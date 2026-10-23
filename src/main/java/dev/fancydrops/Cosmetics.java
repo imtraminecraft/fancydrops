@@ -40,7 +40,7 @@ final class Cosmetics {
         new Suffix("collector", "Collector", "Everyone", one(0xE0D3)),
         new Suffix("secret", "Secret", "Everyone", fr(0xE0E0)),
         new Suffix("glitchsfx", "Hazard", "Special", fr(0xE100)),
-        new Suffix("contrib", "Contributor", "Special", fr(0xE110)),
+        new Suffix("contrib", "Builder", "Special", fr(0xE110)),
         new Suffix("patron", "Patron", "Special", fr(0xE120)),
         new Suffix("hoarder", "Hoarder", "Everyone", one(0xE130)),
         new Suffix("legend", "Legend", "Everyone", one(0xE131))};
@@ -117,7 +117,7 @@ final class Cosmetics {
         }
         if (me != null) {                                                // you see what you picked
             FancyConfig c = FancyConfig.get();
-            Look l = new Look(chosen(), CosmeticData.unlockedId(c.nameFx) ? c.nameFx : null, CosmeticData.unlockedId(c.aura) ? c.aura : null);
+            Look l = new Look(c.selfSuffix ? chosen() : null, c.selfName && CosmeticData.unlockedId(c.nameFx) ? c.nameFx : null, c.selfAura && CosmeticData.unlockedId(c.aura) ? c.aura : null);
             if (l.suffix() != null || l.fx() != null || l.aura() != null) m.put(me, l);
         }
         return m;

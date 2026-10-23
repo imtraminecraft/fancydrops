@@ -1,3 +1,16 @@
+## 0.8.52
+- Settings > Menu: "Cosmetics" now has switches for your own suffix, name effect and aura, and for other players'
+- Chat: removed the Rules section and the minimum price; chat sends whatever you switched on
+- RNG Drop scene now plays for expensive drops even if the item is off; a number box (1m to 1b coins) appears under the switch when it is on
+- Removed the Serif menu font and the Community buttons switch (the buttons are always shown)
+- Building site: things fall with gravity and stack; only items, boulders and bulldozers can be moved (crane, cones and hats are fixed); smaller cones; new wheelbarrow, boulder, planks, sand, pipes, toolbox and cement mixer
+- Fixed the white icons (palette letters clashed with the eye and flame colours)
+- New rotating gear for Settings and the admin panel
+- Page changes no longer bounce (no overshoot on the sidebar, no hopping icons)
+- Aura preview: no more turning; a gentle sway, glowing floor rings, light beams and orbiting lights
+- Admin picker lists sets and cosmetics by rarity, like the Cosmetics page
+- The "Contrib" suffix is now "Builder"
+
 ## 0.8.51
 - The building site no longer overlaps: bulldozers turn round before they touch anything, and you can drag every item around the box (it slides to a free spot when dropped)
 - Fixed the pickaxe and rod handles turning white (a palette letter clashed with the tint colours)

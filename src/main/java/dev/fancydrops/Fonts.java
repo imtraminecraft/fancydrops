@@ -7,7 +7,7 @@ import net.minecraft.resources.Identifier;
 
 /** The fonts the mod can write in: the menu (Settings > Menu) and the drop texts (Text Changes). 0 is the game's own. */
 public final class Fonts {
-    public static final String[] NAMES = {"Default", "Clean", "Bold", "Serif"};
+    public static final String[] NAMES = {"Default", "Clean", "Bold"};
     public static final String[] SUBS = {"The game's own look", "Round and modern", "Heavy sans", "Old-book serif"};
     private static final String[][] IDS = {null, {"fancydrops", "f_clean"}, {"fancydrops", "f_bold"}, {"fancydrops", "f_serif"}};
     private static final FontDescription[] DESC = new FontDescription[IDS.length];

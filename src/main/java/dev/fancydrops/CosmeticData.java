@@ -45,7 +45,7 @@ final class CosmeticData {
         new Def("glitchsfx", "Hazard", Line.SPECIAL, Kind.SUFFIX, "Bug Finder Set", 0xFFFFB02E, "bugfinder"),
         new Def("glitch", "Critical", Line.SPECIAL, Kind.NAME, "Bug Finder Set", 0xFFFF5A36, "bugfinder"),
         new Def("glitchaura", "Alarm", Line.SPECIAL, Kind.AURA, "Bug Finder Set", 0xFFFF7A2E, "bugfinder"),
-        new Def("contrib", "Contrib", Line.SPECIAL, Kind.SUFFIX, "Contributors Set", 0xFF5AFFC8, "contributors"),
+        new Def("contrib", "Builder", Line.SPECIAL, Kind.SUFFIX, "Contributors Set", 0xFF5AFFC8, "contributors"),
         new Def("contribfx", "Aqua Flow", Line.SPECIAL, Kind.NAME, "Contributors Set", 0xFF55D8FF, "contributors"),
         new Def("stardust", "Stardust", Line.SPECIAL, Kind.AURA, "Contributors Set", 0xFF8FD0FF, "contributors"),
         new Def("patron", "Patron", Line.SPECIAL, Kind.SUFFIX, "Patreon Set", 0xFFFFC832, "patreon"),

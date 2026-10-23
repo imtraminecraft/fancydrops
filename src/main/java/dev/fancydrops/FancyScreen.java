@@ -253,7 +253,7 @@ public class FancyScreen extends Screen {
     private EditBox searchField;
     private static final Identifier ICON = Identifier.fromNamespaceAndPath("fancydrops", "textures/gui/icon.png");
     private final List<Row> rows = new ArrayList<>();
-    private EditBox formatField, addField, numField, hexField, adminField;
+    private EditBox formatField, addField, numField, hexField, adminField, thrField;
     private static int sliderSeq; private int typingId = -1;
     private Slider typing; private boolean numShow; private double lastMx;
     private String formatError;                                  // why the typed message was refused, or null
@@ -306,6 +306,18 @@ public class FancyScreen extends Screen {
         adminField = new EditBox(font, 0, 0, 100, 16, Component.literal("player"));
         adminField.setMaxLength(80); adminField.setHint(Component.literal("Cosmetic ID, UUID or online name"));
         addRenderableWidget(adminField); adminField.setVisible(false);
+        thrField = new EditBox(font, 0, 0, 100, 16, Component.literal("coins"));
+        thrField.setMaxLength(10); thrField.setHint(Component.literal("1000000 to 1000000000"));
+        thrField.setValue(Long.toString(FancyConfig.get().epicThreshold));
+        thrField.setResponder(v -> {                                                  // numbers only, 1m to 1b coins
+            String f = v.replaceAll("[^0-9]", ""); if (f.length() > 10) f = f.substring(0, 10);
+            if (!f.equals(v)) { thrField.setValue(f); return; }
+            if (f.isEmpty()) return;
+            long n = Long.parseLong(f);
+            if (n > 1_000_000_000L) { thrField.setValue("1000000000"); return; }
+            if (n >= 1_000_000L) FancyConfig.get().epicThreshold = n;
+        });
+        addRenderableWidget(thrField); thrField.setVisible(false);
         searchField = new EditBox(font, 0, 0, 120, 14, Component.literal("search"));
         searchField.setMaxLength(30); searchField.setBordered(false);
         searchField.setHint(Component.literal("Search..."));
@@ -323,7 +335,7 @@ public class FancyScreen extends Screen {
         addRenderableWidget(hexField);
         hexField.setVisible(false);
         prevBoxes.clear();
-        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false);
+        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false);
         if (pendingCos) { pendingCos = false; openCos(); }                       // /fd cosmetics
     }
 
@@ -1098,7 +1110,8 @@ public class FancyScreen extends Screen {
         int x0 = cx + 14, iw = cw - 28, gap = 6, cols = Math.max(2, iw / 150), tw = (iw - (cols - 1) * gap) / cols, y = top + 8 - adminScroll;
         Gfx.text(g, font, "SETS", x0, y, 0xFFC77DFF); Gfx.text(g, font, "click to tick every member", x0 + 34, y, Ui.DIM); y += 13;
         int i = 0;
-        for (CosmeticData.SetDef sd : CosmeticData.SETS) {
+        List<CosmeticData.SetDef> setOrd = new ArrayList<>(); for (int r2 = 3; r2 >= 0; r2--) for (CosmeticData.SetDef s2 : CosmeticData.SETS) if (s2.rarity() == r2) setOrd.add(s2);
+        for (CosmeticData.SetDef sd : setOrd) {
             List<CosmeticData.Def> m = CosmeticData.members(sd); int have = 0; for (CosmeticData.Def d : m) if (adminPicks.contains(d.id())) have++;
             boolean all = !m.isEmpty() && have == m.size();
             int x = x0 + (i % cols) * (tw + gap), yy = y + (i / cols) * 28; boolean hv = mx >= x && mx < x + tw && my >= yy && my < yy + 24 && my >= top && my < bot;
@@ -1110,8 +1123,12 @@ public class FancyScreen extends Screen {
         for (CosmeticData.Kind k : CosmeticData.Kind.values()) {
             g.fill(x0, y - 4, x0 + iw, y - 3, 0x1CFFFFFF);
             Gfx.text(g, font, heads[k.ordinal()], x0, y, 0xFFFFC857); y += 13; i = 0;
-            for (CosmeticData.Def d : CosmeticData.ALL) {
-                if (d.kind() != k) continue;
+            List<CosmeticData.Def> ord = new ArrayList<>();
+            for (int r2 = 3; r2 >= 0; r2--) {                                              // rarest first: a rarity's set items, then its single items
+                for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) for (CosmeticData.Def d : CosmeticData.members(sd)) if (d.kind() == k) ord.add(d);
+                for (CosmeticData.Def d : CosmeticData.ALL) if (d.kind() == k && d.set() == null && CosmeticData.rarityOf(d) == r2) ord.add(d);
+            }
+            for (CosmeticData.Def d : ord) {
                 boolean on = adminPicks.contains(d.id());
                 int x = x0 + (i % cols) * (tw + gap), yy = y + (i / cols) * 24; boolean hv = mx >= x && mx < x + tw && my >= yy && my < yy + 20 && my >= top && my < bot;
                 adminTile(g, x, yy, tw, 20, d.name(), null, on, RAR_COL[CosmeticData.rarityOf(d)] & 0xFFFFFF, hv);
@@ -1133,8 +1150,6 @@ public class FancyScreen extends Screen {
     private static boolean toastShake;
 
     // ------------------------------------------------------------------ the two Cosmetics side menus: chat + tab list above the window, the aura preview (your skin) to its left
-    private static float figYaw = 0.5f;
-    private boolean dragFig;
     private final int[] auraBox = {-1, -1, -1, -1};
     private void drawCosPanels(GuiGraphicsExtractor g, int mx, int my, float intro) {
         auraBox[0] = auraBox[1] = auraBox[2] = auraBox[3] = -1;
@@ -1154,9 +1169,16 @@ public class FancyScreen extends Screen {
         auraBox[0] = x; auraBox[1] = y + 28; auraBox[2] = x + w; auraBox[3] = y + h;
         g.enableScissor(x + 1, y + 28, x + w - 1, y + h - 1);
         int pcol = ad == null ? 0xFF8A93B0 : ad.color();                                              // a little stage in the colour of the aura
+        { int pc2 = pcol & 0xFFFFFF; float tt = now / 1000f, br = 0.5f + 0.5f * (float) Math.sin(tt * 2f);
+          for (int i2 = 0; i2 < 14; i2++) { int ya = y + 28 + i2 * (h - 56) / 14; g.fill(x + 1, ya, x + w - 1, ya + (h - 56) / 14 + 1, Gfx.argb(Math.round(i2 * 1.8f), pc2)); }   // the backdrop warms toward the floor
+          for (int b2 = 0; b2 < 5; b2++) { int bx = fx - 28 + b2 * 14, bh = Math.round((feet - y - 40) * (0.55f + 0.45f * (float) Math.sin(tt * 1.3f + b2 * 1.7f)) * 0.7f); g.fill(bx, feet - bh, bx + 2, feet, Gfx.argb(22 + Math.round(18 * br), pc2)); }   // light beams
+          for (int rr = 0; rr < 3; rr++) { float ph2 = ((tt * 0.45f) + rr / 3f) % 1f; int rw = 18 + Math.round(ph2 * 26); g.fill(fx - rw, feet, fx + rw, feet + 1, Gfx.argb(Math.round((1f - ph2) * 150), pc2)); }   // rings spreading from the feet
+          for (int sp = 0; sp < 10; sp++) { float a2 = tt * 0.6f + sp * 0.628f; int sx2 = fx + Math.round((float) Math.cos(a2) * 34), sy2 = feet + 2 + Math.round((float) Math.sin(a2) * 3); g.fill(sx2, sy2, sx2 + 2, sy2 + 1, Gfx.argb(200, Canvas.mix(pcol, 0xFFFFFFFF, 0.6f) & 0xFFFFFF)); }   // little lights orbiting the floor
+        }
         g.fill(fx - 22, feet + 3, fx + 22, feet + 5, Gfx.argb(110, 0x000000)); g.fill(fx - 28, feet + 1, fx + 28, feet + 3, Gfx.argb(90, pcol & 0xFFFFFF));
         g.fill(fx - 24, feet, fx + 24, feet + 1, Gfx.argb(200, pcol & 0xFFFFFF)); g.fill(fx - 20, feet + 1, fx + 20, feet + 2, Gfx.argb(150, Canvas.mix(pcol, 0xFFFFFFFF, 0.5f) & 0xFFFFFF));
         List<AuraFx.P> parts = ad == null ? List.of() : AuraFx.particles(aura, now);
+        float figYaw = 0.55f + 0.28f * (float) Math.sin(now / 1900.0);                              // a gentle sway: the figure can't be turned
         float cyw = (float) Math.cos(figYaw), syw = (float) Math.sin(figYaw);
         for (int pass = 0; pass < 2; pass++) {
             if (pass == 1) SkinMock.draw(g, fx, feet, figYaw);
@@ -1168,7 +1190,6 @@ public class FancyScreen extends Screen {
             }
         }
         g.disableScissor();
-        Gfx.textCentered(g, font, "Drag to turn", x + w / 2, y + h - 11, Ui.DIM);
         if (intro < 1f) { int al = Math.round((1f - intro) * 150); pill(g, tr.x, tr.y, tr.w, tr.h, Gfx.argb(al, 0x0C0E14)); pill(g, x, y, w, h, Gfx.argb(al, 0x0C0E14)); }
     }
     private boolean inAuraPanel(double mx, double my) { return auraBox[0] >= 0 && mx >= auraBox[0] && mx < auraBox[2] && my >= auraBox[1] && my < auraBox[3]; }
@@ -1356,7 +1377,8 @@ public class FancyScreen extends Screen {
     }
 
     // ------------------------------------------------------------------ the building site behind pages that are not built yet
-    private static final class SiteItem { int kind, w, h; float x, y, dir = 1f; }
+    private static final class SiteItem { int kind, w, h; float x, y, vy, dir = 1f; }
+    private static boolean siteMovable(int kind) { return kind != 1 && kind != 5 && kind != 6; }      // the crane, the cones and the hard hats are fixed
     private final java.util.List<SiteItem> siteItems = new java.util.ArrayList<>();
     private int siteW = -1, siteDrag = -1; private float siteOffX, siteOffY, siteStartX, siteStartY;
     private final int[] sitePanel = new int[4]; private long siteSeen, siteLast;
@@ -1364,26 +1386,31 @@ public class FancyScreen extends Screen {
 
     private SiteItem siteMake(int kind, float x) {
         SiteItem s = new SiteItem(); s.kind = kind; s.x = x;
-        switch (kind) { case 0 -> { s.w = 24; s.h = 15; } case 1 -> { s.w = 28; s.h = 52; } case 2 -> { s.w = 12; s.h = 15; } case 3 -> { s.w = 8; s.h = 9; } case 4 -> { s.w = 12; s.h = 10; } case 5 -> { s.w = 22; s.h = 24; } default -> { s.w = 19; s.h = 18; } }
+        switch (kind) { case 0 -> { s.w = 24; s.h = 15; } case 1 -> { s.w = 28; s.h = 52; } case 2 -> { s.w = 12; s.h = 15; } case 3 -> { s.w = 8; s.h = 9; } case 4 -> { s.w = 12; s.h = 10; } case 5 -> { s.w = 13; s.h = 14; } case 7 -> { s.w = 14; s.h = 12; } case 8 -> { s.w = 18; s.h = 11; } case 9 -> { s.w = 20; s.h = 6; } case 10 -> { s.w = 22; s.h = 9; } case 11 -> { s.w = 16; s.h = 8; } case 12 -> { s.w = 10; s.h = 7; } case 13 -> { s.w = 16; s.h = 16; } default -> { s.w = 19; s.h = 18; } }
         return s;
     }
-    private static boolean siteHit(SiteItem a, SiteItem b, float ax, float ay) { return ax < b.x + b.w + 1 && ax + a.w + 1 > b.x && ay < b.y + b.h + 1 && ay + a.h + 1 > b.y; }
+    private static boolean siteHit(SiteItem a, SiteItem b, float ax, float ay) { return ax < b.x + b.w && ax + a.w > b.x && ay < b.y + b.h && ay + a.h > b.y; }
     private boolean siteFree(SiteItem a, float ax, float ay, int pw, int ph) {
         if (ax < 3 || ay < 14 || ax + a.w > pw - 3 || ay + a.h > ph - 10) return false;
         for (SiteItem b : siteItems) if (b != a && b.kind != 6 && a.kind != 6 && siteHit(a, b, ax, ay)) return false;
-        return !(ax < sitePill[0] + sitePill[2] + 1 && ax + a.w + 1 > sitePill[0] && ay < sitePill[1] + sitePill[3] + 1 && ay + a.h + 1 > sitePill[1] && a.kind != 6);
+        return !(ax < sitePill[0] + sitePill[2] && ax + a.w > sitePill[0] && ay < sitePill[1] + sitePill[3] && ay + a.h > sitePill[1] && a.kind != 6);
     }
     private void siteInit(Row r) {
         siteItems.clear(); siteW = r.w; int gy = r.h - 13;
-        float xl = 8, xr = r.w - 8;
-        int[][] left = {{5, 0}, {2, 0}, {3, 0}, {0, 0}}, right = {{4, 0}, {0, 0}, {3, 0}, {5, 0}};
-        for (int[] it : left) { SiteItem s = siteMake(it[0], xl); s.y = gy - s.h; if (s.kind == 0) s.dir = 1; siteItems.add(s); xl += s.w + (s.kind == 0 ? 30 : 5); }
-        for (int[] it : right) { SiteItem s = siteMake(it[0], 0); xr -= s.w; s.x = xr; s.y = gy - s.h; if (s.kind == 0) s.dir = -1; siteItems.add(s); xr -= (s.kind == 0 ? 30 : 5); }
+        float xl = 8, xr = r.w - 44, mid = r.w * 0.5f;
+        int[] left = {5, 2, 3, 0, 7, 8, 10, 12}, right = {5, 9, 11, 0, 13, 3, 7};
+        for (int kd : left) { SiteItem q = siteMake(kd, xl); if (xl + q.w > mid - 4) continue; q.y = gy - q.h; if (kd == 0) q.dir = 1; siteItems.add(q); xl += q.w + (kd == 0 ? 30 : 5); }
+        for (int kd : right) { SiteItem q = siteMake(kd, 0); if (xr - q.w < mid + 4) continue; xr -= q.w; q.x = xr; q.y = gy - q.h; if (kd == 0) q.dir = -1; siteItems.add(q); xr -= (kd == 0 ? 30 : 5); }
+        for (SiteItem q : new java.util.ArrayList<>(siteItems)) {                                // a few things start in the air and fall onto the piles
+            if (q.kind == 2) { SiteItem t = siteMake(2, q.x); t.y = 22; siteItems.add(t); }
+            if (q.kind == 9) { SiteItem t = siteMake(12, q.x + 5); t.y = 18; siteItems.add(t); }
+            if (q.kind == 7) { SiteItem t = siteMake(3, q.x + 3); t.y = 26; siteItems.add(t); }
+        }
         SiteItem cr = siteMake(1, r.w - 38); cr.y = gy - cr.h; siteItems.add(cr);
         SiteItem h1 = siteMake(6, 8); h1.y = 14; siteItems.add(h1); SiteItem h2 = siteMake(6, r.w - 30); h2.y = 14; siteItems.add(h2);
         for (int k = 0; k < siteItems.size(); k++) {                                            // anything that starts on top of something else slides away
             SiteItem a = siteItems.get(k);
-            if (!siteFree(a, a.x, a.y, r.w, r.h) && a.kind != 6) siteSettle(a, r.w, r.h);
+            if (a.kind != 6 && a.y > 30 && !siteFree(a, a.x, a.y, r.w, r.h)) siteSettle(a, r.w, r.h);
         }
     }
     /** Finds the nearest free spot for an item (sideways first, then up) so nothing ever overlaps. */
@@ -1401,10 +1428,21 @@ public class FancyScreen extends Screen {
         sitePanel[0] = r.x; sitePanel[1] = r.y; sitePanel[2] = r.w; sitePanel[3] = r.h; siteSeen = nowMs;
         sitePill = new int[]{pillX - r.x, pillY - r.y, pillW, 16};
         if (siteItems.isEmpty() || siteW != r.w) siteInit(r);
-        for (SiteItem a : siteItems) {                                                           // the bulldozers patrol, and turn round before they would touch anything
-            if (a.kind != 0 || siteItems.indexOf(a) == siteDrag) continue;
+        float floor = r.h - 13;
+        for (int k = 0; k < siteItems.size(); k++) {                                             // gravity: whatever is not held falls until something is under it
+            SiteItem a = siteItems.get(k); if (!siteMovable(a.kind) || k == siteDrag) continue;
+            a.vy = Math.min(320f, a.vy + 420f * dt); float ny = a.y + a.vy * dt, sup = floor;
+            for (SiteItem b : siteItems) if (b != a && b.kind != 6 && a.x < b.x + b.w && a.x + a.w > b.x && b.y >= a.y + a.h - 0.5f) sup = Math.min(sup, b.y);
+            if (a.x < sitePill[0] + sitePill[2] && a.x + a.w > sitePill[0] && sitePill[1] >= a.y + a.h - 0.5f) sup = Math.min(sup, sitePill[1]);
+            if (ny + a.h >= sup) { a.y = sup - a.h; a.vy = 0f; } else a.y = ny;
+        }
+        for (int k = 0; k < siteItems.size(); k++) {                                             // the bulldozers patrol (carrying what sits on them) and turn round before they would touch anything
+            SiteItem a = siteItems.get(k); if (a.kind != 0 || k == siteDrag) continue;
             float nx = a.x + a.dir * 16f * dt;
-            if (siteFree(a, nx, a.y, r.w, r.h)) a.x = nx; else a.dir = -a.dir;
+            if (siteFree(a, nx, a.y, r.w, r.h)) {
+                for (SiteItem b : siteItems) if (b != a && siteMovable(b.kind) && Math.abs(b.y + b.h - a.y) < 0.6f && b.x < a.x + a.w && b.x + b.w > a.x) b.x += nx - a.x;
+                a.x = nx;
+            } else a.dir = -a.dir;
         }
         for (int k = 0; k < siteItems.size(); k++) {
             SiteItem a = siteItems.get(k); int ax = r.x + Math.round(a.x), ay = r.y + Math.round(a.y);
@@ -1416,7 +1454,14 @@ public class FancyScreen extends Screen {
                 case 2 -> { for (int j = 0; j < 3; j++) { g.fill(ax, ay + a.h - 5 - j * 5, ax + a.w, ay + a.h - 1 - j * 5, 0xFFB5532E); g.fill(ax, ay + a.h - 5 - j * 5, ax + a.w, ay + a.h - 4 - j * 5, 0xFFD9703E); g.fill(ax + 6, ay + a.h - 5 - j * 5, ax + 7, ay + a.h - 1 - j * 5, 0xFF7A3418); } }
                 case 3 -> { g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); }
                 case 4 -> { g.fill(ax, ay, ax + 12, ay + 4, 0xFFF2F2F2); for (int j = 0; j < 12; j += 4) g.fill(ax + j, ay, ax + j + 2, ay + 4, 0xFFE06A20); g.fill(ax + 1, ay + 4, ax + 3, ay + 10, 0xFF6A6A74); g.fill(ax + 9, ay + 4, ax + 11, ay + 10, 0xFF6A6A74); }
-                case 5 -> { Gfx.push(g); Gfx.translate(g, ax - 2, ay - 2); Gfx.scale(g, 1.5f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); }
+                case 5 -> { Gfx.push(g); Gfx.translate(g, ax - 1, ay - 1); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); }
+                case 7 -> { g.fill(ax + 2, ay, ax + 12, ay + 1, 0xFF8A8A94); g.fill(ax + 1, ay + 1, ax + 13, ay + 3, 0xFF9A9AA6); g.fill(ax, ay + 3, ax + 14, ay + 10, 0xFF7C7C88); g.fill(ax + 1, ay + 10, ax + 13, ay + 12, 0xFF5E5E6A); g.fill(ax + 3, ay + 2, ax + 6, ay + 4, 0xFFB4B4C0); g.fill(ax + 8, ay + 5, ax + 9, ay + 9, 0xFF50505C); }
+                case 8 -> { g.fill(ax + 2, ay + 1, ax + 14, ay + 2, 0xFFFFC857); g.fill(ax + 3, ay + 2, ax + 13, ay + 6, 0xFFD08A10); g.fill(ax + 4, ay, ax + 12, ay + 1, 0xFFD9C27A); g.fill(ax + 14, ay + 6, ax + 18, ay + 11, 0xFF2A2A30); g.fill(ax + 15, ay + 7, ax + 17, ay + 10, 0xFF8A8A94); g.fill(ax + 4, ay + 6, ax + 5, ay + 11, 0xFF6A6A74); g.fill(ax, ay + 3, ax + 4, ay + 4, 0xFF7A4A24); g.fill(ax + 13, ay + 2, ax + 15, ay + 6, 0xFFB07408); }
+                case 9 -> { g.fill(ax, ay, ax + 20, ay + 2, 0xFFC8964E); g.fill(ax, ay + 2, ax + 20, ay + 4, 0xFFB0803E); g.fill(ax, ay + 4, ax + 20, ay + 6, 0xFFC8964E); g.fill(ax + 4, ay, ax + 7, ay + 1, 0xFF8A5E28); g.fill(ax + 12, ay + 2, ax + 16, ay + 3, 0xFF8A5E28); g.fill(ax + 8, ay + 4, ax + 11, ay + 5, 0xFF8A5E28); g.fill(ax, ay, ax + 1, ay + 6, 0xFFE0B878); }
+                case 10 -> { for (int j = 0; j < 9; j++) { int hw = Math.min(11, 2 + j * 3 / 2 + 1); g.fill(ax + 11 - hw, ay + j, ax + 11 + hw, ay + j + 1, j < 3 ? 0xFFEAD592 : 0xFFD9BE70); } g.fill(ax + 8, ay + 4, ax + 9, ay + 5, 0xFFB89A50); g.fill(ax + 14, ay + 6, ax + 15, ay + 7, 0xFFB89A50); }
+                case 11 -> { for (int j = 0; j < 3; j++) { int px2 = j == 2 ? ax + 4 : ax + j * 8, py2 = j == 2 ? ay : ay + 4; g.fill(px2, py2, px2 + 8, py2 + 4, 0xFF3F8FD0); g.fill(px2, py2, px2 + 8, py2 + 1, 0xFF7CC0F0); g.fill(px2, py2, px2 + 1, py2 + 4, 0xFF24547E); g.fill(px2 + 7, py2, px2 + 8, py2 + 4, 0xFF24547E); } }
+                case 12 -> { g.fill(ax, ay + 1, ax + 10, ay + 7, 0xFFD03A30); g.fill(ax, ay + 1, ax + 10, ay + 2, 0xFFFF6A5A); g.fill(ax + 3, ay, ax + 7, ay + 1, 0xFF3A3A44); g.fill(ax + 4, ay + 3, ax + 6, ay + 5, 0xFFFFD84A); }
+                case 13 -> { int ph2 = (int) (sec * 6f); g.fill(ax + 2, ay + 1, ax + 12, ay + 10, 0xFFE0802A); for (int j = 0; j < 3; j++) { int ly = ay + 2 + (ph2 + j * 3) % 8; g.fill(ax + 2, ly, ax + 12, ly + 1, 0xFFFFB060); } g.fill(ax + 9, ay, ax + 13, ay + 2, 0xFF9A5A1A); g.fill(ax + 5, ay + 10, ax + 9, ay + 14, 0xFF5A5A66); g.fill(ax + 1, ay + 13, ax + 5, ay + 16, 0xFF2A2A30); g.fill(ax + 10, ay + 13, ax + 14, ay + 16, 0xFF2A2A30); g.fill(ax + 14, ay + 8, ax + 16, ay + 14, 0xFF7A4A24); }
                 default -> { Gfx.push(g); Gfx.translate(g, ax - 1, ay - 1); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g); }
             }
             if (hov || grab) rout(g, ax - 1, ay - 1, a.w + 2, a.h + 2, Gfx.argb(grab ? 200 : 90, 0xFFC857));
@@ -1430,8 +1475,8 @@ public class FancyScreen extends Screen {
     private boolean siteGrab(double mx, double my) {
         if (System.currentTimeMillis() - siteSeen > 120) return false;
         for (int k = siteItems.size() - 1; k >= 0; k--) {
-            SiteItem a = siteItems.get(k); double ax = sitePanel[0] + a.x, ay = sitePanel[1] + a.y;
-            if (mx >= ax && mx < ax + a.w && my >= ay && my < ay + a.h) { siteDrag = k; siteOffX = (float) (mx - ax); siteOffY = (float) (my - ay); siteStartX = a.x; siteStartY = a.y; return true; }
+            SiteItem a = siteItems.get(k); if (!siteMovable(a.kind)) continue; double ax = sitePanel[0] + a.x, ay = sitePanel[1] + a.y;
+            if (mx >= ax && mx < ax + a.w && my >= ay && my < ay + a.h) { siteDrag = k; siteOffX = (float) (mx - ax); siteOffY = (float) (my - ay); siteStartX = a.x; siteStartY = a.y; a.vy = 0f; return true; }
         }
         return false;
     }
@@ -1443,7 +1488,11 @@ public class FancyScreen extends Screen {
     private void siteDrop() {
         if (siteDrag < 0 || siteDrag >= siteItems.size()) { siteDrag = -1; return; }
         SiteItem a = siteItems.get(siteDrag); siteDrag = -1;
-        if (a.kind != 6 && !siteFree(a, a.x, a.y, sitePanel[2], sitePanel[3])) siteSettle(a, sitePanel[2], sitePanel[3]);        // dropped on something: slide to the nearest free spot
+        a.vy = 0f;
+        if (!siteFree(a, a.x, a.y, sitePanel[2], sitePanel[3])) {                                    // dropped inside something: lifted out of it, then it falls back down
+            boolean ok = false; for (int up = 2; up <= 90 && !ok; up += 2) if (siteFree(a, a.x, a.y - up, sitePanel[2], sitePanel[3])) { a.y -= up; ok = true; }
+            if (!ok) siteSettle(a, sitePanel[2], sitePanel[3]);
+        }
     }
 
     private static void crane(GuiGraphicsExtractor g, int x, int y, int w, int h, float sec) {
@@ -1471,7 +1520,6 @@ public class FancyScreen extends Screen {
     }
 
     private void tabIcon(GuiGraphicsExtractor g, Tab t, int x, int y, long now, boolean lively) {
-        if (!STILL) y -= Math.sin(now / 520.0 + t.ordinal() * 1.3) > 0.45 ? 1 : 0;                  // every menu icon hops up and down, each on its own beat
         switch (t) {
             case DROPS -> Icons.draw(g, "library", x, y, now);
             case HOME -> Icons.draw(g, "home", x, y, now);
@@ -1990,10 +2038,6 @@ public class FancyScreen extends Screen {
                 tr.ctls.add(new Btn("Test", GREEN, () -> DropListener.testChat(msg -> { chatStatus = msg; chatStatusColor = msg.startsWith("Sent") ? 0xFF62E6A8 : 0xFFFF7777; toast(msg, msg.startsWith("Sent") ? 0xFF62E6A8 : DropListener.NOT_ON_HYPIXEL.equals(msg) ? 0xFFFFB86B : 0xFFFF7777); }, chatEv)));
                 rows.add(tr);
                 if (!chatStatus.isEmpty()) rows.add(note(chatStatus, chatStatusColor));
-                rows.add(section("Rules"));
-                Row mp = row(0, "fd:coin", "Minimum price", "Same as RNG Drop: " + PriceService.fmt(c.epicThreshold) + "+  (unknown prices still send)", Ui.ACCENT);
-                mp.ctls.add(new Btn("Change", Ui.ROW_HOVER, () -> { tab = Tab.GENERAL; subSel[Tab.GENERAL.ordinal()] = 1; scroll = 0; jumpTo = "RNG Drop from"; tabChanged = System.currentTimeMillis(); }));
-                rows.add(mp);
                 rows.add(section("Sent in chat  ·  " + CHAT_EVENTS[Math.max(0, Math.min(CHAT_EVENTS.length - 1, chatEv))]));
                 chatSent(rows, c);
                 rows.add(section("Custom drops"));
@@ -2013,6 +2057,7 @@ public class FancyScreen extends Screen {
                 Row tr = row(0, "fd:glass", "Menu translucency", "0% is solid, higher lets the game show through", Ui.ACCENT);
                 tr.ctls.add(new Slider(0, 70, 5, () -> c.menuTranslucency, v -> c.menuTranslucency = (int) v, () -> c.menuTranslucency + "%").typed(1));
                 rows.add(tr);
+                if (c.uiFont >= Fonts.NAMES.length) c.uiFont = 0;
                 String[] fi = new String[Fonts.NAMES.length]; int[] fc2 = new int[fi.length]; for (int i = 0; i < fc2.length; i++) fc2[i] = PICK_PALETTE[i % PICK_PALETTE.length];
                 Row fp = picker("Menu font", "The writing of this menu", Fonts.NAMES, fi, fc2, null, () -> c.uiFont, i -> c.uiFont = i);
                 fp.pFontTiles = true; rows.add(fp);
@@ -2022,14 +2067,16 @@ public class FancyScreen extends Screen {
                 rows.add(picker("Live animation preview", "Where it sits on the Animations and Sounds pages", new String[]{"Top", "Bottom", "Off"},
                     new String[]{"Above the menu", "Below the menu", "Hidden"}, new String[]{"fd:dock_top", "fd:dock_bottom", "fd:dock_off"},
                     new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFF8A8F9E}, null, 3, () -> c.previewAt, i -> c.previewAt = i));
-                rows.add(toggle("fd:discord", "Community buttons", "Discord, Patreon and GitHub beside the menu", () -> c.showCommunity, v -> c.showCommunity = v));
                 rows.add(section("Notices"));
                 rows.add(toggle("fd:tipcard", "Tip card", "The rotating tip at the top of Home", () -> c.showTips, v -> c.showTips = v));
                 rows.add(toggle("fd:bell", "Pop-up notices", "Small notices under the menu (saved, discarded, links) instead of chat messages", () -> c.popups, v -> c.popups = v));
-                rows.add(section("Other players' cosmetics"));
-                rows.add(toggle("fd:cos_suffix", "Show their suffixes", "The little icon after other players' names", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }));
-                rows.add(toggle("fd:cos_name", "Show their name effects", "Moving colours on other players' names", () -> c.othersName, v -> { c.othersName = v; CosmeticData.changed(); }));
-                rows.add(toggle("fd:cos_aura", "Show their auras", "Particles around other players", () -> c.othersAura, v -> { c.othersAura = v; CosmeticData.changed(); }));
+                rows.add(section("Cosmetics"));
+                rows.add(toggle("fd:cos_suffix", "Your suffix", "The little icon after your name", () -> c.selfSuffix, v -> { c.selfSuffix = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:cos_name", "Your name effect", "Moving colours on your name", () -> c.selfName, v -> { c.selfName = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:cos_aura", "Your aura", "Particles around you", () -> c.selfAura, v -> { c.selfAura = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:cos_suffix", "Their suffixes", "The little icon after other players' names", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:cos_name", "Their name effects", "Moving colours on other players' names", () -> c.othersName, v -> { c.othersName = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:cos_aura", "Their auras", "Particles around other players", () -> c.othersAura, v -> { c.othersAura = v; CosmeticData.changed(); }));
                 rows.add(section("Prices"));
                 Row ps = fold("__price", "fd:coin", "Price source", "Bazaar for Bazaar items, Auction House for the rest", Ui.ACCENT);
                 rows.add(ps);
@@ -2045,10 +2092,11 @@ public class FancyScreen extends Screen {
                 Row rf = row(0, "fd:refresh", "Refresh prices now", "Status: " + PriceService.status, Ui.ACCENT);
                 rf.ctls.add(new Btn("Refresh", Ui.ROW_HOVER, () -> { PriceService.refreshAsync(); toast("Refreshing prices.", 0xFF62E6A8); }));
                 rows.add(rf);
-                rows.add(toggle("fd:rng", "RNG Drop scene", "The big scene for expensive drops", () -> c.epicEffects, v -> c.epicEffects = v));
-                rows.add(stepper("fd:coin", "RNG Drop from", "Drops worth this much get the big scene and a chat alert",
-                        () -> PriceService.fmt(c.epicThreshold) + " coins",
-                        d -> c.epicThreshold = EPIC[wrap(idx(EPIC, c.epicThreshold) + d, EPIC.length)], 90));
+                rows.add(toggle("fd:rng", "RNG Drop scene", "Plays the RNG Drop scene for expensive drops, even when the item is switched off", () -> c.epicEffects, v -> c.epicEffects = v));
+                if (c.epicEffects) {
+                    Row th = row(0, "fd:coin", "Worth at least", "Coins, 1m to 1b. Numbers only", Ui.ACCENT);
+                    th.h = 44; th.field = thrField; rows.add(th);
+                }
                             rows.add(section("Drop Data"));
                 Row rl = row(0, "fd:refresh", "Reload drop data", "Reloads the drop data.  " + DataFiles.status, Ui.ACCENT);
                 rl.ctls.add(new Btn("Reload", Ui.ROW_HOVER, () -> { DataFiles.reloadAll(); toast("Reloading the drop data.", 0xFF62E6A8); }));
@@ -3184,7 +3232,7 @@ public class FancyScreen extends Screen {
     @Override public void extractRenderState(GuiGraphicsExtractor g, int mx0, int my0, float delta) {
         Gfx.uiFont = Fonts.fix(FancyConfig.get().uiFont);
         final int mx = editor != 0 ? -9999 : mx0, my = editor != 0 ? -9999 : my0;       // an open editor sits on top: nothing behind it lights up
-        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false);
+        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false);
         searchField.setVisible(false); numShow = false; lastMx = mx;
         if (dragCtl instanceof Slider ls && ls.live) {   // dragging a size slider: show the scene resizing live
             g.fill(0, 0, width, height, 0x55000000);
@@ -3271,7 +3319,7 @@ public class FancyScreen extends Screen {
         g.enableScissor(px + 4, py + 66, px + sw, py + ph - 4);
         float want = tabBox(tab.ordinal())[1];
         if (Float.isNaN(selY) || !animOn) { selY = want; selV = 0f; }
-        else { float h = Math.min(dt, 0.03f); for (int sp = 0; sp < 2; sp++) { selV += ((want - selY) * 420f - selV * 24f) * h / 2f; selY += selV * h / 2f; } }       // a spring: the highlight slides to the tab, overshoots a hair and settles
+        else { float h = Math.min(dt, 0.03f); for (int sp = 0; sp < 2; sp++) { selV += ((want - selY) * 420f - selV * 42f) * h / 2f; selY += selV * h / 2f; } }       // a spring: the highlight slides to the tab, overshoots a hair and settles
         if (Math.abs(want - selY) < 0.25f && Math.abs(selV) < 4f) { selY = want; selV = 0f; }
         int sy = Math.round(selY);
         pill(g, px + 8, sy, sw - 14, 22, Ui.ROW);
@@ -3505,7 +3553,7 @@ public class FancyScreen extends Screen {
             g.fill(cx + cw + 3, lt, cx + cw + 5, lb, 0x14FFFFFF);
             pill(g, cx + cw + 2, by, sh ? 5 : 3, bh, sh ? 0xFF8A93B0 : 0xFF4A4B58);
         }
-        if (FancyConfig.get().showCommunity) drawCommunity(g, mx, my);
+        drawCommunity(g, mx, my);
         if (!cosWin()) {                                                            // the Cosmetics button: outside the menu, bottom right
             int[] cb = cosBtn(); boolean ch = mx >= cb[0] && mx < cb[2] && my >= cb[1] && my < cb[3];
             float hv2 = anim("cosBtn", ch ? 1f : 0f, 40f); int ac = 0xFFC77DFF;
@@ -3524,7 +3572,7 @@ public class FancyScreen extends Screen {
             if (Cosmetics.isAdmin()) {
                 int[] ab = adminBtn(); boolean ah = mx >= ab[0] && mx < ab[2] && my >= ab[1] && my < ab[3]; int rc = 0xFFFF6B6B;
                 pill(g, ab[0], ab[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, rc, 0.2f), rc, ah ? 0.3f : 0f)); rout(g, ab[0], ab[1], 22, 22, Gfx.argb(ah ? 230 : 140, rc & 0xFFFFFF));
-                Icons.draw(g, "fd:settings", ab[0] + 3, ab[1] + 3, ah ? System.currentTimeMillis() : 2400L);
+                Icons.draw(g, "fd:settings", ab[0] + 3, ab[1] + 3, System.currentTimeMillis());
                 if (ah) { int w = Gfx.w(font, "Admin Panel") + 8; int x0 = Math.max(2, ab[0]), ty = ab[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Admin Panel", x0 + 4, ty + 3, Ui.TEXT); }
             }
             if (ch) { int w = Gfx.w(font, "Cosmetics") + 8; int x0 = Math.max(2, cb[0]), ty = cb[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Cosmetics", x0 + 4, ty + 3, Ui.TEXT); }
@@ -3682,7 +3730,6 @@ public class FancyScreen extends Screen {
         }
         if (super.mouseClicked(event, doubleClick)) return true;
         double mx = event.x(), my = event.y(); int button = event.button();
-        if (button == 0 && inAuraPanel(mx, my)) { dragFig = true; return true; }
         if (button == 0 && mx >= px && mx < px + 14 && my >= py && my < py + 12) {                  // the hidden button, in the very corner of the menu
             FancyConfig sc = FancyConfig.get();
             if (!sc.secretFound) { sc.secretFound = true; FancyConfig.save(); toast("You found it!\nThe Secret cosmetic is yours.", 0xFFC08BFF); }
@@ -3738,7 +3785,7 @@ public class FancyScreen extends Screen {
             boolean onBtn = mx >= popup.anchor.x0 && mx < popup.anchor.x1 && my >= ow.y && my < ow.y + 28;
             if (!onBtn) open.removeIf(k -> k.startsWith("dd_"));
         }
-        if (button == 0 && FancyConfig.get().showCommunity) for (int i = 0; i < 3; i++) {
+        if (button == 0) for (int i = 0; i < 3; i++) {
             int[] b = commBox(i);
             if (mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) {             // no links yet: the chat says so
                 if (i == 0) { FancyConfig dc0 = FancyConfig.get(); if (!dc0.discordJoined) { dc0.discordJoined = true; FancyConfig.save(); }      // pressing it unlocks the Discord cosmetic
@@ -3776,7 +3823,6 @@ public class FancyScreen extends Screen {
         if (editor != 0) { if (eDrag != 0) eSet(event.x(), event.y()); return true; }
         if (siteDrag >= 0) { siteMove(event.x(), event.y()); return true; }
         if (dragScroll) { scrollTo(event.y()); return true; }
-        if (dragFig) { figYaw += (float) dx * 0.03f; return true; }
         if (dragFarm) { farmDrag(event.x(), event.y(), false); return true; }
         if (dragCtl != null) return dragCtl.drag(event.x());
         return super.mouseDragged(event, dx, dy);
@@ -3784,7 +3830,7 @@ public class FancyScreen extends Screen {
 
     @Override public boolean mouseReleased(MouseButtonEvent event) {
         eDrag = 0; siteDrop();
-        dragCtl = null; dragFarm = false; dragFig = false; dragScroll = false;
+        dragCtl = null; dragFarm = false; dragScroll = false;
         return super.mouseReleased(event);
     }
 
