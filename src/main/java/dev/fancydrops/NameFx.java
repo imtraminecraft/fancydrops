@@ -20,24 +20,35 @@ final class NameFx {
         return Math.abs(h);
     }
 
+    /** These effects have their own hue. A white or grey name (the tab list, many ranks) takes it fully; a coloured one is blended halfway, so it still shows its own colour. */
+    private static int tint(int own, int base) {
+        int r = (base >> 16) & 255, g = (base >> 8) & 255, b = base & 255;
+        boolean plain = Math.max(r, Math.max(g, b)) - Math.min(r, Math.min(g, b)) < 40;
+        return plain ? own : mix(base, own, 0.5f);
+    }
+
     /** The colour (RGB) of letter i of n at time t (ms), starting from the name's own colour. */
     static int color(String fx, int i, int n, int base, long t) {
         base &= 0xFFFFFF;
         float ph;
         switch (fx) {
-            case "shimmer": {                                              // a bright band of light sweeps over the name, over and over
-                float pos = (t % 2400L) / 2400f * (n + 6) - 3, k = Math.max(0f, 1f - Math.abs(i - pos) / 1.4f);        // a narrow band, so short names keep their colour
-                return mix(mix(base, 0x000000, 0.12f), 0xFFFFFF, 0.8f * k);
+            case "shimmer": {                                              // an ice-blue name with a bright band of light that sweeps over it
+                base = tint(0x8FB8FF, base);
+                float pos = (t % 2400L) / 2400f * (n + 6) - 3, k = Math.max(0f, 1f - Math.abs(i - pos) / 1.6f);
+                return mix(mix(base, 0x000000, 0.22f), 0xFFFFFF, 0.9f * k);
             }
-            case "pulse":                                                   // the whole name breathes: dark, then bright
-                ph = 0.5f + 0.5f * (float) Math.sin(t / 450.0);
-                return mix(mix(base, 0x000000, 0.45f), mix(base, 0xFFFFFF, 0.65f), ph);
-            case "wave":                                                    // clear waves of light and shade run along the letters
-                ph = 0.5f + 0.5f * (float) Math.sin(t / 260.0 - i * 0.9);
-                return mix(mix(base, 0x000000, 0.5f), mix(base, 0xFFFFFF, 0.6f), ph);
-            case "glow":                                                    // the name's colour fading into a bright tint, with a slow breath
+            case "pulse":                                                   // the whole name breathes, soft pink to bright
+                base = tint(0xFF7FB8, base);
+                ph = 0.5f + 0.5f * (float) Math.sin(t / 500.0);
+                return mix(mix(base, 0x000000, 0.3f), mix(base, 0xFFFFFF, 0.5f), ph);
+            case "wave":                                                    // waves of teal light and shade run along the letters
+                base = tint(0x3FD8C4, base);
+                ph = 0.5f + 0.5f * (float) Math.sin(t / 300.0 - i * 0.9);
+                return mix(mix(base, 0x000000, 0.4f), mix(base, 0xFFFFFF, 0.55f), ph);
+            case "glow":                                                    // a warm gold name that slowly breathes towards white from the left
+                base = tint(0xFFC93D, base);
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 900.0);
-                return mix(base, 0xFFFFFF, n <= 1 ? 0f : (0.1f + 0.4f * ph) * i / (n - 1) + 0.08f * ph);
+                return mix(mix(base, 0x000000, 0.1f), 0xFFFFFF, n <= 1 ? 0.2f * ph : (0.12f + 0.4f * ph) * i / (n - 1) + 0.12f * ph);
             case "royal": {                                                 // liquid gold, with a white glint that runs along the name
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 240.0 - i * 0.9);
                 int c = mix(0xFFAA00, 0xFFF3A0, ph);
@@ -76,9 +87,10 @@ final class NameFx {
                 float pos = (t % 3200L) / 3200f * (n + 12) - 6, k = Math.max(0f, 1f - Math.abs(i - pos) / 3f);
                 return mix(c, 0xE8FFFF, 0.7f * k);
             }
-            case "fresh":                                                   // a calm mint tint that drifts slowly along the name
-                ph = 0.5f + 0.5f * (float) Math.sin(t / 1100.0 - i * 0.5);
-                return mix(base, 0xB8FFD0, 0.45f * ph);
+            case "fresh":                                                   // a mint-green name with a lighter green that drifts slowly along it
+                base = tint(0x57D68D, base);
+                ph = 0.5f + 0.5f * (float) Math.sin(t / 900.0 - i * 0.6);
+                return mix(base, 0xD8FFE6, 0.6f * ph);
             default: return base;
         }
     }
