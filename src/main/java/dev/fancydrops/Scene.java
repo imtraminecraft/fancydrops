@@ -568,8 +568,8 @@ final class Scene {
                 * FancyConfig.get().itemK() * (skull ? 0.72 : 1.0);
         FancyConfig ic = FancyConfig.get();
         double dx = side * 25 * easeOut(uu);
-        double yy = itemY(uu) + (ic.itemBob ? 1.6 : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) - (side != 0 ? 4 * (1 - easeOut(uu)) * -1 : 0);
-        double spin = 2.8 * us * ic.itemSpin * (side == 0 ? 1 : -side) + (epic ? 5.0 * (1 - Math.exp(-2.5 * us)) : 0);
+        double yy = itemY(uu) + (ic.itemBob ? 1.6 * ic.itemBobAmp : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) - (side != 0 ? 4 * (1 - easeOut(uu)) * -1 : 0);
+        double spin = 2.8 * us * ic.itemSpin * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side) + (epic ? 5.0 * (1 - Math.exp(-2.5 * us)) : 0);
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
         float pulseG = 0.75f + 0.25f * (float) Math.sin(us * 3.2);

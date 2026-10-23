@@ -27,10 +27,18 @@ public final class Gfx {
     }
     public static void item(GuiGraphicsExtractor g, String name, int x, int y) { g.item(stack(name), x, y); }
 
-    public static void text(GuiGraphicsExtractor g, Font f, String s, int x, int y, int color) { g.text(f, s, x, y, color, true); }
-    public static void textCentered(GuiGraphicsExtractor g, Font f, String s, int cx, int y, int color) {
-        g.text(f, s, cx - f.width(s) / 2, y, color, true);
+    /** The font of the mod's own menu (Settings > Menu). */
+    public static int uiFont;
+    public static int w(Font f, String s) { return uiFont <= 0 ? f.width(s) : f.width(Fonts.text(s, uiFont)); }
+    public static int w(Font f, net.minecraft.network.chat.FormattedText c) { return f.width(c); }
+    public static int w(Font f, net.minecraft.network.chat.FormattedCharSequence c) { return f.width(c); }
+    public static String fit(Font f, String s, int max) {
+        if (uiFont <= 0) return f.plainSubstrByWidth(s, max);
+        while (!s.isEmpty() && w(f, s) > max) s = s.substring(0, s.length() - 1);
+        return s;
     }
+    public static void text(GuiGraphicsExtractor g, Font f, String s, int x, int y, int color) { if (uiFont <= 0) g.text(f, s, x, y, color, true); else g.text(f, Fonts.text(s, uiFont), x, y, color, true); }
+    public static void textCentered(GuiGraphicsExtractor g, Font f, String s, int cx, int y, int color) { text(g, f, s, cx - w(f, s) / 2, y, color); }
 
     public static int argb(int alpha, int rgb) { return (Math.max(0, Math.min(255, alpha)) << 24) | (rgb & 0xFFFFFF); }
     private Gfx() {}

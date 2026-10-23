@@ -19,7 +19,7 @@ final class SkinMock {
     private static final int N = 36, K = 4, W = 22 * K, H = 38 * K, FEET = H - 3 * K;
     private static volatile int[][] cache = new int[N][];
     private static volatile int cacheGen = -1;
-    private static boolean building;
+    private static volatile boolean building;
 
     static void ensure() {
         if (!started) {
@@ -46,9 +46,17 @@ final class SkinMock {
             java.util.concurrent.CompletableFuture.runAsync(() -> {
                 try {
                     int[][] c = new int[N][];
-                    for (int a = 0; a < N; a++) { c[a] = render(sk, a * (float) (Math.PI * 2 / N)); cache = c.clone(); }
+                    int[][] old = cache;                                                    // keep showing the old pictures until the new ones are ready
+                    int failed = 0;
+                    for (int a = 0; a < N; a++) {
+                        try { c[a] = render(sk, a * (float) (Math.PI * 2 / N)); } catch (Throwable t) { failed++; if (failed == 1) System.out.println("[FancyDrops] skin preview: turn " + a + " failed: " + t); }
+                    }
+                    for (int a = 0; a < N; a++) if (c[a] == null) c[a] = old[a];
+                    cache = c;
                     cacheGen = g0;
-                } catch (Throwable t) { cacheGen = g0; } finally { building = false; }
+                    int n = 0; for (int[] r : c) if (r != null && r.length > 0) n++;
+                    System.out.println("[FancyDrops] skin preview built: " + n + "/" + N + " turns, " + failed + " failed");
+                } catch (Throwable t) { System.out.println("[FancyDrops] skin preview error: " + t); cacheGen = g0; } finally { building = false; }
             });
         }
     }

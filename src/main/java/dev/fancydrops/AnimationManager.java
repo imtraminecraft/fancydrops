@@ -139,7 +139,7 @@ public final class AnimationManager {
         int lineH = Math.max(6, Math.round(11 * tsc)), textH = lineH * (rows + 1);
         float want = (farm ? Math.max(0.5f, Math.min(1.1f, c.farmScale)) * 0.24f : (bars ? c.sizeOf(cat) : Math.max(1f, c.sizeOf(cat))) * 0.8f * 0.4f) * m / Scene.W;
         if (bars) {
-            int bar = Math.round(H * c.barHeight / 100f), side = Math.round(bar * SIDE_K), frameH = H - 2 * bar, frameW = W - 2 * side;
+            int bar = Math.round(H * c.barHeight / 100f), side = Math.round(bar * sideK()), frameH = H - 2 * bar, frameW = W - 2 * side;
             float fit = Math.min(frameH * 0.97f / (Scene.H * 1.12f), frameW * 0.97f / (Scene.W * 1.12f));      // 1.12 = how far the scene punches out at the reveal
             float cell = Math.max(0.2f, Math.min(want, fit));
             int sw = Math.round(Scene.W * cell), sh = Math.round(Scene.H * cell);
@@ -270,8 +270,16 @@ public final class AnimationManager {
     private static boolean fxOn(int i, FancyConfig c) { return fxOnly >= 0 ? fxOnly == i : c.fx(i); }
     private static float revealT = 9f, lineDelay = 0f;       // seconds since the words began to appear; the delay of the line being drawn (0 = with the title)
 
+    /** The pieces of a line in the font chosen in Text Changes. */
+    private static Object[] restyle(Object[] p) {
+        FancyConfig fc = FancyConfig.get(); int f = fc.textFont; if (f <= 0 && !fc.textBold) return p;
+        Object[] o = p.clone();
+        for (int i = 0; i < o.length; i += 2) { Component c = (Component) p[i]; net.minecraft.network.chat.Style st = c.getStyle(); if (f > 0) st = st.withFont(Fonts.desc(f)); if (fc.textBold) st = st.withBold(true); o[i] = c.copy().withStyle(st); }
+        return o;
+    }
     /** One centred line made of 1-3 coloured pieces, drawn letter by letter. */
     private static void line(GuiGraphicsExtractor g, Font font, int cx, int y, float sc, int alpha, Object... parts) {
+        parts = restyle(parts);
         int n = 0, w = 0;
         for (int i = 0; i < parts.length; i += 2) { n += ((Component) parts[i]).getString().length(); w += font.width((Component) parts[i]); }
         Gfx.push(g); Gfx.translate(g, cx, y); Gfx.scale(g, sc);
@@ -291,7 +299,7 @@ public final class AnimationManager {
             for (char ch : part.getString().toCharArray()) {
                 float ain = eType ? ((fin - idx) > 0f ? 1f : 0f) : clamp((fin - idx) / 6f), aout = clamp((fout - idx) / 6f);
                 if (eType && idx == (int) fin) curX = x;
-                float a = ain * (1f - aout);
+                float a = ain * (eShrink ? 1f - clamp((aout - 0.65f) / 0.35f) : 1f - aout);          // Shrink: the letters stay solid while they get small (the fade only finishes it off)
                 Component c = Component.literal(String.valueOf(ch)).withStyle(ch == '\ue030' || ch == '\ue031' ? part.getStyle().withFont(EMOJI) : part.getStyle());
                 int cw = font.width(c);
                 if (a > 0.02f && ch != ' ') {
@@ -320,7 +328,8 @@ public final class AnimationManager {
                         g.text(font, c, -cw / 2 - 2 + h, -4, Gfx.argb((int) (alpha * a * 0.6f), 0x56D8FF), false);
                         g.text(font, c, -cw / 2 + 2 - h, -4 + 1, Gfx.argb((int) (alpha * a * 0.6f), 0xFF72C6), false);
                     }
-                    outlined(g, font, c, -cw / 2 + (glitching && idx % 3 == 0 ? 1 : 0), -4, Gfx.argb((int) (alpha * a), col));
+                    if (fx.textOutline) outlined(g, font, c, -cw / 2 + (glitching && idx % 3 == 0 ? 1 : 0), -4, Gfx.argb((int) (alpha * a), col));
+                    else g.text(font, c, -cw / 2 + (glitching && idx % 3 == 0 ? 1 : 0), -4, Gfx.argb((int) (alpha * a), col), true);
                     Gfx.pop(g);
                 }
                 x += cw; idx++;
@@ -652,7 +661,7 @@ public final class AnimationManager {
             return;
         }
         if (cine) {
-            int side = Math.round(barFull * SIDE_K);
+            int side = Math.round(barFull * sideK());
             bars(g, W, H, barFull, side, p.rarity | 0xFF000000, p.rarity | 0xFF000000);
             g.enableScissor(side, barFull, W - side, H - barFull);
             if (!textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), 1f)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), 1f);
@@ -680,7 +689,7 @@ public final class AnimationManager {
     }
 
     /** The pillar bars are a little thinner than the top and bottom ones. */
-    private static final float SIDE_K = 0.8f;
+    private static float sideK() { return FancyConfig.get().barPillars ? 0.8f : 0f; }
 
     /** Bar colour presets (Settings > Animations > Bar colour). Auto takes a deep shade of the drop's own colour. */
     public static final String[] BAR_NAMES = {"Auto (drop colour)", "Midnight", "Wine", "Forest", "Slate", "Black"};
@@ -688,10 +697,11 @@ public final class AnimationManager {
 
     private static int barFill(int tint, int style) {
         FancyConfig fc = FancyConfig.get();
-        if (fc.barCustom) return 0xE6000000 | (fc.barColor & 0xFFFFFF);
+        int al = Math.round(Math.max(20, Math.min(100, fc.barOpacity)) * 2.55f) << 24;
+        if (fc.barCustom) return al | (fc.barColor & 0xFFFFFF);
         int i = Math.floorMod(style, BAR_NAMES.length);
         int rgb = i == 0 ? Canvas.mix(0xFF07070E, 0xFF000000 | (tint & 0xFFFFFF), 0.30f) & 0xFFFFFF : BAR_COLS[i];
-        return 0xE6000000 | rgb;                                                   // a touch see-through so the blurred world glows behind it
+        return al | rgb;                                                   // a touch see-through so the blurred world glows behind it
     }
 
     private static void bars(GuiGraphicsExtractor g, int W, int H, int bar, int side, int edge) { bars(g, W, H, bar, side, edge, Ui.ACCENT); }
@@ -702,6 +712,11 @@ public final class AnimationManager {
         int f = barFill(tint, FancyConfig.get().barStyle);
         g.fill(0, 0, W, bar, f); g.fill(0, H - bar, W, H, f);
         g.fill(0, bar, side, H - bar, f); g.fill(W - side, bar, W, H - bar, f);
+        if (FancyConfig.get().barLine) {                                           // a thin line along the inner edge, in the drop's colour
+            int lc = Gfx.argb(Math.max(120, edge >>> 24), edge & 0xFFFFFF);
+            g.fill(side, bar, W - side, bar + 1, lc); g.fill(side, H - bar - 1, W - side, H - bar, lc);
+            if (side > 0) { g.fill(side - 1, bar, side, H - bar, lc); g.fill(W - side, bar, W - side + 1, H - bar, lc); }
+        }
     }
 
     // ------------------------------------------------------------------ the animation
@@ -744,7 +759,7 @@ public final class AnimationManager {
         int W = g.guiWidth(), H = g.guiHeight(), barFull = Math.round(H * c.barHeight / 100f);
         boolean framed = cine;       // the scene fills the picture between the bars; the words sit in the bars
         float cellF = L.cell(); int sceneX = L.ox(), sceneY = L.oy();
-        int sideFull = Math.round(barFull * SIDE_K);
+        int sideFull = Math.round(barFull * sideK());
         float scx = sceneX + Scene.W * cellF / 2f, scy = sceneY + Scene.H * cellF * 0.46f;
         if (cin > 0.02f) cinematic(g, cin, a, t, ts, scx, scy);
 
@@ -861,7 +876,7 @@ public final class AnimationManager {
         if (a.tier == 2 && since >= 0f) epicBack(g, a, since, W, H, sx0, sy0, cin);
         int bar = Math.round(H * (c.barHeight / 100f) * cin + H * 0.012f * punch * cin);   // the bars flinch on every hit
         float rim = a.tier == 2 && since >= 0f ? 0.5f + 0.5f * (float) Math.sin(since * 7f) : 0f;      // RNG Drop: the bar edges pulse
-        bars(g, W, H, bar, Math.round(bar * SIDE_K), Gfx.argb((int) (110 * cin + 120 * punch + 70 * rim * cin), a.p.rarity & 0xFFFFFF), tint);
+        bars(g, W, H, bar, Math.round(bar * sideK()), Gfx.argb((int) (110 * cin + 120 * punch + 70 * rim * cin), a.p.rarity & 0xFFFFFF), tint);
         if (since >= 0f && since < 0.9f) {                                    // an anamorphic light streak across the middle of the scene
             float f = since / 0.9f, half = W * 0.5f * easeIO(Math.min(1f, f * 2.2f)), alpha = (1f - f) * cin;
             int yc = Math.round(scy);
