@@ -182,6 +182,12 @@ public final class AnimationManager {
 
     public static void play(Anim a) { QUEUE.add(a); }
     public static boolean isPlaying() { return cur != null || !QUEUE.isEmpty(); }
+    /** True while a scene plays that takes over the screen: Farming only shows its picture, so the hotbar and hearts stay. */
+    public static boolean hidesHud() {
+        if (cur != null && !cur.farm) return true;
+        for (Anim a : QUEUE) if (!a.farm) return true;
+        return false;
+    }
 
     private static float clamp(float v) { return Math.max(0f, Math.min(1f, v)); }
 
@@ -202,12 +208,12 @@ public final class AnimationManager {
     }
     /** The whole animation in scene seconds, text included. */
     static final float SLOW = 1.3f;
-    static float naturalScene(Scene.Params p, boolean farm) { return farm ? Scene.splitTime(p) + 3.15f : Scene.length(p) + 1.8f; }
+    static float naturalScene(Scene.Params p, boolean farm) { return farm ? Scene.splitTime(p) + 2.0f : Scene.length(p) + 1.8f; }
     /** {scene seconds per real second, when the words start in scene seconds, total real seconds}. The animation plays first; title and info follow after the text delay. */
     static float[] timing(Scene.Params p, boolean farm, String key, FancyConfig c) {
         float natural = naturalScene(p, farm), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
         Float want = c.animSecs.get(key);
-        float total = Math.max(5f, Math.max(want != null ? Math.max(5f, Math.min(10f, want)) : natural, delay + 3.5f)) * SLOW;   // SLOW: everything plays a notch slower
+        float total = farm ? Math.max(2.6f, want != null ? Math.min(10f, want) * 0.6f : natural) : Math.max(5f, Math.max(want != null ? Math.max(5f, Math.min(10f, want)) : natural, delay + 3.5f)) * SLOW;        // Farming is quick: it plays at its own pace, not slowed   // SLOW: everything plays a notch slower
         float speed = natural / total;
         float textReal = farm ? (ts + 0.5f) / speed : Math.max(delay, (ts + 0.12f) / speed + 0.3f);
         return new float[]{speed, textReal * speed, total};

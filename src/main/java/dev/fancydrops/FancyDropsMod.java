@@ -119,7 +119,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         long now = System.currentTimeMillis();
         if (now != slideAt) {
             float dt = slideAt == 0 ? 0f : Math.min(0.1f, (now - slideAt) / 1000f); slideAt = now;
-            boolean away = AnimationManager.isPlaying();
+            boolean away = AnimationManager.hidesHud();
             float step = dt / 0.35f;
             slideStatus = away ? Math.min(1f, slideStatus + step) : Math.max(0f, slideStatus - step);
             boolean hotbarGoes = away || slideStatus > 0.35f;                               // on the way back the hotbar waits until the hearts are most of the way up
