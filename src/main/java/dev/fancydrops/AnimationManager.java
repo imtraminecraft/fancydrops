@@ -201,12 +201,13 @@ public final class AnimationManager {
         return a.tier == 2 ? "rng" : a.tier == 1 ? "rare" : "default";
     }
     /** The whole animation in scene seconds, text included. */
+    static final float SLOW = 1.3f;
     static float naturalScene(Scene.Params p, boolean farm) { return farm ? Scene.splitTime(p) + 3.15f : Scene.length(p) + 1.8f; }
     /** {scene seconds per real second, when the words start in scene seconds, total real seconds}. The animation plays first; title and info follow after the text delay. */
     static float[] timing(Scene.Params p, boolean farm, String key, FancyConfig c) {
         float natural = naturalScene(p, farm), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
         Float want = c.animSecs.get(key);
-        float total = Math.max(5f, Math.max(want != null ? Math.max(5f, Math.min(10f, want)) : natural, delay + 3.5f));
+        float total = Math.max(5f, Math.max(want != null ? Math.max(5f, Math.min(10f, want)) : natural, delay + 3.5f)) * SLOW;   // SLOW: everything plays a notch slower
         float speed = natural / total;
         float textReal = farm ? (ts + 0.5f) / speed : Math.max(delay, (ts + 0.12f) / speed + 0.3f);
         return new float[]{speed, textReal * speed, total};

@@ -48,6 +48,7 @@ public final class ChatParser {
             }
             if (open <= 0) break;
             String group = rest.substring(open);
+            if (!group.matches("(?is).*(%|magic find|overbloom|\\+\\s*\\d).*")) break;     // "(Duplex I)" is the item's name, not a stat
             if (mf == null) {
                 Matcher ob = OVERBLOOM.matcher(" " + group), mm = MF_ANY.matcher(group);
                 if (ob.find()) mf = "OB:+" + ob.group(1);
@@ -61,6 +62,7 @@ public final class ChatParser {
         }
         String name = rest.replaceAll("[\\s!.:;,✯☘☠♣-]+$", "").trim();
         name = name.replaceFirst("^[^\\p{L}\\p{N}\\[(\"'+]+", "").trim();          // a leading symbol is not part of the name
+        if (name.startsWith("(") && name.endsWith(")") && name.indexOf('(', 1) < 0) name = name.substring(1, name.length() - 1).trim();   // "(Duplex I)"
         if (name.isEmpty()) return null;
         int amount = 1;
         Matcher am = AMOUNT_PREFIX.matcher(name);

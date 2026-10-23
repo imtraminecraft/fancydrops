@@ -38,6 +38,7 @@ public final class DropListener {
             noteBoss(line);
             if (expLine(line, now)) continue;
             if (ChatParser.isKill(line) || ChatParser.isQuestComplete(line)) {
+                dlog("kill line: " + line.trim());
                 ProfitTracker.activity(now, ChatParser.isKill(line));
                 TRACKER.kill(now);
             } else {
@@ -136,7 +137,7 @@ public final class DropListener {
 
     private static boolean isCustom(String name) { for (FancyConfig.CustomDrop cd : FancyConfig.get().custom) if (cd.name.equalsIgnoreCase(name)) return true; return false; }
 
-    private static final class Res { final Item item = new Item(); boolean animate, announce, known; }
+    private static final class Res { final Item item = new Item(); boolean animate, announce, known, unlisted; }
 
     private static Res resolve(ChatParser.Drop d) {
         FancyConfig c = FancyConfig.get();
@@ -165,7 +166,8 @@ public final class DropListener {
             r.animate = cd.animate; r.announce = cd.announce; r.known = true;
             return r;
         }
-        r.animate = false; r.announce = false;                  // rare drops this mod doesn't list are ignored completely
+        r.animate = false; r.announce = false; r.known = true; r.unlisted = true;     // a RARE DROP this mod doesn't list: no scene, no message, but it is still tracked
+        if (lastSlayer != null) it.slayer = lastSlayer;
         return r;
     }
 
@@ -187,18 +189,19 @@ public final class DropListener {
     private static void playDrops(List<Res> found, Runnable onStart, boolean fromKill) {
         FancyConfig c = FancyConfig.get();
         List<Res> shown = new ArrayList<>();
-        boolean any = false;
+        boolean any = false, unl = false;
         for (Res r : found) {
+            if (r.unlisted) unl = true;
             if (!r.known) continue;                                  // not one of ours: no scene, no message, no profit entry
             any = true;
             boolean an = r.animate && c.masterAnimate, ac = r.announce && c.masterAnnounce;      // the two master switches in the menu
             r.item.announce = ac && an;                              // animated drops announce themselves when their scene starts
-            record(r.item, ac && !an, r.animate || r.announce);      // tracked = switched on in the Drop Library
+            record(r.item, ac && !an, r.animate || r.announce || r.unlisted);      // tracked = switched on in the Drop Library
             if (an) shown.add(r);
         }
         shown.sort(Comparator.comparingInt((Res r) -> -r.item.rank));
         if (shown.isEmpty()) {
-            if (!any && !found.isEmpty()) { if (onStart != null) onStart.run(); return; }
+            if ((!any || unl) && !found.isEmpty()) { if (onStart != null) onStart.run(); return; }      // a drop this mod doesn't list happened: it is tracked, and no 'nothing' scene is played over it
             if (fromKill && c.animateNothing && c.masterAnimate && lastSlayer != null) AnimationManager.play(new Anim(lastSlayer, null, -1, onStart));
             else if (onStart != null) onStart.run();
             return;
