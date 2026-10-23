@@ -1,3 +1,10 @@
+## 0.8.50
+- Mining icon: a steel pickaxe swings onto iron ore, cracks it three times, then breaks it into pieces (smaller head, 2 pixel stick)
+- Fishing icon: the rod flexes back and casts, the line pays out to a bobber that splashes down and floats over the shimmering river
+- The Active button shows a faceted diamond spinning over a glowing ring, with sparkles
+- The Default slayer drop has a new sword icon
+- Icons can now be made of frames, not only simple motion
+
 ## 0.8.49
 - Pages that are not built yet say "Coming Soon" with a small TM, and show a busy building site: two bulldozers driving with dust, a swinging crane, brick stacks, barriers and sparks
 - Your original FancyDrops picture is back in the menu header and as the mod icon

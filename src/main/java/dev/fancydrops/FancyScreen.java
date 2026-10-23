@@ -3260,7 +3260,7 @@ public class FancyScreen extends Screen {
                 g.fill(b[0] + 2, b[1] + h - 2, b[2] - 2, b[1] + h - 1, Gfx.argb(Math.round((120 + 100 * pulse) * mv), 0x62E6A8));
                 gleam(g, b[0], b[1], w, h, now);
             } else g.fill(b[0] + 2, b[1] + h - 2, b[2] - 2, b[1] + h - 1, Gfx.argb(150, 0xE5484D));
-            Icons.draw(g, "fd:sparkle", b[0] + 4, b[1] + 3, on ? now : 2400L);
+            Icons.draw(g, "fd:dropped", b[0] + 4, b[1] + 3, on ? now : 2400L);
             if (mv < 0.98f) g.fill(b[0] + 4, b[1] + 3, b[0] + 20, b[1] + 19, Gfx.argb(Math.round(170 * (1f - mv)), tbg & 0xFFFFFF));      // dims the icon with the tile's own colour, so no dark box shows
             Gfx.text(g, font, "Active", b[0] + 24, b[1] + 4, Canvas.mix(0xFF7A7A86, Ui.TEXT, mv));
             Gfx.text(g, font, on ? "ON" : "OFF", b[0] + 24, b[1] + 14, Canvas.mix(0xFFE5484D, 0xFF62E6A8, mv));
