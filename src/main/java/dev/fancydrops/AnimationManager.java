@@ -290,6 +290,7 @@ public final class AnimationManager {
         boolean ePop = fxOn(0, fx), eShine = fxOn(1, fx), eWave = fxOn(2, fx), eRain = fxOn(3, fx), eDrop = fxOn(4, fx), ePulse = fxOn(5, fx), eGlitch = fxOn(6, fx), eGlow = fxOn(7, fx);
         boolean eBounce = fxOn(8, fx), eType = fxOn(9, fx), eFloat = fxOn(10, fx), eShake = fxOn(11, fx), eFire = fxOn(12, fx), eFrost = fxOn(13, fx), eTwink = fxOn(14, fx);
         boolean eRise = fxOn(16, fx), eShrink = fxOn(17, fx), eScatter = fxOn(18, fx);
+        boolean eSlide = fxOn(19, fx), eFlip = fxOn(20, fx), eSwing = fxOn(21, fx), eGold = fxOn(22, fx), eSlideO = fxOn(23, fx), eMelt = fxOn(24, fx);
         float curX = -1f;
         float sweep = wi >= 1f && eShine ? ((waveT * 0.5f) % 2.2f) / 2.2f * (n + 12) - 6f : -99f;     // a bright band travelling along the letters
         boolean glitching = eGlitch && wi >= 1f && (waveT % 2.6f) < 0.22f;
@@ -310,6 +311,7 @@ public final class AnimationManager {
                     if (eRain) col = Canvas.mix(col, 0xFF000000 | (java.awt.Color.HSBtoRGB((waveT * 0.35f + idx * 0.07f) % 1f, 0.75f, 1f) & 0xFFFFFF), 0.7f);
                     if (eFire) { float fl = 0.5f + 0.5f * (float) Math.sin(waveT * 7.0 + idx * 0.9); col = Canvas.mix(col, Canvas.mix(0xFFFF4A1C, 0xFFFFD84A, fl), 0.78f); }
                     if (eFrost) { col = Canvas.mix(col, 0xFF9FE8FF, 0.3f + 0.3f * (float) Math.sin(waveT * 2.0 + idx * 0.5)); if (((idx * 13) + (int) (waveT * 3f)) % 11 == 0) col = Canvas.mix(col, 0xFFFFFFFF, 0.85f); }
+                    if (eGold) { float gs = 0.5f + 0.5f * (float) Math.sin(waveT * 2.4 - idx * 0.45); col = Canvas.mix(col, Canvas.mix(0xFFE0A21B, 0xFFFFF0A0, gs), 0.8f); }
                     boolean flash = eTwink && wi >= 1f && ((idx * 7919 + (int) (waveT * 5f) * 104729) & 0xFFFF) % 9 == 0;
                     if (flash) { col = Canvas.mix(col, 0xFFFFF2B0, 0.9f); s *= 1.15f; }
                     float bob = eWave && wi >= 1f ? (float) Math.sin(waveT * 4.0 + idx * 0.55) * 1.6f : 0f;
@@ -320,8 +322,13 @@ public final class AnimationManager {
                     float fall = eDrop ? -(1f - ain) * (1f - ain) * 16f : 0f;
                     if (eBounce) fall += -(float) Math.abs(Math.cos(ain * Math.PI * 2.5)) * (1f - ain) * 13f;
                     if (eRise) fall -= aout * 14f;
+                    if (eSlide) jx -= (1f - ain) * (1f - ain) * 20f;
+                    if (eSlideO) jx += aout * aout * 22f;
+                    if (eMelt) fall += aout * aout * 14f;
                     if (eScatter) { int hs = (idx * 2654435 + 12345) & 0xFFFF; jx += ((hs % 9) - 4) * aout * 3f; fall += (((hs / 9) % 9) - 4) * aout * 3f; }
                     Gfx.push(g); Gfx.translate(g, x + cw / 2f + jx, 4f + bob + fall); Gfx.scale(g, s);
+                    if (eFlip) g.pose().scale(Math.max(0.05f, (float) Math.sin(ain * Math.PI / 2)), 1f);
+                    if (eSwing && wi >= 1f) g.pose().rotate((float) Math.sin(waveT * 2.6 + idx * 0.5) * 0.14f);
                     if (eGlow) { int ga = Math.round(alpha * a * (0.18f + 0.14f * (float) Math.sin(waveT * 3.0 + idx * 0.3))); int gc = Gfx.argb(ga, col & 0xFFFFFF); for (int ox = -2; ox <= 2; ox += 2) for (int oy = -2; oy <= 2; oy += 2) if (ox != 0 || oy != 0) g.text(font, c, -cw / 2 + ox, -4 + oy, gc, false); }
                     if (glitching) {
                         int h = (idx * 7 + (int) (waveT * 40)) % 5 - 2;
@@ -712,10 +719,24 @@ public final class AnimationManager {
         int f = barFill(tint, FancyConfig.get().barStyle);
         g.fill(0, 0, W, bar, f); g.fill(0, H - bar, W, H, f);
         g.fill(0, bar, side, H - bar, f); g.fill(W - side, bar, W, H - bar, f);
-        if (FancyConfig.get().barLine) {                                           // a thin line along the inner edge, in the drop's colour
-            int lc = Gfx.argb(Math.max(120, edge >>> 24), edge & 0xFFFFFF);
-            g.fill(side, bar, W - side, bar + 1, lc); g.fill(side, H - bar - 1, W - side, H - bar, lc);
-            if (side > 0) { g.fill(side - 1, bar, side, H - bar, lc); g.fill(W - side, bar, W - side + 1, H - bar, lc); }
+        FancyConfig fc = FancyConfig.get();
+        if (fc.barSoft) {                                                          // the bars melt into the scene: a few fainter strips along the inner edge
+            int a0 = f >>> 24, rgb = f & 0xFFFFFF, n = Math.max(2, Math.min(6, bar / 3));
+            for (int k = 0; k < n; k++) {
+                int c2 = Gfx.argb(Math.round(a0 * (1f - (k + 1f) / (n + 1f)) * 0.8f), rgb);
+                g.fill(side, bar + k, W - side, bar + k + 1, c2); g.fill(side, H - bar - k - 1, W - side, H - bar - k, c2);
+                if (side > 0) { g.fill(side + k, bar, side + k + 1, H - bar, c2); g.fill(W - side - k - 1, bar, W - side - k, H - bar, c2); }
+            }
+        }
+        int r = Math.round(bar * Math.max(0, Math.min(100, fc.barCurve)) / 100f);   // rounded window: carve the four inner corners
+        if (r > 1) {
+            r = Math.min(r, Math.min((W - 2 * side) / 2, (H - 2 * bar) / 2));
+            for (int i = 0; i < r; i++) {
+                int ins = r - (int) Math.round(Math.sqrt((double) r * r - (double) (r - i - 0.5) * (r - i - 0.5)));
+                if (ins <= 0) continue;
+                g.fill(side, bar + i, side + ins, bar + i + 1, f); g.fill(W - side - ins, bar + i, W - side, bar + i + 1, f);
+                g.fill(side, H - bar - i - 1, side + ins, H - bar - i, f); g.fill(W - side - ins, H - bar - i - 1, W - side, H - bar - i, f);
+            }
         }
     }
 

@@ -66,12 +66,7 @@ final class Icons {
         int hash = name.indexOf('#');
         if (hash >= 0) { try { tint = 0xFF000000 | Integer.parseInt(name.substring(hash + 1), 16); } catch (Exception ignored) {} name = name.substring(0, hash); }
         if (name.startsWith("cx_")) { Cosmetics.drawCosIcon(g, name.substring(3), x, y, now); return; }
-        if (name.startsWith("myth_")) {                                                                  // every creature sits in a pulsing gold aura with two runes circling it
-            float pu = 0.5f + 0.5f * (float) Math.sin(s * 2.2f);
-            disc(g, x, y, 7.5f, 7.5f, 7.6f, al(40 + Math.round(30 * pu), 0xFFC857)); disc(g, x, y, 7.5f, 7.5f, 6.2f, al(34, 0x12101E));
-            for (int k = 0; k < 2; k++) { double an = s * 1.3 + k * Math.PI; r(g, x, y, Math.round(7.5f + (float) Math.cos(an) * 7.2f), Math.round(7.5f + (float) Math.sin(an) * 7.2f), 1, 1, al(210, 0xFFE9A8)); }
-        }
-        if (PixArt.draw(g, name, x, y, s)) return;                                                          // the hand-pixeled pictures
+        if (PixArt.draw(g, name, x, y, s, tint == 0xFF888888 ? 0 : tint & 0xFFFFFF)) return;                                                          // the hand-pixeled pictures
         if (name.startsWith("suf_")) { Cosmetics.drawIcon(g, name.substring(4), x, y, now); return; }
         switch (name) {
             case "home" -> {                                                                            // a house, its window glowing, smoke fading in and out
@@ -466,6 +461,12 @@ final class Icons {
             case "fx16" -> { float p = (s * 0.9f) % 1f; for (int i = 0; i < 3; i++) { int by = Math.round(10 - (p * 8f) - i * 0.5f); r(g, x, y, 2 + i * 4, Math.max(1, by), 3, 4, al(Math.round(255 * (1f - p)), 0xFFB9E6FF)); } r(g, x, y, 1, 14, 14, 1, 0xFF4B5575); }      // Fly up
             case "fx17" -> { float p = (s * 0.9f) % 1f; int w = Math.round(10 * (1f - p)); if (w > 0) r(g, x, y, 8 - w / 2, 8 - w / 2, w, w, 0xFFFF9AC8); r(g, x, y, 1, 14, 14, 1, 0xFF4B5575); }      // Shrink
             case "fx18" -> { float p = (s * 0.9f) % 1f; int[][] d = {{-3, -2}, {3, -3}, {-2, 3}, {3, 3}, {0, -4}, {-4, 1}}; for (int[] q : d) r(g, x, y, 7 + Math.round(q[0] * p * 2f), 7 + Math.round(q[1] * p * 2f), 2, 2, al(Math.round(255 * (1f - p * 0.8f)), 0xFFFFB86B)); }      // Scatter
+            case "fx19" -> { float p = (s * 0.9f) % 1f; for (int i = 0; i < 3; i++) { int bx = Math.round(-8 + (1f - (1f - p) * (1f - p)) * (8 + i * 3)); r(g, x, y, 1 + bx, 3 + i * 4, 4, 3, al(Math.round(255 * Math.min(1f, p * 2f)), 0xFF9DD6FF)); } }       // Slide in
+            case "fx20" -> { float p = (float) Math.abs(Math.cos(s * 2.2f)); int w = Math.max(1, Math.round(10 * p)); r(g, x, y, 8 - w / 2, 3, w, 10, 0xFFB6A0FF); r(g, x, y, 8 - w / 2, 3, w, 2, 0xFFE0D6FF); }       // Flip in
+            case "fx21" -> { float a2 = (float) Math.sin(s * 3f); for (int i = 0; i < 9; i++) { int ox = Math.round((i - 4) * 1.5f), oy = Math.round(a2 * (i - 4) * 0.5f); r(g, x, y, 7 + ox, 7 + oy, 2, 2, 0xFFFFD27A); } r(g, x, y, 7, 2, 2, 2, 0xFF4B5575); }       // Swing
+            case "fx22" -> { r(g, x, y, 3, 3, 10, 10, 0xFFE0A21B); r(g, x, y, 4, 4, 8, 8, 0xFFFFC83C); r(g, x, y, 4, 4, 8, 2, 0xFFFFF0A0); int sh = Math.round(((s * 1.4f) % 2f) * 12f) - 2; if (sh >= 3 && sh < 12) r(g, x, y, sh, 4, 2, 8, al(190, 0xFFFFFFFF)); }       // Gold
+            case "fx23" -> { float p = (s * 0.9f) % 1f; for (int i = 0; i < 3; i++) r(g, x, y, 1 + Math.round(p * p * (7 + i * 2)), 3 + i * 4, 4, 3, al(Math.round(255 * (1f - p)), 0xFFFFA0A0)); }       // Slide out
+            case "fx24" -> { float p = (s * 0.9f) % 1f; r(g, x, y, 2, 2, 12, 5, 0xFFFF9A5C); for (int i = 0; i < 4; i++) { int dl = Math.round(p * (3 + (i % 3) * 3)); r(g, x, y, 3 + i * 3, 7, 2, 1 + dl, al(Math.round(255 * (1f - p * 0.5f)), 0xFFFF9A5C)); } }       // Melt
             case "exp_rare" -> {                                                                        // a cut gem with a glint passing over it
                 int top = 0xFF9BEAFF, mid = 0xFF3FB8E8, low = 0xFF1C7FB8;
                 for (int yy = 3; yy <= 5; yy++) { int hw = 3 + (yy - 3); r(g, x, y, 8 - hw, yy, hw * 2, 1, top); }

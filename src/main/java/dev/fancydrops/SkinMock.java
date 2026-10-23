@@ -116,6 +116,15 @@ final class SkinMock {
                 }
             }
         }
+        for (int pass = 0; pass < 2; pass++) {                                  // single-pixel holes between neighbouring texels (the dark hairlines) are closed
+            int[] cp = pix.clone();
+            for (int y = 1; y < H - 1; y++) for (int x = 1; x < W - 1; x++) {
+                if (cp[y * W + x] != 0) continue;
+                int l = cp[y * W + x - 1], r = cp[y * W + x + 1], u = cp[(y - 1) * W + x], d = cp[(y + 1) * W + x];
+                int n = (l != 0 ? 1 : 0) + (r != 0 ? 1 : 0) + (u != 0 ? 1 : 0) + (d != 0 ? 1 : 0);
+                if (n >= 3 || (l != 0 && r != 0 && (u != 0 || d != 0))) pix[y * W + x] = l != 0 ? l : r != 0 ? r : u != 0 ? u : d;
+            }
+        }
         // merge pixels into rectangles: runs along a row, then the same run on the rows below
         List<int[]> rects = new ArrayList<>(); List<int[]> open = new ArrayList<>();
         for (int y = 0; y < H; y++) {
@@ -138,7 +147,7 @@ final class SkinMock {
         double d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
         if (Math.abs(d) < 1e-9) return false;
         double l1 = ((by - cy) * (px - cx) + (cx - bx) * (py - cy)) / d, l2 = ((cy - ay) * (px - cx) + (ax - cx) * (py - cy)) / d, l3 = 1 - l1 - l2;
-        return l1 >= -0.02 && l2 >= -0.02 && l3 >= -0.02;
+        return l1 >= -0.09 && l2 >= -0.09 && l3 >= -0.09;
     }
 
     /** The figure with its feet at (cx, feetY), turned by yaw (radians; 0 = facing you). One GUI pixel per picture pixel (about 150 tall). */

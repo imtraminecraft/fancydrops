@@ -2,6 +2,19 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.35
+- Redrawn icons: Nothing, Default, Rare, RNG, Home, Mining, Fishing, Reload, the gears (Settings and WIP), Tip card, GitHub, Patreon and more. They no longer sit on circles, and they are centred. The Griffin has a new icon that follows the pet's rarity colour.
+- Mythological: the Griffin pet row, its list and the page accent use the rarity colours (Common to Mythic).
+- Text Changes: effects now live on four tabs (Entrance, Motion, Colour, Exit) with roomier tiles and plain "1 needed / 1 optional / Up to 2" labels. Six new effects: Slide in, Flip in, Swing, Gold, Slide out, Melt.
+- Bar Changes: the Edge line is gone. New Curved corners and Soft edge. Bar, Text and Item previews are centred and the wording under them is gone.
+- Fonts: the odd ones are removed. New "Mini font", a tiny pixel font.
+- Pop-up notices no longer stack when you click the same thing again.
+- Sliders glide instead of snapping. The scroll bar on the right can be grabbed and dragged.
+- Auras now trail behind the player in the world. The back of the skin preview no longer shows dark lines.
+- The Cosmetics button moved to the bottom left of the menu with sparkles. The LIVE dock icon sits inside its box and the details are coloured.
+- WIP banner is cleaner. Category and animation buttons now say what is inside, and Sounds reads "Sound Editor".
+- Lighter aura preview for a quicker menu.
+
 ## 0.8.34
 - Fixed a build error in Gfx (a text type that does not exist under that name in 26.2).
 
