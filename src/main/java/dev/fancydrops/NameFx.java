@@ -44,26 +44,37 @@ final class NameFx {
                 float pos = (t % 1900L) / 1900f * (n + 10) - 5, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.2f);
                 return mix(c, 0xFFFFFF, k);
             }
-            case "sparklefx": {                                             // warm gold with a white band of light running along it, and pink-white twinkles
-                ph = 0.5f + 0.5f * (float) Math.sin(t / 520.0 - i * 0.5);
-                int c = mix(mix(base, 0xFFD27A, 0.6f), 0xFFF6D0, 0.55f * ph);
-                float pos = (t % 2400L) / 2400f * (n + 8) - 4, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.2f);
-                int h = hash(i, t / 150L) % 9;
-                return h == 0 ? 0xFFFFFF : h == 1 ? 0xFFC8F0 : mix(c, 0xFFFFFF, k);
+            case "sparklefx": {                                             // gold that flows from amber to cream, a white comet with a pink-gold tail runs along it, and single letters flare up softly
+                ph = 0.5f + 0.5f * (float) Math.sin(t / 700.0 - i * 0.55);
+                int c = mix(mix(0xE8A21C, 0xFFF1B8, ph), mix(base, 0xFFFFFF, 0.2f), 0.2f);
+                float pos = (t % 2600L) / 2600f * (n + 12) - 4, d = pos - i;                     // d > 0: the letter is behind the comet's head
+                if (d >= -0.4f && d < 0.9f) c = 0xFFFFFF;
+                else if (d >= 0.9f && d < 5f) c = mix(0xFFFFFF, mix(0xFFB6E6, c, 0.55f), (d - 0.9f) / 4.1f);
+                long st = t / 700L; float en = (float) Math.sin(Math.PI * ((t % 700L) / 700f));        // one letter at a time swells to white and fades back
+                if (n > 0 && hash(7, st) % n == i) c = mix(c, 0xFFFFFF, 0.85f * en);
+                else if (n > 1 && hash(11, st) % n == i) c = mix(c, 0xFFD6F2, 0.7f * en);
+                return c;
             }
-            case "glitch": {                                                // a green scan line sweeps over the name; letters flash bright as it passes and glow hacker-green behind it
-                float pos = (t % 2000L) / 2000f * (n + 10) - 2, d = i - pos;
-                int c = mix(base, 0x2BFF9C, 0.38f);
-                if (d > -0.8f && d < 0.8f) c = 0xFFFFFF;
-                else if (d <= -0.8f && d > -4f) c = mix(0x2BFF9C, c, (-d - 0.8f) / 3.2f);
-                int h = hash(i, t / 110L) % 18;
-                return h == 0 ? 0xFF55FF : h == 1 ? 0x55FFFF : c;
+            case "glitch": {                                                // calm green with a scan line sliding over it; every couple of seconds the whole name tears: letters flash cyan / magenta / white
+                float pos = (t % 1900L) / 1900f * (n + 8) - 2, d = i - pos;
+                int c = mix(0x1FAE72, 0x39FFA8, 0.5f + 0.5f * (float) Math.sin(t / 500.0 - i * 0.6));
+                if (d > -0.7f && d < 0.7f) c = 0xFFFFFF;
+                else if (d <= -0.7f && d > -3.5f) c = mix(0xB6FFE0, c, (-d - 0.7f) / 2.8f);
+                long cyc = t % 2300L;
+                if (cyc < 380L) {                                          // the tear
+                    int h = hash(i, t / 55L) % 6;
+                    c = h == 0 ? 0xFF3DDC : h == 1 ? 0x3DFFF0 : h == 2 ? 0xFFFFFF : h == 3 ? mix(c, 0x000000, 0.5f) : c;
+                } else if (hash(i, t / 90L) % 40 == 0) c = 0x3DFFF0;
+                return c;
             }
-            case "contribfx": {                                             // aqua water flowing along the name, with bright caustic glints
-                ph = 0.5f + 0.5f * (float) Math.sin(t / 380.0 - i * 0.75);
-                int c = mix(mix(0x00B8FF, 0x4DFFB8, ph), base, 0.18f);
-                float gl = (float) Math.pow(Math.max(0.0, Math.sin(t / 260.0 - i * 1.4)), 10);
-                return mix(c, 0xFFFFFF, 0.75f * gl);
+            case "contribfx": {                                             // deep water to bright aqua with two waves crossing, a bright foam crest, and a light that sweeps over now and then
+                float w1 = 0.5f + 0.5f * (float) Math.sin(t / 420.0 - i * 0.7), w2 = 0.5f + 0.5f * (float) Math.sin(t / 770.0 + i * 0.4);
+                int c = mix(mix(0x0A7BFF, 0x3DE8FF, w1), 0x5CFFC4, 0.5f * w2 * w1);
+                c = mix(c, base, 0.1f);
+                float foam = (float) Math.pow(Math.max(0.0, Math.sin(t / 300.0 - i * 1.1)), 12);
+                c = mix(c, 0xFFFFFF, 0.8f * foam);
+                float pos = (t % 3200L) / 3200f * (n + 12) - 6, k = Math.max(0f, 1f - Math.abs(i - pos) / 3f);
+                return mix(c, 0xE8FFFF, 0.7f * k);
             }
             case "fresh":                                                   // a calm mint tint that drifts slowly along the name
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 1100.0 - i * 0.5);
