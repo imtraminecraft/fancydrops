@@ -126,54 +126,46 @@ final class SkinMock {
 
     /** One turn of the figure: a W x H picture as a list of rectangles (x, y, w, h, colour). */
     private static int[] render(int[] sk, float yaw) {
-        int[] pix = new int[W * H]; float[] zb = new float[W * H]; java.util.Arrays.fill(zb, -1e9f);
+        int[] pix = new int[W * H];
         double cy = Math.cos(yaw), sy = Math.sin(yaw), tilt = -0.16, ct = Math.cos(tilt), st = Math.sin(tilt);
-        for (int layer = 0; layer < 2; layer++) for (int bi = 0; bi < 6; bi++) {
-            float[] b = BASE[bi]; float g = layer == 1 ? 0.5f : 0f;
-            float hw = b[3] + g, hh = b[4] + g, hd = b[5] + g; int u = layer == 1 ? OVER[bi][0] : (int) b[6], v = layer == 1 ? OVER[bi][1] : (int) b[7];
-            int w = (int) (b[3] * 2), h = (int) (b[4] * 2), d = (int) (b[5] * 2);
-            // normal, origin, U, V (full face vectors), texture rect, texels
-            float[][] fs = {
-                {0, 0, 1, -hw, hh, hd, 2 * hw, 0, 0, 0, -2 * hh, 0, u + d, v + d, w, h},
-                {0, 0, -1, hw, hh, -hd, -2 * hw, 0, 0, 0, -2 * hh, 0, u + 2 * d + w, v + d, w, h},
-                {-1, 0, 0, -hw, hh, -hd, 0, 0, 2 * hd, 0, -2 * hh, 0, u, v + d, d, h},
-                {1, 0, 0, hw, hh, hd, 0, 0, -2 * hd, 0, -2 * hh, 0, u + d + w, v + d, d, h},
-                {0, 1, 0, -hw, hh, -hd, 2 * hw, 0, 0, 0, 0, 2 * hd, u + d, v, w, d},
-                {0, -1, 0, -hw, -hh, hd, 2 * hw, 0, 0, 0, 0, -2 * hd, u + d + w, v, w, d}};
-            for (float[] f : fs) {
-                double nz0 = -f[0] * sy + f[2] * cy, nz = f[1] * st + nz0 * ct, ny = f[1] * ct - nz0 * st;
-                if (nz <= 0.02) continue;
-                int tu = (int) f[12], tv = (int) f[13], nu = (int) f[14], nv = (int) f[15];
-                float shade = (float) (0.62 + 0.38 * nz + 0.08 * ny);
-                for (int j = 0; j < nv; j++) for (int i = 0; i < nu; i++) {
-                    int c = sk[(tv + j) * 64 + tu + i];
-                    if ((c >>> 24) < 40) continue;
-                    double[] sx = new double[4], sy2 = new double[4], zz = new double[4];
-                    for (int k = 0; k < 4; k++) {
-                        double a = (i + (k == 1 || k == 2 ? 1 : 0)) / (double) nu, bb = (j + (k >= 2 ? 1 : 0)) / (double) nv;
-                        double X = b[0] + f[3] + f[6] * a + f[9] * bb, Y = b[1] + f[4] + f[7] * a + f[10] * bb, Z = b[2] + f[5] + f[8] * a + f[11] * bb;
-                        double X1 = X * cy + Z * sy, Z1 = -X * sy + Z * cy, Y2 = Y * ct - Z1 * st, Z2 = Y * st + Z1 * ct;
-                        sx[k] = W / 2.0 + X1 * K; sy2[k] = FEET - Y2 * K; zz[k] = Z2;
-                    }
-                    double zc = (zz[0] + zz[1] + zz[2] + zz[3]) / 4 + layer * 0.01;
-                    int x0 = (int) Math.floor(Math.min(Math.min(sx[0], sx[1]), Math.min(sx[2], sx[3]))), x1 = (int) Math.ceil(Math.max(Math.max(sx[0], sx[1]), Math.max(sx[2], sx[3])));
-                    int y0 = (int) Math.floor(Math.min(Math.min(sy2[0], sy2[1]), Math.min(sy2[2], sy2[3]))), y1 = (int) Math.ceil(Math.max(Math.max(sy2[0], sy2[1]), Math.max(sy2[2], sy2[3])));
-                    int col = 0xFF000000 | (Math.min(255, Math.round(((c >> 16) & 255) * shade)) << 16) | (Math.min(255, Math.round(((c >> 8) & 255) * shade)) << 8) | Math.min(255, Math.round((c & 255) * shade));
-                    for (int yy = Math.max(0, y0); yy <= Math.min(H - 1, y1); yy++) for (int xx = Math.max(0, x0); xx <= Math.min(W - 1, x1); xx++) {
-                        if (zc <= zb[yy * W + xx] || !inQuad(xx + 0.5, yy + 0.5, sx, sy2)) continue;
-                        zb[yy * W + xx] = (float) zc; pix[yy * W + xx] = col;
-                    }
+        for (int py = 0; py < H; py++) for (int pxl = 0; pxl < W; pxl++) {
+            double X1 = (pxl + 0.5 - W / 2.0) / K, Y2 = (FEET - (py + 0.5)) / K;                 // the ray of this pixel, straight into the picture (no gaps are possible)
+            double ox = X1 * cy + Y2 * st * sy, oy = Y2 * ct, oz = X1 * sy - Y2 * st * cy;         // where it starts, in the figure's own space
+            double dx = -ct * sy, dy = st, dz = ct * cy;                                           // and where it goes (towards the viewer = larger t)
+            double bestT = -1e9; int bestCol = 0;
+            for (int layer = 0; layer < 2; layer++) for (int bi = 0; bi < 6; bi++) {
+                float[] b = BASE[bi]; float g = layer == 1 ? 0.5f : 0f;
+                double hw = b[3] + g, hh = b[4] + g, hd = b[5] + g;
+                double tNear = -1e9, tFar = 1e9; int farAxis = -1; double farSign = 0;
+                double[] o3 = {ox - b[0], oy - b[1], oz - b[2]}, d3 = {dx, dy, dz}, h3 = {hw, hh, hd};
+                boolean miss = false;
+                for (int ax = 0; ax < 3; ax++) {
+                    if (Math.abs(d3[ax]) < 1e-9) { if (Math.abs(o3[ax]) > h3[ax]) { miss = true; break; } continue; }
+                    double t1 = (-h3[ax] - o3[ax]) / d3[ax], t2 = (h3[ax] - o3[ax]) / d3[ax], lo = Math.min(t1, t2), hi = Math.max(t1, t2);
+                    if (lo > tNear) tNear = lo;
+                    if (hi < tFar) { tFar = hi; farAxis = ax; farSign = d3[ax] > 0 ? 1 : -1; }
+                    if (tNear > tFar) { miss = true; break; }
                 }
+                if (miss || farAxis < 0) continue;
+                double t = tFar + layer * 0.01;
+                if (t <= bestT) continue;
+                double[] hit = {o3[0] + d3[0] * tFar, o3[1] + d3[1] * tFar, o3[2] + d3[2] * tFar};
+                float[][] fs = faces(bi, hw, hh, hd, layer);
+                float[] f = null;
+                for (float[] cand : fs) { int nax = cand[0] != 0 ? 0 : cand[1] != 0 ? 1 : 2; if (nax == farAxis && Math.signum(cand[nax]) == farSign) { f = cand; break; } }
+                if (f == null) continue;
+                double rx = hit[0] - f[3], ry = hit[1] - f[4], rz = hit[2] - f[5];
+                double uu = f[6] * f[6] + f[7] * f[7] + f[8] * f[8], vv = f[9] * f[9] + f[10] * f[10] + f[11] * f[11];
+                double a2 = (rx * f[6] + ry * f[7] + rz * f[8]) / uu, bb = (rx * f[9] + ry * f[10] + rz * f[11]) / vv;
+                int nu = (int) f[14], nv = (int) f[15], i = Math.max(0, Math.min(nu - 1, (int) Math.floor(a2 * nu))), j = Math.max(0, Math.min(nv - 1, (int) Math.floor(bb * nv)));
+                int c = sk[((int) f[13] + j) * 64 + (int) f[12] + i];
+                if ((c >>> 24) < 40) continue;                                                         // a see-through part of the outer layer: look through it
+                double nz0 = -f[0] * sy + f[2] * cy, nz = f[1] * st + nz0 * ct, ny = f[1] * ct - nz0 * st;
+                float shade = (float) Math.max(0.62, 0.62 + 0.38 * nz + 0.08 * ny);
+                bestT = t;
+                bestCol = 0xFF000000 | (Math.min(255, Math.round(((c >> 16) & 255) * shade)) << 16) | (Math.min(255, Math.round(((c >> 8) & 255) * shade)) << 8) | Math.min(255, Math.round((c & 255) * shade));
             }
-        }
-        for (int pass = 0; pass < 2; pass++) {                                  // single-pixel holes between neighbouring texels (the dark hairlines) are closed
-            int[] cp = pix.clone();
-            for (int y = 1; y < H - 1; y++) for (int x = 1; x < W - 1; x++) {
-                if (cp[y * W + x] != 0) continue;
-                int l = cp[y * W + x - 1], r = cp[y * W + x + 1], u = cp[(y - 1) * W + x], d = cp[(y + 1) * W + x];
-                int n = (l != 0 ? 1 : 0) + (r != 0 ? 1 : 0) + (u != 0 ? 1 : 0) + (d != 0 ? 1 : 0);
-                if (n >= 3 || (l != 0 && r != 0 && (u != 0 || d != 0))) pix[y * W + x] = l != 0 ? l : r != 0 ? r : u != 0 ? u : d;
-            }
+            if (bestCol != 0) pix[py * W + pxl] = bestCol;
         }
         // merge pixels into rectangles: runs along a row, then the same run on the rows below
         List<int[]> rects = new ArrayList<>(); List<int[]> open = new ArrayList<>();
@@ -191,6 +183,19 @@ final class SkinMock {
         int[] out = new int[rects.size() * 5]; int p = 0;
         for (int[] r : rects) { out[p++] = r[0]; out[p++] = r[1]; out[p++] = r[2]; out[p++] = r[3]; out[p++] = r[4]; }
         return out;
+    }
+    /** The six faces of a box: normal, origin, U and V vectors (relative to the box centre), texture rect. */
+    private static float[][] faces(int bi, double hwD, double hhD, double hdD, int layer) {
+        float[] b = BASE[bi]; float hw = (float) hwD, hh = (float) hhD, hd = (float) hdD;
+        int u = layer == 1 ? OVER[bi][0] : (int) b[6], v = layer == 1 ? OVER[bi][1] : (int) b[7];
+        int w = (int) (b[3] * 2), h = (int) (b[4] * 2), d = (int) (b[5] * 2);
+        return new float[][]{
+            {0, 0, 1, -hw, hh, hd, 2 * hw, 0, 0, 0, -2 * hh, 0, u + d, v + d, w, h},
+            {0, 0, -1, hw, hh, -hd, -2 * hw, 0, 0, 0, -2 * hh, 0, u + 2 * d + w, v + d, w, h},
+            {-1, 0, 0, -hw, hh, -hd, 0, 0, 2 * hd, 0, -2 * hh, 0, u, v + d, d, h},
+            {1, 0, 0, hw, hh, hd, 0, 0, -2 * hd, 0, -2 * hh, 0, u + d + w, v + d, d, h},
+            {0, 1, 0, -hw, hh, -hd, 2 * hw, 0, 0, 0, 0, 2 * hd, u + d, v, w, d},
+            {0, -1, 0, -hw, -hh, hd, 2 * hw, 0, 0, 0, 0, -2 * hd, u + d + w, v, w, d}};
     }
     private static boolean inQuad(double px, double py, double[] x, double[] y) { return tri(px, py, x[0], y[0], x[1], y[1], x[2], y[2]) || tri(px, py, x[0], y[0], x[2], y[2], x[3], y[3]); }
     private static boolean tri(double px, double py, double ax, double ay, double bx, double by, double cx, double cy) {
