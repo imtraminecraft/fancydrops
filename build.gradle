@@ -1,0 +1,65 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    id 'maven-publish'
+}
+
+repositories {
+    // Loom provides the essential Minecraft and library repositories.
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+processResources {
+    def version = project.version
+    def channel = "dev"
+
+    if (System.getenv("GITHUB_REF_NAME") == "main") {
+        channel = "main"
+    }
+
+    inputs.property "version", version
+    inputs.property "channel", channel
+
+    filesMatching("fabric.mod.json") {
+        expand "version": version, "channel": channel
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+}
+
+tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+    def projectName = project.name
+    inputs.property "projectName", projectName
+
+    from("LICENSE") {
+        rename { "${it}_${projectName}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            from components.java
+        }
+    }
+
+    repositories {
+        // Configure publishing repositories here if needed.
+    }
+}

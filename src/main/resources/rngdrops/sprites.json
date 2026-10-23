@@ -1,0 +1,171 @@
+{
+  "_help": {
+    "how": "Each sprite is rows of characters. '.' is transparent; every other character is looked up in 'palette'. Rows must all have the same width."
+  },
+  "zombie": {
+    "palette": {
+      "g": "#5E9E52",
+      "d": "#3D6B36",
+      "k": "#10200E",
+      "b": "#3F6FB5",
+      "p": "#2F3F8A",
+      "x": "#1A1A1A"
+    },
+    "rows": [
+      "..gggggggg..",
+      "..gggggggg..",
+      "..gkkggkkg..",
+      "..gggggggg..",
+      "..gggddggg..",
+      "...gggggg...",
+      "gggbbbbbbggg",
+      "gggbbbbbbggg",
+      "...bbbbbb...",
+      "...bbbbbb...",
+      "...bbbbbb...",
+      "...pppppp...",
+      "...pp..pp...",
+      "...pp..pp...",
+      "...pp..pp...",
+      "..xxx..xxx.."
+    ]
+  },
+  "spider": {
+    "palette": {
+      "k": "#2A2325",
+      "b": "#4A3F42",
+      "r": "#E03030"
+    },
+    "rows": [
+      "k............k",
+      ".k..bbbbbb..k.",
+      "..kbbbbbbbbk..",
+      "k.bbrbbbbrbb.k",
+      "..bbbbbbbbbb..",
+      "k.kbbbbbbbbk.k",
+      ".k..bbbbbb..k.",
+      "k............k"
+    ]
+  },
+  "wolf": {
+    "palette": {
+      "g": "#6B7078",
+      "w": "#B8BEC6",
+      "k": "#101010",
+      "n": "#2B2B2B",
+      "t": "#E8A0A0"
+    },
+    "rows": [
+      "gg........gg",
+      "gwg......gwg",
+      "gwwggggggwwg",
+      ".wwwwwwwwww.",
+      ".wkwwwwwwkw.",
+      ".wwwwwwwwww.",
+      "..wwwnnwww..",
+      "..wwwnnwww..",
+      "...wwtwww...",
+      "....wwww....",
+      "..gggggggg..",
+      "..gggggggg..",
+      "..gg....gg..",
+      "..gg....gg.."
+    ]
+  },
+  "enderman": {
+    "palette": {
+      "k": "#2B2038",
+      "p": "#E070FF",
+      "o": "#43325C"
+    },
+    "rows": [
+      "kkkkkkkk",
+      "kkkkkkkk",
+      "kppkkppk",
+      "kkkkkkkk",
+      "kkkkkkkk",
+      "..kkkk..",
+      ".kkkkkk.",
+      "k.kkkk.k",
+      "k.okko.k",
+      "k.kkkk.k",
+      "k.kkkk.k",
+      "k.kkkk.k",
+      "k.kkkk.k",
+      "..k..k..",
+      "..k..k..",
+      "..k..k..",
+      "..k..k..",
+      "..k..k..",
+      "..k..k..",
+      "..k..k.."
+    ]
+  },
+  "blaze": {
+    "palette": {
+      "y": "#F6D44B",
+      "o": "#F29A2E",
+      "k": "#4A3512",
+      "r": "#E8A93A"
+    },
+    "rows": [
+      "...yyyyyy...",
+      "..yyyyyyyy..",
+      "..ykkyykky..",
+      "..yyyyyyyy..",
+      "..yykkkkyy..",
+      "..yyyyyyyy..",
+      "r....oo....r",
+      ".r...oo...r.",
+      "..r.oooo.r..",
+      "r...oooo...r",
+      ".r...oo...r.",
+      "..r..oo..r..",
+      "r.....oo....",
+      "....oooo...."
+    ]
+  },
+  "vampire": {
+    "palette": {
+      "k": "#1C1624",
+      "p": "#E8D7D0",
+      "r": "#C21B2B",
+      "w": "#FFFFFF"
+    },
+    "rows": [
+      "...kkkkkk...",
+      "..kkkkkkkk..",
+      "..kppppppk..",
+      "..prppprpp..",
+      "..pppppppp..",
+      "..ppwppwpp..",
+      "...pppppp...",
+      "kkkrrrrrrkkk",
+      "kkkkrrrrkkkk",
+      "kkkkkrrkkkkk",
+      "kkkkkkkkkkkk",
+      "kkkkkkkkkkkk",
+      ".kkkkkkkkkk.",
+      "..kkkkkkkk..",
+      "...kk..kk...",
+      "...kk..kk..."
+    ]
+  },
+  "other": {
+    "palette": {
+      "w": "#C7CBD1",
+      "k": "#15161A"
+    },
+    "rows": [
+      "..wwwwwwww..",
+      ".wwwwwwwwww.",
+      ".wkkwwwwkkw.",
+      ".wkkwwwwkkw.",
+      ".wwwwwwwwww.",
+      "..wwwkkwww..",
+      "...wkwkwkw..",
+      "...wwwwwww..",
+      "....w.w.w..."
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "fancydrops",
+  "version": "${version}",
+  "name": "FancyDrops",
+  "description": "Fancy drop animations for Hypixel SkyBlock slayers, with live prices, profit tracking and party/co-op announcements.",
+  "authors": [
+    "You"
+  ],
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "dev.fancydrops.FancyDropsMod"
+    ],
+    "client": [
+      "dev.fancydrops.FancyDropsMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": "~26.2",
+    "java": ">=25",
+    "fabric-api": "*"
+  },
+  "icon": "assets/fancydrops/icon.png",
+  "custom": {
+    "fancydrops:channel": "${channel}"
+  }
+}

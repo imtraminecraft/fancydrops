@@ -1,0 +1,717 @@
+{
+ "v": 5,
+ "sources": [
+  {
+   "id": "minos_hunter",
+   "name": "Minos Hunter",
+   "boss": "Minos Hunter",
+   "icon": "stick",
+   "color": "#8FD1FF",
+   "cube": {
+    "base": "#7FB8E8",
+    "dark": "#3F6A94",
+    "eye": "#FFE066"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Hilt of Revelations",
+     "id": "HILT_OF_REVELATIONS",
+     "icon": "stick",
+     "odds": "",
+     "chance": "",
+     "rank": 0,
+     "untradeable": false,
+     "img": "Stick",
+     "pct": [
+      0.25,
+      0.5,
+      0.75,
+      1,
+      1.5,
+      2
+     ]
+    },
+    {
+     "name": "Minos Hunter Shard",
+     "id": "SHARD_MINOS_HUNTER",
+     "icon": "prismarine_shard",
+     "odds": "",
+     "chance": "Based on your ❣ Charm Chance",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Minos_Hunter_Shard"
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 1,000,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 0
+  },
+  {
+   "id": "siamese_lynxes",
+   "name": "Siamese Lynxes",
+   "boss": "Siamese Lynxes",
+   "icon": "stick",
+   "color": "#F2C48D",
+   "cube": {
+    "base": "#E3B07A",
+    "dark": "#8A5E34",
+    "eye": "#7FE5FF"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Crochet Tiger Plushie",
+     "id": "CROCHET_TIGER_PLUSHIE",
+     "icon": "cat",
+     "odds": "",
+     "chance": "",
+     "rank": 1,
+     "untradeable": false,
+     "pct": [
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.3,
+      0.4
+     ]
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 1,000,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 0
+  },
+  {
+   "id": "stranded_nymph",
+   "name": "Stranded Nymph",
+   "boss": "Stranded Nymph",
+   "icon": "stick",
+   "color": "#6FE3D0",
+   "cube": {
+    "base": "#58C9B8",
+    "dark": "#2A6F68",
+    "eye": "#BFF6FF"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Washed-up Souvenir",
+     "id": "WASHED_UP_SOUVENIR",
+     "icon": "sea_pickle",
+     "odds": "",
+     "chance": "",
+     "rank": 1,
+     "untradeable": false,
+     "pct": [
+      0,
+      0.2,
+      0.25,
+      0.3,
+      0.4,
+      0.5
+     ]
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 1,000,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 1
+  },
+  {
+   "id": "cretan_bull",
+   "name": "Cretan Bull",
+   "boss": "Cretan Bull",
+   "icon": "stick",
+   "color": "#D98B4A",
+   "cube": {
+    "base": "#C46F2F",
+    "dark": "#6A3A14",
+    "eye": "#FF5555"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Cretan Urn",
+     "id": "CRETAN_URN",
+     "icon": "decorated_pot",
+     "odds": "",
+     "chance": "",
+     "rank": 1,
+     "untradeable": false,
+     "pct": [
+      0,
+      0.2,
+      0.25,
+      0.3,
+      0.4,
+      0.5
+     ]
+    },
+    {
+     "name": "Cretan Bull Shard",
+     "id": "SHARD_CRETAN_BULL",
+     "icon": "prismarine_shard",
+     "odds": "",
+     "chance": "Based on your ❣ Charm Chance",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Cretan_Bull_Shard"
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 1,000,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 1
+  },
+  {
+   "id": "harpy",
+   "name": "Harpy",
+   "boss": "Harpy",
+   "icon": "stick",
+   "color": "#B8A6E8",
+   "cube": {
+    "base": "#9C86D8",
+    "dark": "#4C3A86",
+    "eye": "#FFE066"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Antique Remedies",
+     "id": "ANTIQUE_REMEDIES",
+     "icon": "potion",
+     "odds": "",
+     "chance": "",
+     "rank": 1,
+     "untradeable": false,
+     "pct": [
+      0,
+      0,
+      0.35,
+      0.4,
+      0.5,
+      0.6
+     ]
+    },
+    {
+     "name": "Harpy Shard",
+     "id": "SHARD_HARPY",
+     "icon": "prismarine_shard",
+     "odds": "",
+     "chance": "Based on your ❣ Charm Chance",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Harpy_Shard"
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 500,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 2
+  },
+  {
+   "id": "gaia_construct",
+   "name": "Gaia Construct",
+   "boss": "Gaia Construct",
+   "icon": "stick",
+   "color": "#9AD07F",
+   "cube": {
+    "base": "#8FBF74",
+    "dark": "#4C7A3A",
+    "eye": "#FFE066"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Dwarf Turtle Shelmet",
+     "id": "DWARF_TURTLE_SHELMET",
+     "icon": "turtle_helmet",
+     "odds": "",
+     "chance": "",
+     "rank": 0,
+     "untradeable": false,
+     "pct": [
+      0,
+      0,
+      0.35,
+      0.4,
+      0.5,
+      0.6
+     ]
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 500,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 2
+  },
+  {
+   "id": "minotaur",
+   "name": "Minotaur",
+   "boss": "Minotaur",
+   "icon": "stick",
+   "color": "#D9A25F",
+   "cube": {
+    "base": "#B87A3E",
+    "dark": "#6B431C",
+    "eye": "#FF5555"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Daedalus Stick",
+     "id": "DAEDALUS_STICK",
+     "icon": "stick",
+     "odds": "",
+     "chance": "",
+     "rank": 2,
+     "untradeable": false,
+     "img": "Enchanted_Stick",
+     "pct": [
+      0,
+      0,
+      0,
+      0.04,
+      0.06,
+      0.08
+     ]
+    },
+    {
+     "name": "Minotaur Shard",
+     "id": "SHARD_MINOTAUR",
+     "icon": "prismarine_shard",
+     "odds": "",
+     "chance": "Based on your ❣ Charm Chance",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Minotaur_Shard"
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 250,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 3
+  },
+  {
+   "id": "minos_champion",
+   "name": "Minos Champion",
+   "boss": "Minos Champion",
+   "icon": "stick",
+   "color": "#E8C14A",
+   "cube": {
+    "base": "#D6A93A",
+    "dark": "#7A5A12",
+    "eye": "#FFFFFF"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Minos Relic",
+     "id": "MINOS_RELIC",
+     "icon": "nether_star",
+     "odds": "",
+     "chance": "",
+     "rank": 2,
+     "untradeable": false,
+     "pct": [
+      0,
+      0,
+      0,
+      0.02,
+      0.03,
+      0.04
+     ]
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 250,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 3
+  },
+  {
+   "id": "sphinx",
+   "name": "Sphinx",
+   "boss": "Sphinx",
+   "icon": "stick",
+   "color": "#E8C874",
+   "cube": {
+    "base": "#D8B25C",
+    "dark": "#7A5A22",
+    "eye": "#7FE5FF"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Enchanted Ancient Claw",
+     "id": "ENCHANTED_ANCIENT_CLAW",
+     "icon": "flint",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Brain Food",
+     "id": "BRAIN_FOOD",
+     "icon": "golden_apple",
+     "odds": "",
+     "chance": "",
+     "rank": 1,
+     "untradeable": false,
+     "pct": [
+      0,
+      0,
+      0,
+      0,
+      0.25,
+      0.5
+     ]
+    },
+    {
+     "name": "Sphinx Shard",
+     "id": "SHARD_SPHINX",
+     "icon": "prismarine_shard",
+     "odds": "",
+     "chance": "Based on your ❣ Charm Chance",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Sphinx_Shard"
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 50,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 4
+  },
+  {
+   "id": "minos_inquisitor",
+   "name": "Minos Inquisitor",
+   "boss": "Minos Inquisitor",
+   "icon": "stick",
+   "color": "#FF8A3D",
+   "cube": {
+    "base": "#E36B1F",
+    "dark": "#7A2E0A",
+    "eye": "#FFE066"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Enchanted Ancient Claw",
+     "id": "ENCHANTED_ANCIENT_CLAW",
+     "icon": "flint",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Chimera I",
+     "id": "ENCHANTMENT_ULTIMATE_CHIMERA_1",
+     "icon": "enchanted_book",
+     "odds": "",
+     "chance": "",
+     "rank": 1,
+     "untradeable": false,
+     "pct": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1.25
+     ]
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 50,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 4
+  },
+  {
+   "id": "manticore",
+   "name": "Manticore",
+   "boss": "Manticore",
+   "icon": "stick",
+   "color": "#C77DFF",
+   "cube": {
+    "base": "#B05AE0",
+    "dark": "#5B2A86",
+    "eye": "#FFD166"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Enchanted Ancient Claw",
+     "id": "ENCHANTED_ANCIENT_CLAW",
+     "icon": "flint",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Fateful Stinger",
+     "id": "FATEFUL_STINGER",
+     "icon": "stick",
+     "odds": "",
+     "chance": "1 in 200",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Manti-core",
+     "id": "MANTI_CORE",
+     "icon": "nether_star",
+     "odds": "",
+     "chance": "1 in 500",
+     "rank": 2,
+     "untradeable": false
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 10,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 5
+  },
+  {
+   "id": "king_minos",
+   "name": "King Minos",
+   "boss": "King Minos",
+   "icon": "stick",
+   "color": "#FFD54A",
+   "cube": {
+    "base": "#E8B923",
+    "dark": "#7A5A12",
+    "eye": "#FF4040"
+   },
+   "drops": [
+    {
+     "name": "Enchanted Gold Ingot",
+     "id": "ENCHANTED_GOLD",
+     "icon": "gold_ingot",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Enchanted Ancient Claw",
+     "id": "ENCHANTED_ANCIENT_CLAW",
+     "icon": "flint",
+     "odds": "",
+     "chance": "1 in 2",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Crown of Greed",
+     "id": "CROWN_OF_GREED",
+     "icon": "golden_helmet",
+     "odds": "",
+     "chance": "1 in 50",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Shimmering Wool",
+     "id": "SHIMMERING_WOOL",
+     "icon": "white_wool",
+     "odds": "",
+     "chance": "1 in 500",
+     "rank": 2,
+     "untradeable": false
+    },
+    {
+     "name": "King Minos Shard",
+     "id": "SHARD_KING_MINOS",
+     "icon": "prismarine_shard",
+     "odds": "",
+     "chance": "Based on your ❣ Charm Chance",
+     "rank": 1,
+     "untradeable": false,
+     "img": "King_Minos_Shard"
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "MYTHOLOGICAL_DYE",
+     "icon": "light_blue_dye",
+     "odds": "",
+     "chance": "1 in 10,000",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Mythological_Dye"
+    }
+   ],
+   "minPet": 5
+  }
+ ]
+}
