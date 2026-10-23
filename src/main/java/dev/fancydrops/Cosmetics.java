@@ -62,7 +62,7 @@ final class Cosmetics {
         if (me != null && allowed()) { Suffix c = chosen(); if (c != null) m.put(me, c); }
         return m;
     }
-    static String frameNow(Suffix s, long now) { return s.frames()[(int) ((now / 110L) % s.frames().length)]; }
+    static String frameNow(Suffix s, long now) { return s.frames()[(int) ((now / 100L) % s.frames().length)]; }
     static Component glyph(String g) { return Component.literal(g).withStyle(Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)); }
     /** One frame of a suffix as a menu icon. */
     static void drawIcon(net.minecraft.client.gui.GuiGraphicsExtractor g, String id, int x, int y, long now) {
@@ -191,6 +191,7 @@ final class Cosmetics {
                 out.append(Component.literal(s.text().substring(0, cut)).withStyle(s.style()));
                 out.append(Component.literal(" ").withStyle(s.style()));
                 out.append(glyphComp);
+                out.append(Component.literal(" ").withStyle(s.style()));      // the picture is a little wider than its slot: a gap keeps the colon after the name from hiding behind it
                 if (cut < len) out.append(Component.literal(s.text().substring(cut)).withStyle(s.style()));
                 done = true;
             } else out.append(Component.literal(s.text()).withStyle(s.style()));
