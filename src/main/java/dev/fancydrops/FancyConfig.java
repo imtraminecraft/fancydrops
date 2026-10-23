@@ -132,7 +132,7 @@ public class FancyConfig {
     public int uiFont = 0, textFont = 0;                       // Fonts: the menu (Settings > Menu) and the drop texts (Text Changes)
     public boolean othersSuffix = true, othersName = true, othersAura = true;      // see other players' cosmetics: suffixes, name effects, auras
     public boolean showTips = true;           // the rotating tip card on the Home page
-    public boolean showCommunity = true;      // Discord, Patreon and GitHub buttons beside the menu
+    public boolean selfSuffix = true, selfName = true, selfAura = true;           // show your own cosmetics
     public String profitHudSlayer = "all";    // which slayer the Stats page shows ("all" = combined)
     public boolean useBazaar = true, useAuctions = true;
     public String bazaarPrice = "BUY";  // BUY = instant buy, SELL = instant sell

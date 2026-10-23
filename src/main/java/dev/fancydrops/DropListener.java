@@ -200,7 +200,8 @@ public final class DropListener {
             if (r.unlisted) unl = true;
             if (!r.known) continue;                                  // not one of ours: no scene, no message, no profit entry
             any = true;
-            boolean an = r.animate && c.masterAnimate, ac = r.announce && c.masterAnnounce;      // the two master switches in the menu
+            boolean big = c.epicEffects && !r.item.untradeable && r.item.price > 0 && r.item.price * Math.max(1, r.item.amount) >= c.epicThreshold;      // an expensive drop gets its scene even when the item is off
+            boolean an = (r.animate || big) && c.masterAnimate, ac = r.announce && c.masterAnnounce;      // the two master switches in the menu
             r.item.announce = ac && an;                              // animated drops announce themselves when their scene starts
             record(r.item, ac && !an, r.animate || r.announce || r.unlisted);      // tracked = switched on in the Drop Library
             if (an) shown.add(r);
@@ -274,7 +275,6 @@ public final class DropListener {
     private static void queueAnnounce(Item it, double price) {
         FancyConfig c = FancyConfig.get();
         if (c.channel.equals("OFF") || !onHypixel()) return;               // never talks outside Hypixel
-        if (price >= 0 && price < c.epicThreshold) return;                  // only RNG Drop class drops: same price as the Animations page ("RNG Drop from")
         OUT.add(chan(c) + message(it, price, it.mf != null ? it.mf : "0%"));
     }
 
