@@ -214,7 +214,7 @@ public class FancyScreen extends Screen {
         }
     }
 
-    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13;
+    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13, SHOWBAR = 14;
     private class Row {
         String fkey;                                                      // set on folding rows: lets the Show > All tile open or close them all
 
@@ -1677,15 +1677,15 @@ public class FancyScreen extends Screen {
     private static final int[] SHOW_C = {0xFF6C86FF, 0xFFFF72C6, 0xFF7BE05A, 0xFFE5484D};
     private boolean showBarOn() { return tab == Tab.DROPS && !onLanding() && query.isBlank() && ORD[Math.max(0, Math.min(CATS.length - 1, curSub()))] <= 4; }
     /** The Show filter lives in a strip above the menu (like the community buttons), and only while the Drop Library is open. */
+    private Row showRow;
     private int[] showBtn(int i) {
-        int h = 20, y = py - h - 5; if (y < 2) y = py + ph + 5;
-        int w0 = (pw - 12) / 4;
-        return new int[]{px + 6 + i * w0, y, px + 6 + (i + 1) * w0 - 3, y + h};
+        int x = showRow == null ? px : showRow.x, y = showRow == null ? py : showRow.y, w = showRow == null ? pw : showRow.w;
+        int h = 20, w0 = (w - 8) / 4;
+        return new int[]{x + 4 + i * w0, y + 1, x + 4 + (i + 1) * w0 - 3, y + 1 + h};
     }
-    private void drawShowBar(GuiGraphicsExtractor g, int mx, int my) {
-        if (!showBarOn()) return;
-        int[] b0 = showBtn(0);
-        pill(g, px, b0[1], pw, 20, Ui.PANEL); rout(g, px, b0[1], pw, 20, Ui.BORDER);
+    private Row showBarRow() { Row r = new Row(); r.kind = SHOWBAR; r.h = 22; r.noSearch = true; return r; }
+    private void drawShowBar(GuiGraphicsExtractor g, Row r, int mx, int my) {
+        showRow = r;
         for (int i = 0; i < 4; i++) {
             int[] b = showBtn(i); boolean act = dropShow == i, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
             float hv = anim("show|" + i, hov ? 1f : 0f, 48f);
@@ -1696,7 +1696,7 @@ public class FancyScreen extends Screen {
         }
     }
     private boolean showBarClick(double mx, double my) {
-        if (!showBarOn()) return false;
+        if (!showBarOn() || showRow == null || showRow.y < lt || showRow.y + 22 > lb) return false;
         for (int i = 0; i < 4; i++) { int[] b = showBtn(i); if (mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropShow = dropShow == i ? -1 : i; return true; } }
         return false;
     }
@@ -1717,6 +1717,7 @@ public class FancyScreen extends Screen {
         if (dropSrc != null) { for (int i = 0; i < folds.size(); i++) if (folds.get(i).fkey.equals(dropSrc)) open = i; if (open < 0) dropSrc = null; }
         if (open >= 0) {                                                          // one boss / source: its drops (through the Show filter, if one is on)
             for (Row r : head) if (r.kind == HERO) rows.add(r);
+            if (showBarOn()) rows.add(showBarRow());
             Row f = folds.get(open); dropSrcName = f.title;
             String pg = CATS[Math.max(0, Math.min(CATS.length - 1, cat))];
             Row back = row(0, "fd:back", pg, "Back to the " + pg + " page", f.accent);
@@ -1725,7 +1726,7 @@ public class FancyScreen extends Screen {
             boolean any = false; for (Row r : segs.get(open)) if (r.dcfg != null && dropKeep(r.dcfg)) { any = true; break; }
             if (any) for (Row r : segs.get(open)) { if (r.dcfg != null && !dropKeep(r.dcfg)) continue; rows.add(r); }
         } else if (dropShow >= 0) {                                               // a Show filter is on: every matching drop of the page, in one scrollable list
-            rows.addAll(head);
+            rows.addAll(head); if (showBarOn()) rows.add(showBarRow());
             for (int i = 0; i < folds.size(); i++) {
                 List<Row> keep = new ArrayList<>(); Row cols = null;
                 for (Row r : segs.get(i)) { if (r.dcfg != null && dropKeep(r.dcfg)) keep.add(r); else if (r.dropCols) cols = r; }
@@ -1735,7 +1736,7 @@ public class FancyScreen extends Screen {
                 rows.addAll(keep);
             }
         } else {                                                                  // nothing picked: one button per boss / source
-            rows.addAll(head);
+            rows.addAll(head); if (showBarOn()) rows.add(showBarRow());
             int n = folds.size(); String[] lb = new String[n], ls = new String[n], li = new String[n]; int[] lc = new int[n]; boolean[] lw = new boolean[n]; String[] keys = new String[n];
             for (int i = 0; i < n; i++) { Row f = folds.get(i); lb[i] = f.title; li[i] = f.icon; lc[i] = f.accent; keys[i] = f.fkey; ls[i] = f.sub; }
             rows.add(picker("", "", lb, ls, li, lc, lw, 2, () -> -1, q -> { dropSrc = keys[q]; dropBackScroll = scroll; scroll = 0; tabChanged = System.currentTimeMillis(); }));
@@ -3486,6 +3487,7 @@ public class FancyScreen extends Screen {
                 continue;
             }
             if (r.pickLabels != null) { popup = r; continue; }
+            if (r.kind == SHOWBAR) { drawShowBar(g, r, mx, my); continue; }
             if (r.kind == NOTE) { int ny = r.y + 4; for (String ln : wrap(r.title, cw - 20)) { Gfx.text(g, font, ln, r.x + 10, ny, r.subColor); ny += 11; } continue; }
             boolean hov = !r.locked && mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h && my >= lt && my < lb;
             float hv = anim("row|" + tab + r.indent + r.title, hov && r.field == null && (r.click != null || !r.ctls.isEmpty()) ? 1f : 0f, 48f);
@@ -3571,7 +3573,6 @@ public class FancyScreen extends Screen {
         if (intro < 1f) pill(g, px, py, pw, ph, Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
         Gfx.pop(g);
         drawDock(g, mx, my, intro, now);
-        drawShowBar(g, mx, my);
         long pf1 = System.nanoTime(); perf[1] += pf1 - perfFrom;                // everything since the build: the window and its rows
         drawCosPanels(g, mx, my, intro);
         perf[2] += System.nanoTime() - pf1;
