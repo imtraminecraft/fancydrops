@@ -1994,7 +1994,8 @@ public class FancyScreen extends Screen {
          {"Rare Drop", "rare", "1", "fd:rare", "When a kill drops something rare.", "Rare"},
          {"RNG Drop", "rng", "2", "fd:rng", "When a drop is worth a celebration.", "RNG"}},
         {{"Dye Drop", "dye", "4", "fd:dye", "One big splat in the dye's colour fills the screen, then the dye rises out.", "Dye"}},
-        {{"Farming Drop", "farm", "5", "fd:farm", "A scythe cuts a row of crops and the last one opens. For crops, feasts and pests.", "Farming"},
+        {{"Farming Drop", "farm", "5", "fd:farm", "A scythe cuts a row of crops and the last one opens. For crops and feasts.", "Farming"},
+         {"Pest Drop", "pest", "10", "fd:farm", "A vacuum sucks up the pest, it pops, and the drop shoots out of the nozzle.", "Pest"},
          {"Ray of Helios", "helios", "8", "fd:sun", "A longer sunrise, only for the Ray of Helios.", "Helios"}},
         {{"Nothing Happens", "mythnothing", "9", "fd:nothing", "When a ritual drops nothing: the circle goes dark.", "Nothing"},
          {"Mythological Drop", "myth", "6", "fd:mytho", "Golden lightning lights a rune circle, which lifts the drop out in laurel.", "Normal"},
@@ -2040,6 +2041,7 @@ public class FancyScreen extends Screen {
             };
             case "farm" -> DropListener::playFarmTest;
             case "helios" -> DropListener::playHeliosTest;
+            case "pest" -> DropListener::playPestTest;
             case "myth" -> () -> DropListener.playMythTest(false);
             case "mythnothing" -> DropListener::playMythNothing;
             case "exp" -> () -> DropListener.playExpTest(false);
@@ -2051,7 +2053,7 @@ public class FancyScreen extends Screen {
     /** The settings of one animation type: Play, how many slices / drips / strikes, how long it lasts, and its sounds. */
     private void animType(List<Row> rows, FancyConfig c, String[] t) {
         final String key = t[1]; final int sc = Integer.parseInt(t[2]);
-        int col = switch (key) { case "nothing" -> Ui.DIM; case "default" -> Ui.SUB; case "rare" -> Ui.R_CRAZY; case "dye" -> 0xFFFF72C6; case "farm" -> 0xFF7BE05A; case "myth", "mythrng", "mythnothing" -> 0xFFFFC857; case "exp", "exprng" -> 0xFFB56BFF; default -> Ui.ACCENT; };
+        int col = switch (key) { case "nothing" -> Ui.DIM; case "default" -> Ui.SUB; case "rare" -> Ui.R_CRAZY; case "dye" -> 0xFFFF72C6; case "farm", "pest" -> 0xFF7BE05A; case "myth", "mythrng", "mythnothing" -> 0xFFFFC857; case "exp", "exprng" -> 0xFFB56BFF; default -> Ui.ACCENT; };
         Row head = row(0, t[3], t[0], t[4], col);
         Runnable go = playerOf(key);
         head.ctls.add(new Btn("▶ Play", GREEN, () -> play(go)));

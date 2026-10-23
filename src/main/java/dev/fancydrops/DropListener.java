@@ -455,7 +455,7 @@ public final class DropListener {
         it.amount = Math.max(1, d.amount());
         it.announce = announce && animate;
         record(it, announce && !animate, true);
-        if (animate) { boolean hel = dr.id.equals("RAY_OF_HELIOS"); Anim a = new Anim(src, it, hel ? 2 : 0, null); a.farm = true; a.helios = hel; AnimationManager.play(a); }
+        if (animate) { boolean hel = dr.id.equals("RAY_OF_HELIOS"); Anim a = new Anim(src, it, hel ? 2 : 0, null); a.farm = true; a.helios = hel; a.pest = src.id.equals("pests"); AnimationManager.play(a); }
         return animate;
     }
 
@@ -483,8 +483,13 @@ public final class DropListener {
         Item it = farmItem(src, dr, "OB:+" + ob, true);
         previewPrice(it);
         boolean hel = dr.id.equals("RAY_OF_HELIOS");
-        Anim a = new Anim(src, it, hel ? 2 : 0, null); a.farm = true; a.helios = hel;
+        Anim a = new Anim(src, it, hel ? 2 : 0, null); a.farm = true; a.helios = hel; a.pest = src.id.equals("pests");
         AnimationManager.play(a);
+    }
+    /** Animations > Farming > Pest "Play": a sample pest drop. */
+    public static void playPestTest() {
+        for (SlayerData.Slayer s : FarmData.ALL) if (s.id.equals("pests") && !s.drops.isEmpty()) { playFarmDrop(s, s.drops.get(0)); return; }
+        playFarmTest();
     }
 
     /** Animations > Farming "Play": a sample rare crop. */
