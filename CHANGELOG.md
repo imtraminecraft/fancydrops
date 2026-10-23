@@ -1,3 +1,7 @@
+## 0.8.49
+- Pages that are not built yet say "Coming Soon" with a small TM, and show a busy building site: two bulldozers driving with dust, a swinging crane, brick stacks, barriers and sparks
+- Your original FancyDrops picture is back in the menu header and as the mod icon
+
 ## 0.8.48
 - The menu preview now plays exactly like the real animation: same speed, the words stay 2 seconds after the scene, the same fades, then a short rest before it repeats
 
