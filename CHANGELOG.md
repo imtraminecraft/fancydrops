@@ -2,6 +2,17 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.38
+- Commands tidied: only the full names show in Tab now (`/fd simulate`, `/fd magicfind`, `/fd cosmetics`; the short forms are gone).
+- `/fd simulate` has a new shape: `Slayer <Boss> <Drop 1|Nothing> [Drop 2] [mf]`, `Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]`, `Dye <Dye>`, `Farming <Crop|Pest> <Drop 1> [ob]`, `Experiments <Drop 1> [Drop 2]`. Tab completes every step.
+- Mythological mobs now each have their own colours in the ritual scene. Farming simulations use the Overbloom you type.
+- Redrawn: the pickaxe (like Minecraft's) and the fishing rod (a river, a bobbing float). Work in Progress pages now look like a construction site with hazard tape, cones and hard hats.
+- Chat > "Mythological" label fits. The aura preview is its own stage with no black lines behind the skin, and the aura circles are gone.
+- The Cosmetics button glows and sparkles; the community buttons glow softly too.
+- Admin Panel in Cosmetics (owner only): see how many players hold each cosmetic and pick what to give someone; it copies a ready cosmetics.json.
+- Build: upload-artifact updated to v5 (Node 20 warning).
+- Not fixed yet: the name effect in Skyblocker custom tabs.
+
 ## 0.8.37
 - Much lighter menu: every icon is drawn as one picture from a texture instead of hundreds of tiny rectangles, the skin preview is a single picture, only the tile you point at animates in Cosmetics, and the aura preview draws fewer particles.
 - Icons now move the way the thing they show would: the gear and reload ring turn, the pickaxe and fishing rod swing, wheat sways, the rest get a sweep of light. Nothing bobs up and down any more, and the sidebar and community buttons stay put.

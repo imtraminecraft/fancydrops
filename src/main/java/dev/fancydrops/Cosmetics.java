@@ -46,7 +46,7 @@ final class Cosmetics {
         new Suffix("legend", "Legend", "Everyone", one(0xE131))};
     /** Who owns cosmetics. Everyone with the mod sees their suffix; only they can open the Cosmetics page. */
     /** Owners are stored as SHA-256 codes of their UUID, never as the UUID itself. This one is built in; more come from cosmetics.json. */
-    private static final String OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8";
+    static final String OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8";
     private static final Map<UUID, String> CODES = new HashMap<>();
     static String code(UUID u) { return u == null ? "" : CODES.computeIfAbsent(u, k -> { try { var md = java.security.MessageDigest.getInstance("SHA-256"); StringBuilder b = new StringBuilder(); for (byte x : md.digest(k.toString().toLowerCase(Locale.ROOT).getBytes(java.nio.charset.StandardCharsets.UTF_8))) b.append(String.format("%02x", x)); return b.toString(); } catch (Exception e) { return ""; } }); }
     private static final Map<UUID, Component> TAB_BASE = new HashMap<>();
@@ -56,6 +56,9 @@ final class Cosmetics {
     private static final String REMOTE_URL = "https://raw.githubusercontent.com/imtraminecraft/fancydrops/main/cosmetics.json";
     private static final Map<String, Set<String>> BUILTIN = Map.of(OWNER, Set.of("sparkle"));          // the owner has the Special Set
     private static long remoteAt, remoteOkAt;
+    static volatile String remoteRaw;                                   // the cosmetics.json text as last fetched (the Admin Panel edits a copy of it)
+    /** The owner of the mod: can see everything in the Cosmetics menu and use the Admin Panel. */
+    static boolean isAdmin() { return OWNER.equals(code(me())); }
     static { CosmeticData.grants = new HashMap<>(BUILTIN); }
     /** The Refresh button: fetch cosmetics.json again right now. */
     static void forceRefresh() { remoteAt = 0; refreshRemote(); }
@@ -76,6 +79,12 @@ final class Cosmetics {
                     if (id == null || !e.getValue().isJsonArray()) continue;
                     for (var code : e.getValue().getAsJsonArray()) m.computeIfAbsent(code.getAsString().toLowerCase(Locale.ROOT), k -> new HashSet<>()).add(id);
                 }
+                var extra = com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject().getAsJsonObject("extra");
+                if (extra != null) for (var e : extra.entrySet()) {                                             // "extra": { "code": ["crown", ...] } gives single cosmetics
+                    if (!e.getValue().isJsonArray()) continue;
+                    for (var cid : e.getValue().getAsJsonArray()) m.computeIfAbsent(e.getKey().toLowerCase(Locale.ROOT), k -> new HashSet<>()).add("c:" + cid.getAsString());
+                }
+                remoteRaw = res.body();
                 CosmeticData.grants = m; remoteOkAt = System.currentTimeMillis();
             } catch (Throwable ignored) { }
         });

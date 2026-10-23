@@ -39,10 +39,6 @@ final class AuraFx {
                     float al = (float) Math.sin(Math.PI * ph);
                     o.add(new P((float) Math.cos(ang) * r, 0.05f + ph * 1.95f, (float) Math.sin(ang) * r, 0.04f + 0.012f * al, argb(0.3f + 0.7f * al, mix(strand == 0 ? 0x4DD6FF : 0x8FA8FF, 0xE8FFFF, ph)), 0, ph * 0.7f));
                 }
-                for (int i = 0; i < 10; i++) {                                         // the halo
-                    float ang = (float) (i * Math.PI * 2 / 10 - t / 1300.0), tw = 0.5f + 0.5f * (float) Math.sin(t / 260.0 + i * 1.3);
-                    o.add(new P((float) Math.cos(ang) * 0.32f, 2.08f, (float) Math.sin(ang) * 0.32f, 0.03f, argb(0.35f + 0.6f * tw, 0xBFF0FF), 0));
-                }
                 for (int i = 0; i < 5; i++) {                                          // stars that rise and fade
                     long off = i * 560L, step = (t + off) / 2800L; float ph = ((t + off) % 2800L) / 2800f;
                     float ang = hash(i, step) % 628 / 100f;
@@ -51,19 +47,15 @@ final class AuraFx {
                 break;
             }
             case "sparkleaura": {                                                    // two slow rings of stars (one gold, one pink) turn around you; bright bursts pop up now and then; light dust rises
-                for (int ring = 0; ring < 2; ring++) for (int i = 0; i < 6; i++) {
-                    float ang = (float) (i * Math.PI * 2 / 6 + (ring == 0 ? 1 : -1) * t / 2300.0 + ring * 0.5), y = ring == 0 ? 0.55f + 0.1f * (float) Math.sin(t / 700.0 + i) : 1.35f + 0.1f * (float) Math.sin(t / 800.0 + i * 2);
-                    float tw = 0.5f + 0.5f * (float) Math.sin(t / 240.0 + i * 1.9 + ring * 2);
-                    o.add(new P((float) Math.cos(ang) * 0.6f, y, (float) Math.sin(ang) * 0.6f, 0.035f + 0.04f * tw, argb(0.45f + 0.5f * tw, ring == 0 ? 0xFFE680 : 0xFFB3E6), 1));
+                for (int i = 0; i < 10; i++) {                                         // stars twinkle here and there round you, never in a ring
+                    long step = (t + i * 410L) / 2100L; float ph = ((t + i * 410L) % 2100L) / 2100f, tw = (float) Math.sin(Math.PI * ph);
+                    float ang = hash(i + 7, step) % 628 / 100f, r = 0.35f + (hash(i + 31, step) % 40) / 100f, y = 0.15f + (hash(i + 63, step) % 185) / 100f;
+                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.035f + 0.04f * tw, argb(0.35f + 0.6f * tw, i % 2 == 0 ? 0xFFE680 : 0xFFB3E6), 1));
                 }
                 for (int i = 0; i < 5; i++) {                                          // bursts: a star that swells and dies
                     long off = i * 330L, step = (t + off) / 1500L; float ph = ((t + off) % 1500L) / 1500f;
                     float ang = hash(i, step) % 628 / 100f, r = 0.35f + (hash(i + 50, step) % 45) / 100f, y = 0.1f + (hash(i + 99, step) % 180) / 100f;
                     o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.13f * (float) Math.sin(Math.PI * ph), argb(1f, 0xFFFFFF), 1, ph * 0.8f));
-                }
-                for (int i = 0; i < 12; i++) {                                         // a ring of light at your feet
-                    float ang = (float) (i * Math.PI * 2 / 12 + t / 2200.0), tw = 0.5f + 0.5f * (float) Math.sin(t / 300.0 + i * 1.7);
-                    o.add(new P((float) Math.cos(ang) * 0.62f, 0.04f, (float) Math.sin(ang) * 0.62f, 0.035f, argb(0.25f + 0.6f * tw, 0xFFE9A8), 0));
                 }
                 for (int i = 0; i < 8; i++) {
                     float ph = (float) (((t / 3000.0) + i / 8.0) % 1.0), ang = i * 1.9f;
@@ -78,10 +70,7 @@ final class AuraFx {
                     boolean hit = Math.abs(y - ringY) < 0.14f;
                     o.add(new P((float) Math.cos(ang) * 0.58f, y, (float) Math.sin(ang) * 0.58f, hit ? 0.075f : 0.045f, hit ? argb(1f, 0xFFFFFF) : argb(0.9f, i % 2 == 0 ? 0xFF4A2E : 0xFFB02E), hit ? 1 : 0, 0.35f));
                 }
-                if (ringY > 0f && ringY < 2.1f) for (int i = 0; i < 16; i++) {
-                    float ang = (float) (i * Math.PI * 2 / 16);
-                    o.add(new P((float) Math.cos(ang) * 0.6f, ringY, (float) Math.sin(ang) * 0.6f, 0.03f, argb(0.75f * (1f - ringY / 2.3f), 0xFFC03D), 0));
-                }
+                if (ringY > 0f && ringY < 2.1f) o.add(new P(0f, ringY, 0f, 0.05f, argb(0.75f * (1f - ringY / 2.3f), 0xFFC03D), 2));          // a thin slice of amber light climbs, not a ring
                 for (int i = 0; i < 6; i++) {                                         // slow red embers lifting off you
                     float ph = (float) (((t / 3400.0) + i / 6.0) % 1.0), ang = i * 1.7f;
                     o.add(new P((float) Math.cos(ang) * 0.5f, ph * 2f, (float) Math.sin(ang) * 0.5f, 0.032f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0xFF5A36), 0, ph * 0.8f));

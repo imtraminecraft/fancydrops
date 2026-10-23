@@ -1139,10 +1139,14 @@ final class Scene {
     /** The creature the ritual calls up, as a dark shape inside the circle with burning eyes. Feet at gy, about 40 pixels tall. */
     private static void silhouette(Canvas c, int mob, int cx, int gy, float a, float t) {
         if (a <= 0.01f) return;
-        int body = Canvas.rgb((int) (235 * a), 0xFF120E1E), edge = Canvas.rgb((int) (190 * a), 0xFF8A6A2A);
+        // each creature gets its own colours: Hunter olive, Lynxes amber, Gaia stone grey, Minotaur crimson, Champion bronze, Inquisitor ember, Manticore rust, King Minos royal gold, Nymph sea green, Bull ox-blood, Harpy sky blue, Sphinx sand
+        final int[] rimCols = {0xFF7A8A3A, 0xFFD89B3C, 0xFF8E98A8, 0xFFB8453A, 0xFFB98A44, 0xFFE0682D, 0xFFB5552A, 0xFFE8C04A, 0xFF3FB8A0, 0xFF8A3030, 0xFF7FB8E8, 0xFFD9BE7A};
+        final int[] bodyCols = {0xFF141A0E, 0xFF1C140C, 0xFF14161C, 0xFF1E0E0E, 0xFF1A140C, 0xFF1E100A, 0xFF1C100A, 0xFF1A1608, 0xFF0A1C1A, 0xFF1A0A0A, 0xFF0E161E, 0xFF1C1810};
+        int mi = Math.floorMod(mob, 12);
+        int body = Canvas.rgb((int) (235 * a), bodyCols[mi]), edge = Canvas.rgb((int) (190 * a), rimCols[mi]);
         float br = (float) Math.sin(t * 2.2) * 0.8f; int bob = Math.round(br);
         int eyeCol = Canvas.rgb((int) (255 * a), mob == 5 ? 0xFFFF8A3D : mob == 3 || mob == 7 || mob == 9 ? 0xFFFF4040 : mob == 6 ? 0xFFFFD166 : 0xFFFFE08A);
-        c.glow(cx, gy - 18, 26, mob == 5 ? 0xFF8A3D : 0xFFC857, 0.22f * a);
+        c.glow(cx, gy - 18, 26, rimCols[mi] & 0xFFFFFF, 0.26f * a);
         for (int pass = 0; pass < 2; pass++) {
             int col = pass == 0 ? edge : body, o = pass == 0 ? 1 : 0;        // a gold rim first (one pixel bigger on the left), then the dark body over it
             int dx = pass == 0 ? -1 : 0, y0 = bob;

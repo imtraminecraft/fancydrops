@@ -100,6 +100,7 @@ final class CosmeticData {
     private static boolean unlockedNow(Def d) {
         if (d == null) return false;
         Boolean f = force.get(d.id()); if (f != null) return f;
+        if (Cosmetics.isAdmin() || grantsOf(Cosmetics.me()).contains("c:" + d.id())) return true;           // the owner has everything; single cosmetics can be handed out one by one
         FancyConfig c = FancyConfig.get();
         switch (d.line()) {
             case BETA: return betaEligible();
@@ -156,4 +157,40 @@ final class CosmeticData {
     static void changed() { Cosmetics.historyDirty = true; UCACHE.clear(); }
     static String kindLabel(Kind k) { return k == Kind.SUFFIX ? "Suffix" : k == Kind.NAME ? "Name effect" : "Aura"; }
     static int unlockedCount(Line l) { int n = 0; for (Def d : line(l)) if (unlocked(d)) n++; return n; }
+
+    // ---- Admin Panel helpers
+    /** How many players hold each set, and each single cosmetic, according to cosmetics.json. */
+    static Map<String, Integer> counts() {
+        Map<String, Integer> m = new LinkedHashMap<>();
+        for (Set<String> s : grants.values()) for (String g : s) m.merge(g, 1, Integer::sum);
+        return m;
+    }
+    /** What a player is given right now, as a list of cosmetic ids (sets expanded). */
+    static Set<String> heldBy(String code) {
+        Set<String> o = new LinkedHashSet<>(); Set<String> g = grants.getOrDefault(code, Set.of());
+        for (String x : g) {
+            if (x.startsWith("c:")) o.add(x.substring(2));
+            else { SetDef sd = setById(x); if (sd != null) for (Def d : members(sd)) o.add(d.id()); }
+        }
+        return o;
+    }
+    /** cosmetics.json with this player's gifts replaced by the picks: whole Special sets go in their list, anything else under "extra". */
+    static String buildJson(String code, Set<String> picks) {
+        com.google.gson.JsonObject root;
+        try { root = com.google.gson.JsonParser.parseString(Cosmetics.remoteRaw == null ? "{}" : Cosmetics.remoteRaw).getAsJsonObject(); } catch (Throwable t) { root = new com.google.gson.JsonObject(); }
+        com.google.gson.JsonObject special = root.has("special") ? root.getAsJsonObject("special") : new com.google.gson.JsonObject(); root.add("special", special);
+        com.google.gson.JsonObject extra = root.has("extra") ? root.getAsJsonObject("extra") : new com.google.gson.JsonObject();
+        Set<String> left = new LinkedHashSet<>(picks);
+        for (var e : GRANT_KEY.entrySet()) {
+            com.google.gson.JsonArray old = special.has(e.getKey()) ? special.getAsJsonArray(e.getKey()) : new com.google.gson.JsonArray(), neu = new com.google.gson.JsonArray();
+            for (var x : old) if (!x.getAsString().equalsIgnoreCase(code)) neu.add(x);
+            SetDef sd = setById(e.getValue());
+            if (sd != null) { List<Def> mem = members(sd); boolean all = !mem.isEmpty(); for (Def d : mem) if (!picks.contains(d.id())) all = false; if (all) { neu.add(code); for (Def d : mem) left.remove(d.id()); } }
+            special.add(e.getKey(), neu);
+        }
+        extra.remove(code);
+        if (!left.isEmpty()) { com.google.gson.JsonArray a = new com.google.gson.JsonArray(); for (String id : left) a.add(id); extra.add(code, a); }
+        if (extra.size() > 0) root.add("extra", extra); else root.remove("extra");
+        return new com.google.gson.GsonBuilder().setPrettyPrinting().create().toJson(root) + "\n";
+    }
 }

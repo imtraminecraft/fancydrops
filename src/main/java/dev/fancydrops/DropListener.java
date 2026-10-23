@@ -364,7 +364,7 @@ public final class DropListener {
         SlayerData.Slayer[] hit = new SlayerData.Slayer[1];
         int n = bossPrefix(raw, hit);
         SlayerData.Slayer boss = hit[0];
-        if (boss == null) { reply.accept("Pick a boss, dye, farm, mytho or exp first: " + String.join(", ", SlayerData.ALL.stream().map(s -> s.boss).toList()) + ", dye, farm, mytho, exp  (Tab lists them)"); return; }
+        if (boss == null) { reply.accept("Pick a boss: " + String.join(", ", SlayerData.ALL.stream().map(s -> s.boss).toList()) + "  (Tab lists them)"); return; }
         String rest = raw.substring(n).trim();
         List<String> parsed = new ArrayList<>();
         if (rest.isEmpty()) { if (!boss.drops.isEmpty()) parsed.add(boss.drops.get(new Random().nextInt(boss.drops.size())).name); }
@@ -478,8 +478,9 @@ public final class DropListener {
     }
 
     /** Menu "play" button of a Farming drop. */
-    public static void playFarmDrop(SlayerData.Slayer src, SlayerData.Drop dr) {
-        Item it = farmItem(src, dr, "OB:+25", true);
+    public static void playFarmDrop(SlayerData.Slayer src, SlayerData.Drop dr) { playFarmDrop(src, dr, 25); }
+    public static void playFarmDrop(SlayerData.Slayer src, SlayerData.Drop dr, int ob) {
+        Item it = farmItem(src, dr, "OB:+" + ob, true);
         previewPrice(it);
         boolean hel = dr.id.equals("RAY_OF_HELIOS");
         Anim a = new Anim(src, it, hel ? 2 : 0, null); a.farm = true; a.helios = hel;
@@ -586,16 +587,20 @@ public final class DropListener {
     }
 
     /** /fd sim <mf> farm [drop]: a pretend farming drop (a random one when none is named). Not counted in profit. */
-    static void simulateFarm(int mf, String name, Consumer<String> reply) {
+    static void simulateFarm(int ob, String name, Consumer<String> reply) {
         List<Object[]> all = allFarmDrops();
+        for (SlayerData.Slayer fs : FarmData.ALL) {                       // "<Crop|Pest> <Drop>": only that source's drops
+            int n = fs.boss.length();
+            if (name.regionMatches(true, 0, fs.boss, 0, n) && (name.length() == n || name.charAt(n) == ' ')) { all = all.stream().filter(o -> o[0] == fs).toList(); name = name.substring(n).trim(); break; }
+        }
         if (all.isEmpty()) { reply.accept("No farming drops are in the data files."); return; }
         Object[] pick = null;
         if (name.isEmpty()) pick = all.get(new Random().nextInt(all.size()));
         else for (Object[] o : all) if (((SlayerData.Drop) o[1]).name.equalsIgnoreCase(name)) pick = o;
         if (pick == null) { reply.accept("\"" + name + "\" isn't a farming drop. Press Tab to see them."); return; }
         SlayerData.Drop d = (SlayerData.Drop) pick[1];
-        reply.accept("Simulating " + d.name);
-        playFarmDrop((SlayerData.Slayer) pick[0], d);
+        reply.accept("Simulating " + d.name + " at " + ob + " Overbloom");
+        playFarmDrop((SlayerData.Slayer) pick[0], d, ob);
     }
 
     /** Up to {max} drop names from the start of the text, longest match first ("Power VII Protection VI"); null (and a reply) when something doesn't match. */

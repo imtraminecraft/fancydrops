@@ -147,9 +147,6 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             .then(ClientCommands.literal("help").executes(ctx -> help(ctx.getSource())))
             .then(ClientCommands.literal("stats").executes(ctx -> stats(ctx.getSource())))
             .then(ClientCommands.literal("cosmetics").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
-            .then(ClientCommands.literal("cosmetic").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
-            .then(ClientCommands.literal("cosm").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
-            .then(ClientCommands.literal("cm").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
             .then(ClientCommands.literal("discord").executes(ctx -> { ctx.getSource().sendFeedback(Chat.msg("Join the Discord: ").copy().append(net.minecraft.network.chat.Component.literal(DISCORD).withStyle(st -> st.withColor(0x7A8BFF).withUnderlined(true).withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenUrl(java.net.URI.create(DISCORD)))))); return Command.SINGLE_SUCCESS; }))
             .then(ClientCommands.literal("patreon").executes(ctx -> { say(ctx.getSource(), "Patreon link coming soon"); return Command.SINGLE_SUCCESS; }))
             .then(ClientCommands.literal("github").executes(ctx -> { say(ctx.getSource(), "GitHub link coming soon"); return Command.SINGLE_SUCCESS; }))
@@ -165,22 +162,17 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                 say(ctx.getSource(), "FancyDrops " + (on ? "enabled" : "disabled") + " (animations and chat announcements)");
                 return Command.SINGLE_SUCCESS;
             }))
-            // /fd sim|simulation <mf> <Dye | Boss> <Drop 1> [Drop 2]  - pretends you got a drop (a boss kill can drop two items)
-            .then(simNode("simulation"))
+            // /fd simulate <Slayer | Mythological | Dye | Farming | Experiments> ...  - pretends you got a drop
             .then(simNode("simulate"))
-            .then(simNode("sim"))
             .then(ClientCommands.literal("cosmetics").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
-            .then(ClientCommands.literal("cosmetic").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
-            .then(ClientCommands.literal("cosm").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
-            .then(ClientCommands.literal("cm").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
             // /fd <anything else>  - opens the menu and searches for it
             .then(ClientCommands.argument("search", StringArgumentType.greedyString()).executes(ctx -> {
                 FancyScreen.pendingSearch = StringArgumentType.getString(ctx, "search").trim(); openMenu = true;
                 return Command.SINGLE_SUCCESS;
             }))
-            // /fd mf <magic find> [drop name | chance]  - what your magic find does to a drop chance
-            .then(ClientCommands.literal("mf")
-                .executes(ctx -> { say(ctx.getSource(), "Use /fd mf <magic find> [drop name | 1-in-N chance]   e.g. /fd mf 250 Warden Heart"); return Command.SINGLE_SUCCESS; })
+            // /fd magicfind <magic find> [drop name | chance]  - what your magic find does to a drop chance
+            .then(ClientCommands.literal("magicfind")
+                .executes(ctx -> { say(ctx.getSource(), "Use /fd magicfind <magic find> [drop name | 1-in-N chance]   e.g. /fd magicfind 250 Warden Heart"); return Command.SINGLE_SUCCESS; })
                 .then(ClientCommands.argument("magicfind", DoubleArgumentType.doubleArg(0, 100000))
                     .suggests((ctx, builder) -> suggestMagicFind(builder))
                     .executes(ctx -> mfCalc(ctx.getSource(), DoubleArgumentType.getDouble(ctx, "magicfind"), ""))
@@ -194,11 +186,11 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     private static void say(FabricClientCommandSource source, String msg) { source.sendFeedback(Chat.msg(msg)); }
 
     private static CompletableFuture<Suggestions> suggest(SuggestionsBuilder b, String... options) {
-        for (String o : options) if (o.startsWith(b.getRemaining().toLowerCase(Locale.ROOT))) b.suggest(o);
+        for (String o : options) if (o.toLowerCase(Locale.ROOT).startsWith(b.getRemaining().toLowerCase(Locale.ROOT))) b.suggest(o);
         return b.buildFuture();
     }
     private static CompletableFuture<Suggestions> suggest(SuggestionsBuilder b, Iterable<String> options) {
-        for (String o : options) if (o.startsWith(b.getRemaining().toLowerCase(Locale.ROOT))) b.suggest(o);
+        for (String o : options) if (o.toLowerCase(Locale.ROOT).startsWith(b.getRemaining().toLowerCase(Locale.ROOT))) b.suggest(o);
         return b.buildFuture();
     }
 
@@ -207,21 +199,20 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         helpHead(s, "Menu");
         helpLine(s, "/fd", "Open the menu");
         helpLine(s, "/fd stats", "Open the menu on the Stats page");
-        helpLine(s, "/fd cosmetics", "Open the cosmetics menu (also cosmetic, cosm, cm)");
-        helpLine(s, "/fd cosmetics", "Open the cosmetics menu (also cosmetic, cosm, cm)");
+        helpLine(s, "/fd cosmetics", "Open the cosmetics menu");
         helpLine(s, "/fd <search>", "Open the menu and search for what you typed");
         helpHead(s, "Try a drop  (never counts toward profit)");
-        helpLine(s, "/fd sim <Boss> <Drop 1> [Drop 2] [mf]", "A boss kill with one or two drops. Use \"nothing\" for an empty kill");
-        helpLine(s, "/fd sim Mytho <Creature> <Drop 1> [Drop 2] [mf]", "A Mythological Ritual with one or two drops");
-        helpLine(s, "/fd sim Exp <Drop 1> [Drop 2] [mf]", "Experimentation Table rewards, one or two items");
-        helpLine(s, "/fd sim Dye <Dye> [mf]", "One dye (random if you leave it out)");
-        helpLine(s, "/fd sim Farm <Drop> [mf]", "One farming drop (random if you leave it out)");
+        helpLine(s, "/fd simulate Slayer <Boss> <Drop 1|Nothing> [Drop 2] [mf]", "A boss kill with one or two drops");
+        helpLine(s, "/fd simulate Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]", "A Mythological Ritual");
+        helpLine(s, "/fd simulate Dye <Dye>", "One dye");
+        helpLine(s, "/fd simulate Farming <Crop|Pest> <Drop 1> [ob]", "One farming drop, with Overbloom");
+        helpLine(s, "/fd simulate Experiments <Drop 1> [Drop 2]", "Experimentation Table rewards");
         helpHead(s, "Handy");
-        helpLine(s, "/fd mf <magic find> [drop]", "What your Magic Find does to a drop chance");
+        helpLine(s, "/fd magicfind <magic find> [drop]", "What your Magic Find does to a drop chance");
         helpLine(s, "/fd mute", "Turn sounds on or off");
         helpLine(s, "/fd toggle", "Turn the whole mod on or off");
         s.sendFeedback(Component.literal(" "));
-        s.sendFeedback(Chat.color("Example  ", Chat.DIM).append(Chat.color("/fd sim Exp Power VII Protection VI 250", Chat.COMMAND)));
+        s.sendFeedback(Chat.color("Example  ", Chat.DIM).append(Chat.color("/fd simulate Experiments Power VII Protection VI", Chat.COMMAND)));
         s.sendFeedback(Chat.color("Tab completes names. The magic find goes last and defaults to 250.", Chat.DIM));
         return Command.SINGLE_SUCCESS;
     }
@@ -283,7 +274,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             if (++shown > 8) { say(s, "...narrow it down with more of the name"); return Command.SINGLE_SUCCESS; }
             say(s, d.name + " (" + sl.boss + "): " + d.chance + "  ->  1 in " + oneInText(n / mult) + " with " + m + "  (" + pct(100 * mult / n) + ")");
         }
-        if (shown == 0) say(s, "No drop matches \"" + what + "\". You can also type a chance: /fd mf " + trimNum(mf) + " 735");
+        if (shown == 0) say(s, "No drop matches \"" + what + "\". You can also type a chance: /fd magicfind " + trimNum(mf) + " 735");
         return Command.SINGLE_SUCCESS;
     }
     private static String trimNum(double v) { return v == Math.floor(v) ? String.valueOf((long) v) : String.format(Locale.ROOT, "%.2f", v); }
@@ -296,26 +287,65 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         return builder.buildFuture();
     }
 
+    private static final String[] SIM_KINDS = {"Slayer", "Mythological", "Dye", "Farming", "Experiments"};
+    private static final String SIM_USAGE = "/fd simulate Slayer <Boss> <Drop 1|Nothing> [Drop 2] [mf]   ·   Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]   ·   Dye <Dye>   ·   Farming <Crop|Pest> <Drop 1> [ob]   ·   Experiments <Drop 1> [Drop 2]";
+
     private static LiteralArgumentBuilder<FabricClientCommandSource> simNode(String name) {
         return ClientCommands.literal(name)
-            .executes(ctx -> { say(ctx.getSource(), "Use /fd sim <Boss | Mytho | Exp | Dye | Farm> <Drop 1> [Drop 2] [magic find]   e.g. /fd sim Exp Power VII Protection VI 250  (Tab lists them; /fd help has the guide)"); return Command.SINGLE_SUCCESS; })
-            .then(ClientCommands.argument("items", StringArgumentType.greedyString())
-                .suggests((ctx, builder) -> suggestDrops(builder))
-                .executes(ctx -> simulate(ctx.getSource(), StringArgumentType.getString(ctx, "items"))));
+            .executes(ctx -> { say(ctx.getSource(), "Use " + SIM_USAGE); return Command.SINGLE_SUCCESS; })
+            .then(ClientCommands.argument("kind", StringArgumentType.word())
+                .suggests((ctx, b) -> suggest(b, SIM_KINDS))
+                .executes(ctx -> simulate(ctx.getSource(), StringArgumentType.getString(ctx, "kind"), ""))
+                .then(ClientCommands.argument("items", StringArgumentType.greedyString())
+                    .suggests((ctx, b) -> suggestSim(b, StringArgumentType.getString(ctx, "kind")))
+                    .executes(ctx -> simulate(ctx.getSource(), StringArgumentType.getString(ctx, "kind"), StringArgumentType.getString(ctx, "items")))));
     }
 
-    /** "<what> [mf]": the magic find is a trailing number (a leading one still works, like the old syntax). */
-    private static int simulate(FabricClientCommandSource source, String args) {
-        String t = args.trim(); int mf = 250;
-        String[] w = t.split("\\s+");
-        if (w.length > 1 && w[w.length - 1].matches("\\d{1,5}")) { mf = Integer.parseInt(w[w.length - 1]); t = t.substring(0, t.length() - w[w.length - 1].length()).trim(); }
-        else if (w.length > 1 && w[0].matches("\\d{1,5}")) { mf = Integer.parseInt(w[0]); t = t.substring(w[0].length()).trim(); }
-        else if (w.length == 1 && w[0].matches("\\d{1,5}")) { say(source, "Name what to simulate first: /fd sim <Boss | Mytho | Exp | Dye | Farm> ..."); return 0; }
-        return simulate(source, Math.min(10000, mf), t);
+    /** The text after a leading source name ("Minos Hunter Hilt of ..." -> "Hilt of ..."), or null when the text doesn't start with one. */
+    private static String afterSource(java.util.List<SlayerData.Slayer> srcs, String t) {
+        SlayerData.Slayer best = null;
+        for (SlayerData.Slayer sl : srcs) { int n = sl.boss.length(); if (t.regionMatches(true, 0, sl.boss, 0, n) && (t.length() == n || Character.isWhitespace(t.charAt(n))) && (best == null || n > best.boss.length())) best = sl; }
+        return best == null ? null : t.substring(best.boss.length()).trim();
+    }
+    private static SlayerData.Slayer sourceOf(java.util.List<SlayerData.Slayer> srcs, String t) {
+        SlayerData.Slayer best = null;
+        for (SlayerData.Slayer sl : srcs) { int n = sl.boss.length(); if (t.regionMatches(true, 0, sl.boss, 0, n) && (t.length() == n || Character.isWhitespace(t.charAt(n))) && (best == null || n > best.boss.length())) best = sl; }
+        return best;
     }
 
-    private static int simulate(FabricClientCommandSource source, int mf, String items) {
-        DropListener.simulateKill(mf, items, msg -> source.sendFeedback(Chat.msg(msg)));
+    private static int simulate(FabricClientCommandSource source, String kind, String args) {
+        String t = args.trim(); String k = kind.toLowerCase(Locale.ROOT);
+        Integer num = null; String[] w = t.split("\\s+");
+        if (w.length > 0 && w[w.length - 1].matches("\\d{1,5}") && !k.equals("dye") && !k.equals("experiments")) { num = Math.min(10000, Integer.parseInt(w[w.length - 1])); t = t.substring(0, t.length() - w[w.length - 1].length()).trim(); }
+        switch (k) {
+            case "slayer" -> {
+                SlayerData.Slayer[] hit = new SlayerData.Slayer[1]; int n = DropListener.bossPrefix(t, hit);
+                if (hit[0] == null) { say(source, "Pick a boss: " + String.join(", ", SlayerData.ALL.stream().map(sl -> sl.boss).toList()) + "  (Tab lists them)"); return 0; }
+                if (t.substring(n).isBlank()) { say(source, "Use /fd simulate Slayer <Boss> <Drop 1|Nothing> [Drop 2] [mf]"); return 0; }
+                DropListener.simulateKill(num == null ? 250 : num, t, m -> source.sendFeedback(Chat.msg(m)));
+            }
+            case "mythological" -> {
+                String rest = afterSource(MythData.ALL, t);
+                if (rest == null) { say(source, "Pick a mob: " + String.join(", ", MythData.ALL.stream().map(sl -> sl.boss).toList()) + "  (Tab lists them)"); return 0; }
+                if (rest.isEmpty()) { say(source, "Use /fd simulate Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]"); return 0; }
+                DropListener.simulateMyth(num == null ? 250 : num, t, m -> source.sendFeedback(Chat.msg(m)));
+            }
+            case "dye" -> {
+                if (t.isEmpty()) { say(source, "Use /fd simulate Dye <Dye>"); return 0; }
+                DropListener.simulateDye(250, t, m -> source.sendFeedback(Chat.msg(m)));
+            }
+            case "farming" -> {
+                String rest = afterSource(FarmData.ALL, t);
+                if (rest == null) { say(source, "Pick a crop or pest: " + String.join(", ", FarmData.ALL.stream().map(sl -> sl.boss).toList()) + "  (Tab lists them)"); return 0; }
+                if (rest.isEmpty()) { say(source, "Use /fd simulate Farming <Crop|Pest> <Drop 1> [ob]"); return 0; }
+                DropListener.simulateFarm(num == null ? 25 : num, t, m -> source.sendFeedback(Chat.msg(m)));
+            }
+            case "experiments" -> {
+                if (t.isEmpty()) { say(source, "Use /fd simulate Experiments <Drop 1> [Drop 2]"); return 0; }
+                DropListener.simulateExp(250, t, m -> source.sendFeedback(Chat.msg(m)));
+            }
+            default -> { say(source, "Use " + SIM_USAGE); return 0; }
+        }
         return Command.SINGLE_SUCCESS;
     }
 
@@ -326,39 +356,34 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         return builder.buildFuture();
     }
 
-    /** /fd sim <mf> <Boss | Dye | Farm | Mytho> <Drop 1> [Drop 2]: first the boss (or "Dye", "Farm", "Mytho"), then its drops one after the other (names may contain spaces). */
-    /** Tab completion for /fd sim: the category first, then one or two drops, then a magic find. */
-    private static CompletableFuture<Suggestions> suggestDrops(SuggestionsBuilder builder) {
-        String rem = builder.getRemaining(), low = rem.toLowerCase(Locale.ROOT);
-        java.util.List<String> pool = null; int max = 1, pos = 0; boolean nothing = false, creatures = false;
-        String[] kinds = {"dye ", "farm ", "exp ", "mytho "};
-        for (String k : kinds) if (low.startsWith(k)) {
-            pos = k.length();
-            switch (k) {
-                case "dye " -> { pool = new java.util.ArrayList<>(); for (Object[] o : DropListener.allDyes()) pool.add(((SlayerData.Drop) o[1]).name); }
-                case "farm " -> { pool = new java.util.ArrayList<>(); for (Object[] o : DropListener.allFarmDrops()) pool.add(((SlayerData.Drop) o[1]).name); }
-                case "exp " -> { pool = new java.util.ArrayList<>(); for (String[] e : ExperimentData.ALL) pool.add(e[0]); max = 2; }
-                default -> {
-                    max = 2; creatures = true; pool = new java.util.ArrayList<>();
-                    String after = rem.substring(pos).stripLeading();
-                    SlayerData.Slayer own = null;
-                    for (SlayerData.Slayer ms : MythData.ALL) if (after.regionMatches(true, 0, ms.boss + " ", 0, ms.boss.length() + 1)) own = ms;
-                    if (own != null) { pos = rem.length() - after.length() + own.boss.length() + 1; creatures = false; for (SlayerData.Drop md : own.drops) pool.add(md.name); }
-                    else { java.util.Set<String> seen = new java.util.LinkedHashSet<>(); for (SlayerData.Slayer ms : MythData.ALL) seen.add(ms.boss); for (SlayerData.Slayer ms : MythData.ALL) for (SlayerData.Drop md : ms.drops) seen.add(md.name); pool.addAll(seen); }
-                }
-            }
-            break;
+    /** Tab completion for /fd simulate <kind> ...: the source (boss, mob, crop), then one or two drops, then the optional number. */
+    private static CompletableFuture<Suggestions> suggestSim(SuggestionsBuilder builder, String kind) {
+        String k = kind.toLowerCase(Locale.ROOT), rem = builder.getRemaining();
+        java.util.List<SlayerData.Slayer> srcs = null; java.util.List<String> pool; int max = 1; boolean nothing = false; String[] tail = {};
+        switch (k) {
+            case "slayer" -> { srcs = SlayerData.ALL; max = 2; nothing = true; tail = new String[]{"100", "250", "400"}; }
+            case "mythological" -> { srcs = MythData.ALL; max = 2; nothing = true; tail = new String[]{"100", "250", "400"}; }
+            case "farming" -> { srcs = FarmData.ALL; tail = new String[]{"25", "50", "100"}; }
+            case "dye" -> { }
+            case "experiments" -> max = 2;
+            default -> { return builder.buildFuture(); }
         }
-        if (pool == null) {
-            SlayerData.Slayer[] hit = new SlayerData.Slayer[1];
-            int n = DropListener.bossPrefix(rem, hit);
-            if (hit[0] == null || n >= rem.length()) {                            // still choosing the category
-                for (SlayerData.Slayer sl : SlayerData.ALL) if (sl.boss.toLowerCase(Locale.ROOT).startsWith(low)) builder.suggest(sl.boss);
-                for (String k : new String[]{"Dye", "Farm", "Mytho", "Exp"}) if (k.toLowerCase(Locale.ROOT).startsWith(low)) builder.suggest(k);
-                return builder.buildFuture();
+        int pos = 0; pool = new java.util.ArrayList<>();
+        if (srcs != null) {
+            SlayerData.Slayer own = sourceOf(srcs, rem.stripLeading());
+            int lead = rem.length() - rem.stripLeading().length();
+            boolean full = own != null && rem.stripLeading().length() > own.boss.length();            // the name and a space were typed
+            if (!full) {
+                String typed = rem.stripLeading().toLowerCase(Locale.ROOT);
+                SuggestionsBuilder b0 = builder.createOffset(builder.getStart() + lead);
+                for (SlayerData.Slayer sl : srcs) if (sl.boss.toLowerCase(Locale.ROOT).startsWith(typed)) b0.suggest(sl.boss);
+                return b0.buildFuture();
             }
-            pool = new java.util.ArrayList<>(DropListener.dropNames(hit[0])); max = 2; nothing = true; pos = n;
-        }
+            pos = lead + own.boss.length();
+            for (SlayerData.Drop d : own.drops) pool.add(d.name);
+        } else if (k.equals("dye")) { for (Object[] o : DropListener.allDyes()) pool.add(((SlayerData.Drop) o[1]).name); }
+        else { for (String[] e : ExperimentData.ALL) pool.add(e[0]); }
+        if (nothing) pool.add("Nothing");
         java.util.List<String> chosen = new java.util.ArrayList<>();
         while (true) {                                                           // names already typed in full
             while (pos < rem.length() && Character.isWhitespace(rem.charAt(pos))) pos++;
@@ -366,15 +391,13 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             for (String nm : pool) if (nm.length() > best && rest.regionMatches(true, 0, nm, 0, nm.length()) && rest.length() > nm.length() && Character.isWhitespace(rest.charAt(nm.length()))) best = nm.length();
             if (best == 0) break;
             chosen.add(rest.substring(0, best).toLowerCase(Locale.ROOT)); pos += best;
-            if (creatures) break;
-            if (chosen.size() >= max) break;
+            if (chosen.size() >= max || chosen.contains("nothing")) break;
         }
         String typed = rem.substring(Math.min(pos, rem.length())).stripLeading().toLowerCase(Locale.ROOT);
         SuggestionsBuilder b = builder.createOffset(builder.getStart() + rem.length() - typed.length());
-        if (chosen.size() >= max) { for (String m : new String[]{"100", "250", "400"}) if (m.startsWith(typed)) b.suggest(m); return b.buildFuture(); }
-        if (nothing && chosen.isEmpty() && "nothing".startsWith(typed)) b.suggest("nothing");
-        for (String nm : pool) if (nm.toLowerCase(Locale.ROOT).contains(typed) && !chosen.contains(nm.toLowerCase(Locale.ROOT))) b.suggest(nm);
-        if (!chosen.isEmpty() && !creatures) for (String m : new String[]{"100", "250", "400"}) if (m.startsWith(typed)) b.suggest(m);
+        boolean done = chosen.size() >= max || chosen.contains("nothing");
+        if (!done) for (String nm : pool) if (nm.toLowerCase(Locale.ROOT).contains(typed) && !chosen.contains(nm.toLowerCase(Locale.ROOT)) && !(nm.equals("Nothing") && !chosen.isEmpty())) b.suggest(nm);
+        if (!chosen.isEmpty() || srcs != null && done) for (String m : tail) if (m.startsWith(typed)) b.suggest(m);
         return b.buildFuture();
     }
 }
