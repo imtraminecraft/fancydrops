@@ -822,6 +822,22 @@ public class FancyScreen extends Screen {
         CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
         return sd != null ? sd.color() : d.line() == CosmeticData.Line.BETA ? 0xFF3FD16A : 0xFF9AA3B5;
     }
+    /** One line on what a name effect does, put in front of how to get it. */
+    private static String effectNote(CosmeticData.Def d) {
+        if (d.kind() != CosmeticData.Kind.NAME) return "";
+        return switch (d.id()) {
+            case "shimmer" -> "A band of light sweeps over your name. ";
+            case "pulse" -> "Your name breathes, dim to bright. ";
+            case "wave" -> "Waves of light run along your name. ";
+            case "glow" -> "A warm glow that slowly brightens. ";
+            case "fresh" -> "A mint name with a light green that drifts along it. ";
+            case "sparklefx" -> "Gold with a white comet and twinkling letters. ";
+            case "glitch" -> "A scan line, and now and then the name tears. ";
+            case "contribfx" -> "Flowing water with foam and a sweeping light. ";
+            case "royal" -> "Liquid gold with a running glint. ";
+            default -> "";
+        };
+    }
     private static String tipLines(String name, String what, int rar, boolean yours, String extra, String how) {
         return name + "\n" + what + "\n" + rar + "\n" + (yours ? "1" : "0") + "\n" + extra + "\n" + how;
     }
@@ -845,7 +861,7 @@ public class FancyScreen extends Screen {
                 fxs[k] = d.kind() == CosmeticData.Kind.NAME ? d.id() : null;
                 CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
                 boolean hid = !open2 && d.id().equals("secret");
-                tp[k] = tipLines(hid ? "???" : d.name(), CosmeticData.kindLabel(d.kind()), rar[k], open2, sd != null ? sd.name() + " set" : "", open2 && d.line() != CosmeticData.Line.SPECIAL ? d.how() : CosmeticData.lockText(d));
+                tp[k] = tipLines(hid ? "???" : d.name(), CosmeticData.kindLabel(d.kind()), rar[k], open2, sd != null ? sd.name() + " set" : "", effectNote(d) + (open2 && d.line() != CosmeticData.Line.SPECIAL ? d.how() : CosmeticData.lockText(d)));
             }
         }
         Row pk = sets ? picker("", "", lb, sb, ic, cl, null, cols, () -> -1, i -> {

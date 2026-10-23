@@ -2,6 +2,10 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.28
+- Beta and Common name effects have their own colour now (Shimmer ice-blue, Pulse pink, Ripple teal, Glow gold, Fresh mint). On a white name, like in the tab list, they were all white and could not be seen. A coloured name keeps half of its own colour. Pulse is not as dark any more.
+- Name effect tiles tell you what the effect does when you hover them.
+
 ## 0.8.27
 - Shimmer (Beta) was washing short names out to white: its band of light covered the whole name. The band is narrow now, so your name keeps its colour. Glow is a bit gentler too.
 
