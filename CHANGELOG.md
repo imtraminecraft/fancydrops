@@ -2,6 +2,10 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.39
+- The hover card on a player's name now matches the chat: the gradient [FancyDrops] on top, a divider, then one tidy line per cosmetic (name in its colour, rarity beside it).
+- Custom tab list: the list is now refreshed right away every time a name effect moves, and the log says what happened (look for "[FancyDrops] tab:" lines). Not confirmed fixed.
+
 ## 0.8.38
 - Commands tidied: only the full names show in Tab now (`/fd simulate`, `/fd magicfind`, `/fd cosmetics`; the short forms are gone).
 - `/fd simulate` has a new shape: `Slayer <Boss> <Drop 1|Nothing> [Drop 2] [mf]`, `Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]`, `Dye <Dye>`, `Farming <Crop|Pest> <Drop 1> [ob]`, `Experiments <Drop 1> [Drop 2]`. Tab completes every step.
