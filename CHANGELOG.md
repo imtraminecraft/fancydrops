@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.24
+- Name effects keep animating on locked tiles (and the lock dimming is lighter), so you can see how the name would look.
+
 ## 0.8.23
 - Cosmetic tiles: the icon and the name now sit together in the middle of the tile (no empty space on one side).
 - The Suffix, Name Effect and Aura sections are now truly in rarity order: Special, then Beta, then Common. Newcomer no longer sits between the Beta items.
