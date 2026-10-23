@@ -2114,7 +2114,8 @@ public class FancyScreen extends Screen {
 
     private void cosmeticsPage() {
         if (!Cosmetics.allowed()) {
-            Row wp = row(0, "fd:sparkle", "Cosmetics are disabled", "Cosmetics are only open to ImTra. Everything else in FancyDrops works as usual. (You will still see his suffix in chat and the tab list.)", Ui.DIM);
+            Row wp = row(0, "fd:sparkle", "Cosmetics are disabled", "Cosmetics are only open to ImTra. Everything else in FancyDrops works as usual, and you still see his suffix in chat and the tab list. Your ID code: " + Cosmetics.code(Cosmetics.me()), Ui.DIM);
+            wp.ctls.add(new Btn("Copy ID", 0xFF3A4FA0, () -> { try { net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(Cosmetics.code(Cosmetics.me())); } catch (Throwable ignored) { } }));
             wp.kind = PANEL; wp.h = 130; wp.noSearch = true; rows.add(wp); return;
         }
         FancyConfig c = FancyConfig.get();
@@ -2153,22 +2154,23 @@ public class FancyScreen extends Screen {
         l1.append(Component.literal("[MVP+] ").withStyle(plain.withColor(0x55FFFF))).append(Component.literal(user).withStyle(plain.withColor(0x55FFFF)));
         if (cs != null) { l1.append(Component.literal(" ")); l1.append(Cosmetics.glyph(Cosmetics.frameNow(cs, now))); }
         l1.append(Component.literal(": that drop was insane!").withStyle(plain.withColor(0xFFFFFF)));
-        g.text(font, l1, x0 + 6, cy + 5, 0xFFFFFFFF, true);
-        g.text(font, Component.literal("RARE DROP! ").withStyle(plain.withColor(0xFFAA00).withBold(true)).append(Component.literal("Necron Dye").withStyle(plain.withColor(0xFF55FF).withBold(false))), x0 + 6, cy + 17, 0xFFFFFFFF, true);
-        // --- in the tab list: a mock of the player list, with you lit up
+        g.text(font, Component.literal("RARE DROP! ").withStyle(plain.withColor(0xFFAA00).withBold(true)).append(Component.literal("Necron Dye").withStyle(plain.withColor(0xFF55FF).withBold(false))), x0 + 6, cy + 5, 0xFFFFFFFF, true);
+        g.text(font, l1, x0 + 6, cy + 17, 0xFFFFFFFF, true);
+        // --- in the tab list: a mock of SkyBlock's player list, with you lit up and the ping bars moving
         int ty = cy + 41;
         Gfx.text(g, font, "In the tab list", x0, ty - 10, Ui.SUB);
-        int tw = Math.min(w0, 330), tx = r.x + (r.w - tw) / 2, th = r.y + r.h - 6 - ty;
+        int tw = Math.min(w0, 372), tx = r.x + (r.w - tw) / 2, th = r.y + r.h - 6 - ty;
         g.fill(tx, ty, tx + tw, ty + th, 0xC00C0E14); g.outline(tx, ty, tw, th, 0x44FFFFFF);
-        String head = "H Y P I X E L";
-        int hx = tx + (tw - font.width(head)) / 2;
-        for (int i = 0; i < head.length(); i++) { String ch = String.valueOf(head.charAt(i)); float u = (sec * 0.5f + i * 0.07f) % 1f; g.text(font, ch, hx, ty + 3, Gfx.argb(255, Canvas.mix(0xFFFFAA00, 0xFFFFFF55, 0.5f + 0.5f * (float) Math.sin(u * Math.PI * 2)) & 0xFFFFFF), true); hx += font.width(ch); }
+        String head = "You are playing on MC.HYPIXEL.NET";
+        g.text(font, head, tx + (tw - font.width(head)) / 2, ty + 3, 0xFFFFAA00, true);
         g.fill(tx + 4, ty + 14, tx + tw - 4, ty + 15, 0x33FFFFFF);
-        String[] names = {"Dirt_Mage", "xX_Farmer_Xx", null, "Pickaxe_Pro", "Slayer_Sam", "BazaarBob"}; int[] nc = {0xAAAAAA, 0x55FF55, 0, 0xFFAA00, 0xFF5555, 0x55FFFF};
+        String[] names = {"Dirt_Mage", "xX_Farmer_Xx", "CoinCollector", "Pickaxe_Pro", null, "BazaarBob", "Slayer_Sam", "NetherNinja", "DyeDealer", "Mythic_Mel", "MinerMike", "Skyblocker99"};
+        String[] rank = {"", "[VIP] ", "[MVP+] ", "[MVP] ", "[MVP+] ", "[VIP+] ", "", "[MVP++] ", "[VIP] ", "[MVP+] ", "[MVP] ", ""};
+        int[] rc = {0xAAAAAA, 0x55FF55, 0x55FFFF, 0x55FFFF, 0x55FFFF, 0x55FF55, 0xAAAAAA, 0xFFAA00, 0x55FF55, 0x55FFFF, 0x55FFFF, 0xAAAAAA};
         int[] skin = {0xFFC99A6B, 0xFFE0B48A, 0xFFB5835A, 0xFFD9A57A, 0xFFEBC7A0, 0xFFC08A5E}, hair = {0xFF4A2F1B, 0xFF222222, 0xFF6B3F1D, 0xFF8A5A2C, 0xFF111111, 0xFFC9A227};
-        int colW = (tw - 12) / 2, rowH = 11;
-        for (int k = 0; k < 6; k++) {
-            int ex = tx + 6 + (k % 2) * colW, ey2 = ty + 18 + (k / 2) * rowH; boolean me = names[k] == null;
+        int cols = 3, colW = (tw - 12) / cols, rowH = 11;
+        for (int k = 0; k < names.length; k++) {
+            int ex = tx + 6 + (k / 4) * colW, ey2 = ty + 18 + (k % 4) * rowH; boolean me = names[k] == null;
             if (me) {                                                                               // you: a glowing row with a sweeping shine
                 float pu = 0.5f + 0.5f * (float) Math.sin(sec * 3f);
                 g.fill(ex - 1, ey2 - 1, ex + colW - 3, ey2 + 9, Gfx.argb(Math.round(50 + 40 * pu), Ui.ACCENT & 0xFFFFFF)); g.outline(ex - 1, ey2 - 1, colW - 2, 10, Gfx.argb(Math.round(130 + 100 * pu), Ui.ACCENT & 0xFFFFFF));
@@ -2176,12 +2178,18 @@ public class FancyScreen extends Screen {
                 int sx = ex - 14 + Math.round(((sec * 0.7f) % 1.6f) * (colW + 10)); for (int j = 0; j < 10; j++) g.fill(sx + j / 2, ey2 - 1 + j, sx + j / 2 + 3, ey2 + j, 0x55FFFFFF);
                 g.disableScissor();
             }
-            head(g, ex, ey2, me ? 0xFFD9A57A : skin[k], me ? 0xFF2F6BFF : hair[k]);
-            net.minecraft.network.chat.MutableComponent nm = Component.literal(me ? user : names[k]).withStyle(plain.withColor(me ? 0x55FFFF : nc[k]));
+            head(g, ex, ey2, me ? 0xFFD9A57A : skin[k % 6], me ? 0xFF2F6BFF : hair[k % 6]);
+            net.minecraft.network.chat.MutableComponent nm = Component.literal(me ? "[MVP+] " : rank[k]).withStyle(plain.withColor(me ? 0x55FFFF : rc[k]));
+            nm.append(Component.literal(me ? user : names[k]).withStyle(plain.withColor(me ? 0x55FFFF : rc[k])));
             if (me && cs != null) { nm.append(Component.literal(" ")); nm.append(Cosmetics.glyph(Cosmetics.frameNow(cs, now))); }
             g.text(font, nm, ex + 11, ey2, 0xFFFFFFFF, true);
-            for (int b = 0; b < 4; b++) g.fill(ex + colW - 17 + b * 3, ey2 + 7 - b * 2, ex + colW - 15 + b * 3, ey2 + 8, b < 3 + (k % 2) ? 0xFF55FF55 : 0xFF3A4254);       // ping bars
+            float wob = (float) Math.sin(sec * 1.3f + k * 1.9f) + 0.6f * (float) Math.sin(sec * 3.1f + k * 0.7f);            // ping: the bars rise and fall like a real connection
+            int lit = Math.max(1, Math.min(5, 4 + Math.round(wob * 1.2f)));
+            int bc = lit >= 4 ? 0xFF55FF55 : lit >= 3 ? 0xFFFFFF55 : lit >= 2 ? 0xFFFFAA00 : 0xFFFF5555;
+            for (int b = 0; b < 5; b++) g.fill(ex + colW - 20 + b * 3, ey2 + 8 - (2 + b), ex + colW - 18 + b * 3, ey2 + 8, b < lit ? bc : 0xFF3A4254);
         }
+        String foot = "Ranks, Boosters & MORE! STORE.HYPIXEL.NET";
+        g.text(font, foot, tx + (tw - font.width(foot)) / 2, ty + th - 11, 0xFFFF55FF, true);
     }
 
     private void resourcesPage() {
