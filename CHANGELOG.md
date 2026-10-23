@@ -1,3 +1,6 @@
+## 0.8.59
+- Changed: the Enabled / Animated / Chat Alert / Disabled filter now sits inside the Drop Library pages, under the header, so it no longer covers the Active lever
+
 ## 0.8.58
 - Fixed: the new animated suffix icons were only drawn in the menu list, not in chat, the tab list or the preview (those use their own sprite files). Every suffix sprite is now the new animation
 - Note: when Active is OFF, your own suffix, name effect and aura are hidden on your screen
