@@ -2,6 +2,14 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.19
+- Cosmetics page redone: Special Cosmetics first, then Beta, then Earned (was Everyone's). Suffixes, Name effects and Auras each have their own section, the words under the tiles are gone (hover a tile to see how to get it), and the tiles no longer flash.
+- Hover a player's name or suffix in chat to see a FancyDrops card: which cosmetics they have and how they got each one.
+- Name effects animate in chat now, like in the tab list. Glitch keeps jumping between letters, Royal Gold has a glint running along the name.
+- The Secret cosmetic is now given when you find the hidden button (the test menu no longer overrides it).
+- The Stardust aura is bigger and easier to see.
+- Test menu: add or remove single cosmetics on yourself, give or remove all, reset. The old page switch is gone.
+
 ## 0.8.18
 - New Cosmetics page with three lines. Beta Cosmetics (the old suffixes plus four gentle name effects) stay with everyone who downloaded before v1.0; anyone who joins later sees them locked. Special Cosmetics are given by hand, one by one: Sparkle, Royal Gold (Patreon), Glitch (bug reports) and Stardust, a particle aura (contributors). Everyone's Cosmetics are earned by playing and stand still: Newcomer, Discord, First Drop, Collector, and a hidden one.
 - Name effects (IGN) keep your server colour and add light and movement; they animate in the tab list and are frozen looks in chat.
