@@ -18,8 +18,8 @@ public final class ChatParser {
     private static final Pattern KILL = Pattern.compile("\\byour slayer (?:boss )?kill gave you\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern QUEST_DONE = Pattern.compile("^\\s*SLAYER QUEST COMPLETE!?\\s*$", Pattern.CASE_INSENSITIVE);
     // "RARE DROP! Scythe Blade (+120% ✯ Magic Find)"
-    private static final Pattern DROP = Pattern.compile("^\\s*((?:VERY |CRAZY )?RARE|CRAZY|INSANE|PET|SWEET|RNGESUS)\\s+(DROP|CROP)!\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
-    private static final Pattern MF = Pattern.compile("\\s*\\(\\+([\\d.,]+)%.*\\)\\s*$");
+    private static final Pattern DROP = Pattern.compile("(?:^|(?<=[\\s\\]>»:*]))((?:VERY |CRAZY )?RARE|CRAZY|INSANE|PET|SWEET|RNGESUS)\\s+(DROP|CROP)!\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MF_ANY = Pattern.compile("\\(\\+([\\d.,]+)%");
     // farming lines carry Overbloom instead of Magic Find: "(+25 ☘ Overbloom)"
     private static final Pattern OVERBLOOM = Pattern.compile("\\s*\\(\\+?([\\d.,]+)%?[^)]*Overbloom[^)]*\\)\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern AMOUNT_PREFIX = Pattern.compile("^(\\d+)\\s*[x×]\\s*(.+)$", Pattern.CASE_INSENSITIVE);
@@ -29,15 +29,38 @@ public final class ChatParser {
     public static boolean isKill(String line) { return line != null && KILL.matcher(line).find(); }
     public static boolean isQuestComplete(String line) { return line != null && QUEST_DONE.matcher(line).matches(); }
 
-    /** The drop on this line, or null. */
+    /** The drop on this line, or null. Tolerant: leading symbols / tags, odd spaces and any trailing "(...)" groups are fine. */
     public static Drop parseDrop(String line) {
         if (line == null) return null;
+        line = line.replace('\u00a0', ' ').replaceAll("[\\u200b-\\u200f\\u2060\\ufeff]", "");
         Matcher m = DROP.matcher(line);
-        if (!m.matches()) return null;
+        if (!m.find()) return null;
         String kind = m.group(1).toUpperCase(Locale.ROOT) + (m.group(2).equalsIgnoreCase("CROP") ? " CROP" : "");
-        Matcher mfm = MF.matcher(m.group(3)), obm = OVERBLOOM.matcher(m.group(3));
-        String mf = obm.find() ? "OB:+" + obm.group(1) : mfm.find() ? "+" + mfm.group(1) + "%" : null;
-        String name = OVERBLOOM.matcher(MF.matcher(m.group(3)).replaceFirst("")).replaceFirst("").trim();
+        String rest = m.group(3).trim();
+        String mf = null;
+        // peel "(...)" groups off the end: one of them holds Magic Find / Overbloom
+        while (rest.endsWith(")")) {
+            int depth = 0, open = -1;
+            for (int i = rest.length() - 1; i >= 0; i--) {
+                char ch = rest.charAt(i);
+                if (ch == ')') depth++;
+                else if (ch == '(' && --depth == 0) { open = i; break; }
+            }
+            if (open <= 0) break;
+            String group = rest.substring(open);
+            if (mf == null) {
+                Matcher ob = OVERBLOOM.matcher(" " + group), mm = MF_ANY.matcher(group);
+                if (ob.find()) mf = "OB:+" + ob.group(1);
+                else if (mm.find()) mf = m.group(2).equalsIgnoreCase("CROP") ? "OB:+" + mm.group(1) : "+" + mm.group(1) + "%";
+                else {
+                    Matcher num = Pattern.compile("\\+\\s*([\\d.,]+)").matcher(group);
+                    if (num.find() && m.group(2).equalsIgnoreCase("CROP")) mf = "OB:+" + num.group(1);
+                }
+            }
+            rest = rest.substring(0, open).trim();
+        }
+        String name = rest.replaceAll("[\\s!.:;,✯☘☠♣-]+$", "").trim();
+        if (name.isEmpty()) return null;
         int amount = 1;
         Matcher am = AMOUNT_PREFIX.matcher(name);
         if (am.matches()) { amount = amount(am.group(1)); name = am.group(2).trim(); }

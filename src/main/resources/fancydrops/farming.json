@@ -1,5 +1,5 @@
 {
- "v": 7,
+ "v": 8,
  "sources": [
   {
    "id": "rare_crops",
@@ -63,7 +63,7 @@
      "id": "BURROWING_SPORES",
      "icon": "red_mushroom",
      "odds": "",
-     "chance": "1 in 350,000",
+     "chance": "1 in 500 (Harvest Bounty)",
      "rank": 1,
      "untradeable": false
     },
@@ -72,7 +72,7 @@
      "id": "OVERCLOCKER_3000",
      "icon": "redstone",
      "odds": "",
-     "chance": "1 in 2,000",
+     "chance": "1 in 2,000 (Harvest Bounty)",
      "rank": 1,
      "untradeable": false
     },
@@ -81,7 +81,7 @@
      "id": "ETHEREAL_VINE",
      "icon": "vine",
      "odds": "",
-     "chance": "1 in 5",
+     "chance": "1 in 20 (Harvest Bounty)",
      "rank": 1,
      "untradeable": false
     },
@@ -91,6 +91,42 @@
      "icon": "comparator",
      "odds": "",
      "chance": "1 in 200,000",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Evergreen Chip",
+     "id": "EVERGREEN_GARDEN_CHIP",
+     "icon": "oak_sapling",
+     "odds": "",
+     "chance": "1 in 33 (Harvest Bounty)",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Synthesis Chip",
+     "id": "SYNTHESIS_GARDEN_CHIP",
+     "icon": "comparator",
+     "odds": "",
+     "chance": "1 in 33 (Harvest Bounty)",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Iridium",
+     "id": "IRIDIUM",
+     "icon": "prismarine_crystals",
+     "odds": "",
+     "chance": "1 in 500 (Harvest Bounty)",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Overgrown Grass",
+     "id": "OVERGROWN_GRASS",
+     "icon": "grass_block",
+     "odds": "",
+     "chance": "1 in 1,000 (Harvest Bounty)",
      "rank": 1,
      "untradeable": false
     }

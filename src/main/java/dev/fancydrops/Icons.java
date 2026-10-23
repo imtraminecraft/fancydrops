@@ -30,6 +30,15 @@ final class Icons {
             g.fill(x + i, y + j, x + i + 1, y + j + 1, c);
         }
     }
+    /** A filled triangle (barycentric test over the 16x16 cell). */
+    private static void tri(GuiGraphicsExtractor g, int x, int y, float x0, float y0, float x1, float y1, float x2, float y2, int c) {
+        float d = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2); if (Math.abs(d) < 1e-4f) return;
+        for (int j = 0; j < 16; j++) for (int i = 0; i < 16; i++) {
+            float px = i + 0.5f, py = j + 0.5f;
+            float a = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / d, b = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / d, e = 1 - a - b;
+            if (a >= -0.02f && b >= -0.02f && e >= -0.02f) g.fill(x + i, y + j, x + i + 1, y + j + 1, c);
+        }
+    }
     private static int al(int a, int rgb) { return (Math.max(0, Math.min(255, a)) << 24) | (rgb & 0xFFFFFF); }
 
     private static void ln(GuiGraphicsExtractor g, int x, int y, float x0, float y0, float x1, float y1, int c) {
@@ -61,6 +70,7 @@ final class Icons {
             disc(g, x, y, 7.5f, 7.5f, 7.6f, al(40 + Math.round(30 * pu), 0xFFC857)); disc(g, x, y, 7.5f, 7.5f, 6.2f, al(34, 0x12101E));
             for (int k = 0; k < 2; k++) { double an = s * 1.3 + k * Math.PI; r(g, x, y, Math.round(7.5f + (float) Math.cos(an) * 7.2f), Math.round(7.5f + (float) Math.sin(an) * 7.2f), 1, 1, al(210, 0xFFE9A8)); }
         }
+        if (name.startsWith("suf_")) { Cosmetics.drawIcon(g, name.substring(4), x, y, now); return; }
         switch (name) {
             case "home" -> {                                                                            // a house, its window glowing, smoke fading in and out
                 r(g, x, y, 11, 2, 2, 4, 0xFF8A4B2E);
@@ -117,8 +127,9 @@ final class Icons {
                 int[] cols = {0xFF56D8FF, 0xFF8FA8FF, 0xFFFF72C6};
                 int hot = (int) (s * 3f) % 3;
                 for (int i = 0; i < 3; i++) {
-                    int ty = 2 + i * 5, kx = 3 + i * 3; r(g, x, y, 1, ty + 1, 14, 2, 0xFF3A4254);
-                    r(g, x, y, 1, ty + 1, kx, 2, cols[i]); r(g, x, y, kx, ty - 1, 4, 6, i == hot ? 0xFFFFFFFF : 0xFFC4CBD9);
+                    int ty = 3 + i * 5; float kx = 4 + (float) (4 + 4 * Math.sin(s * 1.5f + i * 2.1f));
+                    r(g, x, y, 1, ty, 14, 1, 0xFF3A4254); r(g, x, y, 1, ty, Math.round(kx), 1, cols[i]);
+                    disc(g, x, y, kx, ty + 0.5f, 2.4f, i == hot ? 0xFFFFFFFF : 0xFFC4CBD9); disc(g, x, y, kx, ty + 0.5f, 1.2f, cols[i]);
                 }
             }
             case "wip" -> {                                                                             // two gears meshing, turning against each other
@@ -151,10 +162,12 @@ final class Icons {
                 disc(g, x, y, 7.5f, 7.5f, 6f, al(a, 0xE5484D)); disc(g, x, y, 7.5f, 7.5f, 4f, 0xFF1A2030);
                 for (int k = -4; k <= 4; k++) r(g, x, y, 8 + k, 8 - k - 1, 2, 2, al(a, 0xE5484D));
             }
-            case "chop" -> {                                                                            // a slash with a gleam running along it
-                for (int k = 0; k < 13; k++) r(g, x, y, 1 + k, 1 + k, 2, 2, 0xFFB9C6DA);
-                int hot = Math.round(((s * 1.3f) % 1f) * 12f); for (int k = Math.max(0, hot - 2); k <= hot; k++) r(g, x, y, 1 + k, 1 + k, 2, 2, 0xFFFFFFFF);
-                r(g, x, y, 11, 1, 3, 2, 0xFF8A5A2C); r(g, x, y, 2, 12, 2, 3, 0xFF8A5A2C);
+            case "chop" -> {                                                                            // a sword with a gleam running up the blade
+                for (int k = 0; k < 10; k++) { r(g, x, y, 5 + k, 9 - k, 2, 1, 0xFFE9F0FA); r(g, x, y, 5 + k, 10 - k, 2, 1, 0xFF9FB0C8); r(g, x, y, 4 + k, 10 - k, 1, 1, 0xFF6F7F99); }
+                int hot = Math.round(((s * 1.4f) % 1.3f) * 9f); for (int k = Math.max(0, hot - 2); k <= Math.min(9, hot); k++) r(g, x, y, 5 + k, 9 - k, 2, 1, 0xFFFFFFFF);
+                ln(g, x, y, 3, 8, 8, 13, 0xFFF2C14E); ln(g, x, y, 3, 9, 7, 13, 0xFFB98A24);
+                ln(g, x, y, 4, 12, 1, 15, 0xFF8A5A2C); ln(g, x, y, 5, 12, 2, 15, 0xFF6A4220); r(g, x, y, 0, 14, 2, 2, 0xFFF2C14E);
+                spark(g, x, y, 14, 1, 1, al(120 + (int) (130 * Math.sin(s * 5f)), 0xFFFFFF));
             }
             case "rare" -> {                                                                            // an amethyst shard that glints
                 for (int k = 0; k < 5; k++) { r(g, x, y, 7 - k, 2 + k, 2 + 2 * k, 1, k < 2 ? 0xFFD9A8FF : 0xFFB56BFF); r(g, x, y, 7 - k, 12 - k, 2 + 2 * k, 1, 0xFF8E48D8); }
@@ -168,15 +181,16 @@ final class Icons {
                 }
                 disc(g, x, y, 7.5f, 7.5f, 2.4f, 0xFFFFFFFF);
             }
-            case "dye" -> {                                                                             // three paint drops, glowing in turn
-                int[] cols = {0xFFFF72C6, 0xFF56D8FF, 0xFFFFC857};
-                for (int i = 0; i < 3; i++) {
-                    float p = (float) (Math.sin(s * 3f - i * 1.0f) * 0.5f + 0.5f);
-                    int cx = 2 + i * 5; r(g, x, y, cx, 4, 3, 5, cols[i]); r(g, x, y, cx + 1, 2, 1, 2, cols[i]); r(g, x, y, cx, 9, 3, 1, Canvas.shade(cols[i], 0.7f));
-                    r(g, x, y, cx, 5, 1, 2, al(120 + (int) (135 * p), 0xFFFFFF));
-                    r(g, x, y, cx - 1, 12, 5, 2, al((int) (60 + 180 * p), cols[i] & 0xFFFFFF));
+            case "dye" -> {                                                                             // a paint palette, its dabs glowing in turn
+                disc(g, x, y, 8f, 8.5f, 7.2f, 0xFF8A5A2C); disc(g, x, y, 8f, 8f, 6.8f, 0xFFD9A868); disc(g, x, y, 11.6f, 11.4f, 1.7f, 0xFF7A4E26);
+                int[] cols = {0xFFE5484D, 0xFFFFC857, 0xFF56D8FF, 0xFFB56BFF};
+                float[][] at = {{4.2f, 6.6f}, {7.6f, 3.6f}, {11.4f, 5.2f}, {4.6f, 11f}};
+                for (int k = 0; k < 4; k++) {
+                    float pu = (float) (Math.sin(s * 3f - k * 1.1f) * 0.5f + 0.5f);
+                    disc(g, x, y, at[k][0], at[k][1], 2.1f, al(70 + (int) (90 * pu), cols[k] & 0xFFFFFF));
+                    disc(g, x, y, at[k][0], at[k][1], 1.5f, cols[k]);
+                    r(g, x, y, Math.round(at[k][0]) - 1, Math.round(at[k][1]) - 1, 1, 1, al(120 + (int) (135 * pu), 0xFFFFFF));
                 }
-                r(g, x, y, 0, 15, 16, 1, 0xFF3A4254);
             }
             case "slayers" -> {                                                                         // a sword in a red aura: gleam up the blade, a slash arc, twinkling sparks
                 final String[] sw = {"............oooo", "...........oolbo", "..........oolbdo", ".........oolbdoo", "........oolbdoo.", ".......oolbdoo..", "...ooooolbdoo...", "...oggolbdoo....", "...ooggGdoo.....", "....oogGoo......", ".oooohoGGo......", ".oPPhoooGo......", ".oPPGo.ooo......", ".oPGGo..........", ".ooooo..........", "................"};
@@ -343,11 +357,12 @@ final class Icons {
                 r(g, x, y, 1, 14, 14, 1, 0xFF3C2812); r(g, x, y, 14, 1, 1, 14, 0xFF3C2812);
                 int gl = (int) ((s * 8f) % 20f); if (gl < 14) r(g, x, y, 1 + gl, 1, 1, 1, 0xFFE8FFD0);
             }
-            case "switch" -> {                                                                          // a lever with a blinking light
-                r(g, x, y, 2, 12, 12, 3, 0xFF5A6072); r(g, x, y, 3, 11, 10, 1, 0xFF7B8296);
-                ln(g, x, y, 8, 11, 12, 4, 0xFF9AA6BC); ln(g, x, y, 9, 11, 13, 4, 0xFF9AA6BC);
-                float p = (float) (Math.sin(s * 5f) * 0.5f + 0.5f);
-                disc(g, x, y, 12.5f, 3.5f, 2f, al(90 + Math.round(165 * p), 0x62E6A8)); r(g, x, y, 4, 13, 2, 1, al(90 + Math.round(165 * (1 - p)), 0xE5484D));
+            case "switch" -> {                                                                          // a toggle sliding on and off
+                float v = 0.5f + 0.5f * (float) Math.sin(s * 2.2f);
+                int tr = Canvas.mix(0xFF4A4D5C, 0xFF3FD08F, v);
+                disc(g, x, y, 4.5f, 8f, 4.2f, tr); disc(g, x, y, 11.5f, 8f, 4.2f, tr); r(g, x, y, 4, 4, 8, 8, tr);
+                r(g, x, y, 4, 4, 8, 1, al(70, 0xFFFFFF));
+                disc(g, x, y, 4.5f + 7f * v, 8f, 3.1f, 0xFFF4F6FA); disc(g, x, y, 4.5f + 7f * v, 7.4f, 2f, 0xFFFFFFFF);
             }
             case "farm" -> {                                                                            // a sprout growing out of soil, a leaf swaying
                 r(g, x, y, 1, 12, 14, 3, 0xFF6B4423); r(g, x, y, 1, 12, 14, 1, 0xFF8A5A2C);
@@ -402,12 +417,80 @@ final class Icons {
                     if (since < 0.12f) spark(g, x, y, bx + 1, by + 1, 2, 0xFFFFFFFF);
                 }
             }
-            case "experiments" -> {                                                                     // an enchanting table with a book bobbing above it
-                r(g, x, y, 1, 11, 14, 4, 0xFF1A1426); r(g, x, y, 1, 10, 14, 1, 0xFF2A2140); r(g, x, y, 2, 8, 12, 3, 0xFFB02A3A); r(g, x, y, 2, 8, 12, 1, 0xFFD6485A);
-                r(g, x, y, 3, 12, 1, 1, 0xFF55E6FF); r(g, x, y, 12, 12, 1, 1, 0xFF55E6FF);
-                int by = 3 + Math.round((float) Math.sin(s * 2.6f) * 1.3f);
-                r(g, x, y, 4, by, 8, 4, 0xFF6A4BC4); r(g, x, y, 5, by + 1, 3, 2, 0xFFEDE6FF); r(g, x, y, 8, by + 1, 3, 2, 0xFFEDE6FF); r(g, x, y, 7, by, 1, 4, 0xFF3F2A82);
-                if (((int) (s * 3f)) % 3 == 0) spark(g, x, y, 13, 3, 1, 0xFFB7F0FF); else spark(g, x, y, 2, 4, 1, 0xFFE0C4FF);
+            case "fx0" -> {                                                                             // Slam in: a block slams down, impact lines flash
+                float p = (s * 1.1f) % 1f, sc = p < 0.35f ? 1.7f - p / 0.35f * 0.7f : 1f; int w = Math.round(6 * sc);
+                r(g, x, y, 8 - w / 2, 8 - w / 2, w, w, 0xFFF4C26B);
+                if (p > 0.3f && p < 0.7f) { int a2 = 220; r(g, x, y, 1, 8, 3, 1, al(a2, 0xFFFFFF)); r(g, x, y, 12, 8, 3, 1, al(a2, 0xFFFFFF)); r(g, x, y, 8, 1, 1, 3, al(a2, 0xFFFFFF)); r(g, x, y, 8, 12, 1, 3, al(a2, 0xFFFFFF)); }
+            }
+            case "fx1" -> {                                                                             // Light sweep: a bright band running over a bar of words
+                r(g, x, y, 1, 5, 14, 6, 0xFF4B5575);
+                int gx = Math.round(((s * 1.2f) % 1.5f) * 12f) - 2; g.enableScissor(x + 1, y + 5, x + 15, y + 11); for (int j = 0; j < 6; j++) r(g, x, y, gx - j / 2 + 1, 5 + j, 3, 1, 0xDDFFFFFF); g.disableScissor();
+            }
+            case "fx2" -> { for (int i = 0; i < 5; i++) r(g, x, y, 1 + i * 3, 7 + Math.round((float) Math.sin(s * 4f + i * 0.9f) * 3.2f), 3, 3, 0xFF7BC8FF); }          // Wave
+            case "fx3" -> { int[] rb = {0xFFFF4D4D, 0xFFFFA84D, 0xFFFFE44D, 0xFF62E66A, 0xFF4DB8FF, 0xFFB06BFF}; int off = (int) (s * 5f); for (int i = 0; i < 6; i++) r(g, x, y, 1 + i * 2 + 1, 3, 2, 10, rb[(i + off) % 6]); }       // Rainbow
+            case "fx4" -> {                                                                             // Drop in
+                float p = (s * 0.9f) % 1f; int by = Math.round(p * p * 9f); r(g, x, y, 5, 1 + by, 6, 5, 0xFFF4C26B);
+                for (int k = 1; k <= 3; k++) r(g, x, y, 6 + k, Math.max(0, by - k * 2), 1, 1, al(150 - k * 40, 0xFFFFFF));
+                r(g, x, y, 2, 14, 12, 1, 0xFF4B5575);
+            }
+            case "fx5" -> { float k = 0.5f + 0.5f * (float) Math.sin(s * 3.4f); disc(g, x, y, 7.5f, 7.5f, 3.5f + k * 3f, al(70, 0xFFC857)); disc(g, x, y, 7.5f, 7.5f, 2.6f + k * 1.4f, 0xFFFFC857); }      // Pulse
+            case "fx6" -> {                                                                             // Glitch: a block with offset colour slices
+                int sh = (int) (s * 7f) % 5 - 2; r(g, x, y, 3, 3, 10, 10, 0xFFE8EAF2);
+                r(g, x, y, 3 + sh, 5, 10, 2, 0xAA56D8FF); r(g, x, y, 3 - sh, 9, 10, 2, 0xAAFF72C6); r(g, x, y, 5, 7, 6, 2, 0xFF2A2F40);
+            }
+            case "fx7" -> { float k = 0.5f + 0.5f * (float) Math.sin(s * 3f); disc(g, x, y, 7.5f, 7.5f, 7f, al(40 + Math.round(40 * k), 0x56D8FF)); disc(g, x, y, 7.5f, 7.5f, 5f, al(70 + Math.round(60 * k), 0x56D8FF)); disc(g, x, y, 7.5f, 7.5f, 2.5f, 0xFFFFFFFF); }  // Neon glow
+            case "fx8" -> {                                                                             // Bounce in
+                float p = (s * 0.8f) % 1f; int by = Math.round((float) Math.abs(Math.cos(p * Math.PI * 2.5)) * (1f - p) * 9f); int h = by == 0 ? 4 : 5;
+                r(g, x, y, 5, 10 - by, 6, h, 0xFF8FE88F); r(g, x, y, 4, 14, 8, 1, 0xFF4B5575);
+            }
+            case "fx9" -> {                                                                             // Typewriter: letters typed out, a cursor blinking after them
+                int n = 1 + (int) (s * 2.5f) % 4; for (int i = 0; i < n; i++) r(g, x, y, 2 + i * 3, 7, 2, 4, 0xFFF4F4F8);
+                if ((int) (s * 3f) % 2 == 0) r(g, x, y, 2 + n * 3, 5, 1, 7, 0xFF62E6A8);
+            }
+            case "fx10" -> { int by = Math.round((float) Math.sin(s * 1.8f) * 2.5f); r(g, x, y, 3, 6 + by, 10, 4, 0xFFBFE6FF); r(g, x, y, 5, 4 + by, 6, 2, 0xFFDDF3FF); r(g, x, y, 4 + (int) (Math.sin(s * 1.8f) * 1), 13, 8, 1, al(70, 0x000000)); }       // Float
+            case "fx11" -> { int sh = (int) (s * 14f) % 3 - 1; r(g, x, y, 4 + sh, 5 + (int) (s * 11f) % 3 - 1, 8, 6, 0xFFFF8A5C); r(g, x, y, 1, 7, 1, 2, al(150, 0xFFFFFF)); r(g, x, y, 14, 7, 1, 2, al(150, 0xFFFFFF)); }      // Shake
+            case "fx12" -> {                                                                            // Fire
+                float f = 0.5f + 0.5f * (float) Math.sin(s * 9f);
+                for (int yy = 2; yy <= 13; yy++) { int hw = Math.round((yy < 7 ? 1 + (yy - 2) * 0.6f : 4f - (yy - 7) * 0.4f)); int c0 = yy < 6 ? 0xFFFFD84A : yy < 10 ? 0xFFFF8A2A : 0xFFE0381C; r(g, x, y, 8 - hw, yy + (f > 0.5f && yy < 5 ? 0 : 0), hw * 2, 1, c0); }
+                r(g, x, y, 7, 1 + Math.round(f), 2, 2, 0xFFFFF0A0);
+            }
+            case "fx13" -> {                                                                            // Frost: a snowflake, glinting
+                int c0 = 0xFF9FE8FF; r(g, x, y, 7, 1, 2, 14, c0); r(g, x, y, 1, 7, 14, 2, c0);
+                for (int k = 2; k <= 5; k++) { r(g, x, y, 7 - k + 0, 7 - k + 0, 1, 1, c0); r(g, x, y, 8 + k - 1, 7 - k, 1, 1, c0); r(g, x, y, 7 - k, 8 + k - 1, 1, 1, c0); r(g, x, y, 8 + k - 1, 8 + k - 1, 1, 1, c0); }
+                if ((int) (s * 3f) % 2 == 0) r(g, x, y, 7, 7, 2, 2, 0xFFFFFFFF);
+            }
+            case "fx14" -> { int a1 = 120 + (int) (135 * Math.sin(s * 4f)), a2 = 120 + (int) (135 * Math.sin(s * 4f + 2.1f)), a3 = 120 + (int) (135 * Math.sin(s * 4f + 4.2f)); spark(g, x, y, 4, 5, 3, al(a1, 0xFFE9A0)); spark(g, x, y, 11, 4, 2, al(a2, 0xFFFFFF)); spark(g, x, y, 9, 11, 3, al(a3, 0xFFD84A)); }      // Twinkle
+            case "fx15" -> { for (int i = 0; i < 5; i++) { float k = ((s * 1.2f) % 2f) - i * 0.25f; int a2 = Math.round(255 * Math.max(0f, Math.min(1f, 1.2f - k))); r(g, x, y, 1 + i * 3, 5, 2, 6, al(a2, 0xFFF4C26B)); } }       // Fade away: letters fading one by one
+            case "fx16" -> { float p = (s * 0.9f) % 1f; for (int i = 0; i < 3; i++) { int by = Math.round(10 - (p * 8f) - i * 0.5f); r(g, x, y, 2 + i * 4, Math.max(1, by), 3, 4, al(Math.round(255 * (1f - p)), 0xFFB9E6FF)); } r(g, x, y, 1, 14, 14, 1, 0xFF4B5575); }      // Fly up
+            case "fx17" -> { float p = (s * 0.9f) % 1f; int w = Math.round(10 * (1f - p)); if (w > 0) r(g, x, y, 8 - w / 2, 8 - w / 2, w, w, 0xFFFF9AC8); r(g, x, y, 1, 14, 14, 1, 0xFF4B5575); }      // Shrink
+            case "fx18" -> { float p = (s * 0.9f) % 1f; int[][] d = {{-3, -2}, {3, -3}, {-2, 3}, {3, 3}, {0, -4}, {-4, 1}}; for (int[] q : d) r(g, x, y, 7 + Math.round(q[0] * p * 2f), 7 + Math.round(q[1] * p * 2f), 2, 2, al(Math.round(255 * (1f - p * 0.8f)), 0xFFFFB86B)); }      // Scatter
+            case "exp_rare" -> {                                                                        // a cut gem with a glint passing over it
+                int top = 0xFF9BEAFF, mid = 0xFF3FB8E8, low = 0xFF1C7FB8;
+                for (int yy = 3; yy <= 5; yy++) { int hw = 3 + (yy - 3); r(g, x, y, 8 - hw, yy, hw * 2, 1, top); }
+                for (int yy = 6; yy <= 13; yy++) { int hw = Math.max(1, 6 - (yy - 6) * 6 / 8 - (yy > 11 ? 1 : 0)); r(g, x, y, 8 - hw, yy, hw * 2, 1, yy < 9 ? mid : low); }
+                r(g, x, y, 5, 3, 6, 1, 0xFFE8FAFF); r(g, x, y, 4, 5, 8, 1, 0xFF7ED8F6); r(g, x, y, 7, 6, 2, 6, al(90, 0xFFFFFF));
+                int gx = Math.round(((s * 1.1f) % 1.7f) * 9f) + 1; g.enableScissor(x + 3, y + 3, x + 13, y + 14); for (int j = 0; j < 11; j++) r(g, x, y, gx - j / 2, 3 + j, 2, 1, 0x99FFFFFF); g.disableScissor();
+            }
+            case "exp_book" -> {                                                                        // an enchanted book, its runes glowing
+                int cov = 0xFF6B3FA0, page = 0xFFEDE3C8;
+                r(g, x, y, 2, 2, 12, 12, cov); r(g, x, y, 3, 3, 10, 10, page); r(g, x, y, 2, 2, 2, 12, 0xFF4A2A78); r(g, x, y, 2, 13, 12, 1, 0xFF3A2060);
+                for (int k = 0; k < 3; k++) { int a2 = 140 + (int) (115 * Math.sin(s * 3f + k * 1.3f)); r(g, x, y, 6, 5 + k * 3, 5 - (k % 2), 1, al(a2, 0xB56BFF)); }
+                r(g, x, y, 11, 2, 1, 5, 0xFFFF72C6);
+            }
+            case "experiments" -> {                                                                     // a flask of bubbling liquid, a glow rising in it
+                int glass = 0xFFB9D2E6, liq = Canvas.mix(0xFF39D98A, 0xFF56D8FF, (float) (Math.sin(s * 1.6f) * 0.5f + 0.5f));
+                r(g, x, y, 5, 1, 6, 1, 0xFFE6F2FA); r(g, x, y, 6, 2, 1, 3, glass); r(g, x, y, 9, 2, 1, 3, glass);
+                for (int yy = 5; yy <= 13; yy++) {
+                    int hw = Math.round(2.4f + (yy - 5) * 0.62f), x0 = 8 - hw, w = hw * 2;
+                    if (yy >= 8) r(g, x, y, x0 + 1, yy, w - 2, 1, Canvas.shade(liq, 1f - (yy - 8) * 0.05f));
+                    r(g, x, y, x0, yy, 1, 1, glass); r(g, x, y, x0 + w - 1, yy, 1, 1, glass);
+                }
+                r(g, x, y, 2, 14, 12, 1, glass);
+                r(g, x, y, 5, 9, 2, 1, al(150, 0xFFFFFF));
+                for (int k = 0; k < 3; k++) {
+                    float p = (s * 0.8f + k * 0.34f) % 1f; int by = Math.round(12f - p * 9.5f), bx = 6 + k * 2 + Math.round((float) Math.sin(s * 3f + k) * 0.6f);
+                    r(g, x, y, bx, by, 1, 1, al((int) (230 * (1f - p * 0.6f)), 0xFFFFFF));
+                }
             }
             case "fishing" -> {                                                                         // a rod, a bobber with ripples, rolling waves and a fish leaping out
                 float u = (s * 0.32f) % 1f;
@@ -553,29 +636,74 @@ final class Icons {
                 float p = (float) (Math.sin(s * 4f) * 0.5f + 0.5f);
                 r(g, x, y, 5, 7, 6, 4, al(70 + Math.round(120 * p), 0xFFFFB300)); r(g, x, y, 6, 8, 4, 2, 0xFFFFC857);
             }
-            case "bars" -> {                                                                            // black bars over a picture, the sun twinkling
-                r(g, x, y, 2, 3, 12, 10, 0xFF4B7FB5); r(g, x, y, 9, 6, 3, 3, al(160 + (int) (95 * Math.sin(s * 4f)), 0xFFD36B));
-                r(g, x, y, 2, 3, 12, 2, 0xFF000000); r(g, x, y, 2, 11, 12, 2, 0xFF000000);
+            case "pos_top", "pos_bottom" -> {                                                           // a screen with the words at the top or the bottom
+                boolean top = name.equals("pos_top");
+                r(g, x, y, 1, 2, 14, 12, 0xFF1B2030); g.outline(x + 1, y + 2, 14, 12, 0xFF4A5470);
+                r(g, x, y, 3, top ? 8 : 4, 10, 4, 0xFF2B3A5A);
+                float sh = (s * 1.6f) % 1.6f; int ty = top ? 4 : 10;
+                r(g, x, y, 3, ty, 10, 1, 0xFFE8ECF4); r(g, x, y, 3, ty + 2, 7, 1, 0xFF9AA6BC);
+                r(g, x, y, 3 + Math.round(sh * 6f), ty, 2, 1, 0xFFFFFFFF);
+            }
+            case "dock_top", "dock_bottom", "dock_off" -> {                                             // the menu with the live preview above or below it
+                boolean top = !name.equals("dock_bottom"), off = name.equals("dock_off");
+                float pu = 0.5f + 0.5f * (float) Math.sin(s * 3f);
+                r(g, x, y, 1, 1, 14, 14, 0xFF161A28); g.outline(x + 1, y + 1, 14, 14, off ? 0xFF4A4D5C : 0xFF5A6A9A);
+                int py = top ? 2 : 10;
+                r(g, x, y, 2, py, 12, 4, off ? 0xFF2A2D3A : Canvas.mix(0xFF3A5AA0, 0xFF6C9CFF, pu));
+                if (!off) { r(g, x, y, 7, py + 1, 1, 2, 0xFFFFFFFF); r(g, x, y, 8, py + 1, 1, 2, 0xFFE8ECF4); }
+                int my = top ? 7 : 3;
+                for (int k = 0; k < 3; k++) r(g, x, y, 3, my + k * 2, k == 1 ? 7 : 9, 1, off ? 0xFF3A3D4A : 0xFF7B86A6);
+                if (off) { ln(g, x, y, 3, 13, 12, 2, 0xFFE5484D); ln(g, x, y, 3, 12, 11, 2, 0xFFB43A3E); }
+            }
+            case "bars" -> {                                                                            // a picture with cinematic bars sliding in and out
+                int bh = 2 + Math.round(1.6f * (0.5f + 0.5f * (float) Math.sin(s * 2.4f)));
+                r(g, x, y, 1, 2, 14, 12, 0xFF141826);
+                for (int j = 0; j < 10; j++) r(g, x, y, 2, 3 + j, 12, 1, Canvas.mix(0xFF4F9BE0, 0xFFF6B77A, j / 9f));
+                disc(g, x, y, 10.5f, 8f, 1.9f + 0.3f * (float) Math.sin(s * 4f), 0xFFFFE08A);
+                for (int k = 0; k < 12; k++) { int hh = 2 + Math.round((float) (1.4 + 1.4 * Math.sin(k * 0.75 + 1.1))); r(g, x, y, 2 + k, 13 - hh, 1, hh, k % 3 == 0 ? 0xFF2F7A52 : 0xFF276646); }
+                r(g, x, y, 2, 3, 12, bh, 0xFF05060A); r(g, x, y, 2, 13 - bh, 12, bh, 0xFF05060A);
+                r(g, x, y, 2, 3 + bh, 12, 1, al(90, 0xFFFFFF)); r(g, x, y, 2, 12 - bh, 12, 1, al(90, 0xFFFFFF));
             }
             case "blur" -> {                                                                            // dots that drift in and out of focus
                 float f = (float) (Math.sin(s * 2.2f) * 0.5f + 0.5f);
                 for (int j = 0; j < 3; j++) for (int i = 0; i < 3; i++) disc(g, x, y, 3 + i * 5, 3 + j * 5, 1f + f * 1.6f, al(255 - Math.round(f * 150), (i + j) % 2 == 0 ? 0x56D8FF : 0xB56BFF));
             }
-            case "barheight" -> {                                                                       // a bar between two rails, its edges glowing
-                r(g, x, y, 3, 5, 10, 6, 0xFF202432); int a = 140 + (int) (115 * Math.sin(s * 4f));
-                r(g, x, y, 3, 5, 10, 1, al(a, 0xFF8FA8)); r(g, x, y, 3, 10, 10, 1, al(a, 0xFF8FA8)); r(g, x, y, 1, 2, 14, 1, 0xFF6C7080); r(g, x, y, 1, 13, 14, 1, 0xFF6C7080);
+            case "text_top", "text_bottom" -> {                                                         // a screen with the title lines at the top or the bottom
+                boolean top = name.equals("text_top");
+                r(g, x, y, 1, 2, 14, 12, 0xFF1B2030); g.outline(x + 1, y + 2, 14, 12, 0xFF5A6482);
+                int ty = top ? 4 : 9, sy = top ? 9 : 4; float gl = (s * 1.2f) % 1.6f;
+                r(g, x, y, 3, sy, 10, 3, 0xFF2F5C8F); r(g, x, y, 3, sy, 10, 1, 0xFF4F86C2);
+                r(g, x, y, 3, ty, 10, 1, 0xFFFFFFFF); r(g, x, y, 5, ty + 2, 6, 1, 0xFF8E98AC);
+                int gx = Math.round(gl * 8f); if (gx < 10) r(g, x, y, 3 + gx, ty, 2, 1, 0xFFFFE08A);
             }
-            case "size" -> {                                                                            // a frame whose corners glow
-                r(g, x, y, 4, 4, 8, 8, 0xFF2B4A6B); int a = 120 + (int) (135 * Math.sin(s * 4f));
-                g.outline(x + 3, y + 3, 10, 10, al(a, 0x56D8FF)); spark(g, x, y, 13, 3, 1, 0xFFFFFFFF);
+            case "barheight" -> {                                                                       // two bars growing and shrinking round a double arrow
+                int t = 2 + Math.round(1f * (0.5f + 0.5f * (float) Math.sin(s * 3f)));
+                r(g, x, y, 1, 1, 14, t, 0xFF0B0D14); r(g, x, y, 1, 15 - t, 14, t, 0xFF0B0D14);
+                int a = 150 + (int) (100 * Math.sin(s * 4f));
+                r(g, x, y, 1, 1 + t, 14, 1, al(a, 0xFF8FA8)); r(g, x, y, 1, 14 - t, 14, 1, al(a, 0xFF8FA8));
+                r(g, x, y, 8, 5, 1, 1, 0xFFE8ECF4); r(g, x, y, 7, 6, 3, 1, 0xFFE8ECF4); r(g, x, y, 8, 7, 1, 2, 0xFFB8BECC);
+                r(g, x, y, 7, 9, 3, 1, 0xFFE8ECF4); r(g, x, y, 8, 10, 1, 1, 0xFFE8ECF4);
+            }
+            case "size" -> {                                                                            // corner brackets breathing round a square
+                int o = Math.round(1.2f * (0.5f + 0.5f * (float) Math.sin(s * 3f)));
+                r(g, x, y, 5, 5, 6, 6, 0xFF2B4A6B); r(g, x, y, 5, 5, 6, 1, 0xFF4F7FB0);
+                int c = 0xFF56D8FF;
+                for (int q = 0; q < 4; q++) { int cx = q % 2 == 0 ? 1 - o : 14 + o, cy = q < 2 ? 1 - o : 14 + o, sx = q % 2 == 0 ? 1 : -1, sy = q < 2 ? 1 : -1;
+                    r(g, x, y, sx > 0 ? cx : cx - 3, cy, 4, 1, c); r(g, x, y, cx, sy > 0 ? cy : cy - 3, 1, 4, c); }
+                spark(g, x, y, 8, 8, 1, al(120 + (int) (130 * Math.sin(s * 4f)), 0xFFFFFF));
             }
             case "itemsize" -> {                                                                        // a gem that glints
                 for (int j = -5; j <= 5; j++) { int w = 5 - Math.abs(j); r(g, x, y, 8 - w, 8 + j, w * 2 + 1, 1, j < 0 ? 0xFFB8F0FF : 0xFF2FC9B8); }
                 int a = (int) (255 * Math.max(0, Math.sin(s * 4f))); spark(g, x, y, 6, 6, 1, al(a, 0xFFFFFF));
             }
-            case "cube" -> {                                                                            // a block, an edge lighting in turn
-                r(g, x, y, 2, 5, 6, 9, 0xFFB08A50); r(g, x, y, 8, 5, 6, 9, 0xFF7A5A30); r(g, x, y, 3, 2, 10, 3, 0xFFD9B878);
-                int hot = (int) (s * 3f) % 3; r(g, x, y, hot == 0 ? 3 : hot == 1 ? 2 : 13, hot == 0 ? 2 : 5, hot == 0 ? 10 : 1, hot == 0 ? 1 : 9, 0xFFFFFFFF);
+            case "cube" -> {                                                                            // an isometric block, one edge lighting in turn
+                for (int j = 0; j < 7; j++) { int half = j <= 3 ? j * 2 + 1 : (6 - j) * 2 + 1; r(g, x, y, 8 - half, 1 + j, half * 2, 1, j < 2 ? 0xFFF3DBA0 : 0xFFE0BE7C); }
+                for (int xi = 0; xi < 7; xi++) { int yt = 4 + Math.round(xi * 0.66f); r(g, x, y, 1 + xi, yt, 1, 8, xi == 0 ? 0xFF8F6A38 : 0xFFB38A4E); r(g, x, y, 14 - xi, yt, 1, 8, xi == 0 ? 0xFF4F3818 : 0xFF6E5026); }
+                r(g, x, y, 8, 8, 1, 7, 0xFF5A4220);
+                int hot = (int) (s * 3f) % 3;
+                if (hot == 0) { for (int k = 0; k < 7; k++) r(g, x, y, 1 + k, 4 + Math.round(k * 0.66f), 1, 1, 0xFFFFFFFF); }
+                else if (hot == 1) r(g, x, y, 8, 8, 1, 7, 0xFFFFFFFF);
+                else for (int k = 0; k < 7; k++) r(g, x, y, 14 - k, 4 + Math.round(k * 0.66f), 1, 1, 0xFFFFFFFF);
             }
             case "dice" -> {                                                                            // a die whose face keeps changing
                 int v = (int) (s * 2f) % 6;
@@ -601,8 +729,9 @@ final class Icons {
                 r(g, x, y, 1, 4, 1, 6, al(a, 0xFFFFFF)); r(g, x, y, 14, 4, 1, 6, al(a, 0xFFFFFF)); r(g, x, y, 0, 6, 1, 2, al(a / 2, 0xFFFFFF)); r(g, x, y, 15, 6, 1, 2, al(a / 2, 0xFFFFFF));
             }
             case "send" -> {                                                                            // a paper plane, its trail chasing
-                ln(g, x, y, 14, 3, 3, 7, 0xFFE8ECF4); ln(g, x, y, 14, 3, 7, 13, 0xFFB8BECC); ln(g, x, y, 3, 7, 8, 9, 0xFF8E9BB3); ln(g, x, y, 8, 9, 7, 13, 0xFF8E9BB3);
-                for (int i = 0; i < 4; i++) { float p = ((s * 2f) - i * 0.25f) % 1f; r(g, x, y, 1 + i * 2, 12 - i, 2, 1, al((int) (200 * (1f - p)), 0xFFFFFF)); }
+                tri(g, x, y, 14, 2, 2, 7, 7, 9, 0xFFF1F5FB); tri(g, x, y, 14, 2, 7, 9, 9, 14, 0xFFB4BED0); tri(g, x, y, 7, 9, 9, 14, 8, 10.5f, 0xFF8E9BB3);
+                ln(g, x, y, 14, 2, 7, 9, 0xFF8E9BB3);
+                for (int i = 0; i < 4; i++) { float q = ((s * 2f) - i * 0.25f) % 1f; if (q < 0) q += 1f; r(g, x, y, 1 + i * 2, 13 - i, 2, 1, al((int) (200 * (1f - q)), 0xFFFFFF)); }
             }
             case "disc" -> {                                                                            // a record whose shine travels round the groove
                 disc(g, x, y, 7.5f, 7.5f, 7f, 0xFF15161C); disc(g, x, y, 7.5f, 7.5f, 3f, 0xFFFF72C6); disc(g, x, y, 7.5f, 7.5f, 0.8f, 0xFF15161C);
@@ -614,9 +743,9 @@ final class Icons {
                 for (int i = 0; i < 2; i++) { float ph = (s * 1.6f - i * 0.3f) % 1f; if (ph >= 0) r(g, x, y, 11 + i * 2, 5 - i, 1, 6 + i * 2, al((int) (255 * Math.sin(ph * Math.PI)), 0x56D8FF)); }
             }
             case "format" -> {                                                                          // { | } with a blinking cursor
-                int[][] L = {{4, 3}, {3, 4}, {3, 5}, {2, 7}, {3, 9}, {3, 10}, {4, 11}}, R = {{11, 3}, {12, 4}, {12, 5}, {13, 7}, {12, 9}, {12, 10}, {11, 11}};
-                for (int[] q : L) r(g, x, y, q[0], q[1], 1, 1, 0xFF9AA6FF); for (int[] q : R) r(g, x, y, q[0], q[1], 1, 1, 0xFF9AA6FF);
-                if ((int) (s * 2.4f) % 2 == 0) r(g, x, y, 8, 3, 1, 9, 0xFFFFB300);
+                int[][] L = {{6, 2}, {5, 3}, {5, 4}, {5, 5}, {4, 6}, {3, 7}, {4, 8}, {5, 9}, {5, 10}, {5, 11}, {5, 12}, {6, 13}};
+                for (int[] q : L) { r(g, x, y, q[0] - 1, q[1], 2, 1, 0xFF9AA6FF); r(g, x, y, q[0] - 1, q[1], 1, 1, 0xFFC9D0FF); r(g, x, y, 15 - q[0], q[1], 2, 1, 0xFF9AA6FF); r(g, x, y, 16 - q[0], q[1], 1, 1, 0xFFC9D0FF); }
+                if ((int) (s * 2.4f) % 2 == 0) r(g, x, y, 8, 4, 1, 8, 0xFFFFB300);
             }
             case "plus" -> {                                                                            // a plus that glows
                 int a = 150 + (int) (105 * Math.sin(s * 4f));
@@ -627,19 +756,30 @@ final class Icons {
                 float u = (s % 2f) / 2f; int gx = Math.round(u * 24f) - 6;
                 g.enableScissor(x + 3, y + 2, x + 13, y + 14); for (int j = 0; j < 12; j++) r(g, x, y, gx - j / 2, 2 + j, 3, 1, 0x99FFFFFF); g.disableScissor();
             }
-            case "sparkle" -> {                                                                         // a firework star, its sparks lighting in turn
-                int[] cols = {0xFFFF72C6, 0xFF56D8FF, 0xFFFFC857}; int hot = (int) (s * 6f) % 6;
-                for (int i = 0; i < 6; i++) { double a = i * Math.PI / 3 + 0.3; r(g, x, y, Math.round(8 + (float) Math.cos(a) * 5f), Math.round(8 + (float) Math.sin(a) * 5f), 2, 2, al(i == hot ? 255 : 140, cols[i % 3] & 0xFFFFFF)); }
-                spark(g, x, y, 8, 8, 2, 0xFFFFFFFF);
+            case "sparkle" -> {                                                                         // a dropped item: a gem bobbing over its shadow on the ground, a light beam above it
+                float bob = (float) Math.sin(s * 3f); int by = 5 + Math.round(bob * 1.2f);
+                for (int yy = 0; yy < 12; yy++) { int a2 = 16 + Math.round(34 * (1f - yy / 12f)); r(g, x, y, 5, yy, 6, 1, al(a2, 0xFF72C6)); r(g, x, y, 7, yy, 2, 1, al(a2 + 30, 0xFFFFFF)); }
+                int sw = 8 - Math.round(bob * 1.4f); r(g, x, y, 8 - sw / 2, 13, sw, 1, 0xCC05060A); r(g, x, y, 8 - sw / 2 + 1, 14, sw - 2, 1, 0x88000000);
+                r(g, x, y, 6, by, 4, 1, 0xFF9BEAFF); r(g, x, y, 5, by + 1, 6, 1, 0xFF56D8FF); r(g, x, y, 4, by + 2, 8, 1, 0xFF56D8FF); r(g, x, y, 5, by + 3, 6, 1, 0xFF2FA0D8); r(g, x, y, 6, by + 4, 4, 1, 0xFF1C7FB8); r(g, x, y, 7, by + 5, 2, 1, 0xFF1C7FB8);
+                r(g, x, y, 6, by + 1, 2, 1, 0xFFFFFFFF); r(g, x, y, 5, by + 2, 1, 1, 0xFFE8FAFF);
+                if ((int) (s * 3f) % 2 == 0) spark(g, x, y, 12, 3, 1, 0xFFFFFFFF); else spark(g, x, y, 3, 6, 1, 0xFFFFE9A0);
+            }
+            case "preview" -> {                                                                         // an eye that glances left and right
+                r(g, x, y, 1, 6, 14, 4, 0xFFE8EAF2); r(g, x, y, 3, 4, 10, 2, 0xFFE8EAF2); r(g, x, y, 3, 10, 10, 2, 0xFFE8EAF2); r(g, x, y, 5, 3, 6, 1, 0xFFB8BECC); r(g, x, y, 5, 12, 6, 1, 0xFFB8BECC);
+                int dx = Math.round((float) Math.sin(s * 1.6f) * 2f); disc(g, x, y, 8f + dx, 8f, 3f, 0xFF56D8FF); disc(g, x, y, 8f + dx, 8f, 1.5f, 0xFF10141D); r(g, x, y, 7 + dx, 6, 1, 1, 0xFFFFFFFF);
             }
             case "bazaar" -> {                                                                          // a market stall, a coin glinting on the counter
                 for (int i = 0; i < 7; i++) r(g, x, y, 1 + i * 2, 3, 2, 4, i % 2 == 0 ? 0xFFE5484D : 0xFFF4F4F8);
                 r(g, x, y, 1, 7, 14, 1, 0xFFB8BECC); r(g, x, y, 2, 8, 2, 7, 0xFF8A5A2C); r(g, x, y, 12, 8, 2, 7, 0xFF8A5A2C); r(g, x, y, 2, 11, 12, 2, 0xFFA8733A);
                 r(g, x, y, 7, 9, 2, 2, 0xFFFFC857); spark(g, x, y, 8, 9, 1 + (int) (s * 3f) % 2, 0xFFFFFFFF);
             }
-            case "hammer" -> {                                                                          // a gavel on its block, flashing as it strikes
-                r(g, x, y, 2, 13, 11, 2, 0xFF8A5A2C); ln(g, x, y, 9, 11, 4, 4, 0xFFA8733A); r(g, x, y, 2, 2, 6, 4, 0xFFD9B878); r(g, x, y, 2, 2, 6, 1, 0xFFF2E0A8);
-                float p = (s * 1.4f) % 1f; if (p < 0.35f) { int a = (int) (255 * Math.sin(p / 0.35f * Math.PI)); spark(g, x, y, 11, 12, 2, al(a, 0xFFFFFF)); }
+            case "hammer" -> {                                                                          // a gavel striking its block
+                float p = (s * 1.4f) % 1f; int dy = p < 0.35f ? Math.round((float) Math.sin(p / 0.35f * Math.PI) * 2f) : 0;
+                r(g, x, y, 1, 13, 14, 2, 0xFF6A4220); r(g, x, y, 1, 13, 14, 1, 0xFFA8733A);
+                ln(g, x, y, 8, 8 + dy, 12, 12, 0xFFA8733A); ln(g, x, y, 9, 8 + dy, 13, 12, 0xFF7A4E22);
+                r(g, x, y, 2, 2 + dy, 9, 6, 0xFFD9B878); r(g, x, y, 2, 2 + dy, 9, 1, 0xFFF6E8BC); r(g, x, y, 2, 7 + dy, 9, 1, 0xFF9A7A3E);
+                r(g, x, y, 4, 2 + dy, 1, 6, 0xFF8A8F9E); r(g, x, y, 8, 2 + dy, 1, 6, 0xFF8A8F9E);
+                if (p >= 0.3f && p < 0.5f) spark(g, x, y, 5, 12, 2, al((int) (255 * (1f - (p - 0.3f) / 0.2f)), 0xFFFFFF));
             }
             case "refresh" -> {                                                                         // two arrows, their light chasing round
                 int hot = (int) (s * 8f) % 12;

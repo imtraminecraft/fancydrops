@@ -43,10 +43,11 @@ public final class AnimationManager {
         boolean myth;                            // a Mythological Ritual drop: the lightning-and-rune-circle scene (has bars, blur and a position like Dye)
         boolean farm, helios;                    // a Farming drop: the small bar-less scene (helios: the Ray of Helios, a longer sunrise version)
         float speed = 1f;                        // scene seconds per real second (the animation length setting)
+        float textScene = -1f;                   // when the title and info start, in scene seconds (the text delay setting)
         Scene.Params p; int tier; long start; int frame = -1; float sx, sy;
         boolean isMyth() { return myth || (slayer != null && MythData.ALL.contains(slayer)); }       // every drop of a Mythological creature gets the Mythological scene, whichever way it was started
         boolean isExp() { return exp || (slayer != null && slayer == ExperimentData.slayer()); }
-        String scene() { return helios ? "helios" : farm ? "farm" : isExp() ? "exp" : isMyth() ? "mytho" : item == null ? "nothing" : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
+        String scene() { return helios ? "helios" : farm ? "farm" : item == null && !isExp() ? (isMyth() ? "mythnothing" : "nothing") : isExp() ? "exp" : isMyth() ? "mytho" : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
         final boolean[] done = new boolean[24];
         public Anim(SlayerData.Slayer slayer, Item item, int forcedTier, Runnable onStart) {
             this.slayer = slayer; this.item = item; this.forcedTier = forcedTier; this.onStart = onStart;
@@ -134,9 +135,9 @@ public final class AnimationManager {
         boolean farm = cat == 2;
         int m = Math.min(W, H);
         boolean bars = c.cine(cat) && !farm;
-        float tsc = c.textK() * uk(W, H) * (farm ? 0.8f : 1f);
+        float tsc = c.textK() * uk(W, H) * (farm ? 0.9f : 1f);
         int lineH = Math.max(6, Math.round(11 * tsc)), textH = lineH * (rows + 1);
-        float want = (farm ? Math.max(0.5f, Math.min(1.1f, c.farmScale)) * 0.24f : (bars ? c.size : Math.max(1f, c.size)) * 0.8f * 0.4f) * m / Scene.W;
+        float want = (farm ? Math.max(0.5f, Math.min(1.1f, c.farmScale)) * 0.24f : (bars ? c.sizeOf(cat) : Math.max(1f, c.sizeOf(cat))) * 0.8f * 0.4f) * m / Scene.W;
         if (bars) {
             int bar = Math.round(H * c.barHeight / 100f), side = Math.round(bar * SIDE_K), frameH = H - 2 * bar, frameW = W - 2 * side;
             float fit = Math.min(frameH * 0.97f / (Scene.H * 1.12f), frameW * 0.97f / (Scene.W * 1.12f));      // 1.12 = how far the scene punches out at the reveal
@@ -193,29 +194,38 @@ public final class AnimationManager {
     static String typeKey(Anim a) {
         if (a.farm) return a.helios ? "helios" : "farm";
         if (a.isExp()) return a.tier == 2 ? "exprng" : "exp";
-        if (a.isMyth()) return a.tier == 2 ? "mythrng" : "myth";
+        if (a.isMyth()) return a.item == null ? "mythnothing" : a.tier == 2 ? "mythrng" : "myth";
         if (a.p != null && a.p.dye) return "dye";
         if (a.item == null) return "nothing";
         return a.tier == 2 ? "rng" : a.tier == 1 ? "rare" : "default";
     }
     /** The whole animation in scene seconds, text included. */
     static float naturalScene(Scene.Params p, boolean farm) { return farm ? Scene.splitTime(p) + 3.15f : Scene.length(p) + 1.8f; }
+    /** {scene seconds per real second, when the words start in scene seconds, total real seconds}. The animation plays first; title and info follow after the text delay. */
+    static float[] timing(Scene.Params p, boolean farm, String key, FancyConfig c) {
+        float natural = naturalScene(p, farm), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
+        Float want = c.animSecs.get(key);
+        float total = Math.max(5f, Math.max(want != null ? Math.max(5f, Math.min(10f, want)) : natural, delay + 3.5f));
+        float speed = natural / total;
+        float textReal = farm ? (ts + 0.5f) / speed : Math.max(delay, (ts + 0.12f) / speed + 0.3f);
+        return new float[]{speed, textReal * speed, total};
+    }
     /** How long an animation lasts by default, in real seconds, for the length slider. */
     public static float naturalSecs(String key, FancyConfig c) {
         c.fixChops();
         int t = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
-        Scene.Params p = new Scene.Params(t, !key.equals("nothing"));
+        Scene.Params p = new Scene.Params(t, !key.endsWith("nothing"));
         p.chops = Math.max(1, Math.min(20, t == 2 ? c.chopsEpic : t == 1 ? c.chopsCool : c.chopsDefault));
         p.style = c.slayerStyle;
         boolean farm = false;
         switch (key) {
             case "dye" -> { p.dye = true; p.chops = 1; }
             case "farm", "helios" -> { p.farm = true; p.chops = 3; p.helios = key.equals("helios"); farm = true; }
-            case "myth", "mythrng" -> { p.myth = true; p.chops = key.equals("mythrng") ? c.mythStrikesRng : c.mythStrikes; }
+            case "myth", "mythrng", "mythnothing" -> { p.myth = true; p.chops = key.equals("mythrng") ? c.mythStrikesRng : c.mythStrikes; }
             case "exp", "exprng" -> { p.exp = true; p.chops = key.equals("exprng") ? c.expFlipsRng : c.expFlips; }
             default -> { }
         }
-        return Math.round(naturalScene(p, farm) * 10f) / 10f;
+        return Math.round(Math.max(5f, Math.max(naturalScene(p, farm), c.textDelay(key) + 3.5f)) * 10f) / 10f;
     }
 
     private static Scene.Params params(Anim a, Item it, int tier) {
@@ -249,6 +259,13 @@ public final class AnimationManager {
 
     // Text: every letter slams in from large, one after another; a light sweeps across it now and then; it fades out the same way.
     private static float waveIn = 1f, waveOut = 0f, waveT = 0f, bounceT = -1f;
+    /** Menu previews: freezeT >= 0 holds the scene that many seconds after the words appear; loopTxt replays the words; textOnly leaves the scene out; fxOnly >= 0 shows just that text effect. */
+    public static float freezeT = -1f; public static boolean loopTxt, textOnly; public static int fxOnly = -1;
+    private static long textT0 = System.currentTimeMillis(); private static float textBoost = 1f;
+    public static boolean itemOnly;                                   // the Item Changes preview: just the drop, nothing else
+    /** The looping words start again from the first letter (an effect was hovered or pressed). */
+    public static void restartText() { textT0 = System.currentTimeMillis(); }
+    private static boolean fxOn(int i, FancyConfig c) { return fxOnly >= 0 ? fxOnly == i : c.fx(i); }
     private static float revealT = 9f, lineDelay = 0f;       // seconds since the words began to appear; the delay of the line being drawn (0 = with the title)
 
     /** One centred line made of 1-3 coloured pieces, drawn letter by letter. */
@@ -257,29 +274,66 @@ public final class AnimationManager {
         for (int i = 0; i < parts.length; i += 2) { n += ((Component) parts[i]).getString().length(); w += font.width((Component) parts[i]); }
         Gfx.push(g); Gfx.translate(g, cx, y); Gfx.scale(g, sc);
         int x = -w / 2, idx = 0;
-        float wi = lineDelay > 0f ? clamp((revealT - lineDelay) / 0.6f) : waveIn;               // later lines start a little after the title
+        float wi = clamp((revealT - lineDelay) / 0.6f);               // later lines start a little after the title
         float fin = wi * (n + 6), fout = waveOut * (n + 6);
-        float sweep = wi >= 1f ? ((waveT * 0.5f) % 2.2f) / 2.2f * (n + 12) - 6f : -99f;     // a bright band travelling along the letters
+        FancyConfig fx = FancyConfig.get();
+        boolean ePop = fxOn(0, fx), eShine = fxOn(1, fx), eWave = fxOn(2, fx), eRain = fxOn(3, fx), eDrop = fxOn(4, fx), ePulse = fxOn(5, fx), eGlitch = fxOn(6, fx), eGlow = fxOn(7, fx);
+        boolean eBounce = fxOn(8, fx), eType = fxOn(9, fx), eFloat = fxOn(10, fx), eShake = fxOn(11, fx), eFire = fxOn(12, fx), eFrost = fxOn(13, fx), eTwink = fxOn(14, fx);
+        boolean eRise = fxOn(16, fx), eShrink = fxOn(17, fx), eScatter = fxOn(18, fx);
+        float curX = -1f;
+        float sweep = wi >= 1f && eShine ? ((waveT * 0.5f) % 2.2f) / 2.2f * (n + 12) - 6f : -99f;     // a bright band travelling along the letters
+        boolean glitching = eGlitch && wi >= 1f && (waveT % 2.6f) < 0.22f;
+        float breathe = ePulse && wi >= 1f ? 1f + 0.07f * (float) Math.sin(waveT * 3.2) : 1f;
         for (int i = 0; i < parts.length; i += 2) {
             Component part = (Component) parts[i];
             for (char ch : part.getString().toCharArray()) {
-                float ain = clamp((fin - idx) / 6f), aout = clamp((fout - idx) / 6f);
+                float ain = eType ? ((fin - idx) > 0f ? 1f : 0f) : clamp((fin - idx) / 6f), aout = clamp((fout - idx) / 6f);
+                if (eType && idx == (int) fin) curX = x;
                 float a = ain * (1f - aout);
-                Component c = Component.literal(String.valueOf(ch)).withStyle(part.getStyle());
+                Component c = Component.literal(String.valueOf(ch)).withStyle(ch == '\ue030' || ch == '\ue031' ? part.getStyle().withFont(EMOJI) : part.getStyle());
                 int cw = font.width(c);
                 if (a > 0.02f && ch != ' ') {
-                    float pop = 1f + (1f - ain) * (1f - ain) * 1.9f;                               // starts big, snaps into place
+                    float pop = ePop ? 1f + (1f - ain) * (1f - ain) * 1.9f : 1f;                    // starts big, snaps into place
                     float shine = clamp(1f - Math.abs(idx - sweep) / 3f);
-                    float s = pop * (1f - aout * 0.35f) * (1f + 0.1f * shine);
+                    float s = pop * breathe * (eShrink ? 1f - aout : 1f - aout * 0.35f) * (1f + 0.1f * shine);
                     int col = Canvas.mix((Integer) parts[i + 1], 0xFFFFFFFF, shine * 0.8f);
-                    Gfx.push(g); Gfx.translate(g, x + cw / 2f, 4f); Gfx.scale(g, s);
-                    outlined(g, font, c, -cw / 2, -4, Gfx.argb((int) (alpha * a), col));
+                    if (eRain) col = Canvas.mix(col, 0xFF000000 | (java.awt.Color.HSBtoRGB((waveT * 0.35f + idx * 0.07f) % 1f, 0.75f, 1f) & 0xFFFFFF), 0.7f);
+                    if (eFire) { float fl = 0.5f + 0.5f * (float) Math.sin(waveT * 7.0 + idx * 0.9); col = Canvas.mix(col, Canvas.mix(0xFFFF4A1C, 0xFFFFD84A, fl), 0.78f); }
+                    if (eFrost) { col = Canvas.mix(col, 0xFF9FE8FF, 0.3f + 0.3f * (float) Math.sin(waveT * 2.0 + idx * 0.5)); if (((idx * 13) + (int) (waveT * 3f)) % 11 == 0) col = Canvas.mix(col, 0xFFFFFFFF, 0.85f); }
+                    boolean flash = eTwink && wi >= 1f && ((idx * 7919 + (int) (waveT * 5f) * 104729) & 0xFFFF) % 9 == 0;
+                    if (flash) { col = Canvas.mix(col, 0xFFFFF2B0, 0.9f); s *= 1.15f; }
+                    float bob = eWave && wi >= 1f ? (float) Math.sin(waveT * 4.0 + idx * 0.55) * 1.6f : 0f;
+                    float jx = 0f;
+                    if (eFloat && wi >= 1f) { bob += (float) Math.sin(waveT * 1.6 + idx * 0.15) * 2.2f; jx += (float) Math.sin(waveT * 1.1 + idx * 0.1) * 1.4f; }
+                    if (eShake && wi >= 1f) { int hh = (idx * 31 + (int) (waveT * 26f) * 17) & 7; jx += (hh % 3 - 1) * 0.8f; bob += ((hh / 3) % 3 - 1) * 0.8f; }
+                    if (eFire && wi >= 1f) bob -= (0.5f + 0.5f * (float) Math.sin(waveT * 7.0 + idx * 0.9)) * 1.2f;
+                    float fall = eDrop ? -(1f - ain) * (1f - ain) * 16f : 0f;
+                    if (eBounce) fall += -(float) Math.abs(Math.cos(ain * Math.PI * 2.5)) * (1f - ain) * 13f;
+                    if (eRise) fall -= aout * 14f;
+                    if (eScatter) { int hs = (idx * 2654435 + 12345) & 0xFFFF; jx += ((hs % 9) - 4) * aout * 3f; fall += (((hs / 9) % 9) - 4) * aout * 3f; }
+                    Gfx.push(g); Gfx.translate(g, x + cw / 2f + jx, 4f + bob + fall); Gfx.scale(g, s);
+                    if (eGlow) { int ga = Math.round(alpha * a * (0.18f + 0.14f * (float) Math.sin(waveT * 3.0 + idx * 0.3))); int gc = Gfx.argb(ga, col & 0xFFFFFF); for (int ox = -2; ox <= 2; ox += 2) for (int oy = -2; oy <= 2; oy += 2) if (ox != 0 || oy != 0) g.text(font, c, -cw / 2 + ox, -4 + oy, gc, false); }
+                    if (glitching) {
+                        int h = (idx * 7 + (int) (waveT * 40)) % 5 - 2;
+                        g.text(font, c, -cw / 2 - 2 + h, -4, Gfx.argb((int) (alpha * a * 0.6f), 0x56D8FF), false);
+                        g.text(font, c, -cw / 2 + 2 - h, -4 + 1, Gfx.argb((int) (alpha * a * 0.6f), 0xFF72C6), false);
+                    }
+                    outlined(g, font, c, -cw / 2 + (glitching && idx % 3 == 0 ? 1 : 0), -4, Gfx.argb((int) (alpha * a), col));
                     Gfx.pop(g);
                 }
                 x += cw; idx++;
             }
         }
+        if (eType && wi > 0f && wi < 1f && curX >= 0f && (int) (waveT * 6f) % 2 == 0) g.fill(Math.round(curX), 0, Math.round(curX) + 1, 8, Gfx.argb(alpha, 0xFFFFFF));
         Gfx.pop(g);
+    }
+
+    /** A little piece of text playing one effect: the effect tiles in Text Changes show their own name this way while you hover them. */
+    public static void effectLabel(GuiGraphicsExtractor g, Font font, String text, int cx, int y, float sc, int col, int fx, float t) {
+        int so = fxOnly; float r0 = revealT, w0 = waveT, wo0 = waveOut, ld = lineDelay;
+        fxOnly = fx; lineDelay = 0f; waveT = t;
+        if (fx >= 15) { float ph = t % 3.2f; revealT = 5f; waveOut = Math.max(0f, Math.min(1f, (ph - 0.9f) / 1.3f)); } else { revealT = t; waveOut = 0f; }       // exit effects: the words are in, then leave
+        try { line(g, font, cx, y, sc, 255, lit(text), col); } finally { fxOnly = so; revealT = r0; waveT = w0; waveOut = wo0; lineDelay = ld; }
     }
 
     private static MutableComponent lit(String s) { return Component.literal(s); }
@@ -314,19 +368,19 @@ public final class AnimationManager {
             cols.add(new Object[]{lab, it.price < 0 ? "..." : fullCoins(it.price * Math.max(1, it.amount)) + " coins", Ui.PRICE, 1.05f});
         }
         if (cols.isEmpty()) return;
-        float pad = 9f * sc, ls = sc * 0.6f;
+        float pad = 9f * sc, ls = sc * 0.82f;
         float[] w = new float[cols.size()]; float total = 0;
         for (int i = 0; i < w.length; i++) { w[i] = Math.max(font.width((String) cols.get(i)[1]) * sc, font.width((String) cols.get(i)[0]) * ls); total += w[i] + (i > 0 ? pad * 2 : 0); }
         float x = cx - total / 2f;
         for (int i = 0; i < w.length; i++) {
             Object[] k = cols.get(i); float d = (Float) k[3], xc = x + w[i] / 2f;
             if (i > 0) {
-                float prog = clamp((revealT - d) / 0.4f) * (1f - waveOut);
+                float prog = clamp(revealT / 0.4f) * (1f - waveOut);
                 int sx = Math.round(x - pad);
                 g.fill(sx, yLab, sx + 1, yVal + Math.round(9 * sc), Gfx.argb(Math.round(alpha * 0.35f * prog), 0xFFFFFF));
             }
-            lineDelay = d;
-            line(g, font, Math.round(xc), yLab, ls, alpha, lit((String) k[0]), 0xFF8A93A8);
+            lineDelay = d * (c.subDelay / 0.35f);
+            line(g, font, Math.round(xc), yLab, ls, alpha, lit((String) k[0]), 0xFFB4BDD2);
             line(g, font, Math.round(xc), yVal, sc, alpha, lit((String) k[1]), (Integer) k[2]);
             lineDelay = 0f;
             x += w[i] + pad * 2;
@@ -334,7 +388,7 @@ public final class AnimationManager {
     }
 
     /** One line of facts about a drop: how rare it is, then what it is worth. */
-    private static void detail(GuiGraphicsExtractor g, Font font, Layout L, int y, Item it, FancyConfig c, int alpha) { detailAt(g, font, L.cx(), y, L.tsc(), it, c, alpha); }
+    private static void detail(GuiGraphicsExtractor g, Font font, Layout L, int y, Item it, FancyConfig c, int alpha) { detailAt(g, font, L.cx(), y, L.tsc() * c.subScale, it, c, alpha); }
 
     private static void detailAt(GuiGraphicsExtractor g, Font font, int cx, int y, float sc, Item it, FancyConfig c, int alpha) {
         java.util.List<Object> parts = new java.util.ArrayList<>();
@@ -347,19 +401,28 @@ public final class AnimationManager {
         if (!parts.isEmpty()) line(g, font, cx, y, sc, alpha, parts.toArray());
     }
 
+    static int mfColor(String mf) { return mf != null && mf.startsWith("OB:") ? 0xFFFFFF55 : Ui.MAGIC_FIND; }      // Overbloom is yellow, Magic Find aqua
+
+    static final net.minecraft.network.chat.FontDescription EMOJI = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("fancydrops", "emoji"));
+    /** For the animations: the number and our little Magic Find / Overbloom icon instead of the words. */
+    static String mfAnim(String mf) {
+        if (mf == null) return "";
+        if (mf.startsWith("OB:")) return mf.substring(3).replaceFirst("^\\+", "") + " \ue031";
+        return mf.replaceFirst("^\\+", "").replaceFirst("%$", "") + " \ue030";
+    }
     /** "+250%" becomes "250 ✯ Magic Find". */
     static String mfText(String mf) {
         if (mf == null) return "";
-        if (mf.startsWith("OB:")) return mf.substring(3).replaceFirst("^\\+", "") + " ☘ Overbloom";           // farming: Overbloom, not Magic Find
+        if (mf.startsWith("OB:")) return mf.substring(3).replaceFirst("^\\+", "") + " ✿ Overbloom";           // farming: Overbloom, not Magic Find
         return mf.replaceFirst("^\\+", "").replaceFirst("%$", "") + " ✯ Magic Find"; }
 
     /** The words live in the bottom black bar so they never cover the scene: title, facts and Magic Find. The top bar stays empty. */
     private static void barText(GuiGraphicsExtractor g, Font font, Anim a, FancyConfig c, int alpha, int W, int H, int bar) {
-        float ts = c.textK() * uk(W, H), big = 1.5f * ts, small = 1.1f * ts;
+        float ts = c.textK() * uk(W, H) * textBoost, big = 1.5f * ts * c.titleScale, small = 1.1f * ts * c.subScale;
         String mf = a.item == null ? null : a.item.mf != null ? a.item.mf : a.item2 != null ? a.item2.mf : null;
         boolean hasMf = c.showMagicFind && mf != null;
         boolean facts = a.item != null && a.item2 == null && hasFacts(a.item, c);
-        int total = Math.round(9 * big) + 4 + Math.round(9 * small * (facts ? 1.7f : 1f)) + (hasMf ? 3 + Math.round(9 * small) : 0);
+        int total = Math.round(9 * big) + 4 + Math.round(9 * small * (facts ? 1.95f : 1f)) + (hasMf ? 3 + Math.round(9 * small) : 0);
         int ty = c.textPos == 0 ? Math.max(2, (bar - total) / 2) : Math.min(H - total - 2, H - bar + Math.max(2, (bar - total) / 2)), dy = ty + Math.round(9 * big) + 4;      // in the top or the bottom bar
         if (a.item == null) {
             line(g, font, W / 2, ty, big, alpha, lit("Nothing :(").withStyle(ChatFormatting.BOLD), 0xFFB9BFC9);
@@ -374,10 +437,10 @@ public final class AnimationManager {
             detailAt(g, font, Math.round(W * 0.73f), dy, small * 0.95f, a.item2, c, alpha);
         } else {
             line(g, font, W / 2, ty, big, alpha, lit(a.item.title()).withStyle(ChatFormatting.BOLD), a.item.color());
-            if (facts) columns(g, font, W / 2, dy, dy + Math.round(9 * small * 0.7f), small, a.item, c, alpha);
+            if (facts) columns(g, font, W / 2, dy, dy + Math.round(9 * small * 0.9f), small, a.item, c, alpha);
             else detailAt(g, font, W / 2, dy, small, a.item, c, alpha);
         }
-        if (hasMf) { lineDelay = 1.4f; line(g, font, W / 2, dy + Math.round(9 * small * (facts ? 1.7f : 1f)) + 3, small, alpha, lit(mfText(mf)), Ui.MAGIC_FIND); lineDelay = 0f; }
+        if (hasMf) { lineDelay = 4f * c.subDelay; line(g, font, W / 2, dy + Math.round(9 * small * (facts ? 1.95f : 1f)) + 3, small, alpha, lit(mfText(mf)), mfColor(mf)); lineDelay = 0f; }
     }
 
     /** Two drops from one kill: both names and their facts, stacked. */
@@ -387,7 +450,41 @@ public final class AnimationManager {
         line(g, font, L.cx(), L.lineY(1), L.tsc(), alpha, lit(b.title()).withStyle(ChatFormatting.BOLD), b.color());
         detail(g, font, L, L.lineY(2), b, c, alpha);
         String mf = a.mf != null ? a.mf : b.mf;
-        if (c.showMagicFind && mf != null) line(g, font, L.cx(), L.lineY(3), L.tsc(), alpha, lit(mfText(mf)), Ui.MAGIC_FIND);
+        if (c.showMagicFind && mf != null) line(g, font, L.cx(), L.lineY(3), L.tsc(), alpha, lit(mfText(mf)), mfColor(mf));
+    }
+
+    /** Farming: a clean stack under the scene: the name, how rare, what it is worth, Overbloom. One line each, easy to read. */
+    private static int farmRows(Item it, FancyConfig c) {
+        if (it == null) return 1;
+        int n = 0;
+        if (c.showOdds && (!it.odds.isEmpty() || !it.chance.isEmpty())) n++;
+        if (c.showPrice && !it.untradeable && it.price != -1) n++;
+        if (it.extra != null) n++;
+        if (c.showMagicFind && it.mf != null) n++;
+        return n;
+    }
+
+    private static void farmText(GuiGraphicsExtractor g, Font font, Layout L, Item it, FancyConfig c, int alpha) {
+        if (alpha <= 4) return;
+        if (it == null) { text(g, font, L, null, c, alpha); return; }
+        float tt = L.tsc() * 1.25f * c.titleScale, st = L.tsc() * 1.05f * c.subScale;
+        line(g, font, L.cx(), L.nameY(), tt, alpha, lit(it.title()).withStyle(ChatFormatting.BOLD), it.color());
+        int k = 0;
+        if (c.showOdds && (!it.odds.isEmpty() || !it.chance.isEmpty())) {
+            java.util.List<Object> parts = new java.util.ArrayList<>();
+            if (!it.odds.isEmpty()) { parts.add(lit(it.odds)); parts.add(Ui.odds(it.odds)); }
+            if (!it.chance.isEmpty()) { parts.add(lit((it.odds.isEmpty() ? "" : "   \u00B7   ") + it.chance)); parts.add(Ui.SUB); }
+            lineDelay = (k + 1) * c.subDelay; line(g, font, L.cx(), L.lineY(k++), st, alpha, parts.toArray());
+        }
+        if (c.showPrice && !it.untradeable && it.price != -1) {
+            String v = it.price < 0 ? "..." : fullCoins(it.price * Math.max(1, it.amount)) + " coins";
+            java.util.List<Object> parts = new java.util.ArrayList<>(); parts.add(lit(v)); parts.add(Ui.PRICE);
+            if (c.showPriceSource && it.price >= 0 && !it.source.isEmpty()) { parts.add(lit("   \u00B7   " + it.source)); parts.add(Ui.DIM); }
+            lineDelay = (k + 1) * c.subDelay; line(g, font, L.cx(), L.lineY(k++), st, alpha, parts.toArray());
+        }
+        if (it.extra != null) { lineDelay = (k + 1) * c.subDelay; line(g, font, L.cx(), L.lineY(k++), st, alpha, lit(it.extra), it.extraCol); }
+        if (c.showMagicFind && it.mf != null) { lineDelay = (k + 1) * c.subDelay; line(g, font, L.cx(), L.lineY(k), st, alpha, lit(mfText(it.mf)), mfColor(it.mf)); }
+        lineDelay = 0f;
     }
 
     private static void text(GuiGraphicsExtractor g, Font font, Layout L, Item it, FancyConfig c, int alpha) {
@@ -397,18 +494,20 @@ public final class AnimationManager {
             line(g, font, L.cx(), L.lineY(0), L.tsc(), alpha, lit("Better Luck Next Time"), 0xFF7C8494);
             return;
         }
-        line(g, font, L.cx(), L.nameY(), L.tsc(), alpha, lit(it.title()).withStyle(ChatFormatting.BOLD), it.color());
+        float tt = L.tsc() * c.titleScale, st = L.tsc() * c.subScale;
+        line(g, font, L.cx(), L.nameY(), tt, alpha, lit(it.title()).withStyle(ChatFormatting.BOLD), it.color());
         int k = 0;
-        if (hasFacts(it, c)) { columns(g, font, L.cx(), L.lineY(0), L.lineY(0) + Math.round(L.lineH() * 0.62f), L.tsc(), it, c, alpha); k = 2; }
-        lineDelay = 1.4f;
-        if (it.extra != null) line(g, font, L.cx(), L.lineY(k++), L.tsc(), alpha, lit(it.extra), it.extraCol);
-        if (c.showMagicFind && it.mf != null) line(g, font, L.cx(), L.lineY(k), L.tsc(), alpha, lit(mfText(it.mf)), Ui.MAGIC_FIND);
+        if (hasFacts(it, c)) { columns(g, font, L.cx(), L.lineY(0), L.lineY(0) + Math.round(L.lineH() * 0.8f), st, it, c, alpha); k = 2; }
+        lineDelay = 4f * c.subDelay;
+        if (it.extra != null) line(g, font, L.cx(), L.lineY(k++), st, alpha, lit(it.extra), it.extraCol);
+        if (c.showMagicFind && it.mf != null) line(g, font, L.cx(), L.lineY(k), st, alpha, lit(mfText(it.mf)), mfColor(it.mf));
         lineDelay = 0f;
     }
 
     // ------------------------------------------------------------------ HUD editor preview
 
-    private static int previewFrame = -1;
+    private static int previewFrame = -1, previewStyle = -1;
+    private static long previewT0;
     private static final Item PREVIEW = new Item();
     static { PREVIEW.name = "Example Drop"; PREVIEW.odds = "Pray RNGesus"; PREVIEW.chance = "1 in 735"; PREVIEW.price = 1_230_000; PREVIEW.source = "Bazaar"; PREVIEW.mf = "+250%"; PREVIEW.rank = 2; }
 
@@ -418,6 +517,8 @@ public final class AnimationManager {
     static { PREVIEW_FARM.name = "Example Crop"; PREVIEW_FARM.odds = ""; PREVIEW_FARM.chance = "1 in 18,000"; PREVIEW_FARM.price = 1_230_000; PREVIEW_FARM.source = "Bazaar"; PREVIEW_FARM.rank = 1; PREVIEW_FARM.mf = "OB:+25"; }
 
     private static final Anim PREVIEW_ANIM = new Anim(SlayerData.OTHER, PREVIEW, 1, null);
+    private static final Anim PREVIEW_ANIM_EXP = new Anim(SlayerData.OTHER, PREVIEW_EXP, 1, null);      // no Magic Find in the Experiments bar text
+    private static final Anim PREVIEW_ANIM_FARM = new Anim(SlayerData.OTHER, PREVIEW_FARM, 1, null);
 
     private static final Scene.Params[] PREVIEW_P = new Scene.Params[5];
     private static int previewCat = -1;
@@ -457,17 +558,17 @@ public final class AnimationManager {
 
     /** The preview scene of one animation type (nothing, default, rare, rng, dye, farm, helios, myth, mythrng), built from the live settings every frame. */
     private static Scene.Params previewForKey(String key, FancyConfig c) {
-        int cat = switch (key) { case "dye" -> 1; case "farm", "helios" -> 2; case "myth", "mythrng" -> 3; case "exp", "exprng" -> 4; default -> 0; };
+        int cat = switch (key) { case "dye" -> 1; case "farm", "helios" -> 2; case "myth", "mythrng", "mythnothing" -> 3; case "exp", "exprng" -> 4; default -> 0; };
         Scene.Params base = previewFor(cat, c);
         int tier = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
         Scene.Params p = KEY_P.get(key);
         if (p == null) {
-            p = new Scene.Params(tier, !key.equals("nothing"));
+            p = new Scene.Params(tier, !key.endsWith("nothing"));
             if (p.hasItem) { p.item = base.item; p.rarity = key.equals("default") ? Ui.R_CRAZY : base.rarity; }
             switch (key) {
                 case "dye" -> { p.dye = true; p.dyeCol = 0xFFE0409A; }
                 case "farm", "helios" -> { p.farm = true; p.helios = key.equals("helios"); p.rarity = 0xFF7BE05A; }
-                case "myth", "mythrng" -> { p.myth = true; p.rarity = 0xFFFFC857; }
+                case "myth", "mythrng", "mythnothing" -> { p.myth = true; p.rarity = 0xFFFFC857; }
                 case "exp", "exprng" -> { p.exp = true; p.rarity = key.equals("exprng") ? 0xFFFF55FF : 0xFFB56BFF; }
                 default -> { }
             }
@@ -477,7 +578,7 @@ public final class AnimationManager {
         switch (key) {
             case "dye" -> p.chops = 1;
             case "farm", "helios" -> p.chops = 3;
-            case "myth" -> p.chops = Math.max(1, Math.min(10, c.mythStrikes));
+            case "myth", "mythnothing" -> p.chops = Math.max(1, Math.min(10, c.mythStrikes));
             case "mythrng" -> p.chops = Math.max(1, Math.min(10, c.mythStrikesRng));
             case "exp" -> p.chops = Math.max(1, Math.min(12, c.expFlips));
             case "exprng" -> p.chops = Math.max(1, Math.min(12, c.expFlipsRng));
@@ -493,8 +594,7 @@ public final class AnimationManager {
     public static float[] soundTimes(String key, FancyConfig c) {
         Scene.Params p = previewForKey(key, c);
         float natural = naturalScene(p, p.farm);
-        Float want = c.animSecs.get(key);
-        float secs = want == null ? natural : Math.max(2f, Math.min(10f, want)), k = secs / Math.max(0.1f, natural);
+        float secs = timing(p, p.farm, key, c)[2], k = secs / Math.max(0.1f, natural);
         int n = Math.max(0, Math.min(p.chops, 20));
         float[] r = new float[n + 6];
         r[0] = secs; r[1] = n;
@@ -511,37 +611,55 @@ public final class AnimationManager {
     public static void drawPreview(GuiGraphicsExtractor g, int W, int H, int cat, String key) {
         FancyConfig c = FancyConfig.get();
         cat = Math.max(0, Math.min(4, cat));
-        Scene.Params p = key == null ? previewFor(cat, c) : previewForKey(key, c);
-        float speed = 1f;
-        if (key != null) {
-            Float want = c.animSecs.get(key);
-            if (want != null) speed = naturalScene(p, p.farm) / Math.max(2f, Math.min(10f, want));
+        if (c.slayerStyle != previewStyle) {                                                   // Sword <-> Spirit: build the scenes again and play the new one from the start
+            previewStyle = c.slayerStyle; KEY_P.clear(); java.util.Arrays.fill(PREVIEW_P, null); previewFrame = -1; previewT0 = System.currentTimeMillis();
         }
+        Scene.Params p = key == null ? previewFor(cat, c) : previewForKey(key, c);
+        if (itemOnly) {                                                                         // just the item, big, in the middle
+            float isec = ((System.currentTimeMillis() - textT0) % 4600L) / 1000f;
+            Scene.drawItemOnly(OUT, L3, p, isec); SceneTexture.upload(OUT);
+            float cell = H / 72f; int zw = Math.round(Scene.W * cell), zh = Math.round(Scene.H * cell);
+            int dx = W / 2 - Math.round(56 * cell), dy = H / 2 - Math.round(32 * cell);
+            if (!SceneTexture.draw(g, OUT, dx, dy, zw, zh, 1f)) OUT.flush(g::fill, dx, dy, Math.max(1, Math.round(cell)), 1f);
+            return;
+        }
+        float[] tm = key == null ? null : timing(p, p.farm, key, c);
+        float speed = tm == null ? 1f : tm[0];
         if (cat == 3) p.mob = (int) ((System.currentTimeMillis() / 1000L / 9L) % 12L);      // the preview calls a different creature each loop
         String kk = key == null ? "" : key;
         if (previewCat != cat || !kk.equals(previewKeyLast)) { previewCat = cat; previewKeyLast = kk; previewFrame = -1; }
         boolean farm = cat == 2, cine = c.cine(cat) && !farm;
         Font font = Minecraft.getInstance().font;
-        float sec = syncSec >= 0f ? syncSec * speed : (System.currentTimeMillis() % 600_000L) / 1000f * speed;
-        float ts = Scene.splitTime(p), len = Scene.length(p) + 0.4f, t = syncSec >= 0f ? Math.min(sec, len - 0.02f) : sec % len;
+        float sec = syncSec >= 0f ? syncSec * speed : ((System.currentTimeMillis() - previewT0) % 600_000L) / 1000f * speed;
+        float ts = Scene.splitTime(p), len = tm == null ? Scene.length(p) + 0.4f : naturalScene(p, p.farm), t = syncSec >= 0f ? Math.min(sec, len - 0.02f) : sec % len;
+        float rv0 = tm == null ? ts + 0.15f : tm[1];
+        if (freezeT >= 0f) { t = Math.min(len - 1.0f, rv0 + freezeT); sec = t; }                 // a still frame: the words are in, nothing moves
+        else if (loopTxt) { t = Math.min(len - 1.0f, rv0 - 0.3f + ((System.currentTimeMillis() - textT0) % 4600L) / 1000f); sec = t; }       // the words play again and again
         int frame = (int) (t * 30f);
         if (frame != previewFrame) { previewFrame = frame; Scene.draw(OUT, L3, p, frame / 30f); if (cine) feather(OUT); SceneTexture.upload(OUT); }
-        revealT = t - ts - 0.15f; waveIn = clamp((t - ts - 0.15f) / 0.6f); waveOut = clamp((t - (len - 0.8f)) / 0.6f); waveT = sec; bounceT = t - (ts + 0.15f + 0.6f);
+        float rv = tm == null ? ts + 0.15f : tm[1];
+        revealT = t - rv; waveIn = clamp((t - rv) / 0.6f); waveOut = clamp((t - (len - 0.8f)) / 0.6f); waveT = sec; bounceT = t - (rv + 0.6f);
         float ga = 1f - waveOut * 0f;
         int barFull = cine ? Math.round(H * c.barHeight / 100f) : 0;
         Item pi = cat == 4 ? PREVIEW_EXP : farm ? PREVIEW_FARM : PREVIEW;
-        Layout L = layout(W, H, c, rows(pi, c), cat);
+        Layout L = layout(W, H, c, cat == 2 ? farmRows(pi, c) : rows(pi, c), cat);
+        if (textOnly) {                                                                          // the Text Changes editor: just the words, big and centred, on nothing
+            float lt = ((System.currentTimeMillis() - textT0) % 4600L) / 1000f;                  // the words come in, stay, and leave, again and again
+            revealT = lt - 0.2f; waveIn = clamp(revealT / 0.6f); waveOut = clamp((lt - 3.5f) / 0.9f); waveT = lt;
+            textBoost = 2.6f; try { barText(g, font, PREVIEW_ANIM, c, 255, W, H, H); } finally { textBoost = 1f; }
+            return;
+        }
         if (cine) {
             int side = Math.round(barFull * SIDE_K);
             bars(g, W, H, barFull, side, p.rarity | 0xFF000000, p.rarity | 0xFF000000);
             g.enableScissor(side, barFull, W - side, H - barFull);
-            if (!SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), 1f)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), 1f);
+            if (!textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), 1f)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), 1f);
             g.disableScissor();
-            barText(g, font, PREVIEW_ANIM, c, 255, W, H, barFull);
+            barText(g, font, cat == 4 ? PREVIEW_ANIM_EXP : farm ? PREVIEW_ANIM_FARM : PREVIEW_ANIM, c, 255, W, H, barFull);
             return;
         }
-        if (!SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), 1f)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), 1f);
-        text(g, font, L, pi, c, 255);
+        if (!textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), 1f)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), 1f);
+        if (cat == 2) farmText(g, font, L, pi, c, 255); else text(g, font, L, pi, c, 255);
     }
 
     /** Fades the scene's edges to see-through so it melts into the blurred world instead of sitting there as a hard box. */
@@ -567,6 +685,8 @@ public final class AnimationManager {
     private static final int[] BAR_COLS = {0, 0x0B0E2A, 0x2A0B1C, 0x0B2418, 0x1A202C, 0x000000};
 
     private static int barFill(int tint, int style) {
+        FancyConfig fc = FancyConfig.get();
+        if (fc.barCustom) return 0xE6000000 | (fc.barColor & 0xFFFFFF);
         int i = Math.floorMod(style, BAR_NAMES.length);
         int rgb = i == 0 ? Canvas.mix(0xFF07070E, 0xFF000000 | (tint & 0xFFFFFF), 0.30f) & 0xFFFFFF : BAR_COLS[i];
         return 0xE6000000 | rgb;                                                   // a touch see-through so the blurred world glows behind it
@@ -584,6 +704,9 @@ public final class AnimationManager {
 
     // ------------------------------------------------------------------ the animation
 
+    /** The words stay this many real seconds after the scene is over. */
+    private static final float TEXT_EXTRA = 2f;
+
     public static void render(GuiGraphicsExtractor g) {
         FancyConfig c = FancyConfig.get();
         if (cur == null) {
@@ -596,23 +719,24 @@ public final class AnimationManager {
             DropListener.announceNow(a.item); DropListener.announceNow(a.item2);          // the chat message goes out together with the scene
             a.tier = a.forcedTier >= 0 ? a.forcedTier : Math.max(tierOf(a.item), tierOf(a.item2));
             a.p = params(a, a.item, a.tier);
-            Float want = c.animSecs.get(typeKey(a));
-            a.speed = want == null ? 1f : naturalScene(a.p, a.farm) / Math.max(2f, Math.min(10f, want));
+            float[] tm = timing(a.p, a.farm, typeKey(a), c);
+            a.speed = tm[0]; a.textScene = tm[1];
             a.start = System.currentTimeMillis();
         }
         Anim a = cur;
         float t = (System.currentTimeMillis() - a.start) / 1000f * a.speed;                // a.speed stretches or squeezes the whole scene to the length the user chose
-        float len = a.farm ? Scene.splitTime(a.p) + 3.15f : Scene.length(a.p) + 1.8f;      // farming: the words stay about 3 seconds, longer than the 1.5 s scene                // the text stays up a good while after the reveal
+        float sLen = naturalScene(a.p, a.farm);     // the scene (picture, bars, shake) ends here
+        float len = sLen + TEXT_EXTRA * a.speed;    // the words stay on screen 2 real seconds longer than the scene
         if (t >= len) { cur = null; SoundFx.stopPreviews(); return; }          // a sound longer than the animation ends with it
         if (a.p.item == null && a.item != null) a.p.item = ItemIcons.model(a.item.id, a.slayer.color());   // art finished loading late
         if (a.p.twin && a.p.item2 == null && a.item2 != null) a.p.item2 = ItemIcons.model(a.item2.id, a.slayer.color());
 
-        float ga = Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f));
+        float ga = Math.min(clamp(t / 0.2f), clamp((sLen - t) / 0.5f)), gt = Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f));      // scene fade, words fade
         boolean cine = c.cine(catOf(a)) && !a.farm;                              // bars are for Slayer and Dye scenes only
-        float cin = cine ? easeIO(Math.min(clamp(t / 0.6f), clamp((len - t) / 0.6f))) : 0f;
+        float cin = cine ? easeIO(Math.min(clamp(t / 0.6f), clamp((sLen - t) / 0.6f))) : 0f;
         Font font = Minecraft.getInstance().font;
-        Layout L = layout(g.guiWidth(), g.guiHeight(), c, rows(a, c), catOf(a));
-        float ts = Scene.splitTime(a.p), reveal = ts + 0.12f;
+        Layout L = layout(g.guiWidth(), g.guiHeight(), c, catOf(a) == 2 ? farmRows(a.item, c) : rows(a, c), catOf(a));
+        float ts = Scene.splitTime(a.p), reveal = a.textScene >= 0f ? a.textScene : ts + 0.27f;
         boolean epic = a.tier == 2;
         int W = g.guiWidth(), H = g.guiHeight(), barFull = Math.round(H * c.barHeight / 100f);
         boolean framed = cine;       // the scene fills the picture between the bars; the words sit in the bars
@@ -623,25 +747,28 @@ public final class AnimationManager {
 
         if (epic && t > ts) g.fill(0, 0, W, H, Gfx.argb((int) (26 * clamp((t - ts) / 0.3f) * ga), 0x000010));
 
+        if (t < sLen) {                                      // after the scene ends only the words remain
         int frame = (int) (t * 30f);                         // the scene is redrawn 30 times a second, not every frame
         if (frame != a.frame) { a.frame = frame; Scene.draw(OUT, L3, a.p, frame / 30f); if (cine) feather(OUT); a.sx = a.p.shakeX; a.sy = a.p.shakeY; SceneTexture.upload(OUT); }
         float since = t - ts, kick = since >= 0f && since < 0.45f ? (float) Math.sin(Math.PI * since / 0.45f) * (a.tier == 2 ? 0.07f : 0.045f) : 0f;   // the picture punches in at the reveal
-        float zoom = (cine ? 1f + 0.05f * easeIO(clamp(t / len)) : 1f) + (cine ? kick : 0f);
+        float zoom = (cine ? 1f + 0.05f * easeIO(clamp(t / sLen)) : 1f) + (cine ? kick : 0f);
         int zw = Math.round(Scene.W * cellF * zoom), zh = Math.round(Scene.H * cellF * zoom);
         int dx = sceneX + Math.round(a.sx * cellF) - (zw - Math.round(Scene.W * cellF)) / 2, dy = sceneY + Math.round(a.sy * cellF) - (zh - Math.round(Scene.H * cellF)) / 2;
         if (framed) g.enableScissor(sideFull, barFull, W - sideFull, H - barFull);          // a zoomed scene never spills into the bars
         if (!SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga)) OUT.flush(g::fill, sceneX + Math.round(a.sx * cellF), sceneY + Math.round(a.sy * cellF), Math.max(1, Math.round(cellF)), ga);
         if (framed) g.disableScissor();
-        revealT = t - reveal - 0.15f; waveIn = clamp((t - reveal - 0.15f) / 0.6f); waveOut = clamp((t - (len - 1.0f)) / 0.7f); waveT = t; bounceT = t - (reveal + 0.15f + 0.6f);
+        }
+        revealT = t - reveal; waveIn = clamp((t - reveal) / 0.6f); waveOut = clamp((t - (len - 1.0f)) / 0.7f); waveT = t; bounceT = t - (reveal + 0.6f);
         if (epic && t > ts) epicFront(g, a, t - ts, W, H, scx, scy, cin * ga);
         if (waveIn > 0f) {
-            int al = (int) (255 * ga);
+            int al = (int) (255 * gt);
             if (framed) barText(g, font, a, c, al, W, H, barFull);
             else if (a.item2 != null) twinText(g, font, L, a.item, a.item2, c, al);
+            else if (catOf(a) == 2) farmText(g, font, L, a.item, c, al);
             else text(g, font, L, a.item, c, al);
         }
 
-        sounds(a, t, ts, len);
+        sounds(a, t, ts, sLen);
     }
 
     private static float easeIO(float x) { x = clamp(x); return x * x * (3 - 2 * x); }

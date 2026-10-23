@@ -486,6 +486,13 @@ public final class DropListener {
         AnimationManager.play(a);
     }
 
+    /** A ritual that dropped nothing: the circle goes dark. */
+    public static void playMythNothing() {
+        if (MythData.ALL.isEmpty()) return;
+        Anim a = new Anim(MythData.ALL.get(Math.min(MythData.ALL.size() - 1, 6)), null, 0, null); a.myth = true;
+        AnimationManager.play(a);
+    }
+
     /** Animations > Mythological "Play": the normal scene (rng false) or the RNG Drop version (rng true) with a sample drop. */
     public static void playMythTest(boolean rng) {
         if (MythData.ALL.isEmpty()) return;
@@ -591,6 +598,7 @@ public final class DropListener {
             int n = s.boss.length();
             if (name.regionMatches(true, 0, s.boss, 0, n) && (name.length() == n || name.charAt(n) == ' ')) { from = s; name = name.substring(n).trim(); break; }
         }
+        if (name.equalsIgnoreCase("nothing")) { reply.accept("Simulating a ritual that dropped nothing"); playMythNothing(); return; }
         List<SlayerData.Drop> pool = new ArrayList<>();
         if (from != null) pool.addAll(from.drops); else for (SlayerData.Slayer s : MythData.ALL) pool.addAll(s.drops);
         if (pool.isEmpty()) { reply.accept("No mythological drops loaded."); return; }

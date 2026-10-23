@@ -321,7 +321,6 @@ final class Scene {
         }
     }
 
-    private static final int[] DROP_X = {0, 1, -1, 0, 1, -1, 0, 1, -1, 0, 1, -1};     // every drip falls from the same spout, so the puddle forms right under it
 
     private static int hsv(float h, float sat, float v) { return 0xFF000000 | (java.awt.Color.HSBtoRGB(h - (float) Math.floor(h), Math.max(0f, Math.min(1f, sat)), Math.max(0f, Math.min(1f, v))) & 0xFFFFFF); }
 
@@ -445,24 +444,6 @@ final class Scene {
         }
     }
 
-    /** A paint can tipped to pour, its mouth at (lipX, lipY): steel body with a band of paint, a rim and a glossy highlight. */
-    private static void drawCan(Canvas out, int lipX, int lipY, float tilt, float alpha, int paint, int paintDark) {
-        double ca = Math.cos(tilt), sa = Math.sin(tilt);
-        double cxC = lipX - 10 * ca, cyC = lipY - 10 * sa;                          // the mouth is the can's right end
-        for (int y = (int) cyC - 20; y <= (int) cyC + 20; y++) for (int x = (int) cxC - 20; x <= (int) cxC + 20; x++) {
-            double dx = x + 0.5 - cxC, dy = y + 0.5 - cyC, u = dx * ca + dy * sa, v = -dx * sa + dy * ca;     // into the can's own axes
-            if (u < -10 || u > 10 || Math.abs(v) > 7.5) continue;
-            int col;
-            if (u > 8.3) col = 0xFF8C93A8;                                         // the rim
-            else if (u > 5 && u <= 8.3) col = Math.abs(v) < 5 ? Canvas.mix(paint, 0xFF000000, 0.15f) : 0xFF565C70;   // paint inside the mouth
-            else if (Math.abs(u) < 3.2) col = v < -2 ? Canvas.mix(paint, 0xFFFFFFFF, 0.25f) : paint;              // the label band
-            else col = v < -3.2 ? 0xFFB9C0D4 : v > 3.8 ? 0xFF3B4052 : 0xFF6D748A;                                   // steel, lit from above
-            if (u < -8.6) col = 0xFF454B5F;                                        // the base
-            out.set(x, y, Canvas.rgb((int) (255 * alpha), col));
-        }
-        double lx = lipX, ly = lipY;                                               // paint clinging under the lip
-        for (int i = 0; i < 3; i++) out.set((int) lx - 2 + i * 2, (int) ly + 1 + (i == 1 ? 1 : 0), Canvas.rgb((int) (230 * alpha), paint));
-    }
 
     private static void ribbons(Canvas out, float us, int cy, int[] pal, boolean front) {
         float in = cl(us / 0.3f);
@@ -555,6 +536,14 @@ final class Scene {
         }
     }
 
+    /** Item Changes preview: nothing but the drop itself, flying up and then spinning. sec = seconds since it appeared. */
+    static void drawItemOnly(Canvas out, Canvas l3, Params p, float sec) {
+        out.clear(); l3.clear(); IT.clear();
+        if (p.item == null) return;
+        float ts = splitTime(p);
+        drawOne(out, p, p.item, p.rarity, ts + 0.12f + sec, ts, Math.max(0f, sec), 0);
+    }
+
     private static void drawItem(Canvas out, Params p, float t, float ts, float us) {
         if (p.twin && p.item2 != null) {
             float tr = ts + 0.12f, uu = (t - tr) / 0.35f;
@@ -577,14 +566,15 @@ final class Scene {
         boolean skull = m.parts != null || (m.puffy != null && m.sprite == null);       // heads are bulky: draw them smaller
         double size = (side != 0 ? (epic ? 26 : cool ? 23 : 21) : (epic ? 31 : cool ? 26 : 22)) * Math.max(0.01, e)
                 * FancyConfig.get().itemK() * (skull ? 0.72 : 1.0);
+        FancyConfig ic = FancyConfig.get();
         double dx = side * 25 * easeOut(uu);
-        double yy = itemY(uu) + 1.6 * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) - (side != 0 ? 4 * (1 - easeOut(uu)) * -1 : 0);
-        double spin = 2.8 * us * (side == 0 ? 1 : -side) + (epic ? 5.0 * (1 - Math.exp(-2.5 * us)) : 0);
+        double yy = itemY(uu) + (ic.itemBob ? 1.6 : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) - (side != 0 ? 4 * (1 - easeOut(uu)) * -1 : 0);
+        double spin = 2.8 * us * ic.itemSpin * (side == 0 ? 1 : -side) + (epic ? 5.0 * (1 - Math.exp(-2.5 * us)) : 0);
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
         float pulseG = 0.75f + 0.25f * (float) Math.sin(us * 3.2);
-        out.glow(sx, sy, (float) size * (epic ? 1.7f : 1.4f), rar & 0xFFFFFF, Math.min(1f, uu) * (epic ? 0.62f : 0.5f) * pulseG);     // the icons' soft halo
-        out.glow(sx, sy, (float) size * 0.8f, 0xFFFFFF, Math.min(1f, uu) * 0.22f * pulseG);
+        out.glow(sx, sy, (float) size * (epic ? 1.7f : 1.4f), rar & 0xFFFFFF, Math.min(1f, uu) * (epic ? 0.62f : 0.5f) * pulseG * ic.itemGlow);     // the icons' soft halo
+        out.glow(sx, sy, (float) size * 0.8f, 0xFFFFFF, Math.min(1f, uu) * 0.22f * pulseG * ic.itemGlow);
         if (m.sprite != null) {
             flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK());
         } else if (m.puffy != null) {
@@ -595,7 +585,7 @@ final class Scene {
             for (Obj o : parts) { o.scale = k; o.at(dx, yy, 6).rot(spin, -TILT * m.pitchK, 0); }
             Render3D.render(IT, parts, CX, CY, 1.0, TILT);
         }
-        IT.softOutline(0.42f);
+        if (ic.itemOutline) IT.softOutline(0.42f);
         out.draw(IT);
     }
 
@@ -604,7 +594,7 @@ final class Scene {
         int[] spr = m.sprite;
         int col = rar & 0xFFFFFF;
         float pulse = 0.5f + 0.5f * (float) Math.sin(us * 3.2);
-        for (int r = 4; r >= 1; r--) out.disc(Math.round(sx), Math.round(sy), Math.round(size * (0.42f + r * 0.1f)), Canvas.rgb((int) ((10 + 14 * pulse) * (5 - r) / 2f * Math.min(1f, uu)), col));
+        for (int r = 4; r >= 1; r--) out.disc(Math.round(sx), Math.round(sy), Math.round(size * (0.42f + r * 0.1f)), Canvas.rgb((int) ((10 + 14 * pulse) * (5 - r) / 2f * Math.min(1f, uu) * FancyConfig.get().itemGlow), col));
         float flip = us < 0.8f ? (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * us))) : 1f;      // two quick coin flips that settle
         float xs = Math.max(0.06f, Math.abs(flip));
         float k = 2f * sm, half = 16f * sm;                                   // whole-number scale so every sprite pixel stays square
@@ -624,7 +614,7 @@ final class Scene {
                 IT.set(x, y, (Canvas.shade(c | 0xFF000000, f) & 0xFFFFFF) | (al << 24));
             }
         }
-        for (int i = 0; i < 6; i++) {                                                                  // orbiting glints
+        for (int i = 0; i < 6 && FancyConfig.get().itemGlints; i++) {                                  // orbiting glints
             double a = us * 1.6 + i * Math.PI / 3, rr = size * 0.72;
             int x = Math.round(sx + (float) Math.cos(a) * (float) rr), y = Math.round(sy + (float) Math.sin(a) * (float) rr * 0.55f);
             float tw = Math.min(1f, uu) * (0.45f + 0.55f * (float) Math.sin(us * 6 + i * 2) * (float) Math.sin(us * 6 + i * 2));
@@ -1299,7 +1289,7 @@ final class Scene {
             int a = on ? (int) (255 * (0.7f + 0.3f * Math.sin(t * 9 + i))) : 70;
             out.rect(x, y - 1, x + 2, y + 2, Canvas.rgb(a, on ? PALE : 0x8A7A4A)); out.set(x + 1, y, Canvas.rgb(a, 0xFFFFFF));
         }
-        float cg = lit * (split ? 1f : 0.8f);
+        float cg = lit * (split ? (p.hasItem ? 1f : 0.15f) : 0.8f);
         if (cg > 0) { out.glow(cx, gy + 1, 30, GOLD, 0.35f * cg); }
 
         // a hexagram turns inside the circle, brighter with every strike
@@ -1368,7 +1358,7 @@ final class Scene {
         }
 
         // the eruption
-        if (split) {
+        if (split && p.hasItem) {
             float a = t - ts;
             if (a < 1.1f) for (int i = 0; i < 64; i++) {                                   // the shadow bursts into golden shards
                 double an = h(i, 41) * Math.PI * 2; float sp = 14 + 70 * h(i, 42), x0 = cx + (h(i, 43) - 0.5f) * 16, y0 = gy - 4 - h(i, 44) * 34;
@@ -1405,7 +1395,7 @@ final class Scene {
             if (fl > 0) for (int i = 0; i < 5; i++) out.disc(cx, icy, 12 + i * 12, Canvas.rgb((int) (95 * fl), i % 2 == 0 ? 0xFFFFFFFF : 0xFFFFE9A8));
         }
 
-        if (split && rng) {                                                                  // ---- the RNG Drop finale
+        if (split && rng && p.hasItem) {                                                     // ---- the RNG Drop finale
             float a = t - ts;
             float gr = cl(a / 0.5f) * cl((length(p) - t) / 0.8f);
             for (int i = 0; i < 12; i++) {                                                   // god rays turning slowly behind the drop
@@ -1432,6 +1422,20 @@ final class Scene {
             }
             float fl2 = cl(1f - a / 0.5f);
             if (fl2 > 0) out.glow(cx, icy, 120, 0xFFFFFF, 0.6f * fl2);
+        }
+        if (split && !p.hasItem) {                                                           // ---- nothing came: the circle goes dark and grey smoke curls up
+            float a = t - ts, d = cl(a / 0.5f);
+            ell(out, cx, gy + 1, 36, 9, Canvas.rgb((int) (215 * d), 0xFF262938));
+            ell(out, cx, gy + 1, 22, 5, Canvas.rgb((int) (120 * d), 0xFF14141E));
+            for (int i = 0; i < 28; i++) {
+                float ph = cl(a * 0.45f - h(i, 5) * 0.7f); if (ph <= 0f || ph >= 1f) continue;
+                int x = (int) (cx + (h(i, 6) - 0.5f) * 46 + Math.sin(a * 2.2 + i) * 4), y = (int) (gy - ph * 40);
+                out.disc(x, y, 2 + (int) (ph * 5), Canvas.rgb((int) (140 * (1 - ph)), i % 2 == 0 ? 0xFF8A8F9E : 0xFF6A6F7E));
+            }
+            for (int k = 0; k < K; k++) {                                                    // the cracks the strikes left go cold
+                float tx = cx + (k - H) * 12;
+                lin(out, tx, gy + 1, tx + (h(k, 9) - 0.5f) * 14, gy + 3, Canvas.rgb((int) (160 * d), 0xFF0E0C14));
+            }
         }
         if (split && p.hasItem && p.item != null) {
             laurel(out, us, icy, false);

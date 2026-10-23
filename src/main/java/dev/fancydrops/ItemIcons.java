@@ -67,18 +67,11 @@ public final class ItemIcons {
 
     private static void load(String id, Icon ic) {
         if (isBook(id)) {                                          // every enchanted book / bundle: a proper book, never a head or a wiki render
-            Cached b = new Cached(); b.wikiVersion = 10; b.wikiPixels = bookSprite();
-            ic.data = b; ic.ready = true; return;
-        }
-        if (id != null && id.startsWith("MYTHMOB_")) {             // a Mythological creature: its sprite from the wiki, or nothing (the menu then draws its own icon)
-            Cached b = new Cached(); b.wikiVersion = 10;
-            String sp = MythData.spriteOf(id);
-            if (sp != null) try { b.wikiPixels = downloadWikiPixels("https://hypixelskyblock.minecraft.wiki/images/" + sp + ".png"); } catch (Exception ignored) {}
-            if (b.wikiPixels == null && sp != null) try { b.wikiPixels = downloadWikiPixels("https://hypixelskyblock.minecraft.wiki/images/" + sp.replace("_Sprite", "") + ".png"); } catch (Exception ignored) {}
+            Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = bookSprite();
             ic.data = b; ic.ready = true; return;
         }
         if ("@seed".equals(FarmData.imgOf(id))) {                  // Seasoning is not a real item: a few seeds
-            Cached b = new Cached(); b.wikiVersion = 10; b.wikiPixels = seedSprite();
+            Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = seedSprite();
             ic.data = b; ic.ready = true; return;
         }
         Cached c = new Cached();
@@ -86,28 +79,27 @@ public final class ItemIcons {
             Path cf = cacheFile(id);
             if (Files.exists(cf)) {
                 Cached old = GSON.fromJson(Files.readString(cf), Cached.class);
-                if (old != null && old.wikiVersion >= 10 && (old.wikiPixels != null || old.face != null) && (old.heads != null || !skullFlag(id))) { ic.data = old; ic.ready = true; return; }
+                if (old != null && old.wikiVersion >= 11 && (old.wikiPixels != null || old.face != null) && (old.heads != null || !skullFlag(id))) { ic.data = old; ic.ready = true; return; }
             }
         } catch (Exception ignored) {}
 
-        final String mimg = FarmData.hasId(id) ? null : MythData.imgOf(id);
-        final boolean wikiFirst = FarmData.hasId(id) || mimg != null;      // farming items and the Mythological shards / dye have a picture file of their own on the wiki
-        if (wikiFirst) {                                  // farming items: the page's own picture file (/images/Name.png, as on the Rare Crops page) comes first
-            String img = mimg != null ? mimg : FarmData.imgOf(id);
+        if (FarmData.hasId(id)) {                                  // farming items: the page's own picture file (/images/Name.png, as on the Rare Crops page) comes first
+            String img = FarmData.imgOf(id);
             java.util.List<String> files = new java.util.ArrayList<>(); if (img != null) files.add(img); files.addAll(wikiPages(id));
             for (String page : files) {
                 try { c.wikiPixels = downloadWikiPixels("https://hypixelskyblock.minecraft.wiki/images/" + URLEncoder.encode(page.trim().replace(' ', '_'), StandardCharsets.UTF_8).replace("+", "%20").replace("%27", "'") + ".png"); if (c.wikiPixels != null) break; } catch (Exception ignored) {}
             }
         }
-        if (c.wikiPixels == null && wikiFirst) for (String page : wikiPages(id)) {      // farming items: the picture in the page's own info box (its og:image), not the "lead image" guess that can pick a pest
+        if (c.wikiPixels == null && FarmData.hasId(id)) for (String page : wikiPages(id)) {      // farming items: the picture in the page's own info box (its og:image), not the "lead image" guess that can pick a pest
             try { c.wikiPixels = ogImagePixels(page); if (c.wikiPixels != null) break; } catch (Exception ignored) {}
         }
-        if (c.wikiPixels == null && !wikiFirst) for (String page : wikiPages(id)) {                       // try the likely page names until one has a picture
+        if (c.wikiPixels == null && !FarmData.hasId(id)) for (String page : wikiPages(id)) {                       // try the likely page names until one has a picture
             try { c.wikiPixels = fetchWikiPixels(page); if (c.wikiPixels != null) break; } catch (Exception ignored) {}
         }
-        if (c.wikiPixels == null && !wikiFirst) try { c.wikiPixels = fetchWikiPixels(searchWiki(wikiPageName(id))); } catch (Exception ignored) {}   // a search can land on the wrong page (a pest for a crop), so farming items go without
-        c.wikiVersion = 10;
-        for (String cand : neuIds(id)) {
+        if (c.wikiPixels == null && !FarmData.hasId(id)) try { c.wikiPixels = fetchWikiPixels(searchWiki(wikiPageName(id))); } catch (Exception ignored) {}   // a search can land on the wrong page (a pest for a crop), so farming items go without
+        c.wikiVersion = 11;
+        boolean flatFarm = FarmData.hasId(id) && !skullFlag(id) && c.wikiPixels != null;      // a plain farming item (Cornucopia...) keeps the wiki's own picture, never a head cube
+        if (!flatFarm) for (String cand : neuIds(id)) {
             if (c.heads != null) break;
             try {
             JsonObject j = JsonParser.parseString(httpString(REPO + URLEncoder.encode(cand, StandardCharsets.UTF_8) + ".json")).getAsJsonObject();
@@ -123,7 +115,7 @@ public final class ItemIcons {
                 // the next candidate id, the Hypixel item list, or finally the wiki PNG / gem
             }
         }
-        if (c.heads == null) {                                    // second source: Hypixel's own item list knows every skull's skin
+        if (c.heads == null && !flatFarm) {                       // second source: Hypixel's own item list knows every skull's skin
             try {
                 String skin = apiSkin(id);
                 if (skin != null) { c.heads = fetchHead(skin); c.face = c.heads[4]; c.headTexture = skin; }
@@ -403,8 +395,8 @@ public final class ItemIcons {
     /** Starts loading the item art now so it is ready by the time the item pops up. */
     public static void prefetch(String id) { get(id); }
     public static boolean ready(String id) { return get(id).ready; }
-    /** True once the id's picture has been downloaded (a creature sprite, say), so a menu can prefer it over its own drawing. */
-    public static boolean hasPixels(String id) { Icon ic = get(id); return ic.ready && ic.data != null && ic.data.wikiPixels != null; }
+    /** True once the picture for this id has downloaded and has real pixels (a wiki picture, or a head). */
+    public static boolean hasPixels(String id) { Icon ic = get(id); Cached d = ic.data; return ic.ready && d != null && (d.wikiPixels != null || d.face != null || d.heads != null); }
 
     /** A little gem, used when no art could be found. Tinted with the slayer's colour. */
     static int[] gem(int rgb) {

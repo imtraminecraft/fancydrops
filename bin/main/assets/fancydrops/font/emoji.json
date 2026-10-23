@@ -1,1 +1,121 @@
-{"providers": [{"type": "bitmap", "file": "fancydrops:font/fancy.png", "ascent": 7, "height": 8, "chars": ["\ue000"]}]}
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/fancy.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue000"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/sparkle.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue020\ue021\ue022\ue023\ue024\ue025"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/mf.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue030"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/ob.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue031"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_crown.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue040\ue041\ue042\ue043\ue044\ue045"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_gem.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue050\ue051\ue052\ue053\ue054\ue055"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_flame.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue060\ue061\ue062\ue063\ue064\ue065"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_clover.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue070\ue071\ue072\ue073\ue074\ue075"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_heart.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue080\ue081\ue082\ue083\ue084\ue085"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_bolt.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue090\ue091\ue092\ue093\ue094\ue095"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_snow.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue0a0\ue0a1\ue0a2\ue0a3\ue0a4\ue0a5"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_star.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue0b0\ue0b1\ue0b2\ue0b3\ue0b4\ue0b5"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_ghost.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue0c0\ue0c1\ue0c2\ue0c3\ue0c4\ue0c5"
+      ]
+    }
+  ]
+}
