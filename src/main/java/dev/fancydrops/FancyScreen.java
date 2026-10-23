@@ -701,7 +701,7 @@ public class FancyScreen extends Screen {
             int col = r.pColors[i];
             boolean lk = r.pLock != null && r.pLock[i];
             Long shk = lk ? lockShake.get(r.pLabels[i]) : null;
-            if (shk != null) { long ag = now - shk; if (ag < 420) b[0] += Math.round((float) Math.sin(ag / 24.0) * 4f * (1f - ag / 420f)); }          // a locked tile shakes when you press it
+            if (shk != null) { long ag = now - shk; if (ag < 420) { float dk = 1f - ag / 420f; b[0] += Math.round((float) Math.sin(ag * 0.034) * 3f * dk * dk); } }          // a locked tile shakes when you press it
             float k = anim("pick|" + r.title + "|" + r.pLabels[i], on ? 1f : hv ? 0.4f : 0f, 40f);
             if (hv && r.pTips != null) { tipText = r.pTips[i]; tipCol = r.pBg != null ? r.pBg[i] : col; }
             if (hv && r.pIds != null) hoverCos = r.pIds[i];
@@ -866,7 +866,7 @@ public class FancyScreen extends Screen {
         int[] accents = {0xFFFFC857, 0xFFFF9AC8, 0xFF8FD0FF};
         // --- sets: the rarest first
         int ownedSets = 0; for (CosmeticData.SetDef sd : CosmeticData.SETS) if (CosmeticData.unlocked(CosmeticData.members(sd).get(0))) ownedSets++;
-        rows.add(catHeader("SETS", "A suffix, a name effect and an aura that belong together.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
+        rows.add(catHeader("SETS", "A suffix and a name effect that go together, and an aura for most.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
         List<Object> st = new ArrayList<>(); for (int r2 = 2; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) st.add(sd);
         rows.add(grid(st, 3));
         // --- one section per kind, ordered by rarity (special, then beta, then common); a set's items keep the set's colours
@@ -2289,7 +2289,7 @@ public class FancyScreen extends Screen {
         float in = ease(age / 240f), out = age > toastDur - 450 ? (toastDur - age) / 450f : 1f;
         String[] ln = toastText.split("\n"); int tw = 0; for (String s : ln) tw = Math.max(tw, font.width(s));
         int w = tw + 46, h = 10 + ln.length * 11 + 6, x = px + (pw - w) / 2;
-        if (toastShake && age < 600) x += Math.round((float) Math.sin(age / 22.0) * 6f * (1f - age / 600f));          // LOCKED! rattles
+        if (toastShake && age < 600) { float dk = 1f - age / 600f; x += Math.round((float) Math.sin(age * 0.03) * 5f * dk * dk); }          // LOCKED! rattles
         int y = py + ph + 8 + (TEST_STRIP ? 22 : 0) + (dockK > 0.97f && FancyConfig.get().previewAt != 0 && dockWanted() ? DOCK_H + DOCK_GAP : 0) + Math.round((1f - in) * 10f);
         if (y + h > height - 2) y = Math.max(2, height - h - 2);
         int al = Math.round(255 * in * out);
