@@ -486,7 +486,8 @@ public class FancyScreen extends Screen {
         if (tab == Tab.ANIMATIONS) return !onLanding();                      // only inside a scene page
         return tab == Tab.SOUNDS && FancyConfig.get().sound && !onLanding() && curSub() < 5;
     }
-    private static int menuHeight(int screenH) { return Math.min(350, screenH - 16 - (screenH >= 390 && FancyConfig.get().previewAt != 2 ? DOCK_H + DOCK_GAP : 0)); }
+    private static final int SW_H = 22;      // the Active switch above the menu
+    private static int menuHeight(int screenH) { return Math.min(350, screenH - 16 - SW_H - (screenH >= 390 && FancyConfig.get().previewAt != 2 ? DOCK_H + DOCK_GAP : 0)); }
 
     private static String slotName(int sc, int k) { return sc == 10 ? PEST_SLOT_NAMES[k] : sc == 7 ? EXP_SLOT_NAMES[k] : (sc == 6 || sc == 9) ? MYTH_SLOT_NAMES[k] : (sc == 5 || sc == 8) ? FARM_SLOT_NAMES[k] : sc == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k]; }
 
@@ -821,15 +822,15 @@ public class FancyScreen extends Screen {
             int avN = b[2] - 18 - iw - (wip ? 22 : 0), fullW = Gfx.w(font, r.pLabels[i]);
             float nk = fullW > avN && r.pSubs == null && !r.pFontTiles && r.pFx == null ? Math.max(0.72f, avN / (float) fullW) : 1f;          // a long name shrinks a little instead of losing its end
             String nm = Gfx.fit(font, r.pLabels[i], Math.round(avN / nk));
-            String sb2 = r.pSubs != null ? Gfx.fit(font, r.pSubs[i], b[2] - 18 - iw) : null;
-            int tw2 = Math.max(Gfx.w(font, nm), sb2 == null ? 0 : Gfx.w(font, sb2)), gx = b[0] + 9, tx = gx + iw;          // every tile lines up the same way: the icon in one column on the left, the text right after it
+            String sb2 = r.pSubs != null ? Gfx.fit(font, r.pSubs[i], Math.round((b[2] - 18 - iw) / 0.8f)) : null;          // the small line under a title is drawn smaller than the title
+            int tw2 = Math.max(Gfx.w(font, nm), sb2 == null ? 0 : Math.round(Gfx.w(font, sb2) * 0.8f)), gx = b[0] + 9, tx = gx + iw;          // every tile lines up the same way: the icon in one column on the left, the text right after it
             if (ico) Icons.draw(g, r.pIcons[i], gx, iy, hv ? now : r.pOn != null ? 2400L : on ? now : 2400L);          // cosmetic icons stand still
             int ny = sb2 != null ? b[1] + 7 : b[1] + (b[3] - 8) / 2 - 1, nx = tx;
             if (r.pFx != null && r.pFx[i] != null) { int lx = nx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, ny, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, now)); lx += Gfx.w(font, chs); } }
             else if (r.pFontTiles) g.text(font, Fonts.text(nm, i), nx, ny, on ? Ui.TEXT : Ui.SUB, true);
             else if (nk < 1f) { Gfx.push(g); Gfx.translate(g, nx, ny + (1f - nk) * 4f); Gfx.scale(g, nk); Gfx.text(g, font, nm, 0, 0, on ? Ui.TEXT : wip ? Ui.DIM : Ui.SUB); Gfx.pop(g); }
             else Gfx.text(g, font, nm, nx, ny, on ? Ui.TEXT : wip ? Ui.DIM : sb2 != null ? Canvas.mix(Ui.SUB, Ui.TEXT, 0.5f) : Ui.SUB);
-            if (sb2 != null) Gfx.text(g, font, sb2, tx, b[1] + 18, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM);
+            if (sb2 != null) { Gfx.push(g); Gfx.translate(g, tx, b[1] + 19); Gfx.scale(g, 0.8f); Gfx.text(g, font, sb2, 0, 0, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM); Gfx.pop(g); }
             if (wip) { pill(g, b[0] + b[2] - 22, b[1] + 5, 18, 10, 0xFF3A3220); Gfx.text(g, font, "WIP", b[0] + b[2] - 20, b[1] + 6, 0xFFFFC857); }
             if (lk) {                                                                                  // locked: dimmed, with a padlock
                 g.fill(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1, 0x70080A10);
@@ -1023,19 +1024,25 @@ public class FancyScreen extends Screen {
         } catch (Throwable ignored) { }
         if (nm == null && code.equals(Cosmetics.OWNER)) nm = "you";
         adminName = nm != null ? nm : (t.matches("(?i)[0-9a-f]{64}|[0-9a-f-]{36}") ? "" : t);
-        adminTarget = code; adminPicks.clear(); adminPicks.addAll(CosmeticData.heldBy(code)); adminScroll = 0; adminOpen = true;
+        adminTarget = code; adminPicks.clear(); adminPicks.addAll(CosmeticData.pickedFor(code)); adminDirtyAt = 0; adminScroll = 0; adminOpen = true;
     }
     private void adminToggleSet(CosmeticData.SetDef sd) {
         List<CosmeticData.Def> m = CosmeticData.members(sd); boolean all = true; for (CosmeticData.Def d : m) if (!adminPicks.contains(d.id())) all = false;
         for (CosmeticData.Def d : m) { if (all) adminPicks.remove(d.id()); else adminPicks.add(d.id()); }
+        adminDirtyAt = System.currentTimeMillis();
     }
-    private boolean adminSaving;
-    private void adminFinish() {
+    private boolean adminSaving; private long adminDirtyAt; private boolean adminTokenWarned;
+    private void adminFinish() { adminSave(true); }
+    /** Saves the picks to GitHub. close: the Save button also closes the picker; the automatic save a moment after every click does not. */
+    private void adminSave(boolean close) {
         if (adminSaving) return;
         FancyConfig fc = FancyConfig.get();
-        if (fc.adminToken == null || fc.adminToken.isBlank()) { toast("Paste a GitHub token first.\n(Admin Panel > Save token)", 0xFFFF8A5C); adminOpen = false; return; }
+        if (fc.adminToken == null || fc.adminToken.isBlank()) {
+            if (close || !adminTokenWarned) toast("Paste a GitHub token first.\n(Admin Panel, then try again)", 0xFFFF8A5C);
+            adminTokenWarned = true; if (close) adminOpen = false; return;
+        }
         String js = CosmeticData.buildJson(adminTarget, adminPicks); adminSaving = true;
-        Cosmetics.saveRemote(js, fc.adminToken, msg -> { adminSaving = false; boolean ok = msg.startsWith("Saved"); toast(msg, ok ? 0xFF62E6A8 : 0xFFFF7777); if (ok) adminOpen = false; });
+        Cosmetics.saveRemote(js, fc.adminToken, msg -> { adminSaving = false; boolean ok = msg.startsWith("Saved"); toast(msg, ok ? 0xFF62E6A8 : 0xFFFF7777); if (ok && close) adminOpen = false; });
     }
     /** The admin windows are a centred card on a dimmed screen: {x, y, w, h}. */
     private int[] adminCard(GuiGraphicsExtractor g, int maxW, String title, String sub, int accent) {
@@ -1116,11 +1123,12 @@ public class FancyScreen extends Screen {
         String who = adminName.isEmpty() ? adminTarget.substring(0, Math.min(10, adminTarget.length())) + "…" : adminName;
         int[] c = adminCard(g, 720, "Give cosmetics to " + who, adminTarget.substring(0, Math.min(12, adminTarget.length())) + "…  ·  " + adminPicks.size() + " of " + CosmeticData.ALL.size() + " picked", 0xFF62E6A8);
         int cx = c[0], cy = c[1], cw = c[2], ch = c[3];
-        int rt = adminButton(g, cx + cw - 10, cy + 9, adminSaving ? "Saving..." : "Save", 0xFF2F8F5A, mx, my, this::adminFinish);
+        if (adminDirtyAt != 0 && !adminSaving && System.currentTimeMillis() - adminDirtyAt > 900) { adminDirtyAt = 0; adminSave(false); }          // every change saves itself a moment after the last click
+        int rt = adminButton(g, cx + cw - 10, cy + 9, adminSaving ? "Saving..." : adminDirtyAt != 0 ? "Save" : "Saved", 0xFF2F8F5A, mx, my, this::adminFinish);
         adminButton(g, rt, cy + 9, "Cancel", 0xFF555B6E, mx, my, () -> adminOpen = false);
         int top = cy + 38, bot = cy + ch - 4; g.enableScissor(cx + 1, top, cx + cw - 1, bot);
         int x0 = cx + 14, iw = cw - 28, gap = 6, cols = Math.max(2, iw / 150), tw = (iw - (cols - 1) * gap) / cols, y = top + 8 - adminScroll;
-        Gfx.text(g, font, "SETS", x0, y, 0xFFC77DFF); Gfx.text(g, font, "click to tick every member", x0 + 34, y, Ui.DIM); y += 13;
+        Gfx.text(g, font, "SETS", x0, y, 0xFFC77DFF); Gfx.text(g, font, "click to tick every member  ·  saves by itself", x0 + 34, y, Ui.DIM); y += 13;
         int i = 0;
         List<CosmeticData.SetDef> setOrd = new ArrayList<>(); for (int r2 = 3; r2 >= 0; r2--) for (CosmeticData.SetDef s2 : CosmeticData.SETS) if (s2.rarity() == r2) setOrd.add(s2);
         for (CosmeticData.SetDef sd : setOrd) {
@@ -1145,7 +1153,7 @@ public class FancyScreen extends Screen {
                 int x = x0 + (i % cols) * (tw + gap), yy = y + (i / cols) * 24; boolean hv = mx >= x && mx < x + tw && my >= yy && my < yy + 20 && my >= top && my < bot;
                 CosmeticData.SetDef own = d.set() == null ? null : CosmeticData.setById(d.set());
                 adminTile(g, x, yy, tw, 20, d.name(), null, on, (own != null ? own.color() : RAR_COL[CosmeticData.rarityOf(d)]) & 0xFFFFFF, hv);
-                adminHits.add(new Object[]{x, Math.max(top, yy), x + tw, Math.min(bot, yy + 20), (Runnable) () -> { if (!adminPicks.remove(d.id())) adminPicks.add(d.id()); }}); i++;
+                adminHits.add(new Object[]{x, Math.max(top, yy), x + tw, Math.min(bot, yy + 20), (Runnable) () -> { if (!adminPicks.remove(d.id())) adminPicks.add(d.id()); adminDirtyAt = System.currentTimeMillis(); }}); i++;
             }
             y += ((i + cols - 1) / cols) * 24 + 10;
         }
@@ -1348,9 +1356,9 @@ public class FancyScreen extends Screen {
     private void drawSearchSide(GuiGraphicsExtractor g, int mx, int my, long now) {
         sideScroll = Math.max(0, Math.min(sideMax(), sideScroll));
         searchSide.clear();
-        g.enableScissor(px + 4, py + 66, px + sw, py + ph - 4);
+        g.enableScissor(px + 4, py + 42, px + sw, py + ph - 4);
         String q = query.trim().toLowerCase(Locale.ROOT);
-        int y0 = py + 70 - sideScroll, y = y0, rowH = Math.max(12, Math.min(SUBH, 15));
+        int y0 = py + 46 - sideScroll, y = y0, rowH = Math.max(12, Math.min(SUBH, 15));
         boolean any = false;
         for (Tab t : Tab.values()) {
             int ti = t.ordinal();
@@ -1534,7 +1542,7 @@ public class FancyScreen extends Screen {
 
     private void tabIcon(GuiGraphicsExtractor g, Tab t, int x, int y, long now, boolean lively) {
         switch (t) {
-            case DROPS -> Icons.draw(g, "library", x, y, now);
+            case DROPS -> Icons.draw(g, "dropped", x, y, now);
             case HOME -> Icons.draw(g, "home", x, y, now);
             case ANIMATIONS -> Icons.draw(g, "animations", x, y, now);
             case SOUNDS -> Icons.draw(g, "sounds", x, y, now);
@@ -1548,7 +1556,7 @@ public class FancyScreen extends Screen {
     }
 
     /** The main switch tile under the title: {x0, y0, x1, y1}. */
-    private int[] masterBox() { return new int[]{px + 8, py + 36, px + sw - 6, py + 62}; }
+    private int[] masterBox() { int top = FancyConfig.get().previewAt == 0 ? Math.round((DOCK_H + DOCK_GAP) * dockK) : 0; int w = 96, y = Math.max(2, py - top - 21); return new int[]{px + pw - w, y, px + pw, y + 18}; }
 
     /** The header line: the tab, and the page inside it ("Animations  >  Slayers"). */
     private String pageTitle() {
@@ -1665,7 +1673,7 @@ public class FancyScreen extends Screen {
     private static boolean dropKeep(FancyConfig.DropCfg d) {
         return dropShow <= 0 || (dropShow == 1 ? d.animate : dropShow == 2 ? d.announce : (!d.animate || !d.announce));
     }
-    private static final String[] SHOW_L = {"Enabled", "Animated", "Chat Alert", "Disabled"}, SHOW_I = {"fd:library", "fd:animations", "fd:chat", "fd:nothing"};
+    private static final String[] SHOW_L = {"Enabled", "Animated", "Chat Alert", "Disabled"}, SHOW_I = {"fd:dropped", "fd:animations", "fd:chat", "fd:nothing"};
     private static final int[] SHOW_C = {0xFF6C86FF, 0xFFFF72C6, 0xFF7BE05A, 0xFFE5484D};
     private boolean showBarOn() { return tab == Tab.DROPS && !onLanding() && query.isBlank() && ORD[Math.max(0, Math.min(CATS.length - 1, curSub()))] <= 4; }
     /** The Show filter lives in a strip above the menu (like the community buttons), and only while the Drop Library is open. */
@@ -1850,7 +1858,7 @@ public class FancyScreen extends Screen {
                 hero.kind = HERO; hero.h = 84; hero.noSearch = true; rows.add(hero);
                 rows.add(section("Jump to"));
                 Object[][] pts = {
-                    {"fd:library", "Drop Library", "Choose which drops animate and announce", Tab.DROPS},
+                    {"fd:dropped", "Drop Library", "Choose which drops animate and announce", Tab.DROPS},
                     {"fd:animations", "Animations", "Scenes, sounds and looks", Tab.ANIMATIONS},
                     {"fd:megaphone", "Chat", "Tell everyone about your drop, in the channel you set", Tab.CHAT},
                     {"fd:profit", "Stats", "Profit, kills and drops", Tab.STATS}};
@@ -2198,7 +2206,7 @@ public class FancyScreen extends Screen {
     private static final int[] animType = {1, 0, 0, 1, 0};                      // Animations: which animation type of each page is open
     private static final String[][][] ATYPES = {
         {{"Nothing Happens", "nothing", "3", "fd:nothing", "When a kill drops nothing.", "Nothing"},
-         {"Default", "default", "0", "fd:chop", "When a kill drops something decent.", "Default"},
+         {"Default", "default", "0", "fd:decent", "When a kill drops something decent.", "Default"},
          {"Rare Drop", "rare", "1", "fd:rare", "When a kill drops something rare.", "Rare"},
          {"RNG Drop", "rng", "2", "fd:rng", "When a drop is worth a celebration.", "RNG"}},
         {{"Dye Drop", "dye", "4", "fd:dye", "One big splat in the dye's colour fills the screen, then the dye rises out.", "Dye"}},
@@ -2928,7 +2936,7 @@ public class FancyScreen extends Screen {
 
     private static final String[][] LANDING = {
         {},
-        {"fd:library", "Drop Library", "Every drop the mod knows about, grouped by where it comes from. Open a page to choose which drops get an animation and which get a chat alert.",
+        {"fd:dropped", "Drop Library", "Every drop the mod knows about, grouped by where it comes from. Open a page to choose which drops get an animation and which get a chat alert.",
             "fd:slayers|Slayers|Slayer boss drops", "fd:mytho|Mythological|Mob drops", "fd:dye|Dye|All dye drops", "fd:farm|Farming|Pest and crop drops", "fd:experiments|Experiments|Table drops", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
         {"fd:animations", "Animations", "Pick the scene, sounds and look of the animation for each kind of drop, and try them out with the play buttons.",
             "fd:slayers|Slayers|Nothing \u00B7 Default \u00B7 Rare \u00B7 RNG", "fd:mytho|Mythological|Nothing \u00B7 Ritual \u00B7 RNG", "fd:dye|Dye|Paint splat", "fd:farm|Farming|Scythe \u00B7 Helios", "fd:experiments|Experiments|Book \u00B7 RNG", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
@@ -3201,7 +3209,7 @@ public class FancyScreen extends Screen {
     private int srcExtra() { return tab == Tab.DROPS ? Math.round(srcExp * SRCH * srcList.size()) : 0; }
     private static final int SRCH = 14;
     private int sideMax() { if (!query.isBlank()) return Math.max(0, searchSideH - (ph - 70 - 8)); return Math.max(0, (Tab.values().length - 1) * 24 + 4 + srcExtra() + Math.round(subExp * subH() * subs().length) - (ph - 70 - 8)); }
-    private boolean inSide(double mx, double my) { return !cosWin() && mx >= px && mx < px + sw && my >= py + 66 && my < py + ph - 4; }
+    private boolean inSide(double mx, double my) { return !cosWin() && mx >= px && mx < px + sw && my >= py + 42 && my < py + ph - 4; }
     private int[] tabBox(int i) {
         int y = (i == Tab.COSMETICS.ordinal() ? -1000 : py + 70 - sideScroll + vi(i) * 24) + (i > tab.ordinal() ? Math.round(subExp * subH() * subs().length) + srcExtra() : 0);
         return new int[]{px + 8, y, px + sw - 6, y + 22};
@@ -3264,7 +3272,7 @@ public class FancyScreen extends Screen {
         ph = Math.round(menuHeight(height) + (Math.min(350, height - 2 * (COS_H + DOCK_GAP + 6)) - menuHeight(height)) * cosK);
         dockK = anim("dock", dockWanted() ? 1f : 0f, 14f);
         int dockExtra = Math.round((DOCK_H + DOCK_GAP) * dockK);
-        py = (height - ph - dockExtra) / 2 + (FancyConfig.get().previewAt == 0 ? dockExtra : 0) + Math.round((1f - intro) * 10f);        // the panel glides up into place; the live preview takes the room above or below it
+        py = (height - ph - dockExtra - SW_H) / 2 + SW_H + (FancyConfig.get().previewAt == 0 ? dockExtra : 0) + Math.round((1f - intro) * 10f);        // the panel glides up into place; the live preview takes the room above or below it
         lt = py + 46; lb = py + ph - 10;
 
         int viewH = lb - lt;
@@ -3319,7 +3327,7 @@ public class FancyScreen extends Screen {
         else {
         // sidebar tabs: the highlight glides from tab to tab
         sideScroll = Math.max(0, Math.min(sideMax(), sideScroll));
-        g.enableScissor(px + 4, py + 66, px + sw, py + ph - 4);
+        g.enableScissor(px + 4, py + 42, px + sw, py + ph - 4);
         float want = tabBox(tab.ordinal())[1];
         if (Float.isNaN(selY) || !animOn) { selY = want; selV = 0f; }
         else { float h = Math.min(dt, 0.03f); for (int sp = 0; sp < 2; sp++) { selV += ((want - selY) * 420f - selV * 42f) * h / 2f; selY += selV * h / 2f; } }       // a spring: the highlight slides to the tab, overshoots a hair and settles
@@ -3392,52 +3400,27 @@ public class FancyScreen extends Screen {
         g.disableScissor();
         }
         if (sideMax() > 0) {                                                       // a slim scroll bar shows there is more below
-            int trk = ph - 76, bar = Math.max(14, trk * trk / (trk + sideMax())), by0 = py + 68 + Math.round((trk - bar) * (sideScroll / (float) sideMax()));
-            g.fill(px + sw - 3, py + 68, px + sw - 1, py + 68 + trk, 0x22FFFFFF); g.fill(px + sw - 3, by0, px + sw - 1, by0 + bar, 0x99B0B8D0);
+            int trk = ph - 52, bar = Math.max(14, trk * trk / (trk + sideMax())), by0 = py + 44 + Math.round((trk - bar) * (sideScroll / (float) sideMax()));
+            g.fill(px + sw - 3, py + 44, px + sw - 1, py + 44 + trk, 0x22FFFFFF); g.fill(px + sw - 3, by0, px + sw - 1, by0 + bar, 0x99B0B8D0);
         }
 
-        // the main switch sits right under the title: one wide glowing tile that turns the whole mod on or off
-        {
+        }
+        // the main switch sits above the menu, top right: it turns the whole mod on or off
+        if (!cosWin()) {
             FancyConfig mc = FancyConfig.get();
             boolean on = mc.masterAnimate || mc.masterAnnounce;
             int[] b = masterBox();
             boolean mh = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
-            float mv = anim("masterSw", on ? 1f : 0f, 36f), hv = anim("masterHv", mh ? 1f : 0f, 48f);
+            float mv = anim("masterSw", on ? 1f : 0f, 30f), hv = anim("masterHv", mh ? 1f : 0f, 48f);
             int w = b[2] - b[0], h = b[3] - b[1];
             float pulse = STILL ? 0.5f : 0.5f + 0.5f * (float) Math.sin(now / 420.0);
-            int tbg = Canvas.mix(Canvas.mix(Ui.PANEL2, 0xFF1D2338, mv), 0xFF23283A, hv * 0.8f);
-            pill(g, b[0], b[1], w, h, tbg);
-            if (mv > 0.02f) {                                                              // a soft glow breathing round the tile while the mod is on
-                rout(g, b[0], b[1], w, h, Gfx.argb(Math.round((60 + 70 * pulse) * mv), 0x62E6A8));
-                g.fill(b[0] + 2, b[1] + h - 2, b[2] - 2, b[1] + h - 1, Gfx.argb(Math.round((120 + 100 * pulse) * mv), 0x62E6A8));
-                gleam(g, b[0], b[1], w, h, now);
-            } else g.fill(b[0] + 2, b[1] + h - 2, b[2] - 2, b[1] + h - 1, Gfx.argb(150, 0xE5484D));
-            Icons.draw(g, "fd:dropped", b[0] + 4, b[1] + 3, on ? now : 2400L);
-            if (mv < 0.98f) g.fill(b[0] + 4, b[1] + 3, b[0] + 20, b[1] + 19, Gfx.argb(Math.round(170 * (1f - mv)), tbg & 0xFFFFFF));      // dims the icon with the tile's own colour, so no dark box shows
-            Gfx.text(g, font, "Active", b[0] + 24, b[1] + 4, Canvas.mix(0xFF7A7A86, Ui.TEXT, mv));
-            Gfx.text(g, font, on ? "ON" : "OFF", b[0] + 24, b[1] + 14, Canvas.mix(0xFFE5484D, 0xFF62E6A8, mv));
-            // a battery instead of a switch: full and charging while the mod is on, drained (and blinking red) while it is off
-            int bx0 = b[2] - 38, by0 = b[1] + 6, bw0 = 30, bh0 = 14;
-            int rim = Canvas.mix(0xFF6E7488, 0xFFD6DAE6, mv * 0.7f + hv * 0.3f);
-            g.fill(bx0 + bw0, by0 + 4, bx0 + bw0 + 2, by0 + bh0 - 4, rim);                         // the little terminal on the right
-            g.fill(bx0, by0, bx0 + bw0, by0 + bh0, 0xFF0C0E14); g.outline(bx0, by0, bw0, bh0, rim);
-            int cells = 5, cellW = (bw0 - 4) / cells;
-            float charge = mv * cells;
-            for (int k = 0; k < cells; k++) {
-                float f = Math.max(0f, Math.min(1f, charge - k));
-                int cxx = bx0 + 2 + k * cellW;
-                if (f > 0.02f) {
-                    int cc = Canvas.mix(0xFF3FBF7F, 0xFF7CF0B0, (float) k / cells);
-                    if (mv > 0.98f && !STILL) cc = Canvas.mix(cc, 0xFFFFFFFF, 0.25f * Math.max(0f, (float) Math.sin(now / 260.0 - k * 0.8)));      // a ripple of charge runs along a full battery
-                    g.fill(cxx, by0 + 2, cxx + cellW - 1, by0 + bh0 - 2, Gfx.argb(Math.round(255 * f), cc & 0xFFFFFF));
-                }
-            }
-            if (mv < 0.5f) {                                                                         // drained: one red sliver that blinks
-                float lowBlink = STILL ? 1f : 0.35f + 0.65f * (0.5f + 0.5f * (float) Math.sin(now / 300.0));
-                g.fill(bx0 + 2, by0 + 2, bx0 + 2 + Math.max(2, cellW - 3), by0 + bh0 - 2, Gfx.argb(Math.round(230 * lowBlink * (1f - mv * 2f)), 0xE5484D));
-            }
-        }
-
+            pill(g, b[0], b[1], w, h, Canvas.mix(Canvas.mix(Ui.PANEL2, 0xFF1D2338, mv), 0xFF23283A, hv * 0.8f));
+            rout(g, b[0], b[1], w, h, Gfx.argb(Math.round(70 + 60 * hv + 70 * pulse * mv), mv > 0.5f ? 0x62E6A8 : 0xE5484D));
+            Gfx.text(g, font, "Active", b[0] + 7, b[1] + 5, Canvas.mix(0xFF9A9AA8, Ui.TEXT, mv));
+            int tw = 34, th = 12, tx = b[2] - tw - 6, ty = b[1] + 3;                               // the switch: a track that fills green, and a knob that slides across
+            pill(g, tx, ty, tw, th, Canvas.mix(0xFF4A2226, 0xFF2F8F5A, mv));
+            Gfx.text(g, font, mv > 0.5f ? "ON" : "OFF", mv > 0.5f ? tx + 5 : tx + tw - 5 - Gfx.w(font, "OFF"), ty + 2, Canvas.mix(0xFFE08A8A, 0xFFD8FFE9, mv));
+            int kx = tx + 1 + Math.round(mv * (tw - th)); pill(g, kx, ty + 1, th - 2, th - 2, Canvas.mix(0xFFD6DAE6, 0xFFFFFFFF, mv));
         }
         // page header
         Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 12, Ui.TEXT);
