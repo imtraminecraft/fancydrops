@@ -44,19 +44,26 @@ final class NameFx {
                 float pos = (t % 1900L) / 1900f * (n + 10) - 5, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.2f);
                 return mix(c, 0xFFFFFF, k);
             }
-            case "sparklefx": {                                             // soft gold light with little white and pink twinkles popping on single letters
-                ph = 0.5f + 0.5f * (float) Math.sin(t / 500.0 - i * 0.6);
-                int c = mix(mix(base, 0xFFE9A8, 0.5f), 0xFFFFFF, 0.25f * ph);
-                int h = hash(i, t / 160L) % 7;
-                return h == 0 ? 0xFFFFFF : h == 1 ? 0xFFC8F0 : c;
+            case "sparklefx": {                                             // warm gold with a white band of light running along it, and pink-white twinkles
+                ph = 0.5f + 0.5f * (float) Math.sin(t / 520.0 - i * 0.5);
+                int c = mix(mix(base, 0xFFD27A, 0.6f), 0xFFF6D0, 0.55f * ph);
+                float pos = (t % 2400L) / 2400f * (n + 8) - 4, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.2f);
+                int h = hash(i, t / 150L) % 9;
+                return h == 0 ? 0xFFFFFF : h == 1 ? 0xFFC8F0 : mix(c, 0xFFFFFF, k);
             }
-            case "glitch": {                                                // the name's own colour; a letter now and then flashes cyan or magenta for a blink
-                int h = hash(i, t / 120L) % 14;
-                return h == 0 ? 0x55FFFF : h == 1 ? 0xFF55FF : h == 2 && (t / 120L) % 5 == 0 ? 0xFFFFFF : base;
+            case "glitch": {                                                // a green scan line sweeps over the name; letters flash bright as it passes and glow hacker-green behind it
+                float pos = (t % 2000L) / 2000f * (n + 10) - 2, d = i - pos;
+                int c = mix(base, 0x2BFF9C, 0.38f);
+                if (d > -0.8f && d < 0.8f) c = 0xFFFFFF;
+                else if (d <= -0.8f && d > -4f) c = mix(0x2BFF9C, c, (-d - 0.8f) / 3.2f);
+                int h = hash(i, t / 110L) % 18;
+                return h == 0 ? 0xFF55FF : h == 1 ? 0x55FFFF : c;
             }
-            case "contribfx": {                                             // aqua and mint flow along the name like a stream
-                ph = 0.5f + 0.5f * (float) Math.sin(t / 420.0 - i * 0.7);
-                return mix(mix(base, 0x4DD0FF, 0.55f), 0x7CFFB8, ph * 0.9f);
+            case "contribfx": {                                             // aqua water flowing along the name, with bright caustic glints
+                ph = 0.5f + 0.5f * (float) Math.sin(t / 380.0 - i * 0.75);
+                int c = mix(mix(0x00B8FF, 0x4DFFB8, ph), base, 0.18f);
+                float gl = (float) Math.pow(Math.max(0.0, Math.sin(t / 260.0 - i * 1.4)), 10);
+                return mix(c, 0xFFFFFF, 0.75f * gl);
             }
             default: return base;
         }
@@ -68,7 +75,6 @@ final class NameFx {
         long tt = live ? t : 1500L + i * 90L;
         int c = color(fx, i, n, b, tt);
         Style st = base.withColor(c);
-        if ("royal".equals(fx)) st = st.withBold(c == 0xFFFFFF);
         return st;
     }
 }

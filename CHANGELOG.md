@@ -2,6 +2,16 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.21
+- The Cosmetics page is compact now: Special Sets on top (one row per set: the set tile, then its suffix, name effect and aura), then one Collection grid, rarest first. Beta cosmetics sit in the same grid as the earned ones. Boxes are coloured by rarity: gradient for Special, green for Beta, grey for Earned. Every tile says what it is (Suffix, Name effect, Aura). The Wear set button is now the set tile and only works if you own the set. Icons no longer bounce.
+- The main menu stays in the middle of the screen on the Cosmetics page. The chat and tab preview sits above it and the aura preview to its left; the window only gets a little smaller to make room.
+- The aura preview shows your skin as a 3D model with a gentle turn. Drag to move it, right-drag to turn it.
+- Auras were drawing as huge squares in third person (the camera was not found). Fixed, and the particles are now small and soft. Redesigned: Twinkle (stars and a ring of light), Static (a climbing scan line and red/cyan split pixels), Stardust (a double helix) and Gilded Embers.
+- New name effects: Starlight (gold with a running band of light), Glitch (a green scan sweeps over the name), Aqua Flow (flowing water with glints). Royal Gold no longer makes the chat jump around (it used bold letters).
+- Name effects now update every frame in the tab list, so they are as smooth as in chat.
+- The suffix in the tab preview has its own colours now.
+- Shorter cosmetic names so they fit the tiles.
+
 ## 0.8.20
 - Special cosmetics are now four sets, each a suffix + name effect + aura, with a Wear set button: Special Set (Sparkle, Starlight, Twinkle), Bug Finder Set (Glitch Spark, a calmer Glitch, Static), Contributors Set (Contributor, Aqua Flow, Stardust) and Patreon Set (Patron, Royal Gold, Gilded Embers). Other players see the whole set you were given.
 - Auras are drawn with our own particles (no Minecraft particles) and also play in a new Aura preview menu on the left, using your own skin. Drag the skin to move it. Hover an aura tile to preview it.

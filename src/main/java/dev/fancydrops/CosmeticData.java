@@ -14,10 +14,10 @@ final class CosmeticData {
     /** A Special set: a suffix, a name effect and an aura that belong together. */
     record SetDef(String id, String name, String how, int color, String suffix, String fx, String aura) {}
     static final List<SetDef> SETS = List.of(
-        new SetDef("sparkle", "Special Set", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura"),
-        new SetDef("bugfinder", "Bug Finder Set", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFF55FF9A, "glitchsfx", "glitch", "glitchaura"),
-        new SetDef("contributors", "Contributors Set", "Only given to the mod contributors.", 0xFF55D8FF, "contrib", "contribfx", "stardust"),
-        new SetDef("patreon", "Patreon Set", "Only given to Patreon supporters.", 0xFFFFC832, "patron", "royal", "patronaura"));
+        new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura"),
+        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFF55FF9A, "glitchsfx", "glitch", "glitchaura"),
+        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "contrib", "contribfx", "stardust"),
+        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, "patron", "royal", "patronaura"));
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
     private static final String BETA_HOW = "Downloaded the mod before v1.0";
@@ -26,33 +26,33 @@ final class CosmeticData {
         new Def("crown", "Crown", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFC857),
         new Def("gem", "Gem", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF55D8FF),
         new Def("flame", "Flame", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFF8A3D),
-        new Def("clover", "Lucky Clover", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF62E6A8),
-        new Def("heart", "Heartbeat", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFF6B8A),
-        new Def("bolt", "Lightning", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFE066),
-        new Def("snow", "Snowflake", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF9AD8FF),
-        new Def("star", "Shooting Star", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFD36B),
+        new Def("clover", "Clover", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF62E6A8),
+        new Def("heart", "Heart", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFF6B8A),
+        new Def("bolt", "Bolt", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFE066),
+        new Def("snow", "Snow", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF9AD8FF),
+        new Def("star", "Star", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFD36B),
         new Def("ghost", "Ghost", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFC9D2FF),
         new Def("shimmer", "Shimmer", Line.BETA, Kind.NAME, BETA_HOW, 0xFFBFD4FF),
         new Def("pulse", "Pulse", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFF9AC8),
         new Def("wave", "Ripple", Line.BETA, Kind.NAME, BETA_HOW, 0xFF7FE0D0),
-        new Def("glow", "Soft Glow", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFFE9A8),
+        new Def("glow", "Glow", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFFE9A8),
         // Special: handed out by hand, one set at a time (suffix + name effect + aura)
         new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFB48CFF, "sparkle"),
         new Def("sparklefx", "Starlight", Line.SPECIAL, Kind.NAME, "Special Set", 0xFFFFE9A8, "sparkle"),
         new Def("sparkleaura", "Twinkle", Line.SPECIAL, Kind.AURA, "Special Set", 0xFFFFE680, "sparkle"),
-        new Def("glitchsfx", "Glitch Spark", Line.SPECIAL, Kind.SUFFIX, "Bug Finder Set", 0xFF55FFE0, "bugfinder"),
+        new Def("glitchsfx", "Spark", Line.SPECIAL, Kind.SUFFIX, "Bug Finder Set", 0xFF55FFE0, "bugfinder"),
         new Def("glitch", "Glitch", Line.SPECIAL, Kind.NAME, "Bug Finder Set", 0xFF55FF9A, "bugfinder"),
         new Def("glitchaura", "Static", Line.SPECIAL, Kind.AURA, "Bug Finder Set", 0xFFFF55DD, "bugfinder"),
-        new Def("contrib", "Contributor", Line.SPECIAL, Kind.SUFFIX, "Contributors Set", 0xFF5AFFC8, "contributors"),
+        new Def("contrib", "Contrib", Line.SPECIAL, Kind.SUFFIX, "Contributors Set", 0xFF5AFFC8, "contributors"),
         new Def("contribfx", "Aqua Flow", Line.SPECIAL, Kind.NAME, "Contributors Set", 0xFF55D8FF, "contributors"),
         new Def("stardust", "Stardust", Line.SPECIAL, Kind.AURA, "Contributors Set", 0xFF8FD0FF, "contributors"),
         new Def("patron", "Patron", Line.SPECIAL, Kind.SUFFIX, "Patreon Set", 0xFFFFC832, "patreon"),
-        new Def("royal", "Royal Gold", Line.SPECIAL, Kind.NAME, "Patreon Set", 0xFFFFC832, "patreon"),
-        new Def("patronaura", "Gilded Embers", Line.SPECIAL, Kind.AURA, "Patreon Set", 0xFFFF9B2E, "patreon"),
+        new Def("royal", "Royal", Line.SPECIAL, Kind.NAME, "Patreon Set", 0xFFFFC832, "patreon"),
+        new Def("patronaura", "Embers", Line.SPECIAL, Kind.AURA, "Patreon Set", 0xFFFF9B2E, "patreon"),
         // Everyone: earn them yourself (all still, except the secret one)
         new Def("newcomer", "Newcomer", Line.FREE, Kind.SUFFIX, "Downloaded the mod", 0xFF7BE07B),
         new Def("discord", "Discord", Line.FREE, Kind.SUFFIX, "Pressed the Discord button", 0xFF7289DA),
-        new Def("firstdrop", "First Drop", Line.FREE, Kind.SUFFIX, "Got a first rare drop", 0xFFFFD700),
+        new Def("firstdrop", "1st Drop", Line.FREE, Kind.SUFFIX, "Got a first rare drop", 0xFFFFD700),
         new Def("collector", "Collector", Line.FREE, Kind.SUFFIX, "Got 25 rare drops", 0xFFD9A05B),
         new Def("hoarder", "Hoarder", Line.FREE, Kind.SUFFIX, "Got 100 rare drops", 0xFFB0763C),
         new Def("legend", "Legend", Line.FREE, Kind.SUFFIX, "Got 500 rare drops", 0xFFFFCD32),

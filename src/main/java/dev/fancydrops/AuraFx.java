@@ -29,42 +29,59 @@ final class AuraFx {
     static List<P> particles(String aura, long t) {
         List<P> o = new ArrayList<>();
         switch (aura == null ? "" : aura) {
-            case "stardust": {                                                       // cool cyan motes spiral up the body and fade away at the top
-                for (int i = 0; i < 22; i++) {
-                    float ph = (float) (((t / 2800.0) + i / 22.0) % 1.0), ang = (float) (i * 2.399 + t / 850.0), r = 0.5f + 0.12f * (float) Math.sin(i + t / 500.0);
-                    float al = (float) Math.pow(Math.sin(Math.PI * ph), 0.7);
-                    int col = mix(0x66E0FF, 0xFFFFFF, 0.5f + 0.5f * (float) Math.sin(i * 1.3 + t / 400.0));
-                    o.add(new P((float) Math.cos(ang) * r, ph * 2.0f, (float) Math.sin(ang) * r, 0.05f + 0.035f * al, argb(al, col), i % 4 == 0 ? 1 : 0));
+            case "stardust": {                                                       // two strands of cyan light wind up the body like a helix, with a glint where they cross
+                for (int strand = 0; strand < 2; strand++) for (int i = 0; i < 12; i++) {
+                    float ph = (float) (((t / 3200.0) + i / 12.0) % 1.0), ang = (float) (ph * Math.PI * 4 + strand * Math.PI + t / 1500.0), r = 0.52f;
+                    float al = (float) Math.sin(Math.PI * ph);
+                    o.add(new P((float) Math.cos(ang) * r, ph * 2.0f, (float) Math.sin(ang) * r, 0.045f, argb(0.25f + 0.75f * al, mix(0x4DD6FF, 0xE8FFFF, ph)), 0));
+                }
+                for (int i = 0; i < 4; i++) {
+                    long off = i * 700L, step = (t + off) / 2800L; float ph = ((t + off) % 2800L) / 2800f;
+                    float ang = hash(i, step) % 628 / 100f;
+                    o.add(new P((float) Math.cos(ang) * 0.6f, 0.2f + ph * 1.6f, (float) Math.sin(ang) * 0.6f, 0.085f * (float) Math.sin(Math.PI * ph), argb(0.95f, 0xE8FFFF), 1));
                 }
                 break;
             }
-            case "sparkleaura": {                                                    // twinkling four-point stars that pop up round you and fade
-                for (int i = 0; i < 14; i++) {
-                    long off = i * 107L, step = (t + off) / 1500L; float ph = ((t + off) % 1500L) / 1500f;
-                    float ang = hash(i, step) % 628 / 100f, r = 0.35f + (hash(i + 50, step) % 45) / 100f, y = 0.1f + (hash(i + 99, step) % 185) / 100f;
-                    float sz = 0.16f * (float) Math.sin(Math.PI * ph);
-                    int col = new int[]{0xFFE680, 0xFFFFFF, 0xFFB3E6, 0xBFE8FF}[hash(i, step + 3) % 4];
-                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, sz, argb(0.35f + 0.65f * (float) Math.sin(Math.PI * ph), col), 1));
+            case "sparkleaura": {                                                    // gold and white stars twinkle round you, with a slow ring of light dots at your feet
+                for (int i = 0; i < 10; i++) {
+                    long off = i * 157L, step = (t + off) / 1600L; float ph = ((t + off) % 1600L) / 1600f;
+                    float ang = hash(i, step) % 628 / 100f, r = 0.4f + (hash(i + 50, step) % 40) / 100f, y = 0.15f + (hash(i + 99, step) % 175) / 100f;
+                    int col = new int[]{0xFFE680, 0xFFFFFF, 0xFFB3E6, 0xFFD27A}[hash(i, step + 3) % 4];
+                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.09f * (float) Math.sin(Math.PI * ph), argb(0.95f, col), 1));
+                }
+                for (int i = 0; i < 12; i++) {
+                    float ang = (float) (i * Math.PI * 2 / 12 + t / 2200.0);
+                    float tw = 0.5f + 0.5f * (float) Math.sin(t / 300.0 + i * 1.7);
+                    o.add(new P((float) Math.cos(ang) * 0.62f, 0.04f, (float) Math.sin(ang) * 0.62f, 0.035f, argb(0.25f + 0.6f * tw, 0xFFE9A8), 0));
+                }
+                for (int i = 0; i < 6; i++) {
+                    float ph = (float) (((t / 3000.0) + i / 6.0) % 1.0), ang = i * 1.9f;
+                    o.add(new P((float) Math.cos(ang) * 0.5f, ph * 2f, (float) Math.sin(ang) * 0.5f, 0.03f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0xFFF2C0), 0));
                 }
                 break;
             }
-            case "glitchaura": {                                                     // torn pixels of magenta, cyan and green jumping round you, and now and then a flat slice of light
-                long step = t / 110L;
-                for (int i = 0; i < 18; i++) {
-                    long st = step / (1 + i % 2);
-                    float ang = hash(i, st) % 628 / 100f, r = 0.4f + (hash(i + 20, st) % 40) / 100f, y = (hash(i + 40, st) % 200) / 100f;
-                    int col = new int[]{0xFF3DDC, 0x3DFFF0, 0x6BFF6B, 0xFFFFFF}[hash(i + 7, st) % 4];
-                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.04f + (hash(i + 3, st) % 6) / 100f, argb(0.55f + (hash(i + 9, st) % 45) / 100f, col), 0));
+            case "glitchaura": {                                                     // a scan line climbs the body, and torn pixels jump around with a red/cyan split
+                float sp = (float) ((t % 1700L) / 1700.0);
+                o.add(new P(0f, sp * 2.0f, 0.45f, 0.9f, argb(0.85f * (1f - sp * 0.4f), 0x3DFFB0), 2));
+                o.add(new P(0f, Math.max(0f, sp * 2.0f - 0.12f), 0.44f, 0.9f, argb(0.4f, 0xFF3DDC), 2));
+                o.add(new P(0f, sp * 2.0f, -0.45f, 0.9f, argb(0.6f * (1f - sp * 0.4f), 0x3DFFB0), 2));
+                long step = t / 120L;
+                for (int i = 0; i < 10; i++) {
+                    long st = step / (1 + i % 3);
+                    float ang = hash(i, st) % 628 / 100f, r = 0.42f + (hash(i + 20, st) % 30) / 100f, y = (hash(i + 40, st) % 200) / 100f;
+                    float x = (float) Math.cos(ang) * r, z = (float) Math.sin(ang) * r;
+                    float sz = 0.04f + (hash(i + 3, st) % 4) / 100f; float al = 0.55f + (hash(i + 9, st) % 45) / 100f;
+                    o.add(new P(x - 0.03f, y, z, sz, argb(al, 0x3DFFF0), 0));          // the split: cyan one side, magenta the other
+                    o.add(new P(x + 0.03f, y, z, sz, argb(al, 0xFF3DDC), 0));
+                    if (hash(i + 77, st) % 5 == 0) o.add(new P(x, y, z, sz * 0.8f, argb(1f, 0xFFFFFF), 0));
                 }
-                if (hash(1, step) % 3 == 0) o.add(new P(0f, (hash(2, step) % 190) / 100f, 0.5f, 0.55f, argb(0.55f, 0x55FFFF), 2));
-                if (hash(5, step) % 4 == 0) o.add(new P(0f, (hash(6, step) % 190) / 100f, -0.5f, 0.45f, argb(0.5f, 0xFF55FF), 2));
                 break;
             }
             case "patronaura": {                                                     // gold embers drift slowly up, now and then a glint
-                for (int i = 0; i < 18; i++) {
-                    float ph = (float) (((t / 3800.0) + i / 18.0) % 1.0), ang = (float) (i * 2.1 + Math.sin(t / 1300.0 + i) * 0.6), r = 0.45f + 0.2f * (float) Math.sin(i * 1.7 + t / 900.0);
+                for (int i = 0; i < 16; i++) {
+                    float ph = (float) (((t / 3800.0) + i / 16.0) % 1.0), ang = (float) (i * 2.1 + Math.sin(t / 1300.0 + i) * 0.6), r = 0.45f + 0.2f * (float) Math.sin(i * 1.7 + t / 900.0);
                     float al = (float) Math.sin(Math.PI * ph);
-                    o.add(new P((float) Math.cos(ang) * r, ph * 2.1f, (float) Math.sin(ang) * r, 0.045f * (1f - 0.5f * ph) + 0.02f, argb(al, mix(0xFFD24A, 0xFF7A1E, ph)), i % 6 == 0 ? 1 : 0));
+                    o.add(new P((float) Math.cos(ang) * r, ph * 2.1f, (float) Math.sin(ang) * r, 0.04f * (1f - 0.5f * ph) + 0.018f, argb(al, mix(0xFFD24A, 0xFF7A1E, ph)), i % 6 == 0 ? 1 : 0));
                 }
                 break;
             }
@@ -82,6 +99,44 @@ final class AuraFx {
     }
     private static double fieldD(Object o, String f) { try { var fl = o.getClass().getField(f); return fl.getDouble(o); } catch (Throwable t) { Object r = call(o, f); return r instanceof Number nn ? nn.doubleValue() : 0; } }
 
+    private static java.lang.reflect.Field camPos, camX, camY; private static Object camObj; private static boolean camTried;
+    /** The camera the world is drawn from: x, y, z, yaw, pitch. Found by field shape; if that fails, worked out from the player and the F5 view. */
+    private static double[] camera(Minecraft mc) {
+        try {
+            if (!camTried) {
+                camTried = true;
+                for (var f : mc.gameRenderer.getClass().getDeclaredFields()) {
+                    if (!f.getType().getSimpleName().equals("Camera")) continue;
+                    f.setAccessible(true); camObj = f.get(mc.gameRenderer);
+                    for (var cf : f.getType().getDeclaredFields()) {
+                        cf.setAccessible(true);
+                        if (cf.getType().getSimpleName().equals("Vec3") && camPos == null) camPos = cf;
+                        else if (cf.getType() == float.class && cf.getName().toLowerCase().startsWith("x") && camX == null) camX = cf;
+                        else if (cf.getType() == float.class && cf.getName().toLowerCase().startsWith("y") && camY == null) camY = cf;
+                    }
+                    break;
+                }
+                System.err.println("[FancyDrops] aura camera: " + (camObj != null && camPos != null && camX != null && camY != null ? "found" : "not found, using the player view"));
+            }
+            if (camObj != null && camPos != null && camX != null && camY != null) {
+                Object v = camPos.get(camObj);
+                if (v != null) return new double[]{fieldD(v, "x"), fieldD(v, "y"), fieldD(v, "z"), camY.getFloat(camObj), camX.getFloat(camObj)};
+            }
+        } catch (Throwable ignored) { }
+        double x = mc.player.getX(), y = mc.player.getEyeY(), z = mc.player.getZ(); float yaw = mc.player.getYRot(), pitch = mc.player.getXRot();
+        try {                                                                                    // F5: the camera floats 4 blocks behind (or in front of) the player
+            Object ct = call(mc.options, "getCameraType");
+            boolean first = ct == null || Boolean.TRUE.equals(call(ct, "isFirstPerson"));
+            if (!first) {
+                boolean front = Boolean.TRUE.equals(call(ct, "isMirrored"));
+                double yr = Math.toRadians(yaw), xr = Math.toRadians(pitch), d = front ? -4.0 : 4.0;
+                x += Math.sin(yr) * Math.cos(xr) * d; y += Math.sin(xr) * d; z -= Math.cos(yr) * Math.cos(xr) * d;
+                if (front) { yaw += 180f; pitch = -pitch; }
+            }
+        } catch (Throwable ignored) { }
+        return new double[]{x, y, z, yaw, pitch};
+    }
+
     /** Called every frame by the HUD: draws the aura particles round every player who wears one. */
     static void render(GuiGraphicsExtractor g) {
         try {
@@ -89,12 +144,8 @@ final class AuraFx {
             if (mc.level == null || mc.player == null) return;
             Map<UUID, Cosmetics.Look> looks = Cosmetics.looks();
             if (looks.isEmpty()) return;
-            double cx, cy, cz; float yaw, pitch;
-            Object cam = call(mc.gameRenderer, "getMainCamera");
-            Object pos = call(cam, "position", "getPosition");
-            Object yr = call(cam, "yRot", "getYRot"), xr = call(cam, "xRot", "getXRot");
-            if (pos != null && yr instanceof Number yn && xr instanceof Number xn) { cx = fieldD(pos, "x"); cy = fieldD(pos, "y"); cz = fieldD(pos, "z"); yaw = yn.floatValue(); pitch = xn.floatValue(); }
-            else { cx = mc.player.getX(); cy = mc.player.getEyeY(); cz = mc.player.getZ(); yaw = mc.player.getYRot(); pitch = mc.player.getXRot(); }
+            double[] cam = camera(mc);
+            double cx = cam[0], cy = cam[1], cz = cam[2]; float yaw = (float) cam[3], pitch = (float) cam[4];
             double yr2 = Math.toRadians(yaw), xr2 = Math.toRadians(pitch);
             double fx = -Math.sin(yr2) * Math.cos(xr2), fy = -Math.sin(xr2), fz = Math.cos(yr2) * Math.cos(xr2);          // forward
             double rx = -Math.cos(yr2), ry = 0, rz = -Math.sin(yr2);                                                      // right
@@ -122,25 +173,34 @@ final class AuraFx {
         } catch (Throwable ignored) { }
     }
 
-    /** One particle at a screen position, sx/sy its centre and px its size in GUI pixels. */
+    /** One particle at a screen position, sx/sy its centre and px its size in GUI pixels. Small and soft: a core with a faint halo. */
     static void draw(GuiGraphicsExtractor g, float sx, float sy, float px, P q) {
-        int a = q.argb(); if ((a >>> 24) < 4) return;
-        int s = Math.max(1, Math.round(px));
+        int a = q.argb(), al = a >>> 24, rgb = a & 0xFFFFFF; if (al < 6) return;
+        px = Math.max(1f, Math.min(px, 7f));
         int x = Math.round(sx), y = Math.round(sy);
         switch (q.shape()) {
-            case 1: {                                                                  // a four-point star
-                int arm = Math.max(1, Math.round(px * 1.4f)), t = Math.max(1, s / 3);
-                g.fill(x - arm, y - t / 2, x + arm + 1, y - t / 2 + t, a); g.fill(x - t / 2, y - arm, x - t / 2 + t, y + arm + 1, a);
-                int core = ((Math.min(255, (a >>> 24) + 60)) << 24) | 0xFFFFFF;
-                g.fill(x - t / 2, y - t / 2, x - t / 2 + t, y - t / 2 + t, core);
+            case 1: {                                                                  // a four-point star: thin arms that fade out, a bright centre
+                int arm = Math.max(2, Math.round(px * 1.3f));
+                for (int d = 1; d <= arm; d++) {
+                    int ad = Math.round(al * (1f - d / (arm + 1f)));
+                    int c = (ad << 24) | rgb;
+                    g.fill(x + d, y, x + d + 1, y + 1, c); g.fill(x - d, y, x - d + 1, y + 1, c); g.fill(x, y + d, x + 1, y + d + 1, c); g.fill(x, y - d, x + 1, y - d + 1, c);
+                }
+                g.fill(x - 1, y - 1, x + 2, y + 2, ((al / 3) << 24) | rgb);
+                g.fill(x, y, x + 1, y + 1, (Math.min(255, al + 60) << 24) | 0xFFFFFF);
                 break;
             }
             case 2: {                                                                  // a flat slice of light
-                int w = Math.max(3, Math.round(px)), h = Math.max(1, s / 6);
-                g.fill(x - w / 2, y, x + w / 2, y + h, a);
+                int w = Math.max(4, Math.min(60, Math.round(px * 6f)));
+                g.fill(x - w / 2, y, x + w / 2, y + 1, a);
+                g.fill(x - w / 2, y - 1, x + w / 2, y, ((al / 4) << 24) | rgb); g.fill(x - w / 2, y + 1, x + w / 2, y + 2, ((al / 4) << 24) | rgb);
                 break;
             }
-            default: g.fill(x - s / 2, y - s / 2, x - s / 2 + s, y - s / 2 + s, a);
+            default: {
+                int s = Math.max(1, Math.round(px));
+                if (s >= 2) g.fill(x - s / 2 - 1, y - s / 2 - 1, x - s / 2 + s + 1, y - s / 2 + s + 1, ((al / 4) << 24) | rgb);
+                g.fill(x - s / 2, y - s / 2, x - s / 2 + s, y - s / 2 + s, a);
+            }
         }
     }
 }
