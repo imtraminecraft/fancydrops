@@ -15,5 +15,30 @@
   },
   "owners": {
     "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8": "sparkle"
+  },
+  "extra": {
+    "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8": [
+      "crown",
+      "gem",
+      "flame",
+      "clover",
+      "heart",
+      "bolt",
+      "snow",
+      "star",
+      "ghost",
+      "shimmer",
+      "pulse",
+      "wave",
+      "glow",
+      "newcomer",
+      "fresh",
+      "discord",
+      "firstdrop",
+      "collector",
+      "hoarder",
+      "legend",
+      "secret"
+    ]
   }
 }
