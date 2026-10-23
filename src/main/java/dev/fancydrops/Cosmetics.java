@@ -189,7 +189,7 @@ final class Cosmetics {
     }
 
     // ---- chat lines can't animate on their own, so the lines that carry an animated name effect get a wrapper that recolours the letters every frame
-    private static boolean chatFx, chatFail;
+    private static boolean chatFx, chatFail; private static Object chatObj;
     private static java.lang.reflect.Field chatLines; private static Class<?> lineCls; private static java.lang.reflect.RecordComponent[] lineRc; private static java.lang.reflect.Constructor<?> lineCtor; private static int lineSeq;
 
     private static String[] fxMark(Style s) {
@@ -224,7 +224,11 @@ final class Cosmetics {
     static void tickChat(Minecraft mc) {
         if (!chatFx || chatFail) return;
         try {
-            Object chat = mc.gui.getChat();
+            if (chatObj == null) for (var f : mc.gui.getClass().getDeclaredFields()) {                       // the chat component, found by its type (its getter has a different name in this version)
+                if (f.getType().getSimpleName().equals("ChatComponent")) { f.setAccessible(true); chatObj = f.get(mc.gui); break; }
+            }
+            Object chat = chatObj;
+            if (chat == null) { chatFail = true; return; }
             if (chatLines == null) {
                 for (var f : chat.getClass().getDeclaredFields()) {
                     if (!List.class.isAssignableFrom(f.getType())) continue;
