@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.42
+- The Admin Panel is now a button outside the menu (red, above the Cosmetics button; only you see it). It opens a full-screen panel with the players-per-cosmetic toggle and the box to pick what to give.
+
 ## 0.8.41
 - ImTra now has every cosmetic: the Special sets, the whole Beta line and the earned ones are all in cosmetics.json. In the Admin Panel picker your own ID shows everything ticked, and the Beta set ticks all 13 of its items.
 
