@@ -26,8 +26,8 @@ final class NameFx {
         float ph;
         switch (fx) {
             case "shimmer": {                                              // a bright band of light sweeps over the name, over and over
-                float pos = (t % 2200L) / 2200f * (n + 10) - 5, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.5f);
-                return mix(mix(base, 0x000000, 0.12f), 0xFFFFFF, 0.95f * k);
+                float pos = (t % 2400L) / 2400f * (n + 6) - 3, k = Math.max(0f, 1f - Math.abs(i - pos) / 1.4f);        // a narrow band, so short names keep their colour
+                return mix(mix(base, 0x000000, 0.12f), 0xFFFFFF, 0.8f * k);
             }
             case "pulse":                                                   // the whole name breathes: dark, then bright
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 450.0);
@@ -37,7 +37,7 @@ final class NameFx {
                 return mix(mix(base, 0x000000, 0.5f), mix(base, 0xFFFFFF, 0.6f), ph);
             case "glow":                                                    // the name's colour fading into a bright tint, with a slow breath
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 900.0);
-                return mix(base, 0xFFFFFF, n <= 1 ? 0f : (0.25f + 0.55f * ph) * i / (n - 1) + 0.15f * ph);
+                return mix(base, 0xFFFFFF, n <= 1 ? 0f : (0.1f + 0.4f * ph) * i / (n - 1) + 0.08f * ph);
             case "royal": {                                                 // liquid gold, with a white glint that runs along the name
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 240.0 - i * 0.9);
                 int c = mix(0xFFAA00, 0xFFF3A0, ph);

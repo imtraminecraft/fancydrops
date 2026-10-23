@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.27
+- Shimmer (Beta) was washing short names out to white: its band of light covered the whole name. The band is narrow now, so your name keeps its colour. Glow is a bit gentler too.
+
 ## 0.8.26
 - Auras follow you smoothly when you move: they use your exact position for each frame (before, they lagged and jittered). Sparkles, stars and dust that rise off you are now left behind in the world as you run, like real particles, and settle back into the same look when you stand still. Patreon's embers keep their look.
 - Cooler name effects: Starlight (gold flowing amber to cream, a white comet with a pink tail, single letters flaring), Glitch (calm green with a scan line, and every couple of seconds the name tears into cyan, magenta and white), Aqua Flow (two crossing waves, foam crests and a sweeping light). They only change colour, so chat lines never shift.
