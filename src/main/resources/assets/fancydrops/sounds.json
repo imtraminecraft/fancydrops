@@ -438,5 +438,61 @@
         "stream": false
       }
     ]
+  },
+  "reap": {
+    "sounds": [
+      {
+        "name": "fancydrops:reap",
+        "stream": false
+      }
+    ]
+  },
+  "rustle": {
+    "sounds": [
+      {
+        "name": "fancydrops:rustle",
+        "stream": false
+      }
+    ]
+  },
+  "sprout": {
+    "sounds": [
+      {
+        "name": "fancydrops:sprout",
+        "stream": false
+      }
+    ]
+  },
+  "breeze": {
+    "sounds": [
+      {
+        "name": "fancydrops:breeze",
+        "stream": false
+      }
+    ]
+  },
+  "settle": {
+    "sounds": [
+      {
+        "name": "fancydrops:settle",
+        "stream": false
+      }
+    ]
+  },
+  "vacuum": {
+    "sounds": [
+      {
+        "name": "fancydrops:vacuum",
+        "stream": false
+      }
+    ]
+  },
+  "squeak": {
+    "sounds": [
+      {
+        "name": "fancydrops:squeak",
+        "stream": false
+      }
+    ]
   }
 }

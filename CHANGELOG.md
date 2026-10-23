@@ -1,3 +1,11 @@
+## 0.8.47
+- New short sound effects for Farming and Pest Drop (Reap, Rustle, Sprout, Breeze, Settle, Vacuum, Squeak). Every sound is now at most 2.6 s, so none run past the animation
+- The Sounds graph draws each sound's real loudness, with no random jitter
+- New Farming and Pest icons, and a new FancyDrops icon
+- Big menu icons float up and down and animate
+- Page subtitles under Drop Library, Animations, Sounds and Stats now match their pages
+- The menu's X no longer shows over the admin panel
+
 # FancyDrops changelog
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.

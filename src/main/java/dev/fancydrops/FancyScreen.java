@@ -577,13 +577,13 @@ public class FancyScreen extends Screen {
         if (key == null) { Gfx.textCentered(g, font, "Coming soon", x + w / 2, y + h / 2 - 4, Ui.SUB); return; }
         float[] st = AnimationManager.soundTimes(key, c);
         float total = Math.max(0.5f, st[0]); int n = (int) st[1], ne = n + 4;
-        float[] te = new float[ne], du = new float[ne]; int[] slot = new int[ne];
+        float[] te = new float[ne], du = new float[ne]; int[] slot = new int[ne]; String[] nm = new String[ne];
         for (int i = 0; i < n; i++) { te[i] = st[2 + i]; slot[i] = 0; }
         te[n] = st[2 + n]; slot[n] = 1; te[n + 1] = st[3 + n]; slot[n + 1] = 2; te[n + 2] = st[4 + n]; slot[n + 2] = 3; te[n + 3] = st[5 + n]; slot[n + 3] = 4;
         float span = total;
         for (int i = 0; i < ne; i++) {
-            String nm = SoundFx.chosen(SoundFx.SCENES[sc], SoundFx.SLOTS[slot[i]]);
-            du[i] = SoundFx.NONE.equals(nm) ? 0f : SoundFx.duration(nm);
+            nm[i] = SoundFx.chosen(SoundFx.SCENES[sc], SoundFx.SLOTS[slot[i]]);
+            du[i] = SoundFx.NONE.equals(nm[i]) ? 0f : SoundFx.duration(nm[i]);
         }
         long loopMs = Math.round((span + 0.6f) * 1000f);
         boolean fresh = waveKey == null || !waveKey.equals(key) || now - waveNow > 250;
@@ -620,20 +620,17 @@ public class FancyScreen extends Screen {
             float tx = (xx - x - 4) / (float) (w - 8) * span;
             float e = 0.03f; int dom = -1; float best = 0.05f;
             for (int i = 0; i < ne; i++) {
+                if (du[i] <= 0f) continue;
                 float u = tx - te[i];
                 if (u < 0f || u > du[i]) continue;
-                float rel = u / du[i], shape;
-                if (du[i] >= 2.4f) shape = (float) Math.pow(Math.sin(Math.PI * Math.min(1f, rel * 0.9f + 0.05f)), 0.7) * (0.55f + 0.45f * (float) Math.exp(-rel * 2f));   // a long pad swells and fades
-                else shape = (1f - (float) Math.exp(-u / 0.012f)) * (float) Math.exp(-rel * 4.2f);                                                                         // a hit: sharp, then it dies away
                 long since = now - pulseAt[slot[i]];
-                float v = power[slot[i]] * shape;
-                if (since >= 0 && since < 900) v += 0.35f * shape * (float) Math.exp(-since / 260.0);       // played by hand
+                float v = power[slot[i]] * SoundFx.level(nm[i], u);                                    // the real loudness of that sound
+                if (since >= 0 && since < 900) v += 0.3f * v * (float) Math.exp(-since / 260.0);       // played by hand
                 e += v;
                 if (v > best) { best = v; dom = slot[i]; }
             }
             e = Math.min(1f, e);
-            float jit = 0.7f + 0.3f * Math.abs((float) Math.sin(xx * 0.77 + sec * (tx <= t ? 9.0 : 0.0) + (xx % 5)));
-            int hh = Math.max(1, Math.round(amp * e * jit));
+            int hh = Math.max(1, Math.round(amp * e));
             boolean played = tx <= t;
             int rgb = dom >= 0 ? SLOT_COL[dom] & 0xFFFFFF : 0x5A6C9A;
             if (e > 0.1f && played) g.fill(xx - 1, cy - hh - 1, xx + 3, cy + hh + 2, Gfx.argb(Math.round(10 + 45 * e), rgb));      // glow
@@ -1357,11 +1354,11 @@ public class FancyScreen extends Screen {
         if (onLanding()) return tab.sub;
         String[][] t = {
             {tab.sub},
-            {"Pick what animates and announces", "Every RNG dye, by rarity", "Crops, pests and feasts", "Ritual creatures and their drops", "Experimentation Table drops", "Coming soon", "Coming soon"},
-            {"Boss scenes, sounds and looks", "Paint scene, sounds and looks", "Scythe scene, sounds and looks", "Lightning scene, sounds and looks", "Book scene, sounds and looks", "Coming soon", "Coming soon"},
-            {"Pick the sound of each moment, and watch the waves"}, {tab.sub},
+            {"Pick what animates and announces", "Ritual creatures and their drops", "Every RNG dye, by rarity", "Crops, pests and feasts", "Experimentation Table drops", "Coming soon", "Coming soon"},
+            {"Boss scenes, sounds and looks", "Lightning scene, sounds and looks", "Paint scene, sounds and looks", "Scythe scene, sounds and looks", "Book scene, sounds and looks", "Coming soon", "Coming soon"},
+            {"Slayer sounds, moment by moment", "Ritual sounds, moment by moment", "Paint sounds, moment by moment", "Farming sounds, moment by moment", "Book sounds, moment by moment", "Coming soon", "Coming soon"}, {tab.sub},
             {"How the menu looks", "Where prices come from", "Reload the drop data"},
-            {"Profit, kills and drops", "Slayer profit and drops", "Dye profit and drops", "Farming profit and drops", "Mythological profit and drops", "Everything you dropped, newest first"},
+            {"Profit, kills and drops", "Slayer profit and drops", "Mythological profit and drops", "Dye profit and drops", "Farming profit and drops", "Everything you dropped, newest first"},
             {tab.sub}, {tab.sub}};
         String[] a = t[tab.ordinal()];
         return a[Math.min(k, a.length - 1)];
@@ -1638,7 +1635,7 @@ public class FancyScreen extends Screen {
                 if (c.showTips) { Row tip = new Row(); tip.kind = TIP; tip.h = 46; tip.noSearch = true; tip.icon = "fd:tipcard"; tip.title = TIPS[tipNow()]; tip.sub = "";
                 tip.click = () -> { tipIdx = tipNow() + 1; tipAt = System.currentTimeMillis(); };
                 rows.add(tip); }
-                Row hero = row(0, "fd:sparkle", "FancyDrops", "Every rare drop becomes a show. Pick what animates, what gets announced, and watch your profit grow.", Ui.ACCENT);
+                Row hero = row(0, "fd:fancydrops", "FancyDrops", "Every rare drop becomes a show. Pick what animates, what gets announced, and watch your profit grow.", Ui.ACCENT);
                 hero.kind = HERO; hero.h = 84; hero.noSearch = true; rows.add(hero);
                 rows.add(section("Jump to"));
                 Object[][] pts = {
@@ -1995,7 +1992,7 @@ public class FancyScreen extends Screen {
          {"RNG Drop", "rng", "2", "fd:rng", "When a drop is worth a celebration.", "RNG"}},
         {{"Dye Drop", "dye", "4", "fd:dye", "One big splat in the dye's colour fills the screen, then the dye rises out.", "Dye"}},
         {{"Farming Drop", "farm", "5", "fd:farm", "A scythe cuts a row of crops and the last one opens. For crops and feasts.", "Farming"},
-         {"Pest Drop", "pest", "10", "fd:farm", "A vacuum sucks up the pest, it pops, and the drop shoots out of the nozzle.", "Pest"},
+         {"Pest Drop", "pest", "10", "fd:pest", "A vacuum sucks up the pest, it pops, and the drop shoots out of the nozzle.", "Pest"},
          {"Ray of Helios", "helios", "8", "fd:sun", "A longer sunrise, only for the Ray of Helios.", "Helios"}},
         {{"Nothing Happens", "mythnothing", "9", "fd:nothing", "When a ritual drops nothing: the circle goes dark.", "Nothing"},
          {"Mythological Drop", "myth", "6", "fd:mytho", "Golden lightning lights a rune circle, which lifts the drop out in laurel.", "Normal"},
@@ -3265,7 +3262,9 @@ public class FancyScreen extends Screen {
             if (r.kind == PANEL || r.kind == HERO) {                                // a centred banner (HERO: just icon, title, words) or a construction site for a page that is not built yet
                 pill(g, r.x, r.y, r.w, r.h, r.kind == PANEL ? 0xFF16130B : Ui.ROW);
                 int mid = r.x + r.w / 2; long nw = System.currentTimeMillis(); float sec = (nw % 3600000L) / 1000f;
-                int cyi = r.y + 32;
+                int bob = r.kind == HERO && !STILL ? Math.round((float) Math.sin(sec * 2.6f) * 2.5f) : 0;       // a menu page's big icon floats up and down
+                int cyi = r.y + 32 + bob;
+                if (r.kind == HERO) { int shw = 10 - Math.abs(bob) * 2; g.fill(mid - shw, r.y + 49, mid + shw, r.y + 51, 0x30000000); }   // its shadow breathes with it
                 if (r.kind == PANEL) {
                     tape(g, r.x + 3, r.y + 3, r.w - 6, STILL ? 0 : (int) ((nw / 60L) % 16)); tape(g, r.x + 3, r.y + r.h - 9, r.w - 6, STILL ? 0 : 16 - (int) ((nw / 60L) % 16));
                     for (int k = 0; k < 6; k++) {                                       // welding sparks drifting up from the ground
@@ -3280,7 +3279,7 @@ public class FancyScreen extends Screen {
                     double an = sec * 1.3 + i * Math.PI * 2 / 5; int sx2 = mid + (int) (Math.cos(an) * 30), sy2 = cyi + (int) (Math.sin(an) * 12);
                     int al = 120 + (int) (120 * Math.sin(sec * 5 + i)); g.fill(sx2, sy2, sx2 + 2, sy2 + 2, Gfx.argb(Math.max(0, Math.min(255, al)), i % 2 == 0 ? 0xFFC857 : 0x9DB2CC));
                 }
-                if (r.iconId != null) ItemIcons.draw(g, r.iconId, r.icon, mid, cyi, 1.8f); else if (Icons.has(r.icon)) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Icons.draw(g, r.icon, 0, 0, r.kind == PANEL ? nw : 2400L); Gfx.pop(g); }
+                if (r.iconId != null) ItemIcons.draw(g, r.iconId, r.icon, mid, cyi, 1.8f); else if (Icons.has(r.icon)) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Icons.draw(g, r.icon, 0, 0, nw); Gfx.pop(g); }
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
                 int wy = r.y + 70; for (String ln : wrap(r.sub, r.w - 120)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; }
                 if (r.kind == HERO) continue;
@@ -3392,7 +3391,7 @@ public class FancyScreen extends Screen {
         if (adminHome && !adminOpen) drawAdminHome(g, mx0, my0);
         if (adminOpen) drawAdmin(g, mx0, my0);
         drawToast(g, now); PixArt.flush();
-        if (editor == 0) drawX(g, mainClose(), in(mx0, my0, mainClose()), "mx");
+        if (editor == 0 && !adminHome && !adminOpen) drawX(g, mainClose(), in(mx0, my0, mainClose()), "mx");
         drawEditor(g, mx0, my0);
         if (tab == Tab.COSMETICS) {                                              // how long each part takes, written to the log every 3 seconds (for finding what is slow)
             perfN++;
