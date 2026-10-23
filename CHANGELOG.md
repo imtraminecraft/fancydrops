@@ -2,6 +2,12 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.15
+- Everyone with the mod now sees ImTra's suffix, in chat and in the tab list. What it is comes from cosmetics.json in the GitHub repo.
+- The Cosmetics page and picking a suffix are only for ImTra's account, in every build.
+- The tab list now uses the same animated picture as chat, so the two always run at the same speed.
+- Removed the leftover resource-pack code and the unused font files.
+
 ## 0.8.14
 - The suffix in chat no longer covers the colon after the name (a small gap), and the tab suffix plays at the same speed as the chat one.
 
