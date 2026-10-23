@@ -1,3 +1,8 @@
+## 0.8.55
+- Newcomer, Discord, First Drop, Collector, Secret, Hoarder and Legend suffixes have new animated icons (the Discord one matches the new Discord logo)
+- Auras have a moving animation: while you move, a curtain of light streams out behind you along your path. It follows your speed, so it shortens and slows as you do, fades into the resting aura as you stop, and the idle animation starts after 5 seconds as before
+- The log now lists tab-related mods, to help find out why a custom tab list freezes the name effect
+
 ## 0.8.54
 - Every suffix icon is redrawn with real motion (spinning gem and clover, swinging hammer, beating heart, flickering flame, bobbing ghost...) instead of a shine; Sparkle uses the new star
 - Cosmetic tiles animate their icon when you hover them

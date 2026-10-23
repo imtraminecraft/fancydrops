@@ -34,16 +34,16 @@ final class Cosmetics {
         new Suffix("snow", "Snowflake", "v0.8.0", fr(0xE0A0)),
         new Suffix("star", "Shooting Star", "v0.8.0", fr(0xE0B0)),
         new Suffix("ghost", "Ghost", "v0.8.0", fr(0xE0C0)),
-        new Suffix("newcomer", "Newcomer", "Everyone", one(0xE0D0)),
-        new Suffix("discord", "Discord", "Everyone", one(0xE0D1)),
-        new Suffix("firstdrop", "First Drop", "Everyone", one(0xE0D2)),
-        new Suffix("collector", "Collector", "Everyone", one(0xE0D3)),
-        new Suffix("secret", "Secret", "Everyone", fr(0xE0E0)),
+        new Suffix("newcomer", "Newcomer", "Everyone", fr(0xE140)),
+        new Suffix("discord", "Discord", "Everyone", fr(0xE150)),
+        new Suffix("firstdrop", "First Drop", "Everyone", fr(0xE160)),
+        new Suffix("collector", "Collector", "Everyone", fr(0xE170)),
+        new Suffix("secret", "Secret", "Everyone", fr(0xE1A0)),
         new Suffix("glitchsfx", "Hazard", "Special", fr(0xE100)),
         new Suffix("contrib", "Builder", "Special", fr(0xE110)),
         new Suffix("patron", "Patron", "Special", fr(0xE120)),
-        new Suffix("hoarder", "Hoarder", "Everyone", one(0xE130)),
-        new Suffix("legend", "Legend", "Everyone", one(0xE131))};
+        new Suffix("hoarder", "Hoarder", "Everyone", fr(0xE180)),
+        new Suffix("legend", "Legend", "Everyone", fr(0xE190))};
     /** Who owns cosmetics. Everyone with the mod sees their suffix; only they can open the Cosmetics page. */
     /** Owners are stored as SHA-256 codes of their UUID, never as the UUID itself. This one is built in; more come from cosmetics.json. */
     static final String OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8";
@@ -505,6 +505,11 @@ final class Cosmetics {
         try {
             if (!sbkTried) {
                 sbkTried = true;
+                try {                                                                                        // so the log names whichever tab mod is installed
+                    StringBuilder mods = new StringBuilder();
+                    for (var m : net.fabricmc.loader.api.FabricLoader.getInstance().getAllMods()) { String mid = m.getMetadata().getId(); if (mid.toLowerCase().matches(".*(sky|tab|hud).*")) mods.append(mid).append(' '); }
+                    System.err.println("[FancyDrops] tab-related mods: " + mods);
+                } catch (Throwable ignored) { }
                 try {
                     Class<?> c = Class.forName("de.hysky.skyblocker.skyblock.tabhud.util.PlayerListManager");
                     try { sbkFlag = c.getDeclaredField("shouldUpdateNextTick"); sbkFlag.setAccessible(true); } catch (Throwable ignored) { }
