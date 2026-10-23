@@ -123,6 +123,7 @@ public class FancyConfig {
     public int menuTranslucency = 25;        // 0 = solid menu .. 70 = see-through (General settings)
     public boolean menuIcons = true;          // sidebar and row icons move
     public boolean menuAnimated = true;       // menu slides in, pages fade, accent bar flows
+    public boolean othersSuffix = true, othersName = true, othersAura = true;      // see other players' cosmetics: suffixes, name effects, auras
     public boolean showTips = true;           // the rotating tip card on the Home page
     public boolean showCommunity = true;      // Discord, Patreon and GitHub buttons beside the menu
     public String profitHudSlayer = "all";    // which slayer the Stats page shows ("all" = combined)

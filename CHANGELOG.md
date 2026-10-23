@@ -2,6 +2,13 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.31
+- Cosmetics is its own window now. The button is at the bottom left of the menu (no longer in the sidebar); it opens a separate window with no sidebar, with the chat and tab preview above it and the aura preview beside it. The X or Esc takes you back to the page you were on.
+- Turning the mod off (the Active switch) also hides cosmetics on your own screen: yours and other players'. Other players still see yours.
+- New settings (Settings page): show other players' suffixes, name effects and auras, each on its own switch.
+- Name effects now move in custom tab lists too. Skyblocker's tab only copies the player list once in a while, so the mod asks it to copy again a few times a second while a name is moving.
+- The TEST strip under the menu is gone.
+
 ## 0.8.30
 - The Bug Finder set is new and no longer green: Hazard (a blinking warning triangle), Critical (hot red-orange with a warning stripe and a letter flashing white) and Alarm (red and amber sparks circling you, a ring of light climbing your body, sparks flaring as it passes).
 - Tile backgrounds: every Special set has its own (twinkling stars, warning stripes, an aqua wave, gold embers), Beta tiles have a passing light, Common tiles have none.

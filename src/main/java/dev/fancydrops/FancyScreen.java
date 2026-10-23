@@ -34,6 +34,13 @@ public class FancyScreen extends Screen {
     /** One colour for each main page; its sub pages use a lighter shade of it. */
     private static final int[] TAB_COL = {0xFFFFA45C, 0xFFFFC857, 0xFFFF72C6, 0xFF56D8FF, 0xFF7BE05A, 0xFFB0B6C2, 0xFFB56BFF, 0xFF6C86FF, 0xFFFF6B8A};
     private int tabAcc;
+    private Tab prevTab = Tab.HOME; private long cosAt;
+    /** The Cosmetics page is its own window (no sidebar), opened from the button at the bottom left of the menu. */
+    private boolean cosWin() { return tab == Tab.COSMETICS; }
+    private int[] cosBtn() { return new int[]{px + 8, py + ph - 30, px + sw - 6, py + ph - 8}; }
+    private void openCos() { if (tab != Tab.COSMETICS) prevTab = tab; tab = Tab.COSMETICS; query = ""; searchField.setValue(""); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
+    private void closeCos() { tab = prevTab == Tab.COSMETICS ? Tab.HOME : prevTab; scroll = 0; selY = Float.NaN; tabChanged = System.currentTimeMillis(); }
+    private static int vi(int ord) { return ord > Tab.COSMETICS.ordinal() ? ord - 1 : ord; }          // the sidebar skips Cosmetics
     private static int tabCol(Tab t) { return TAB_COL[t.ordinal()]; }
     private static int subCol(Tab t) { return Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.5f); }
     private static final long[] EPIC = {500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000, 20_000_000, 50_000_000, 100_000_000, 500_000_000};
@@ -295,7 +302,7 @@ public class FancyScreen extends Screen {
         searchField.setMaxLength(30);
         searchField.setHint(Component.literal("Search..."));
         searchField.setValue(query);
-        searchField.setResponder(v -> { query = v; scroll = 0; sideScroll = 0; });
+        searchField.setResponder(v -> { query = v; scroll = 0; sideScroll = 0; if (tab == Tab.COSMETICS && !v.isBlank()) closeCos(); });
         addRenderableWidget(searchField);
         numField = new EditBox(font, 0, 0, 40, 14, Component.literal("value"));
         numField.setMaxLength(4);
@@ -941,17 +948,6 @@ public class FancyScreen extends Screen {
     }
     private static boolean toastShake;
 
-    // ------------------------------------------------------------------ the small test menu under the main menu (remove once the new page is tested)
-    private static final boolean TEST_STRIP = true;
-    private int[] stripBox(int i) {
-        String[] lbl = stripLabels(); int x = px + 30, w;
-        for (int k = 0; k < i; k++) x += font.width(lbl[k]) + 14;
-        w = font.width(lbl[i]) + 10;
-        return new int[]{x, py + ph + 4, x + w, py + ph + 18};
-    }
-    private String[] stripLabels() {
-        return new String[]{"Add / remove mine: " + (CosmeticData.editMode ? "ON" : "OFF"), "Give me all", "Remove all from me", "Reset test + secret + drops"};
-    }
     // ------------------------------------------------------------------ the two Cosmetics side menus: chat + tab list above the window, the aura preview (your skin) to its left
     private static float figYaw = 0.5f;
     private boolean dragFig;
@@ -984,36 +980,6 @@ public class FancyScreen extends Screen {
         if (intro < 1f) { int al = Math.round((1f - intro) * 150); pill(g, tr.x, tr.y, tr.w, tr.h, Gfx.argb(al, 0x0C0E14)); pill(g, x, y, w, h, Gfx.argb(al, 0x0C0E14)); }
     }
     private boolean inAuraPanel(double mx, double my) { return auraBox[0] >= 0 && mx >= auraBox[0] && mx < auraBox[2] && my >= auraBox[1] && my < auraBox[3]; }
-
-    private void drawStrip(GuiGraphicsExtractor g, int mx, int my) {
-        if (!TEST_STRIP) return;
-        String[] lbl = stripLabels(); boolean[] on = {CosmeticData.editMode, false, false, false};
-        Gfx.text(g, font, "TEST", px + 2, py + ph + 8, 0xFF6B7390);
-        for (int i = 0; i < lbl.length; i++) {
-            int[] b = stripBox(i);
-            boolean hv = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
-            pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], on[i] ? 0xFF2A5A44 : hv ? 0xFF2A2F44 : 0xFF1A1E2E);
-            g.outline(b[0], b[1], b[2] - b[0], b[3] - b[1], on[i] ? 0xFF62E6A8 : 0x55FFFFFF);
-            Gfx.text(g, font, lbl[i], b[0] + 5, b[1] + 3, on[i] ? 0xFFB8FFD9 : Ui.SUB);
-        }
-    }
-    private boolean stripClick(double mx, double my) {
-        if (!TEST_STRIP) return false;
-        for (int i = 0; i < 4; i++) {
-            int[] b = stripBox(i);
-            if (mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) {
-                FancyConfig c = FancyConfig.get();
-                switch (i) {
-                    case 0 -> { CosmeticData.editMode = !CosmeticData.editMode; toast(CosmeticData.editMode ? "Test mode ON\nClick a tile to add or remove it." : "Test mode OFF", 0xFFFFB86B); }
-                    case 1 -> { for (CosmeticData.Def d : CosmeticData.ALL) CosmeticData.force.put(d.id(), true); CosmeticData.changed(); toast("Every cosmetic added (test only).", 0xFF62E6A8); }
-                    case 2 -> { for (CosmeticData.Def d : CosmeticData.ALL) CosmeticData.force.put(d.id(), false); CosmeticData.changed(); toast("Every cosmetic removed (test only).", 0xFFFF8A5A); }
-                    default -> { CosmeticData.force.clear(); CosmeticData.editMode = false; CosmeticData.changed(); c.secretFound = false; c.discordJoined = false; c.dropsSeen = 0; FancyConfig.save(); toast("Test changes, secret, Discord and drop counter reset.", 0xFFFFB86B); }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
 
     // ---- Chat > the typing preview
     private static String prevKey = ""; private static long prevAt;
@@ -1732,6 +1698,10 @@ public class FancyScreen extends Screen {
                 rows.add(toggle("fd:rng", "Tip card", "The rotating tip at the top of Home", () -> c.showTips, v -> c.showTips = v));
                 rows.add(toggle("fd:discord", "Community buttons", "Discord, Patreon and GitHub beside the menu", () -> c.showCommunity, v -> c.showCommunity = v));
                 rows.add(toggle("fd:bell", "Pop-up notices", "Small notices under the menu (saved, discarded, links) instead of chat messages", () -> c.popups, v -> c.popups = v));
+                rows.add(section("Other players' cosmetics"));
+                rows.add(toggle("fd:sparkle", "Show their suffixes", "The little icon after other players' names", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:sparkle", "Show their name effects", "Moving colours on other players' names", () -> c.othersName, v -> { c.othersName = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:sparkle", "Show their auras", "Particles around other players", () -> c.othersAura, v -> { c.othersAura = v; CosmeticData.changed(); }));
                 rows.add(section("Prices"));
                 Row ps = fold("__price", "fd:coin", "Price source", "Bazaar for Bazaar items, Auction House for the rest", Ui.ACCENT);
                 rows.add(ps);
@@ -2339,7 +2309,7 @@ public class FancyScreen extends Screen {
         String[] ln = toastText.split("\n"); int tw = 0; for (String s : ln) tw = Math.max(tw, font.width(s));
         int w = tw + 46, h = 10 + ln.length * 11 + 6, x = px + (pw - w) / 2;
         if (toastShake && age < 600) { float dk = 1f - age / 600f; x += Math.round((float) Math.sin(age * 0.03) * 5f * dk * dk); }          // LOCKED! rattles
-        int y = py + ph + 8 + (TEST_STRIP ? 22 : 0) + (dockK > 0.97f && FancyConfig.get().previewAt != 0 && dockWanted() ? DOCK_H + DOCK_GAP : 0) + Math.round((1f - in) * 10f);
+        int y = py + ph + 8 + (dockK > 0.97f && FancyConfig.get().previewAt != 0 && dockWanted() ? DOCK_H + DOCK_GAP : 0) + Math.round((1f - in) * 10f);
         if (y + h > height - 2) y = Math.max(2, height - h - 2);
         int al = Math.round(255 * in * out);
         if (al < 6) return;
@@ -2779,10 +2749,10 @@ public class FancyScreen extends Screen {
     private int sideScroll;                                   // the sidebar scrolls when the tabs and sub pages are taller than the menu
     private int srcExtra() { return tab == Tab.DROPS ? Math.round(srcExp * SRCH * srcList.size()) : 0; }
     private static final int SRCH = 14;
-    private int sideMax() { if (!query.isBlank()) return Math.max(0, searchSideH - (ph - 70 - 8)); return Math.max(0, Tab.values().length * 24 + 4 + srcExtra() + Math.round(subExp * subH() * subs().length) - (ph - 70 - 8)); }
-    private boolean inSide(double mx, double my) { return mx >= px && mx < px + sw && my >= py + 66 && my < py + ph - 4; }
+    private int sideMax() { if (!query.isBlank()) return Math.max(0, searchSideH - (ph - 70 - 8)); return Math.max(0, (Tab.values().length - 1) * 24 + 4 + srcExtra() + Math.round(subExp * subH() * subs().length) - (ph - 70 - 8 - 32)); }
+    private boolean inSide(double mx, double my) { return !cosWin() && mx >= px && mx < px + sw && my >= py + 66 && my < py + ph - 34; }
     private int[] tabBox(int i) {
-        int y = py + 70 - sideScroll + i * 24 + (i > tab.ordinal() ? Math.round(subExp * subH() * subs().length) + srcExtra() : 0);
+        int y = (i == Tab.COSMETICS.ordinal() ? -1000 : py + 70 - sideScroll + vi(i) * 24) + (i > tab.ordinal() ? Math.round(subExp * subH() * subs().length) + srcExtra() : 0);
         return new int[]{px + 8, y, px + sw - 6, y + 22};
     }
     private int[] srcBox(int j) { int[] b = subBox(curSub()); int y = b[1] + subH() + j * SRCH; return new int[]{px + 26, y, px + sw - 6, y + SRCH - 1}; }
@@ -2837,6 +2807,7 @@ public class FancyScreen extends Screen {
         cosK = anim("cosK", cosPanels() ? 1f : 0f, 14f);
         int basePw = Math.min(560, width - 76);
         pw = Math.round(basePw + (Math.min(basePw, width - 2 * (AURA_W + DOCK_GAP + 6)) - basePw) * cosK);       // the window stays in the middle; it only gets a little smaller to leave room for the side menus
+        sw = cosWin() ? 0 : 132;
         px = (width - pw) / 2; cx = px + sw + 10; cw = pw - sw - 20 - RS;
         ph = Math.round(menuHeight(height) + (Math.min(350, height - 2 * (COS_H + DOCK_GAP + 6)) - menuHeight(height)) * cosK);
         dockK = anim("dock", dockWanted() ? 1f : 0f, 14f);
@@ -2853,11 +2824,11 @@ public class FancyScreen extends Screen {
         perf[0] += System.nanoTime() - pf0; perfFrom = pf0;
 
         g.fill(0, 0, width, height, Gfx.argb(Math.round((0x28 + 0x78 * TR) * intro), 0x000000));
-        float zoom = 0.94f + 0.06f * intro;                                    // the whole menu grows into place (and shrinks away on Esc)
+        float zoom = 0.94f + 0.06f * intro;
+        if (cosWin()) zoom *= 0.9f + 0.1f * ease(Math.min(1f, (now - cosAt) / 300f));                  // the Cosmetics window opens outwards from the menu                                    // the whole menu grows into place (and shrinks away on Esc)
         Gfx.push(g); Gfx.translate(g, px + pw / 2f, py + ph / 2f); Gfx.scale(g, zoom); Gfx.translate(g, -(px + pw / 2f), -(py + ph / 2f));
         pill(g, px, py, pw, ph, Ui.PANEL);
-        g.fill(px + 1, py + 2, px + sw, py + ph - 1, soft(Ui.PANEL2));
-        g.fill(px + sw, py + 4, px + sw + 1, py + ph - 4, Ui.BORDER);
+        if (!cosWin()) { g.fill(px + 1, py + 2, px + sw, py + ph - 1, soft(Ui.PANEL2)); g.fill(px + sw, py + 4, px + sw + 1, py + ph - 4, Ui.BORDER); }
         int[] grad = {0xFF42D9FF, 0xFF6578FF, 0xFFB66CFF, 0xFFFF6EB5};
         float flow = animOn ? (now % 5000L) / 5000f : 0f;                    // the colours slowly flow along the top edge
         for (int x = px + 1; x < px + pw - 1; x += 3) {
@@ -2867,6 +2838,7 @@ public class FancyScreen extends Screen {
         }
         g.outline(px, py, pw, ph, Ui.BORDER);
 
+        if (!cosWin()) {
         // brand
         g.blit(RenderPipelines.GUI_TEXTURED, ICON, px + 8, py + 8, 0f, 0f, 26, 26, 128, 128, 128, 128, 0xFFFFFFFF);
         // the name drops in letter by letter, bounces once, and stays still
@@ -2888,7 +2860,8 @@ public class FancyScreen extends Screen {
             }
         }
         Gfx.text(g, font, "v" + FancyDropsMod.VERSION + "  \u00B7  " + FancyDropsMod.CHANNEL, px + 40, py + 22, Ui.DIM);
-
+        }
+        if (!cosWin()) {
         if (!query.isBlank()) drawSearchSide(g, mx, my, now);
         else {
         // sidebar tabs: the highlight glides from tab to tab
@@ -2902,7 +2875,7 @@ public class FancyScreen extends Screen {
         tabAcc = Canvas.mix(tabAcc == 0 ? tabCol(tab) : tabAcc, tabCol(tab), animOn ? 0.2f : 1f);
         g.fill(px + 8, sy + 3, px + 10, sy + 19, tabAcc);
         for (int i = 0; i < Tab.values().length; i++) {
-            Tab t = Tab.values()[i]; int[] b = tabBox(i);
+            Tab t = Tab.values()[i]; if (t == Tab.COSMETICS) continue; int[] b = tabBox(i);
             boolean act = t == tab, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
             float hv = anim("tab|" + i, hov && !act ? 1f : 0f, 48f);
             if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
@@ -2961,6 +2934,15 @@ public class FancyScreen extends Screen {
         }
         g.disableScissor();
         }
+        {                                                                           // the Cosmetics button, bottom left (the tabs scroll under its strip)
+            g.fill(px + 1, py + ph - 36, px + sw, py + ph - 1, soft(Ui.PANEL2));
+            int[] cb = cosBtn(); boolean ch = mx >= cb[0] && mx < cb[2] && my >= cb[1] && my < cb[3];
+            float hv2 = anim("cosBtn", ch ? 1f : 0f, 40f); int ac = 0xFFC77DFF;
+            pill(g, cb[0], cb[1], cb[2] - cb[0], cb[3] - cb[1], Canvas.mix(Canvas.mix(Ui.PANEL2, ac, 0.14f), ac, 0.14f * hv2 + 0.0f));
+            g.outline(cb[0], cb[1], cb[2] - cb[0], cb[3] - cb[1], Gfx.argb(Math.round(110 + 110 * hv2), ac & 0xFFFFFF));
+            Icons.draw(g, "fd:sparkle", cb[0] + 5, cb[1] + 3, ch ? now : 2400L);
+            Gfx.text(g, font, "Cosmetics", cb[0] + 26, cb[1] + (cb[3] - cb[1] - 8) / 2, Canvas.mix(Ui.SUB, Ui.TEXT, 0.5f + 0.5f * hv2));
+        }
         if (sideMax() > 0) {                                                       // a slim scroll bar shows there is more below
             int trk = ph - 76, bar = Math.max(14, trk * trk / (trk + sideMax())), by0 = py + 68 + Math.round((trk - bar) * (sideScroll / (float) sideMax()));
             g.fill(px + sw - 3, py + 68, px + sw - 1, py + 68 + trk, 0x22FFFFFF); g.fill(px + sw - 3, by0, px + sw - 1, by0 + bar, 0x99B0B8D0);
@@ -3008,6 +2990,7 @@ public class FancyScreen extends Screen {
             }
         }
 
+        }
         // page header
         Gfx.text(g, font, font.plainSubstrByWidth(pageTitle(), cw - 134), cx, py + 12, Ui.TEXT);
         Gfx.text(g, font, font.plainSubstrByWidth(query.isBlank() ? pageSub() : "Searching every page", cw - 134), cx, py + 25, Ui.SUB);
@@ -3130,7 +3113,6 @@ public class FancyScreen extends Screen {
         long pf1 = System.nanoTime(); perf[1] += pf1 - perfFrom;                // everything since the build: the window and its rows
         drawCosPanels(g, mx, my, intro);
         perf[2] += System.nanoTime() - pf1;
-        drawStrip(g, mx, my);
         drawToast(g, now);
         drawTileTip(g, mx, my);
         if (editor == 0) drawX(g, mainClose(), in(mx0, my0, mainClose()), "mx");
@@ -3273,7 +3255,6 @@ public class FancyScreen extends Screen {
         }
         if (super.mouseClicked(event, doubleClick)) return true;
         double mx = event.x(), my = event.y(); int button = event.button();
-        if (button == 0 && stripClick(mx, my)) return true;
         if (button == 0 && inAuraPanel(mx, my)) { dragFig = true; return true; }
         if (button == 0 && mx >= px && mx < px + 14 && my >= py && my < py + 12) {                  // the hidden button, in the very corner of the menu
             FancyConfig sc = FancyConfig.get();
@@ -3281,6 +3262,7 @@ public class FancyScreen extends Screen {
             return true;
         }
         if (button == 0 && farmDrag(mx, my, true)) { dragFarm = true; return true; }
+        if (button == 0 && in(mx, my, mainClose()) && cosWin()) { closeCos(); return true; }
         if (button == 0 && in(mx, my, mainClose())) { if (FancyConfig.get().menuAnimated) { if (closeAt == 0L) closeAt = System.currentTimeMillis(); } else onClose(); return true; }
         if (button == 0 && showBarClick(mx, my)) return true;
         if (button == 0 && dockBtn[0] >= 0 && mx >= dockBtn[0] && mx < dockBtn[2] && my >= dockBtn[1] && my < dockBtn[3]) {        // the dock's own "move" button
@@ -3288,7 +3270,8 @@ public class FancyScreen extends Screen {
             return true;
         }
 
-        if (button == 0 && mx >= masterBox()[0] && mx < masterBox()[2] && my >= masterBox()[1] && my < masterBox()[3]) {
+        if (button == 0 && !cosWin() && mx >= cosBtn()[0] && mx < cosBtn()[2] && my >= cosBtn()[1] && my < cosBtn()[3]) { openCos(); return true; }
+        if (button == 0 && !cosWin() && mx >= masterBox()[0] && mx < masterBox()[2] && my >= masterBox()[1] && my < masterBox()[3]) {
             FancyConfig mc = FancyConfig.get(); boolean on = !(mc.masterAnimate || mc.masterAnnounce);
             mc.setMaster(on, on); FancyConfig.save();
             return true;
@@ -3302,6 +3285,7 @@ public class FancyScreen extends Screen {
             }
         } else
         for (int i = 0; i < Tab.values().length; i++) {
+            if (i == Tab.COSMETICS.ordinal()) continue;
             int[] b = tabBox(i);
             if (inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = null; if (tab != Tab.values()[i]) { tabChanged = System.currentTimeMillis(); } tab = Tab.values()[i]; subSel[tab.ordinal()] = -1; scroll = 0; open.removeIf(o -> o.startsWith("dd_")); return true; }
         }
@@ -3402,6 +3386,7 @@ public class FancyScreen extends Screen {
         }
         if (addField.isFocused() && addField.visible && (key == 257 || key == 335)) { addCustom(); return true; }
         FancyConfig fc = FancyConfig.get();
+        if (key == 256 && cosWin()) { closeCos(); return true; }
         if (key == 256 && fc.menuAnimated) { if (closeAt == 0L) closeAt = System.currentTimeMillis(); return true; }      // Esc fades the menu out first
         if (key >= 262 && key <= 265 && fc.farmPos == 9 && !prevBoxes.isEmpty() && typing == null && !searchField.isFocused() && !formatField.isFocused() && !addField.isFocused()) {
             float dx = key == 262 ? 1f : key == 263 ? -1f : 0f, dy = key == 264 ? 1f : key == 265 ? -1f : 0f;     // one GUI pixel per press

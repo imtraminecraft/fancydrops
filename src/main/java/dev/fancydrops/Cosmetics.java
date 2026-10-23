@@ -90,6 +90,8 @@ final class Cosmetics {
     /** Everybody who gets a suffix on this screen: the owners (what they picked in cosmetics.json, else the sparkle) and you (your own pick, when allowed). */
     static Map<UUID, Look> active() {
         Map<UUID, Look> m = new LinkedHashMap<>(); UUID me = me();
+        FancyConfig c0 = FancyConfig.get();
+        if (!(c0.masterAnimate || c0.masterAnnounce)) return m;                  // the mod is off: nothing is drawn on your screen (other players still see yours, they get it from the list, not from you)
         refreshRemote();
         var conn = Minecraft.getInstance().getConnection();
         if (conn != null) for (var info : conn.getOnlinePlayers()) {
@@ -98,7 +100,11 @@ final class Cosmetics {
             if (u.equals(me)) continue;
             Set<String> g = CosmeticData.grantsOf(u);                    // everybody sees what an owner has been given
             if (g.isEmpty()) continue;
-            for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 2 && g.contains(sd.id())) { m.put(u, new Look(byId(sd.suffix()), sd.fx(), sd.aura())); break; }       // what they were given: the whole set
+            for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 2 && g.contains(sd.id())) {       // what they were given: the whole set (minus what you chose not to see)
+                Look ol = new Look(c0.othersSuffix ? byId(sd.suffix()) : null, c0.othersName ? sd.fx() : null, c0.othersAura ? sd.aura() : null);
+                if (ol.suffix() != null || ol.fx() != null || ol.aura() != null) m.put(u, ol);
+                break;
+            }
         }
         if (me != null) {                                                // you see what you picked
             FancyConfig c = FancyConfig.get();
@@ -436,6 +442,25 @@ final class Cosmetics {
                 info.setTabListDisplayName(out);
             }
             tabMoving = anyMoving;
+            if (anyMoving) nudgeCustomTabs(now);
+        } catch (Throwable ignored) { }
+    }
+
+    private static java.lang.reflect.Field sbkFlag; private static java.lang.reflect.Method sbkUpd; private static boolean sbkTried; private static long sbkAt;
+    /** Custom tab lists (Skyblocker's) copy the player list once in a while instead of every frame, so a moving name would stand still there. Ask it to copy again, a few times a second, while a name is moving. */
+    private static void nudgeCustomTabs(long now) {
+        if (now - sbkAt < 50) return; sbkAt = now;
+        try {
+            if (!sbkTried) {
+                sbkTried = true;
+                try {
+                    Class<?> c = Class.forName("de.hysky.skyblocker.skyblock.tabhud.util.PlayerListManager");
+                    try { sbkFlag = c.getDeclaredField("shouldUpdateNextTick"); sbkFlag.setAccessible(true); } catch (Throwable ignored) { }
+                    try { sbkUpd = c.getDeclaredMethod("updateListNow"); sbkUpd.setAccessible(true); } catch (Throwable ignored) { }
+                    System.err.println("[FancyDrops] custom tab list found (Skyblocker): " + (sbkFlag != null ? "flag" : sbkUpd != null ? "method" : "no hook"));
+                } catch (Throwable ignored) { }
+            }
+            if (sbkFlag != null) sbkFlag.setBoolean(null, true); else if (sbkUpd != null) sbkUpd.invoke(null);
         } catch (Throwable ignored) { }
     }
 
