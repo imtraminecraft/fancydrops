@@ -1,3 +1,8 @@
+## 0.8.54
+- Every suffix icon is redrawn with real motion (spinning gem and clover, swinging hammer, beating heart, flickering flame, bobbing ghost...) instead of a shine; Sparkle uses the new star
+- Cosmetic tiles animate their icon when you hover them
+- Stats > Overview: removed the Categories tiles
+
 ## 0.8.53
 - Removed the stray line beside the sword icon
 - Pest Drop sounds page has its own names (Suck, Pop, Shoot) and icons
