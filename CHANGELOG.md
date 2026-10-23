@@ -1,3 +1,13 @@
+## 0.8.51
+- The building site no longer overlaps: bulldozers turn round before they touch anything, and you can drag every item around the box (it slides to a free spot when dropped)
+- Fixed the pickaxe and rod handles turning white (a palette letter clashed with the tint colours)
+- New Farming icon: a hoe digs up a carrot. Sounds, Chat, Stats and Animations icons now animate, and every menu icon hops up and down
+- The Settings gear is symmetric and centred
+- Removed the white caps on the sound graph bars
+- Ray of Helios has new short sounds (Beam, Flare); all of its sounds end well inside the animation
+- Admin panel redesigned as a clean card with check tiles and counts; Beta and Common set counts now include the owner
+- Players per cosmetic counts sets by who holds every member
+
 ## 0.8.50
 - Mining icon: a steel pickaxe swings onto iron ore, cracks it three times, then breaks it into pieces (smaller head, 2 pixel stick)
 - Fishing icon: the rod flexes back and casts, the line pays out to a bobber that splashes down and floats over the shimmering river
