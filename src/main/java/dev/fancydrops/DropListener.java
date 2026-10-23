@@ -46,7 +46,7 @@ public final class DropListener {
                     dlog("heard: " + line.trim() + "  ->  " + d.kind() + " / " + d.name() + " x" + d.amount());
                     if (FarmData.isFarm(d)) { if (playFarm(d)) drop = true; }          // farming drops have no kill: they play at once
                     else if (MythData.isMyth(d)) { if (playMyth(d)) drop = true; }     // so do mythological creature drops
-                    else { TRACKER.drop(d, now); drop = true; }
+                    else { TRACKER.drop(d, now); if (find(d.name()) != null || isCustom(d.name())) drop = true; else dlog("left in chat (unlisted): " + d.name()); }      // only a drop the mod knows is replaced by its scene
                 }
             }
         }
@@ -114,6 +114,28 @@ public final class DropListener {
         } catch (Throwable ignored) { }
     }
 
+    /** Names compared without case, spaces and symbols, so "Flawed Opal Gemstone", "flawed opal gemstone!" and "✯ Flawed Opal Gemstone" are all the same drop. */
+    private static String norm(String n) { return n == null ? "" : n.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", ""); }
+
+    /** The listed drop a chat name belongs to: {slayer, drop}, or null. Exact name first, then the same name ignoring symbols, then a listed name found inside the chat name (or the other way round). The slayer you are fighting wins a tie. */
+    private static Object[] find(String chatName) {
+        List<SlayerData.Slayer> order = new ArrayList<>(SlayerData.ALL);
+        if (lastSlayer != null && order.remove(lastSlayer)) order.add(0, lastSlayer);
+        for (SlayerData.Slayer s : order) for (SlayerData.Drop dr : s.drops) if (dr.name.equalsIgnoreCase(chatName)) return new Object[]{s, dr};
+        String n = norm(chatName);
+        if (n.isEmpty()) return null;
+        for (SlayerData.Slayer s : order) for (SlayerData.Drop dr : s.drops) if (norm(dr.name).equals(n)) return new Object[]{s, dr};
+        Object[] best = null; int bestLen = 0;
+        for (SlayerData.Slayer s : order) for (SlayerData.Drop dr : s.drops) {
+            String dn = norm(dr.name);
+            if (dn.length() < 6) continue;
+            if ((n.contains(dn) || (n.length() >= 8 && dn.contains(n))) && dn.length() > bestLen) { best = new Object[]{s, dr}; bestLen = dn.length(); }
+        }
+        return best;
+    }
+
+    private static boolean isCustom(String name) { for (FancyConfig.CustomDrop cd : FancyConfig.get().custom) if (cd.name.equalsIgnoreCase(name)) return true; return false; }
+
     private static final class Res { final Item item = new Item(); boolean animate, announce, known; }
 
     private static Res resolve(ChatParser.Drop d) {
@@ -121,10 +143,9 @@ public final class DropListener {
         Res r = new Res();
         Item it = r.item;
         it.rank = d.rank(); it.mf = d.mf(); it.name = d.name(); it.sim = d.sim();
-        List<SlayerData.Slayer> order = new ArrayList<>(SlayerData.ALL);
-        if (lastSlayer != null && order.remove(lastSlayer)) order.add(0, lastSlayer);          // a drop two slayers share belongs to the one you are fighting
-        for (SlayerData.Slayer s : order) for (SlayerData.Drop dr : s.drops) {
-            if (!dr.name.equalsIgnoreCase(d.name())) continue;
+        Object[] hit = find(d.name());
+        if (hit != null) {
+            SlayerData.Slayer s = (SlayerData.Slayer) hit[0]; SlayerData.Drop dr = (SlayerData.Drop) hit[1];
             FancyConfig.SlayerCfg sc = c.slayer(s.id);
             FancyConfig.DropCfg dc = c.drop(s.id, dr.name);
             it.slayer = s; it.name = dr.name; it.id = dr.id; it.icon = dr.icon; it.odds = dr.odds; it.chance = dr.chance;
@@ -136,6 +157,7 @@ public final class DropListener {
             lastSlayer = s;
             return r;
         }
+        dlog("not one of the listed drops: \"" + d.name() + "\"");
         it.id = PriceService.normalize(d.name());
         it.untradeable = SlayerData.untradeable(it.id);
         for (FancyConfig.CustomDrop cd : c.custom) if (cd.name.equalsIgnoreCase(d.name())) {

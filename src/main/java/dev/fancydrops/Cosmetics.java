@@ -36,8 +36,18 @@ final class Cosmetics {
     static final FontDescription EMOJI = new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "emoji"));
 
     private record Seg(String text, Style style) {}
-    /** A font holding only this suffix's frames: with the obfuscated style the game picks one of them at random every frame, so the suffix twinkles in chat. */
-    static FontDescription chatFont(Suffix s) { return new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "suf_" + s.id())); }
+    /** The chat font of a suffix: one still frame. The optional "FancyDrops Animated Suffix" resource pack replaces it with all six frames, and chat then flickers through them (the obfuscated style picks one at random every frame). */
+    static FontDescription chatFont(Suffix s) { return new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "chat_" + s.id())); }
+    private static long packAt; private static boolean packOn;
+    /** True while the animated-suffix resource pack is switched on (it carries a marker file the mod alone does not have). */
+    static boolean packActive() {
+        long now = System.currentTimeMillis();
+        if (now - packAt > 1000) {
+            packAt = now;
+            try { packOn = Minecraft.getInstance().getResourceManager().getResource(Identifier.fromNamespaceAndPath("fancydrops", "pack_animated.txt")).isPresent(); } catch (Throwable t) { packOn = false; }
+        }
+        return packOn;
+    }
 
     static UUID me() { try { var u = Minecraft.getInstance().getUser(); return u == null ? null : u.getProfileId(); } catch (Throwable t) { return null; } }
     /** The dev build is open to everyone; the public build only to whitelisted UUIDs. */
@@ -83,11 +93,13 @@ final class Cosmetics {
                 if (name == null) continue;
                 int at = find(full, name);
                 if (at < 0) continue;
-                return insert(message, at + name.length(), e.getValue().frames()[0], Style.EMPTY.withFont(chatFont(e.getValue())).withColor(0xFFFFFF).withObfuscated(true));
+                return insert(message, at + name.length(), e.getValue().frames()[0], chatStyle(e.getValue()));
             }
         } catch (Exception ignored) { }
         return message;
     }
+
+    private static Style chatStyle(Suffix s) { Style st = Style.EMPTY.withFont(chatFont(s)).withColor(0xFFFFFF); return packActive() ? st.withObfuscated(true) : st; }
 
     private static boolean ours(String curStr) { for (Suffix s : SUFFIXES) for (String f : s.frames()) if (curStr.contains(f)) return true; return false; }
 

@@ -60,6 +60,7 @@ public final class ChatParser {
             rest = rest.substring(0, open).trim();
         }
         String name = rest.replaceAll("[\\s!.:;,✯☘☠♣-]+$", "").trim();
+        name = name.replaceFirst("^[^\\p{L}\\p{N}\\[(\"'+]+", "").trim();          // a leading symbol is not part of the name
         if (name.isEmpty()) return null;
         int amount = 1;
         Matcher am = AMOUNT_PREFIX.matcher(name);
