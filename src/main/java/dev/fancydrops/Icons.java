@@ -65,6 +65,7 @@ final class Icons {
         String name = key.startsWith("fd:") ? key.substring(3) : key; int tint = 0xFF888888;
         int hash = name.indexOf('#');
         if (hash >= 0) { try { tint = 0xFF000000 | Integer.parseInt(name.substring(hash + 1), 16); } catch (Exception ignored) {} name = name.substring(0, hash); }
+        if (name.startsWith("cx_")) { Cosmetics.drawCosIcon(g, name.substring(3), x, y, now); return; }
         if (name.startsWith("myth_")) {                                                                  // every creature sits in a pulsing gold aura with two runes circling it
             float pu = 0.5f + 0.5f * (float) Math.sin(s * 2.2f);
             disc(g, x, y, 7.5f, 7.5f, 7.6f, al(40 + Math.round(30 * pu), 0xFFC857)); disc(g, x, y, 7.5f, 7.5f, 6.2f, al(34, 0x12101E));

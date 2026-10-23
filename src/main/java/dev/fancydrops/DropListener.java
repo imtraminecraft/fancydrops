@@ -49,6 +49,7 @@ public final class DropListener {
             } else {
                 ChatParser.Drop d = ChatParser.parseDrop(line);
                 if (d != null) {
+                    { FancyConfig fc = FancyConfig.get(); if (fc.dropsSeen < 100000) { fc.dropsSeen++; FancyConfig.save(); } }          // counts toward the First Drop / Collector cosmetics
                     dlog("heard: " + line.trim() + "  ->  " + d.kind() + " / " + d.name() + " x" + d.amount());
                     if (FarmData.isFarm(d)) { if (playFarm(d)) drop = true; }          // farming drops have no kill: they play at once
                     else if (MythData.isMyth(d)) { if (playMyth(d)) drop = true; }     // so do mythological creature drops

@@ -116,6 +116,15 @@
       "chars": [
         "\ue0c0\ue0c1\ue0c2\ue0c3\ue0c4\ue0c5"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/free.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue0d0\ue0d1\ue0d2\ue0d3\ue0e0\ue0e1\ue0e2\ue0e3\ue0e4\ue0e5"
+      ]
     }
   ]
 }

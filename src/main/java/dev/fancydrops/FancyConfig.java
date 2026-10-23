@@ -44,7 +44,11 @@ public class FancyConfig {
     public boolean animateNothing = true;     // play the (boring) scene on slayer kills that drop nothing you ticked in /fancydrops
     public boolean showOdds = true;           // "1 in 735" under the drop name
     public boolean showMagicFind = true;      // "Magic Find: +X%" line, taken from the Hypixel drop message
-    public String suffix = "sparkle";            // Cosmetics: the chat / tab list suffix you picked ("" = none)
+    public String suffix = "";                   // Cosmetics: the chat / tab list suffix you picked ("" = none)
+    public String nameFx = "", aura = "";        // Cosmetics: the name effect and the aura you picked
+    public String firstVersion = "";             // the first version of the mod this config saw: decides who gets the Beta cosmetics
+    public boolean discordJoined, secretFound;   // Cosmetics: unlocked by pressing the Discord button / the hidden button
+    public int dropsSeen;                        // rare drops the mod has heard (First Drop, Collector)
     public boolean show3d = true;             // dropped item is a real spinning 3D model instead of a flat icon
     public Boolean cineDye, cineMytho, cineExp, blurDye, blurMytho, blurExp;   // each scene can have its own bars and blur (null = same as Slayers)
     public float size = -1f;                  // animation size, 100% = 1.0 (older configs stored it as 80% = 1.0; converted on load)
@@ -144,6 +148,9 @@ public class FancyConfig {
             if (Files.exists(p)) instance = GSON.fromJson(Files.readString(p), FancyConfig.class);
         } catch (Exception e) { e.printStackTrace(); }
         if (instance == null) instance = new FancyConfig();
+        if (instance.firstVersion == null || instance.firstVersion.isEmpty()) { instance.firstVersion = FancyDropsMod.VERSION; save(); }
+        if (instance.nameFx == null) instance.nameFx = "";
+        if (instance.aura == null) instance.aura = "";
         instance.fixChops();
         if (!instance.enabled) { instance.masterAnimate = false; instance.masterAnnounce = false; instance.enabled = true; }   // older configs had one master switch
         instance.scale = Math.max(0.5f, Math.min(1.1f, instance.scale));

@@ -1,4 +1,12 @@
 {
+  "special": {
+    "sparkle": [
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
+    ],
+    "patreon": [],
+    "bughunter": [],
+    "contributor": []
+  },
   "owners": {
     "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8": "sparkle"
   }
