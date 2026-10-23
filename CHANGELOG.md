@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.13
+- The chat suffix is animated again, this time as a small animated picture inside the mod itself (no resource pack, no flicker). If this Minecraft can't draw it, chat falls back to the still glyph and the reason is printed in the game log.
+
 ## 0.8.12
 - Rare drops this mod doesn't list (like "VERY RARE DROP! (Duplex I)") are now tracked too; the name in brackets was being read as a stat and the whole line was dropped.
 - Any boss kill plays exactly one animation: a drop we don't list no longer cancels the "nothing dropped" scene, and it doesn't play that scene over a real drop.
