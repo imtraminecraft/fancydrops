@@ -1,0 +1,190 @@
+{
+  "dyes": [
+    {
+      "name": "Aquamarine Dye",
+      "rarity": 0,
+      "src": "Fishing anywhere  ·  1 in 10M"
+    },
+    {
+      "name": "Mango Dye",
+      "rarity": 0,
+      "src": "Breaking logs on public islands  ·  1 in 10M"
+    },
+    {
+      "name": "Wild Strawberry Dye",
+      "rarity": 0,
+      "src": "Breaking crops  ·  1 in 150M"
+    },
+    {
+      "name": "Mocha Dye",
+      "rarity": 0,
+      "src": "Brewing potions  ·  1 in 100M to 250k"
+    },
+    {
+      "name": "Cyclamen Dye",
+      "rarity": 0,
+      "src": "Various mobs  ·  1 in 10M to 250k"
+    },
+    {
+      "name": "Pearlescent Dye",
+      "rarity": 0,
+      "src": "End mobs and dragons  ·  1 in 10M to 50k"
+    },
+    {
+      "name": "Matcha Dye",
+      "rarity": 0,
+      "src": "Revenant Horror  ·  1 in 15M to 500k",
+      "slayer": "zombie"
+    },
+    {
+      "name": "Brick Red Dye",
+      "rarity": 0,
+      "src": "Tarantula Broodfather  ·  1 in 15M to 1M",
+      "slayer": "spider"
+    },
+    {
+      "name": "Celeste Dye",
+      "rarity": 0,
+      "src": "Sven Packmaster  ·  1 in 15M to 1M",
+      "slayer": "wolf"
+    },
+    {
+      "name": "Byzantium Dye",
+      "rarity": 0,
+      "src": "Voidgloom Seraph  ·  1 in 15M to 1M",
+      "slayer": "enderman"
+    },
+    {
+      "name": "Flame Dye",
+      "rarity": 0,
+      "src": "Inferno Demonlord  ·  1 in 15M to 1M",
+      "slayer": "blaze"
+    },
+    {
+      "name": "Bone Dye",
+      "rarity": 1,
+      "src": "Killing any Skeleton  ·  1 in 3M"
+    },
+    {
+      "name": "Carmine Dye",
+      "rarity": 1,
+      "src": "Various mobs  ·  1 in 5M to 250k"
+    },
+    {
+      "name": "Emerald Dye",
+      "rarity": 1,
+      "src": "Mining emeralds  ·  1 in 5M"
+    },
+    {
+      "name": "Jade Dye",
+      "rarity": 1,
+      "src": "Crystal Nucleus  ·  1 in 2M"
+    },
+    {
+      "name": "Iceberg Dye",
+      "rarity": 1,
+      "src": "Fishing on Jerry's Workshop  ·  1 in 2M"
+    },
+    {
+      "name": "Fossil Dye",
+      "rarity": 1,
+      "src": "Excavating  ·  1 in 1M"
+    },
+    {
+      "name": "Midnight Dye",
+      "rarity": 1,
+      "src": "Spooky mobs and sea creatures  ·  1 in 1M"
+    },
+    {
+      "name": "Pelt Dye",
+      "rarity": 1,
+      "src": "Trapper animals  ·  1 in 1M to 50k"
+    },
+    {
+      "name": "Secret Dye",
+      "rarity": 1,
+      "src": "Dungeon secrets  ·  1 in 1M"
+    },
+    {
+      "name": "Dung Dye",
+      "rarity": 2,
+      "src": "Vacuuming pests  ·  1 in 500k"
+    },
+    {
+      "name": "Periwinkle Dye",
+      "rarity": 2,
+      "src": "Runic mobs  ·  1 in 500k"
+    },
+    {
+      "name": "Frostbitten Dye",
+      "rarity": 2,
+      "src": "Glacite corpses  ·  1 in 500k to 25k"
+    },
+    {
+      "name": "Nyanza Dye",
+      "rarity": 2,
+      "src": "Commissions  ·  1 in 250k"
+    },
+    {
+      "name": "Tentacle Dye",
+      "rarity": 2,
+      "src": "Kuudra  ·  1 in 250k to 50k"
+    },
+    {
+      "name": "Sangria Dye",
+      "rarity": 2,
+      "src": "Riftstalker Bloodfiend  ·  1 in 150k to 25k",
+      "slayer": "vampire"
+    },
+    {
+      "name": "Copper Dye",
+      "rarity": 3,
+      "src": "Garden visitors  ·  1 in 100k to 500"
+    },
+    {
+      "name": "Nadeshiko Dye",
+      "rarity": 3,
+      "src": "Experiments  ·  1 in 50k to 10k"
+    },
+    {
+      "name": "Celadon Dye",
+      "rarity": 3,
+      "src": "Bacte  ·  1 in 20k"
+    },
+    {
+      "name": "Archfiend Dye",
+      "rarity": 4,
+      "src": "Archfiend Dice  ·  1 in 6.6k"
+    },
+    {
+      "name": "Livid Dye",
+      "rarity": 4,
+      "src": "Master Mode Floor 5 chest  ·  1 in 5k"
+    },
+    {
+      "name": "Holly Dye",
+      "rarity": 4,
+      "src": "Red gifts  ·  1 in 4k"
+    },
+    {
+      "name": "Necron Dye",
+      "rarity": 4,
+      "src": "Master Mode Floor 7 chest  ·  1 in 2.5k"
+    },
+    {
+      "name": "Dark Purple Dye",
+      "rarity": 5,
+      "src": "Dark Auction  ·  1 in 500"
+    },
+    {
+      "name": "Pure Blue Dye",
+      "rarity": 6,
+      "src": "Incredible Raffle Box"
+    },
+    {
+      "name": "Pure Yellow Dye",
+      "rarity": 6,
+      "src": "Incredible Raffle Box"
+    }
+  ]
+}

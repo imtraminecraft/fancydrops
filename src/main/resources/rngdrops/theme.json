@@ -1,0 +1,32 @@
+{
+  "_help": "Colours are #RRGGBB. Numbers control the animation timeline (fractions of total duration 0..1) and sizes.",
+  "colors": {
+    "gold": "#FFB300",
+    "panel": "#14151A",
+    "panelBorder": "#2E2F3A",
+    "row": "#21222A",
+    "rowHover": "#2B2C36",
+    "text": "#FFFFFF",
+    "subtext": "#8FA3B8",
+    "toggleOff": "#3A3A44",
+    "price": "#FFFFFF",
+    "groundLight": "#DDDDDD",
+    "groundDark": "#8A8A8A",
+    "sparkle": "#FFF2C0",
+    "rarityRare": "#5555FF",
+    "rarityVeryRare": "#AA00AA",
+    "rarityCrazyRare": "#FF55FF",
+    "rarityLegendary": "#FFAA00"
+  },
+  "numbers": {
+    "pixel": 2,
+    "itemScale": 1.75,
+    "groundWidthPixels": 38,
+    "particles": 18,
+    "rise": 0.2,
+    "slash": 0.32,
+    "burst": 0.4,
+    "fade": 0.84,
+    "idleBob": 0.5
+  }
+}

@@ -1,0 +1,565 @@
+{
+ "v": 7,
+ "sources": [
+  {
+   "id": "rare_crops",
+   "name": "Rare Crops",
+   "boss": "Rare Crops",
+   "icon": "wheat",
+   "color": "#7CCB4F",
+   "cube": {
+    "base": "#6FBF4A",
+    "dark": "#3E7A2B",
+    "eye": "#FFE066"
+   },
+   "drops": [
+    {
+     "name": "Cropie",
+     "id": "CROPIE",
+     "icon": "carrot",
+     "odds": "",
+     "chance": "1 in 2,000",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Squash",
+     "id": "SQUASH",
+     "icon": "pumpkin",
+     "odds": "",
+     "chance": "1 in 3,333",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Fermento",
+     "id": "FERMENTO",
+     "icon": "brown_mushroom",
+     "odds": "",
+     "chance": "1 in 14,286",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Helianthus",
+     "id": "HELIANTHUS",
+     "icon": "sunflower",
+     "odds": "",
+     "chance": "1 in 25,000",
+     "rank": 2,
+     "untradeable": false
+    },
+    {
+     "name": "Warty",
+     "id": "WARTY",
+     "icon": "nether_wart",
+     "odds": "",
+     "chance": "1 in 1,000",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Burrowing Spores",
+     "id": "BURROWING_SPORES",
+     "icon": "red_mushroom",
+     "odds": "",
+     "chance": "1 in 350,000",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Overclocker 3000",
+     "id": "OVERCLOCKER_3000",
+     "icon": "redstone",
+     "odds": "",
+     "chance": "1 in 2,000",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Ethereal Vine",
+     "id": "ETHEREAL_VINE",
+     "icon": "vine",
+     "odds": "",
+     "chance": "1 in 5",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Rarefinder Chip",
+     "id": "RAREFINDER_GARDEN_CHIP",
+     "icon": "comparator",
+     "odds": "",
+     "chance": "1 in 200,000",
+     "rank": 1,
+     "untradeable": false
+    }
+   ]
+  },
+  {
+   "id": "harvest_feast",
+   "name": "Harvest Feast",
+   "boss": "Harvest Feast",
+   "icon": "pumpkin",
+   "color": "#FFA63A",
+   "cube": {
+    "base": "#E08A2E",
+    "dark": "#8F4F17",
+    "eye": "#FFE066"
+   },
+   "drops": [
+    {
+     "name": "Cornucopia",
+     "id": "CORNUCOPIA",
+     "icon": "nautilus_shell",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Nautilus_Shell"
+    },
+    {
+     "name": "Carrot Zest",
+     "id": "CARROT_ZEST",
+     "icon": "carrot",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Fire_Coral"
+    },
+    {
+     "name": "Deepfries",
+     "id": "DEEPFRIES",
+     "icon": "baked_potato",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Deepfries"
+    },
+    {
+     "name": "Aggourdian",
+     "id": "AGGOURDIAN",
+     "icon": "pumpkin",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Goat_Horn"
+    },
+    {
+     "name": "Cane Knot",
+     "id": "CANE_KNOT",
+     "icon": "sugar_cane",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Kelp"
+    },
+    {
+     "name": "Melon Juice",
+     "id": "MELON_JUICE",
+     "icon": "melon_slice",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Beetroot_Soup"
+    },
+    {
+     "name": "Cactus Flower",
+     "id": "CACTUS_FLOWER",
+     "icon": "cactus",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Cactus_Flower"
+    },
+    {
+     "name": "Designer Coffee Beans",
+     "id": "DESIGNER_COFFEE_BEANS",
+     "icon": "cocoa_beans",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Beetroot_Seeds"
+    },
+    {
+     "name": "Feastfungus",
+     "id": "FEASTFUNGUS",
+     "icon": "red_mushroom",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Feastfungus"
+    },
+    {
+     "name": "Botroot",
+     "id": "BOTROOT",
+     "icon": "nether_wart",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Weeping_Vines"
+    },
+    {
+     "name": "Salted Sunflower Seeds",
+     "id": "SALTED_SUNFLOWER_SEEDS",
+     "icon": "wheat_seeds",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Yellow_Bundle"
+    },
+    {
+     "name": "Crystalized Moonlight",
+     "id": "CRYSTALIZED_MOONLIGHT",
+     "icon": "amethyst_shard",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Crystalized_Moonlight"
+    },
+    {
+     "name": "Floral Gelatin",
+     "id": "FLORAL_GELATIN",
+     "icon": "pink_petals",
+     "odds": "",
+     "chance": "1 in 18,000",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Honey_Bottle"
+    },
+    {
+     "name": "Ray of Helios",
+     "id": "RAY_OF_HELIOS",
+     "icon": "glowstone_dust",
+     "odds": "",
+     "chance": "1 in 500,000,000",
+     "rank": 2,
+     "untradeable": false,
+     "img": "Horn_Coral"
+    },
+    {
+     "name": "Seasoning",
+     "id": "SEASONING",
+     "icon": "sugar",
+     "odds": "",
+     "chance": "1 in 2,250",
+     "rank": 0,
+     "untradeable": true,
+     "img": "@seed"
+    }
+   ]
+  },
+  {
+   "id": "pests",
+   "name": "Pests",
+   "boss": "Pests",
+   "icon": "spider_eye",
+   "color": "#D2603F",
+   "cube": {
+    "base": "#B8523A",
+    "dark": "#6E2E1F",
+    "eye": "#FFE066"
+   },
+   "drops": [
+    {
+     "name": "Beady Eyes",
+     "id": "BEADY_EYES",
+     "icon": "spider_eye",
+     "odds": "",
+     "chance": "1 in 33",
+     "rank": 0,
+     "untradeable": false
+    },
+    {
+     "name": "Chirping Stereo",
+     "id": "CHIRPING_STEREO",
+     "icon": "jukebox",
+     "odds": "",
+     "chance": "1 in 100",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Locust Larva",
+     "id": "LOCUST_LARVA",
+     "icon": "slime_ball",
+     "odds": "",
+     "chance": "1 in 25",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Rat Pet",
+     "id": "RAT;4",
+     "icon": "bone",
+     "odds": "",
+     "chance": "1 in 250",
+     "rank": 2,
+     "untradeable": false,
+     "img": "Rat",
+     "rarity": "LEGENDARY",
+     "george": {
+      "LEGENDARY": 5000,
+      "MYTHIC": 10000
+     }
+    },
+    {
+     "name": "Clipped Wings",
+     "id": "CLIPPED_WINGS",
+     "icon": "feather",
+     "odds": "",
+     "chance": "1 in 50",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Bookworm's Favorite Book",
+     "id": "BOOKWORM_BOOK",
+     "icon": "enchanted_book",
+     "odds": "",
+     "chance": "1 in 25",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Book"
+    },
+    {
+     "name": "Atmospheric Filter",
+     "id": "ATMOSPHERIC_FILTER",
+     "icon": "iron_trapdoor",
+     "odds": "",
+     "chance": "1 in 200",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Wriggling Larva",
+     "id": "WRIGGLING_LARVA",
+     "icon": "string",
+     "odds": "",
+     "chance": "1 in 100",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Slug Pet",
+     "id": "SLUG;4",
+     "icon": "slime_ball",
+     "odds": "",
+     "chance": "1 in 100",
+     "rank": 2,
+     "untradeable": false,
+     "img": "Slug",
+     "rarity": "EPIC",
+     "george": {
+      "EPIC": 500000,
+      "LEGENDARY": 5000000
+     }
+    },
+    {
+     "name": "Pesterminator I",
+     "id": "PESTERMINATOR;1",
+     "icon": "enchanted_book",
+     "odds": "",
+     "chance": "1 in 14",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Vermin Vaporizer Chip",
+     "id": "VERMIN_VAPORIZER_GARDEN_CHIP",
+     "icon": "comparator",
+     "odds": "",
+     "chance": "1 in 50",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Fire in a Bottle",
+     "id": "FIRE_IN_A_BOTTLE",
+     "icon": "glass_bottle",
+     "odds": "",
+     "chance": "1 in 50",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Mantid Claw",
+     "id": "MANTID_CLAW",
+     "icon": "iron_sword",
+     "odds": "",
+     "chance": "1 in 50",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Sunset I",
+     "id": "SUNSET;1",
+     "icon": "enchanted_book",
+     "odds": "",
+     "chance": "1 in 3",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Squeaky Toy",
+     "id": "SQUEAKY_TOY",
+     "icon": "cookie",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Squeaky Mousemat",
+     "id": "SQUEAKY_MOUSEMAT",
+     "icon": "carpet",
+     "odds": "",
+     "chance": "1 in 100",
+     "rank": 1,
+     "untradeable": false
+    },
+    {
+     "name": "Pretty Fly Vinyl",
+     "id": "VINYL_PRETTY_FLY",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Stal"
+    },
+    {
+     "name": "Cricket Choir Vinyl",
+     "id": "VINYL_CRICKET_CHOIR",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Chirp"
+    },
+    {
+     "name": "Cicada Symphony Vinyl",
+     "id": "VINYL_CICADA_SYMPHONY",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Blocks"
+    },
+    {
+     "name": "Rodent Revolution Vinyl",
+     "id": "VINYL_RODENT_REVOLUTION",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_13"
+    },
+    {
+     "name": "Buzzin' Beats Vinyl",
+     "id": "VINYL_BUZZIN_BEATS",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Ward"
+    },
+    {
+     "name": "Earthworm Ensemble Vinyl",
+     "id": "VINYL_EARTHWORM_ENSEMBLE",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Mall"
+    },
+    {
+     "name": "DynaMITES Vinyl",
+     "id": "VINYL_DYNAMITES",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Strad"
+    },
+    {
+     "name": "Wings of Harmony Vinyl",
+     "id": "VINYL_WINGS_OF_HARMONY",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Wait"
+    },
+    {
+     "name": "Slow and Groovy Vinyl",
+     "id": "VINYL_SLOW_AND_GROOVY",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Far"
+    },
+    {
+     "name": "Not Just a Pest Vinyl",
+     "id": "VINYL_BEETLE",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Mellohi"
+    },
+    {
+     "name": "Imagine Dragonflies Vinyl",
+     "id": "VINYL_IMAGINE_DRAGONFLIES",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Relic"
+    },
+    {
+     "name": "Firefly in the Hole Vinyl",
+     "id": "VINYL_FIREFLY",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Pigstep"
+    },
+    {
+     "name": "Pray For Me Vinyl",
+     "id": "VINYL_PRAY_FOR_ME",
+     "icon": "music_disc_13",
+     "odds": "",
+     "chance": "1 in 20",
+     "rank": 1,
+     "untradeable": false,
+     "img": "Music_Disc_Creator"
+    }
+   ]
+  }
+ ]
+}
