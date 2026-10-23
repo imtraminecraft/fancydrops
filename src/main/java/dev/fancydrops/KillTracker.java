@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  *  - drops, no kill line  -> after PENDING_MS they get a scene of their own (so the mod still works if the kill text changes)
  */
 public final class KillTracker<T> {
-    public static final long JOIN_MS = 150, WINDOW_MS = 1400, PENDING_MS = 1500, DEDUPE_MS = 2500, EARLY_MS = 3000, NOTHING_MS = 1600;      // NOTHING_MS: a kill with no drop yet waits this long for one before it counts as "nothing"
+    public static final long JOIN_MS = 150, WINDOW_MS = 1400, PENDING_MS = 1500, DEDUPE_MS = 8000, EARLY_MS = 3000, NOTHING_MS = 1600;      // NOTHING_MS: a kill with no drop yet waits this long for one before it counts as "nothing"
 
     public static final class Session<T> {
         public final List<T> drops = new ArrayList<>();
