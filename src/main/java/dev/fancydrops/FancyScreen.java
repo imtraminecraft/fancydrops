@@ -2127,7 +2127,7 @@ public class FancyScreen extends Screen {
             () -> { Cosmetics.Suffix cs = Cosmetics.chosen(); if (cs == null) return 0; for (int k = 0; k < Cosmetics.SUFFIXES.length; k++) if (Cosmetics.SUFFIXES[k] == cs) return k + 1; return 0; },
             i -> { c.suffix = i == 0 ? "" : Cosmetics.SUFFIXES[i - 1].id(); FancyConfig.save(); }));
         rows.add(note(Cosmetics.status(), Ui.DIM));
-        rows.add(note(Cosmetics.packActive() ? "Animated chat suffix pack: ON" : "In chat the suffix stands still. Switch on the FancyDrops Animated Suffix resource pack to animate it (the tab list always animates).", Ui.DIM));
+        rows.add(note(Cosmetics.packActive() ? "Animated chat suffix pack: ON" : "The FancyDrops Animated Suffix pack is off, so the chat suffix stands still. Turn it on in Options > Resource Packs.", Ui.DIM));
     }
 
     /** A little fake player head: skin, hair and two eyes. */
