@@ -146,6 +146,10 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             })
             .then(ClientCommands.literal("help").executes(ctx -> help(ctx.getSource())))
             .then(ClientCommands.literal("stats").executes(ctx -> stats(ctx.getSource())))
+            .then(ClientCommands.literal("cosmetics").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
+            .then(ClientCommands.literal("cosmetic").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
+            .then(ClientCommands.literal("cosm").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
+            .then(ClientCommands.literal("cm").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
             .then(ClientCommands.literal("discord").executes(ctx -> { ctx.getSource().sendFeedback(Chat.msg("Join the Discord: ").copy().append(net.minecraft.network.chat.Component.literal(DISCORD).withStyle(st -> st.withColor(0x7A8BFF).withUnderlined(true).withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenUrl(java.net.URI.create(DISCORD)))))); return Command.SINGLE_SUCCESS; }))
             .then(ClientCommands.literal("patreon").executes(ctx -> { say(ctx.getSource(), "Patreon link coming soon"); return Command.SINGLE_SUCCESS; }))
             .then(ClientCommands.literal("github").executes(ctx -> { say(ctx.getSource(), "GitHub link coming soon"); return Command.SINGLE_SUCCESS; }))
@@ -165,6 +169,10 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             .then(simNode("simulation"))
             .then(simNode("simulate"))
             .then(simNode("sim"))
+            .then(ClientCommands.literal("cosmetics").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
+            .then(ClientCommands.literal("cosmetic").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
+            .then(ClientCommands.literal("cosm").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
+            .then(ClientCommands.literal("cm").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
             // /fd <anything else>  - opens the menu and searches for it
             .then(ClientCommands.argument("search", StringArgumentType.greedyString()).executes(ctx -> {
                 FancyScreen.pendingSearch = StringArgumentType.getString(ctx, "search").trim(); openMenu = true;
@@ -199,6 +207,8 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         helpHead(s, "Menu");
         helpLine(s, "/fd", "Open the menu");
         helpLine(s, "/fd stats", "Open the menu on the Stats page");
+        helpLine(s, "/fd cosmetics", "Open the cosmetics menu (also cosmetic, cosm, cm)");
+        helpLine(s, "/fd cosmetics", "Open the cosmetics menu (also cosmetic, cosm, cm)");
         helpLine(s, "/fd <search>", "Open the menu and search for what you typed");
         helpHead(s, "Try a drop  (never counts toward profit)");
         helpLine(s, "/fd sim <Boss> <Drop 1> [Drop 2] [mf]", "A boss kill with one or two drops. Use \"nothing\" for an empty kill");

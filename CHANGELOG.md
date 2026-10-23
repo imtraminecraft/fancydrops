@@ -2,6 +2,16 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.37
+- Much lighter menu: every icon is drawn as one picture from a texture instead of hundreds of tiny rectangles, the skin preview is a single picture, only the tile you point at animates in Cosmetics, and the aura preview draws fewer particles.
+- Icons now move the way the thing they show would: the gear and reload ring turn, the pickaxe and fishing rod swing, wheat sways, the rest get a sweep of light. Nothing bobs up and down any more, and the sidebar and community buttons stay put.
+- Redrawn: Mining, Fishing, Farming, Animations, Work in Progress (a hard hat) and the FancyDrops chest (also the mod icon). The Slayers sword is back to the old one. Every icon is centred on its square.
+- Circles behind icons are gone everywhere. Aura particles no longer have a halo.
+- Fixed: Settings > Menu was blank. The aura preview now finds your real skin (several ways, with log lines if it cannot).
+- /fd cosmetics (also cosmetic, cosm, cm) opens the cosmetics menu.
+- Reload drop data and Copy ID now show a pop-up too.
+- The Mini font is removed.
+
 ## 0.8.36
 - Fixed a build error in the draggable scroll bar (a variable used outside its method).
 
