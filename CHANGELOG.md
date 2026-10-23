@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.45
+- Two-item drops redone: the two items now fly out one after the other in an arc, are drawn a little smaller so they no longer overlap, and each one's name and details sit right under it instead of far out at the sides of the screen.
+
 ## 0.8.44
 - Beta set is now just Flame and Pulse. Crown, Gem, Clover, Heart, Bolt, Snow, Star, Ghost, Shimmer, Ripple and Glow are Rare cosmetics, in dark blue (still held by players who downloaded before v1.0).
 - Rarities now run Common, Rare, Beta, Special.

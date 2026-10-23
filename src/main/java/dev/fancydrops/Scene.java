@@ -16,6 +16,7 @@ import java.util.List;
  */
 final class Scene {
     static final int W = 112, H = 96;
+    static final double TWIN_DX = 27;                                                              // a twin drop's two items sit this far left / right of the middle
     static final double CX = 56, CY = 74, TILT = 0.52, GY = 0.62;
     private static final double CT = Math.cos(TILT), ST = Math.sin(TILT);
     static final int N = 12;                                   // texture size of the mob's faces
@@ -559,7 +560,9 @@ final class Scene {
 
     /** side: 0 = the usual single drop in the middle, -1 / +1 = the left / right drop of a twin scene. */
     private static void drawOne(Canvas out, Params p, Model m, int rar, float t, float ts, float us, int side) {
-        float tr = ts + 0.12f, uu = (t - tr) / 0.35f;
+        float dl = side > 0 ? 0.3f : 0f;                                                   // twin: the right drop follows a moment after the left one
+        float tr = ts + 0.12f + dl, uu = (t - tr) / 0.35f;
+        us = Math.max(0f, us - dl);
         if (uu <= 0) return;
         boolean epic = p.tier == 2, cool = p.tier >= 1;
         float e = back(uu);
@@ -567,8 +570,8 @@ final class Scene {
         double size = (side != 0 ? (epic ? 26 : cool ? 23 : 21) : (epic ? 31 : cool ? 26 : 22)) * Math.max(0.01, e)
                 * FancyConfig.get().itemK() * (skull ? 0.72 : 1.0);
         FancyConfig ic = FancyConfig.get();
-        double dx = side * 25 * easeOut(uu);
-        double yy = itemY(uu) + (ic.itemBob ? 1.6 * ic.itemBobAmp : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) - (side != 0 ? 4 * (1 - easeOut(uu)) * -1 : 0);
+        double dx = side * TWIN_DX * easeOut(uu);
+        double yy = itemY(uu) + (ic.itemBob ? 1.6 * ic.itemBobAmp : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) + (side != 0 ? 14 * Math.sin(Math.min(1f, Math.max(0f, uu)) * Math.PI) : 0);     // twin: each item flies out in an arc
         double spin = 2.8 * us * ic.itemSpin * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side) + (epic ? 5.0 * (1 - Math.exp(-2.5 * us)) : 0);
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
@@ -576,7 +579,7 @@ final class Scene {
         out.glow(sx, sy, (float) size * (epic ? 1.7f : 1.4f), rar & 0xFFFFFF, Math.min(1f, uu) * (epic ? 0.62f : 0.5f) * pulseG * ic.itemGlow);     // the icons' soft halo
         out.glow(sx, sy, (float) size * 0.8f, 0xFFFFFF, Math.min(1f, uu) * 0.22f * pulseG * ic.itemGlow);
         if (m.sprite != null) {
-            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK());
+            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f));
         } else if (m.puffy != null) {
             m.puffy.draw(IT, sx, sy, (float) (size / 16.0), spin, 0.35);
         } else {

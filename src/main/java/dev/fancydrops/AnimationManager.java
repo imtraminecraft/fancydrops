@@ -441,6 +441,7 @@ public final class AnimationManager {
         return mf.replaceFirst("^\\+", "").replaceFirst("%$", "") + " ✯ Magic Find"; }
 
     /** The words live in the bottom black bar so they never cover the scene: title, facts and Magic Find. The top bar stays empty. */
+    private static float twinCell;                                  // screen pixels per scene pixel, so a twin drop's names sit right under their own item
     private static void barText(GuiGraphicsExtractor g, Font font, Anim a, FancyConfig c, int alpha, int W, int H, int bar) {
         float ts = c.textK() * uk(W, H) * textBoost, big = 1.5f * ts * c.titleScale, small = 1.1f * ts * c.subScale;
         String mf = a.item == null ? null : a.item.mf != null ? a.item.mf : a.item2 != null ? a.item2.mf : null;
@@ -455,10 +456,11 @@ public final class AnimationManager {
         }
         if (a.item2 != null) {
             float tb = big * 0.82f;
-            line(g, font, Math.round(W * 0.27f), ty, tb, alpha, lit(a.item.title()).withStyle(ChatFormatting.BOLD), a.item.color());
-            detailAt(g, font, Math.round(W * 0.27f), dy, small * 0.95f, a.item, c, alpha);
-            line(g, font, Math.round(W * 0.73f), ty, tb, alpha, lit(a.item2.title()).withStyle(ChatFormatting.BOLD), a.item2.color());
-            detailAt(g, font, Math.round(W * 0.73f), dy, small * 0.95f, a.item2, c, alpha);
+            int lx = twinCell > 0f ? Math.round(W / 2f - Scene.TWIN_DX * twinCell) : Math.round(W * 0.27f), rx = twinCell > 0f ? Math.round(W / 2f + Scene.TWIN_DX * twinCell) : Math.round(W * 0.73f);
+            line(g, font, lx, ty, tb, alpha, lit(a.item.title()).withStyle(ChatFormatting.BOLD), a.item.color());
+            detailAt(g, font, lx, dy, small * 0.95f, a.item, c, alpha);
+            line(g, font, rx, ty, tb, alpha, lit(a.item2.title()).withStyle(ChatFormatting.BOLD), a.item2.color());
+            detailAt(g, font, rx, dy, small * 0.95f, a.item2, c, alpha);
         } else {
             line(g, font, W / 2, ty, big, alpha, lit(a.item.title()).withStyle(ChatFormatting.BOLD), a.item.color());
             if (facts) columns(g, font, W / 2, dy, dy + Math.round(9 * small * 0.9f), small, a.item, c, alpha);
@@ -807,7 +809,7 @@ public final class AnimationManager {
         if (epic && t > ts) epicFront(g, a, t - ts, W, H, scx, scy, cin * ga);
         if (waveIn > 0f) {
             int al = (int) (255 * gt);
-            if (framed) barText(g, font, a, c, al, W, H, barFull);
+            if (framed) { twinCell = L.cell(); barText(g, font, a, c, al, W, H, barFull); }
             else if (a.item2 != null) twinText(g, font, L, a.item, a.item2, c, al);
             else if (catOf(a) == 2) farmText(g, font, L, a.item, c, al);
             else text(g, font, L, a.item, c, al);
