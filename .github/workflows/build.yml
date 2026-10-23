@@ -54,14 +54,26 @@ jobs:
           echo "Prepared release/FancyDrops.jar"
           ls -lh release/FancyDrops.jar
 
+
+      - name: Read mod version
+        id: mod_version
+        shell: bash
+        run: |
+          VERSION=$(grep -E '^mod_version=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r')
+          if [ -z "$VERSION" ]; then
+            echo "::error::mod_version not found in gradle.properties"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Publish direct JAR download
         uses: softprops/action-gh-release@v3
         with:
           tag_name: build-${{ github.ref_name }}-${{ github.run_number }}
-          name: FancyDrops ${{ github.ref_name }} Build ${{ github.run_number }}
-          body: Automated FancyDrops build from branch ${{ github.ref_name }}.
-          prerelease: true
-          make_latest: false
+          name: FancyDrops ${{ steps.mod_version.outputs.version }} [${{ github.ref_name == 'main' && 'Full' || 'Beta' }}]
+          body: Automated FancyDrops ${{ github.ref_name == 'main' && 'stable' || 'beta' }} build, version ${{ steps.mod_version.outputs.version }}.
+          prerelease: ${{ github.ref_name != 'main' }}
+          make_latest: ${{ github.ref_name == 'main' }}
           files: release/FancyDrops.jar
           fail_on_unmatched_files: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+
