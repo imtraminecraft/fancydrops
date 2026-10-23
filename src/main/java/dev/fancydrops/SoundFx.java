@@ -29,12 +29,17 @@ public final class SoundFx {
     }
 
     public static final String NONE = "none";
-    public static final String[] SCENES = {"default", "cool", "epic", "nothing", "dye", "farm", "mytho", "exp", "helios"};
+    public static final String[] SCENES = {"default", "cool", "epic", "nothing", "dye", "farm", "mytho", "exp", "helios", "mythnothing"};
     public static final String[] SLOTS = {"chop", "split", "reveal", "linger", "end"};
 
     private static final Map<String, Fx> ALL = new LinkedHashMap<>();
     private static Fx reg(String name, String label, SoundEvent vanilla, float vol) { Fx f = new Fx(name, label, vanilla, vol, true); ALL.put(name, f); return f; }
-    private static Fx vanilla(String name, String label, SoundEvent e, float vol) { Fx f = new Fx(name, label, e, vol, false); ALL.put(name, f); return f; }
+    /** A plain Minecraft sound by its id ("block.note_block.chime"): only offered while Custom sounds is off. */
+    private static Fx mc(String name, String label, String id, float vol) {
+        Fx f = new Fx(name, label, SoundEvent.createVariableRangeEvent(Identifier.fromNamespaceAndPath("minecraft", id)), vol, false);
+        ALL.put(name, f); return f;
+    }
+    private static boolean isMc(String name) { return name != null && name.startsWith("mc_"); }
 
     // custom (ogg)
     public static final Fx SLICE = reg("slice", "Slice", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);
@@ -94,16 +99,62 @@ public final class SoundFx {
     public static final Fx PAGE = reg("page", "Page", SoundEvents.BOOK_PAGE_TURN, 0.9f);
     public static final Fx GLOW = reg("glow", "Glow", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
     public static final Fx FLICK = reg("flick", "Tink", SoundEvents.PLAYER_ATTACK_SWEEP, 0.8f);
-    // plain Minecraft sounds
+    // Minecraft's own sounds, picked to work as a set: bright notes for the stepping slices, a solid hit, a reward, a long glow, a soft close
     static {
-        vanilla("v_hit", "MC Hit", SoundEvents.PLAYER_ATTACK_STRONG, 0.8f);
-        vanilla("v_anvil", "MC Anvil", SoundEvents.ANVIL_LAND, 0.6f);
-        vanilla("v_levelup", "MC Level", SoundEvents.PLAYER_LEVELUP, 0.7f);
-        vanilla("v_totem", "MC Totem", SoundEvents.TOTEM_USE, 0.6f);
-        vanilla("v_firework", "MC Firework", SoundEvents.FIREWORK_ROCKET_BLAST, 0.7f);
-        vanilla("v_pageturn", "MC Page", SoundEvents.BOOK_PAGE_TURN, 1f);
-        vanilla("v_enchant", "MC Enchant", SoundEvents.ENCHANTMENT_TABLE_USE, 0.8f);
-        vanilla("v_thunder", "MC Thunder", SoundEvents.LIGHTNING_BOLT_THUNDER, 0.5f);
+        mc("mc_chime", "Chime", "block.note_block.chime", 0.9f);
+        mc("mc_bell", "Bell", "block.note_block.bell", 0.9f);
+        mc("mc_harp", "Harp", "block.note_block.harp", 0.9f);
+        mc("mc_xylo", "Xylophone", "block.note_block.iron_xylophone", 0.9f);
+        mc("mc_flute", "Flute", "block.note_block.flute", 0.9f);
+        mc("mc_pling", "Pling", "block.note_block.pling", 0.7f);
+        mc("mc_bit", "Bit", "block.note_block.bit", 0.7f);
+        mc("mc_bass", "Bass", "block.note_block.bass", 1.0f);
+        mc("mc_kick", "Kick", "block.note_block.basedrum", 1.0f);
+        mc("mc_snare", "Snare", "block.note_block.snare", 0.8f);
+        mc("mc_crystal", "Crystal", "block.amethyst_block.chime", 0.9f);
+        mc("mc_shimmer", "Shimmer", "block.amethyst_block.resonate", 0.8f);
+        mc("mc_swish", "Swish", "entity.player.attack.sweep", 0.8f);
+        mc("mc_crit", "Crit", "entity.player.attack.crit", 0.8f);
+        mc("mc_smack", "Smack", "entity.player.attack.strong", 0.8f);
+        mc("mc_orb", "Orb", "entity.experience_orb.pickup", 0.8f);
+        mc("mc_levelup", "Level up", "entity.player.levelup", 0.7f);
+        mc("mc_fanfare", "Fanfare", "ui.toast.challenge_complete", 0.8f);
+        mc("mc_totem", "Totem", "item.totem.use", 0.5f);
+        mc("mc_thunder", "Thunder", "entity.lightning_bolt.thunder", 0.5f);
+        mc("mc_bolt", "Lightning", "entity.lightning_bolt.impact", 0.6f);
+        mc("mc_trident", "Trident", "item.trident.thunder", 0.5f);
+        mc("mc_beacon", "Beacon", "block.beacon.activate", 0.7f);
+        mc("mc_hum", "Beacon hum", "block.beacon.ambient", 0.7f);
+        mc("mc_powerdown", "Power down", "block.beacon.deactivate", 0.7f);
+        mc("mc_power", "Power", "block.beacon.power_select", 0.7f);
+        mc("mc_conduit", "Conduit", "block.conduit.ambient", 0.7f);
+        mc("mc_enchant", "Enchant", "block.enchantment_table.use", 0.8f);
+        mc("mc_page", "Page", "item.book.page_turn", 0.9f);
+        mc("mc_squish", "Squish", "entity.slime.squish", 0.8f);
+        mc("mc_gift", "Gift", "entity.allay.item_given", 0.9f);
+        mc("mc_fizzle", "Fizzle", "block.respawn_anchor.deplete", 0.7f);
+        mc("mc_warp", "Warp", "entity.enderman.teleport", 0.6f);
+        mc("mc_twinkle", "Twinkle", "entity.firework_rocket.twinkle", 0.8f);
+        mc("mc_harvest", "Harvest", "block.sweet_berry_bush.pick_berries", 0.9f);
+        mc("mc_anvil", "Anvil", "block.anvil.land", 0.5f);
+        mc("mc_glass", "Glass", "block.glass.break", 0.6f);
+        mc("mc_nope", "Nope", "entity.villager.no", 0.5f);
+    }
+
+    private static final Map<String, String> MC_DEFAULTS = new LinkedHashMap<>();
+    static {
+        String[][] d = {                                           // the same five moments as the custom set, built only from Minecraft sounds
+            {"default", "mc_chime", "mc_crit", "mc_orb", "mc_shimmer", "mc_powerdown"},
+            {"cool", "mc_bell", "mc_trident", "mc_levelup", "mc_hum", "mc_powerdown"},
+            {"epic", "mc_xylo", "mc_bolt", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"nothing", "mc_bass", "mc_fizzle", "mc_nope", NONE, NONE},
+            {"dye", "mc_squish", "mc_twinkle", "mc_gift", "mc_shimmer", "mc_powerdown"},
+            {"farm", "mc_swish", "mc_harvest", "mc_orb", "mc_shimmer", "mc_powerdown"},
+            {"mytho", "mc_bolt", "mc_thunder", "mc_power", "mc_hum", "mc_powerdown"},
+            {"exp", "mc_page", "mc_enchant", "mc_levelup", "mc_shimmer", "mc_powerdown"},
+            {"helios", "mc_swish", "mc_beacon", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"mythnothing", "mc_bolt", "mc_fizzle", NONE, NONE, NONE}};
+        for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) MC_DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
     /** What each slot plays until the player changes it. */
@@ -118,7 +169,8 @@ public final class SoundFx {
             {"farm", "scythe", "nectar", "cascade", "meadow", "dusk"},
             {"mytho", "arc", "thump", "halo", "storm", "dusk"},
             {"exp", "page", "glow", "halo", "chant", "dusk"},
-            {"helios", "scythe", "nectar", "halo", "ember", "dusk"}};
+            {"helios", "scythe", "nectar", "halo", "ember", "dusk"},
+            {"mythnothing", "arc", "sigh", NONE, NONE, "dusk"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
@@ -134,17 +186,26 @@ public final class SoundFx {
     public static Iterable<String> names() { return ALL.keySet(); }
     public static Fx byName(String n) { return n == null ? null : ALL.get(n.toLowerCase(Locale.ROOT)); }
 
-    /** Every choice for a slot, "none" first. */
-    public static List<String> choices() { List<String> l = new ArrayList<>(); l.add(NONE); l.addAll(ALL.keySet()); return l; }
+    /** Every choice for a slot, "none" first: the mod's own sounds, or Minecraft's while Custom sounds is off. */
+    public static List<String> choices() {
+        boolean custom = FancyConfig.get().customSounds;
+        List<String> l = new ArrayList<>(); l.add(NONE);
+        for (String n : ALL.keySet()) if (isMc(n) != custom) l.add(n);
+        return l;
+    }
     public static String label(String name) { Fx f = byName(name); return f == null ? "None" : f.label; }
 
-    /** The sound the player picked (or the default) for e.g. ("epic", "reveal"). */
+    private static Map<String, String> picks() { FancyConfig c = FancyConfig.get(); if (c.mcSounds == null) c.mcSounds = new LinkedHashMap<>(); return c.customSounds ? c.sounds : c.mcSounds; }
+
+    /** The sound the player picked (or the default) for e.g. ("epic", "reveal"), in the current sound set. */
     public static String chosen(String scene, String slot) {
         String key = scene + "." + slot;
-        String v = FancyConfig.get().sounds.get(key);
-        return v != null && (v.equals(NONE) || ALL.containsKey(v)) ? v : DEFAULTS.get(key);
+        boolean custom = FancyConfig.get().customSounds;
+        String v = picks().get(key);
+        if (v != null && (v.equals(NONE) || (ALL.containsKey(v) && isMc(v) != custom))) return v;
+        return (custom ? DEFAULTS : MC_DEFAULTS).get(key);
     }
-    public static void choose(String scene, String slot, String name) { FancyConfig.get().sounds.put(scene + "." + slot, name); }
+    public static void choose(String scene, String slot, String name) { picks().put(scene + "." + slot, name); }
 
     /** Master volume as a 0..1 factor (0 when sounds are off). */
     public static float master() {
@@ -170,7 +231,7 @@ public final class SoundFx {
 
     private static final Map<String, Float> LEN = new java.util.HashMap<>();
     static {
-        String[] d = ("arc 0.6;aurora 1.3;bloom 5.6;burst 0.9;cascade 1.3;chant 5.0;crystal 3.4;drop808 3.0;dusk 1.9;ember 4.7;flick 0.2;glimmer 4.8;glow 2.1;halo 1.8;impact 1.2;lift 0.9;lull 4.6;meadow 4.4;nectar 1.0;page 0.6;plop 0.6;ripple 5.0;rise 2.3;satin 0.7;scythe 0.8;sigh 3.2;silk 0.9;splat 1.1;storm 4.6;swoosh 1.2;thump 0.6;twinkle 1.8;velvet 3.8").split(";");
+        String[] d = ("mc_chime 1.0;mc_bell 1.6;mc_harp 1.0;mc_xylo 0.8;mc_flute 1.0;mc_pling 0.6;mc_bit 0.5;mc_bass 0.8;mc_kick 0.5;mc_snare 0.4;mc_crystal 1.5;mc_shimmer 3.0;mc_swish 0.5;mc_crit 0.5;mc_smack 0.5;mc_orb 0.5;mc_levelup 1.3;mc_fanfare 2.8;mc_totem 3.0;mc_thunder 4.0;mc_bolt 2.0;mc_trident 2.5;mc_beacon 2.5;mc_hum 4.5;mc_powerdown 2.0;mc_power 1.6;mc_conduit 4.0;mc_enchant 1.5;mc_page 0.6;mc_squish 0.5;mc_gift 1.2;mc_fizzle 1.6;mc_warp 0.6;mc_twinkle 1.4;mc_harvest 0.7;mc_anvil 1.0;mc_glass 0.8;mc_nope 0.8;arc 0.6;aurora 1.3;bloom 5.6;burst 0.9;cascade 1.3;chant 5.0;crystal 3.4;drop808 3.0;dusk 1.9;ember 4.7;flick 0.2;glimmer 4.8;glow 2.1;halo 1.8;impact 1.2;lift 0.9;lull 4.6;meadow 4.4;nectar 1.0;page 0.6;plop 0.6;ripple 5.0;rise 2.3;satin 0.7;scythe 0.8;sigh 3.2;silk 0.9;splat 1.1;storm 4.6;swoosh 1.2;thump 0.6;twinkle 1.8;velvet 3.8").split(";");
         for (String e : d) { String[] p = e.split(" "); LEN.put(p[0], Float.parseFloat(p[1])); }
     }
     /** How long a sound lasts, in seconds (an estimate for the ones that are Minecraft's own). */

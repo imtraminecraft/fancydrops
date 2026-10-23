@@ -22,10 +22,13 @@ dependencies {
 
 processResources {
 	def version = project.version
+	// GitHub Actions sets GITHUB_REF_NAME to the branch being built: "main" = Main build, anything else (and local builds) = Dev build
+	def channel = System.getenv("GITHUB_REF_NAME") == "main" ? "main" : "dev"
 	inputs.property "version", version
+	inputs.property "channel", channel
 
 	filesMatching("fabric.mod.json") {
-		expand "version": version
+		expand "version": version, "channel": channel
 	}
 }
 

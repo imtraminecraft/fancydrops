@@ -20,7 +20,6 @@ public final class ChatParser {
     // "RARE DROP! Scythe Blade (+120% ✯ Magic Find)"
     private static final Pattern DROP = Pattern.compile("(?:^|(?<=[\\s\\]>»:*]))((?:VERY |CRAZY )?RARE|CRAZY|INSANE|PET|SWEET|RNGESUS)\\s+(DROP|CROP)!\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern MF_ANY = Pattern.compile("\\(\\+([\\d.,]+)%");
-    private static final Pattern MF = Pattern.compile("\\s*\\(\\+([\\d.,]+)%.*\\)\\s*$");
     // farming lines carry Overbloom instead of Magic Find: "(+25 ☘ Overbloom)"
     private static final Pattern OVERBLOOM = Pattern.compile("\\s*\\(\\+?([\\d.,]+)%?[^)]*Overbloom[^)]*\\)\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern AMOUNT_PREFIX = Pattern.compile("^(\\d+)\\s*[x×]\\s*(.+)$", Pattern.CASE_INSENSITIVE);

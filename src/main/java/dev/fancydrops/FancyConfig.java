@@ -27,7 +27,7 @@ public class FancyConfig {
     public static final String DEFAULT_DYE_FORMAT = "RARE DYE! {item} ({price})";
     public static final String DEFAULT_MYTH_FORMAT = "RARE DROP! {item} ({price}) from {source}";
     public static final String DEFAULT_EXP_FORMAT = "RARE DROP! {item} ({price}) from {source}";
-    public static final String DEFAULT_FARM_FORMAT = "RARE CROP! {item} ({price}) from {source}";
+    public static final String DEFAULT_FARM_FORMAT = "RARE CROP! {item} ({price})";
 
     public boolean enabled = true;       // legacy; kept equal to "animate or announce"
     public boolean masterAnimate = true;  // master: play any animation at all
@@ -44,20 +44,41 @@ public class FancyConfig {
     public boolean animateNothing = true;     // play the (boring) scene on slayer kills that drop nothing you ticked in /fancydrops
     public boolean showOdds = true;           // "1 in 735" under the drop name
     public boolean showMagicFind = true;      // "Magic Find: +X%" line, taken from the Hypixel drop message
+    public String suffix = "sparkle";            // Cosmetics: the chat / tab list suffix you picked ("" = none)
     public boolean show3d = true;             // dropped item is a real spinning 3D model instead of a flat icon
     public Boolean cineDye, cineMytho, cineExp, blurDye, blurMytho, blurExp;   // each scene can have its own bars and blur (null = same as Slayers)
     public float size = -1f;                  // animation size, 100% = 1.0 (older configs stored it as 80% = 1.0; converted on load)
     public boolean animBlur = true;           // blur the game behind a scene
     public int barHeight = 16;                // each black cinematic bar, as a percentage of the screen height
     public int slayerStyle = 0;               // 0 Sword (sword slices), 1 Spirit (soul slashes)
+    public int barPx = 15;                    // bar height in pixels of the 96-pixel-tall scene (5..15); barHeight (a percentage) follows it
+    public boolean barCustom = false;         // true: the bars use barColor instead of the drop's colour
+    public int barColor = 0xFF0B0E2A;
+    public float textDelayAll = 4f;           // seconds after an animation starts until its words appear (3..10)
+    public boolean fxPop = true, fxShine = true, fxWave = false, fxRainbow = false, fxDrop = false, fxPulse = false, fxGlitch = false, fxGlow = false, fxBounce = false, fxType = false, fxFloat = false, fxShake = false, fxFire = false, fxFrost = false, fxTwinkle = false, fxFade = true, fxRise = false, fxShrink = false, fxScatter = false;
+    public float itemSpin = 1f, itemGlow = 1f;                   // Item Changes: how fast the item spins and how strong its glow is (a multiple)
+    public boolean itemBob = true, itemGlints = true, itemOutline = true;   // Item Changes: floats up and down, little glints round flat items, soft outline   // text effects (Animations > Text Changes)
+    public float titleScale = 1f, subScale = 1f;   // title and sub title size, as a multiple
+    public float subDelay = 0.35f;            // seconds between the title and the sub title coming in
+    public boolean popups = true;             // notices pop up under the menu instead of going to chat
+    public boolean fx(int i) { return switch (i) { case 0 -> fxPop; case 1 -> fxShine; case 2 -> fxWave; case 3 -> fxRainbow; case 4 -> fxDrop; case 5 -> fxPulse; case 6 -> fxGlitch; case 7 -> fxGlow; case 8 -> fxBounce; case 9 -> fxType; case 10 -> fxFloat; case 11 -> fxShake; case 12 -> fxFire; case 13 -> fxFrost; case 14 -> fxTwinkle; case 15 -> fxFade; case 16 -> fxRise; case 17 -> fxShrink; default -> fxScatter; }; }
+    public void setFx(int i, boolean v) { switch (i) { case 0 -> fxPop = v; case 1 -> fxShine = v; case 2 -> fxWave = v; case 3 -> fxRainbow = v; case 4 -> fxDrop = v; case 5 -> fxPulse = v; case 6 -> fxGlitch = v; case 7 -> fxGlow = v; case 8 -> fxBounce = v; case 9 -> fxType = v; case 10 -> fxFloat = v; case 11 -> fxShake = v; case 12 -> fxFire = v; case 13 -> fxFrost = v; case 14 -> fxTwinkle = v; case 15 -> fxFade = v; case 16 -> fxRise = v; case 17 -> fxShrink = v; default -> fxScatter = v; } }
     public int barStyle = 0;                  // cinematic bar colour preset (AnimationManager.BAR_NAMES)
     public boolean cinematic = true;          // blur the game and close black bars from the top and bottom while a scene plays
     public boolean epicEffects = true;        // the RNG Drop scene for expensive drops
     public long epicThreshold = 20_000_000L;  // coins; drops worth this much play the RNG Drop scene AND are the cheapest drops announced in chat
     public float scale = 1f;                  // size of the animation scene
     public float textScale = 1f;              // size of the text under it (item name, price, odds)
+    public float dyeSize = -1f, mythSize = -1f, expSize = -1f;   // animation size of Dye / Mythological / Experiments (-1 = same as Slayers)
+    /** Animation size of one category (0 Slayers, 1 Dye, 2 Farming = its own farmScale, 3 Mythological, 4 Experiments). */
+    public float sizeOf(int cat) {
+        float v = switch (cat) { case 1 -> dyeSize; case 3 -> mythSize; case 4 -> expSize; default -> -1f; };
+        return v < 0f ? size : Math.max(0.6f, Math.min(1.4f, v));
+    }
+    public void setSizeOf(int cat, float v) { switch (cat) { case 1 -> dyeSize = v; case 3 -> mythSize = v; case 4 -> expSize = v; default -> size = v; } }
     public float itemScale = 1f;              // size of the dropped item inside the scene
     public int chopsDefault = 2, chopsCool = 4, chopsEpic = 10;   // slices per animation (the nothing-dropped scene uses the default count)
+    public Map<String, String> mcSounds = new LinkedHashMap<>();   // the same slots, but for the Minecraft sound set (used while Custom sounds is off)
     public Map<String, String> sounds = new LinkedHashMap<>();   // "<scene>.<slot>" -> sound name, see SoundFx
     /** The chat message for an event: 0 Slayers, 1 Dye, 2 Farming. */
     public String formatFor(int ev) {
@@ -80,9 +101,10 @@ public class FancyConfig {
     public int posBars = 2;             // with cinematic bars: 0 top, 1 middle, 2 bottom centre
     public int pos9 = 7;                // without bars: 3 x 3 grid, row by row (7 = bottom centre)
     public int mythStrikes = 3, mythStrikesRng = 5;   // lightning strikes before the Mythological drop shows (1..10)
-    public java.util.Map<String, Float> animSecs = new java.util.HashMap<>();   // how long each animation lasts, in seconds (2..10); missing = its natural length
+    public java.util.Map<String, Float> animSecs = new java.util.HashMap<>();   // how long each animation lasts, in seconds (5..10); missing = its natural length
     public java.util.Map<String, Float> textSecs = new java.util.HashMap<>();   // seconds after the animation starts until the title and info appear (3..10); missing = 4
-    public float textDelay(String key) { Float v = textSecs == null ? null : textSecs.get(key); return Math.max(3f, Math.min(10f, v == null ? 4f : v)); }
+    public float textDelay(String key) { return "farm".equals(key) || "helios".equals(key) ? 0f : Math.max(3f, Math.min(10f, textDelayAll)); }       // Farming's words follow the reveal by themselves
+    public void setBarPx(int px) { barPx = Math.max(5, Math.min(15, px)); barHeight = Math.round(barPx * 100f / 96f); }
     public int mythPet = 5;                       // Mythological: the Griffin pet rarity drop chances are shown for (0 Common .. 5 Mythic)
     public int mythPosBars = -1, mythPos9 = -1;   // Mythological scene positions (-1 = same as Slayers)
     public int expPosBars = -1, expPos9 = -1;     // Experimentation Table scene positions (-1 = same as Slayers)
@@ -97,6 +119,8 @@ public class FancyConfig {
     public int menuTranslucency = 25;        // 0 = solid menu .. 70 = see-through (General settings)
     public boolean menuIcons = true;          // sidebar and row icons move
     public boolean menuAnimated = true;       // menu slides in, pages fade, accent bar flows
+    public boolean showTips = true;           // the rotating tip card on the Home page
+    public boolean showCommunity = true;      // Discord, Patreon and GitHub buttons beside the menu
     public String profitHudSlayer = "all";    // which slayer the Stats page shows ("all" = combined)
     public boolean useBazaar = true, useAuctions = true;
     public String bazaarPrice = "BUY";  // BUY = instant buy, SELL = instant sell
@@ -128,6 +152,9 @@ public class FancyConfig {
         instance.textScale = Math.max(0f, Math.min(1.1f, instance.textScale));
         instance.itemScale = Math.max(0.5f, Math.min(1.1f, instance.itemScale));
         instance.barHeight = Math.max(0, Math.min(25, instance.barHeight));
+        instance.barPx = Math.max(5, Math.min(15, Math.round(instance.barHeight * 96f / 100f)));
+        instance.textDelayAll = Math.max(3f, Math.min(10f, instance.textDelayAll));
+        instance.titleScale = Math.max(0.5f, Math.min(1.5f, instance.titleScale)); instance.subScale = Math.max(0.5f, Math.min(1.5f, instance.subScale)); instance.subDelay = Math.max(0f, Math.min(3f, instance.subDelay));
         instance.farmPos = Math.max(0, Math.min(9, instance.farmPos));
         instance.farmX = Math.max(0f, Math.min(1f, instance.farmX)); instance.farmY = Math.max(0f, Math.min(1f, instance.farmY));
         instance.mythPet = Math.max(0, Math.min(5, instance.mythPet));
@@ -135,7 +162,8 @@ public class FancyConfig {
         if (instance.textSecs == null) instance.textSecs = new java.util.HashMap<>();
         instance.textSecs.replaceAll((k, v) -> v == null ? 4f : Math.max(3f, Math.min(10f, v)));
         if (instance.animSecs == null) instance.animSecs = new java.util.HashMap<>();
-        instance.animSecs.replaceAll((k, v) -> v == null ? null : Math.max(2f, Math.min(10f, v)));
+        instance.itemSpin = Math.max(0f, Math.min(2f, instance.itemSpin)); instance.itemGlow = Math.max(0f, Math.min(1.5f, instance.itemGlow));
+        instance.animSecs.replaceAll((k, v) -> v == null ? null : Math.max(5f, Math.min(10f, v)));
         instance.mythPosBars = Math.max(-1, Math.min(2, instance.mythPosBars)); instance.mythPos9 = Math.max(-1, Math.min(8, instance.mythPos9));
         instance.expPosBars = Math.max(-1, Math.min(2, instance.expPosBars)); instance.expPos9 = Math.max(-1, Math.min(8, instance.expPos9));
         instance.expFlips = Math.max(1, Math.min(12, instance.expFlips)); instance.expFlipsRng = Math.max(1, Math.min(12, instance.expFlipsRng));
@@ -147,6 +175,11 @@ public class FancyConfig {
         instance.posBars = Math.max(0, Math.min(2, instance.posBars)); instance.pos9 = Math.max(0, Math.min(8, instance.pos9)); instance.textPos = Math.max(0, Math.min(1, instance.textPos));
         if (instance.profitHudSlayer == null) instance.profitHudSlayer = "all";
         if (instance.formatVer < 3) { instance.format = DEFAULT_FORMAT; instance.formatDye = instance.formatFarm = instance.formatMyth = instance.formatExp = null; instance.formatVer = 3; }       // every message starts over with the new placeholders
+        if (instance.formatVer < 4) {                                                                 // Dye and Farming messages have no {source} any more
+            if (instance.formatFarm != null) instance.formatFarm = instance.formatFarm.replaceAll("\\s*(?:from\\s+)?\\{source}", "").trim();
+            if (instance.formatDye != null) instance.formatDye = instance.formatDye.replaceAll("\\s*(?:from\\s+)?\\{source}", "").trim();
+            instance.formatVer = 4;
+        }
         if (instance.format == null || instance.format.isBlank() || !ChatFilter.ok(instance.format)) instance.format = DEFAULT_FORMAT;
         if (instance.formatDye != null && !ChatFilter.ok(instance.formatDye)) instance.formatDye = null;
         if (instance.formatFarm != null && !ChatFilter.ok(instance.formatFarm)) instance.formatFarm = null;

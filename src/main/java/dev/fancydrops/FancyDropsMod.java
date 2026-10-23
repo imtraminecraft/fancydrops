@@ -30,6 +30,10 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     /** The one version number: gradle.properties -> fabric.mod.json -> here. */
     public static final String VERSION = net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer("fancydrops")
             .map(m -> m.getMetadata().getVersion().getFriendlyString()).orElse("dev");
+    /** "Dev" or "Main": which build this jar is (set by the build: GitHub Actions on the main branch = Main, everything else = Dev). */
+    public static final String CHANNEL = net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer("fancydrops")
+            .map(m -> { try { return m.getMetadata().getCustomValue("fancydrops:channel").getAsString(); } catch (Throwable t) { return "dev"; } })
+            .map(v -> v.equalsIgnoreCase("main") ? "Main" : "Dev").orElse("Dev");
     private static volatile boolean openMenu;
     public static volatile boolean reopenMenu;   // set by the Preview buttons: menu closes, reopens when the scene ends
 
@@ -124,27 +128,6 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                         .executes(ctx -> mfCalc(ctx.getSource(), DoubleArgumentType.getDouble(ctx, "magicfind"), StringArgumentType.getString(ctx, "drop"))))));
     }
 
-    /** /fancydrops <name> [on|off]  - no argument flips the setting. */
-    private static LiteralArgumentBuilder<FabricClientCommandSource> switchCmd(String name, String label,
-            java.util.function.Function<FancyConfig, Boolean> get, java.util.function.BiConsumer<FancyConfig, Boolean> set) {
-        return ClientCommands.literal(name)
-            .executes(ctx -> {
-                FancyConfig c = FancyConfig.get(); set.accept(c, !get.apply(c)); FancyConfig.save();
-                say(ctx.getSource(), label + ": " + (get.apply(c) ? "on" : "off"));
-                return Command.SINGLE_SUCCESS;
-            })
-            .then(ClientCommands.argument("state", StringArgumentType.word())
-                .suggests((ctx, b) -> suggest(b, ON_OFF))
-                .executes(ctx -> {
-                    FancyConfig c = FancyConfig.get();
-                    String v = StringArgumentType.getString(ctx, "state").toLowerCase(Locale.ROOT);
-                    if (!v.equals("on") && !v.equals("off")) { say(ctx.getSource(), "Use: /fancydrops " + name + " <on|off>"); return 0; }
-                    set.accept(c, v.equals("on")); FancyConfig.save();
-                    say(ctx.getSource(), label + ": " + v);
-                    return Command.SINGLE_SUCCESS;
-                }));
-    }
-
     static final String DISCORD = "https://discord.gg/bum8VPbRPR";
 
     private static void say(FabricClientCommandSource source, String msg) { source.sendFeedback(Chat.msg(msg)); }
@@ -192,7 +175,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
     private static int status(FabricClientCommandSource s) {
         FancyConfig c = FancyConfig.get();
-        say(s, "Animations " + (c.masterAnimate ? "on" : "OFF") + ", announcements " + (c.masterAnnounce ? "on" : "OFF") + " | v" + VERSION + " | 3D " + (c.show3d ? "on" : "off")
+        say(s, "Animations " + (c.masterAnimate ? "on" : "OFF") + ", announcements " + (c.masterAnnounce ? "on" : "OFF") + " | v" + VERSION + " (" + CHANNEL + " build)" + " | 3D " + (c.show3d ? "on" : "off")
                 + " | RNG Drop " + (c.epicEffects ? "from " + PriceService.fmt(c.epicThreshold) : "off"));
         say(s, "Sound " + (c.sound ? c.volume + "%" : "muted") + " (" + (c.customSounds ? "custom" : "vanilla") + ") | size " + Math.round(c.size * 100) + "% text " + Math.round(c.textScale * 100) + "% | slices " + c.chopsDefault + "/" + c.chopsCool + "/" + c.chopsEpic);
         say(s, "Chat channel " + c.channel + " | prices: " + PriceService.status);

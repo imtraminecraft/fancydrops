@@ -7,6 +7,21 @@ final class DyeData {
     static final String[] RARITY = {"Mythic", "Legendary", "Epic", "Rare", "Uncommon", "Common", "Special"};
     static final int[] RARITY_COL = {0xFFFF55FF, 0xFFFFAA00, 0xFFAA00AA, 0xFF5555FF, 0xFF55FF55, 0xFFFFFFFF, 0xFF55FFFF};
 
+    /** The pages of the Drop Library: where a dye comes from. */
+    static final String[] GROUPS = {"Special", "RNG", "Mob Drop", "Activity"};
+    static final int[] GROUP_COL = {0xFF55FFFF, 0xFFFF72C6, 0xFFE5484D, 0xFF7BE05A};
+    static final String[] GROUP_SUB = {"Raffles, auctions and experiments", "Chests, dice and chance rewards", "Dropped by mobs and bosses", "Earned by doing things"};
+    private static final String[][] GROUP_NAMES = {
+        {"Nadeshiko Dye", "Dark Purple Dye", "Pure Blue Dye", "Pure Yellow Dye"},
+        {"Secret Dye", "Mythological Dye", "Frostbitten Dye", "Nyanza Dye", "Tentacle Dye", "Copper Dye", "Archfiend Dye", "Holly Dye", "Livid Dye", "Necron Dye"},
+        {"Cyclamen Dye", "Pearlescent Dye", "Matcha Dye", "Brick Red Dye", "Celeste Dye", "Byzantium Dye", "Flame Dye", "Bone Dye", "Carmine Dye", "Periwinkle Dye", "Sangria Dye", "Celadon Dye"},
+        {"Aquamarine Dye", "Mango Dye", "Wild Strawberry Dye", "Mocha Dye", "Emerald Dye", "Jade Dye", "Iceberg Dye", "Fossil Dye", "Midnight Dye", "Pelt Dye", "Dung Dye"}};
+    /** Which Drop Library page a dye sits on (a dye added later by dyes.json lands in RNG until it is listed here). */
+    static int group(String name) {
+        for (int g = 0; g < GROUP_NAMES.length; g++) for (String n : GROUP_NAMES[g]) if (n.equalsIgnoreCase(name)) return g;
+        return -1;
+    }
+
     record Dye(String name, int rarity, String src, String slayer) {
         String id() { return name.toUpperCase(java.util.Locale.ROOT).replace(' ', '_'); }
         String owner() { return slayer == null ? "dyes" : slayer; }
