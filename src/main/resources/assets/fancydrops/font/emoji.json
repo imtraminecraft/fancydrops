@@ -119,15 +119,6 @@
     },
     {
       "type": "bitmap",
-      "file": "fancydrops:font/free.png",
-      "ascent": 8,
-      "height": 9,
-      "chars": [
-        "\ue0d0\ue0d1\ue0d2\ue0d3\ue0e0\ue0e1\ue0e2\ue0e3\ue0e4\ue0e5"
-      ]
-    },
-    {
-      "type": "bitmap",
       "file": "fancydrops:font/suffix_glitchsfx.png",
       "ascent": 8,
       "height": 9,
@@ -155,11 +146,65 @@
     },
     {
       "type": "bitmap",
-      "file": "fancydrops:font/free2.png",
+      "file": "fancydrops:font/suffix_newcomer.png",
       "ascent": 8,
       "height": 9,
       "chars": [
-        "\ue130\ue131"
+        "\ue140\ue141\ue142\ue143\ue144\ue145"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_discord.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue150\ue151\ue152\ue153\ue154\ue155"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_firstdrop.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue160\ue161\ue162\ue163\ue164\ue165"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_collector.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue170\ue171\ue172\ue173\ue174\ue175"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_hoarder.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue180\ue181\ue182\ue183\ue184\ue185"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_legend.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue190\ue191\ue192\ue193\ue194\ue195"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_secret.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue1a0\ue1a1\ue1a2\ue1a3\ue1a4\ue1a5"
       ]
     }
   ]

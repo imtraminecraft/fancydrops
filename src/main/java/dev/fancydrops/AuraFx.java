@@ -92,6 +92,7 @@ final class AuraFx {
 
     // ------------------------------------------------------------------ in the world: our particles projected onto the screen
     private static final Map<UUID, double[]> STATE = new HashMap<>();
+    private static final Map<UUID, ArrayDeque<double[]>> HIST = new HashMap<>();
     private static int auraRgb(String aura) {
         return switch (aura == null ? "" : aura) { case "glitchaura" -> 0xFF7A2E; case "stardust" -> 0x8FD0FF; case "patronaura" -> 0xFF9B2E; default -> 0xFFE680; };
     }
@@ -109,6 +110,28 @@ final class AuraFx {
         for (int i = 0; i < 12; i++) {
             double an = i * Math.PI / 6 + (now % 12000L) / 12000.0 * Math.PI * 2;
             o.add(new P((float) Math.cos(an) * (0.62f + 0.06f * br), 0.9f + 0.05f * br, (float) Math.sin(an) * (0.62f + 0.06f * br), 0.035f, argb((0.35f + 0.45f * br) * k, col), 0));
+        }
+        return o;
+    }
+    /** Every particle's alpha times k. */
+    private static List<P> fade(List<P> in, float k) {
+        if (k >= 0.999f) return in;
+        List<P> o = new ArrayList<>(in.size());
+        for (P q : in) { int al = Math.round((q.argb() >>> 24) * k); if (al > 0) o.add(new P(q.x(), q.y(), q.z(), q.size(), (al << 24) | (q.argb() & 0xFFFFFF), q.shape(), q.lag())); }
+        return o;
+    }
+    /** The moving animation: a curtain of light streams out behind you along the path you just walked, swirling round it. Slower steps, shorter and fainter trail. */
+    static List<P> trail(String aura, ArrayDeque<double[]> hist, long now, double ex, double ey, double ez, double turn, float k) {
+        List<P> o = new ArrayList<>(); int col = auraRgb(aura), pale = mix(col, 0xFFFFFF, 0.55f);
+        int n = 30;
+        for (int i = 0; i < n; i++) {
+            float u = i / (float) n;
+            double[] h = at(hist, now - (long) (u * 900f));                                                  // where you were u * 0.9 s ago
+            float hgt = 0.1f + 1.9f * (float) ((i * 0.618034) % 1.0);                                        // each particle keeps its own height: together they make a curtain
+            double an = turn * 3.0 + i * 0.75; float r = 0.3f * (1f - 0.4f * u);
+            float fl = (1f - u) * (1f - u * 0.4f);
+            float tail = 0.25f * u * (float) Math.sin(turn * 2 + i);
+            o.add(new P((float) (h[0] - ex + Math.cos(an) * r), hgt + tail, (float) (h[2] - ez + Math.sin(an) * r), 0.05f * (1f - 0.55f * u) + 0.012f, argb(fl * k * 0.95f, i % 3 == 0 ? pale : col), i % 4 == 0 ? 1 : 0));
         }
         return o;
     }
@@ -190,18 +213,27 @@ final class AuraFx {
                 double ox = fieldD(p, "xOld"), oy = fieldD(p, "yOld"), oz = fieldD(p, "zOld");           // where the player is drawn this frame: between the last tick and this one
                 if (ox == 0 && oy == 0 && oz == 0) { ox = p.getX(); oy = p.getY(); oz = p.getZ(); }
                 double ex = ox + (p.getX() - ox) * pt, ey = oy + (p.getY() - oy) * pt, ez = oz + (p.getZ() - oz) * pt;
-                double[] st = STATE.computeIfAbsent(p.getUUID(), k -> new double[]{0, now, ex, ey, ez, now, 1});     // phase ms, last frame, last position, last time it moved, speed
+                double[] st = STATE.computeIfAbsent(p.getUUID(), k -> new double[]{0, now, ex, ey, ez, now, 1, 0, 0});     // phase ms, last frame, last position, last time it moved, speed
                 double moved = Math.abs(ex - st[2]) + Math.abs(ey - st[3]) + Math.abs(ez - st[4]);
                 if (moved > 0.004) st[5] = now;
+                double dtf = Math.max(1, Math.min(100, now - (long) st[1]));
+                double sp = Math.sqrt((ex - st[2]) * (ex - st[2]) + (ez - st[4]) * (ez - st[4])) / (dtf / 1000.0);      // blocks per second
+                st[7] += (Math.min(sp, 12.0) - st[7]) * Math.min(1.0, dtf / 160.0);                                      // smoothed, so it eases in and out
                 st[2] = ex; st[3] = ey; st[4] = ez;
+                ArrayDeque<double[]> hist = HIST.computeIfAbsent(p.getUUID(), k -> new ArrayDeque<>());
+                if (hist.isEmpty() || now - (long) hist.peekLast()[0] >= 25) hist.addLast(new double[]{now, ex, ey, ez});
+                while (hist.size() > 2 && now - (long) hist.peekFirst()[0] > 1600) hist.removeFirst();
+                float moveK = (float) Math.max(0.0, Math.min(1.0, (st[7] - 0.35) / 3.6)); moveK = moveK * moveK * (3f - 2f * moveK);
                 boolean idle = now - (long) st[5] > 5000, going = now - (long) st[5] < 250;
                 double want = going ? 2.0 : idle ? 0.55 : 1.0;                                            // moving: the aura swirls faster round you; resting: it slows down
                 double dtm = Math.min(100, now - st[1]); st[1] = now;
                 st[6] += (want - st[6]) * Math.min(1.0, dtm / 250.0);
                 st[0] += dtm * st[6];
                 float idleK = idle ? (float) Math.min(1.0, (now - st[5] - 5000) / 1200.0) : 0f;            // the idle animation fades in over a second
-                List<P> ps = particles(l.aura(), (long) st[0]);
-                if (idleK > 0f) ps.addAll(idleParticles(l.aura(), now, idleK));
+                st[8] += dtm * (0.25 + st[7] * 0.35) / 1000.0;                                              // the trail's swirl turns with your speed: it slows as you do
+                List<P> ps = fade(particles(l.aura(), (long) st[0]), 1f - moveK);                           // the resting aura melts away as you pick up speed, and comes back as you slow
+                if (idleK > 0f) ps.addAll(idleParticles(l.aura(), now, idleK * (1f - moveK)));
+                if (moveK > 0.01f) ps.addAll(trail(l.aura(), hist, now, ex, ey, ez, st[8], moveK));
                 for (P q : ps) {
                     double bx = ex, by = ey, bz = ez;                                                       // always on you: the aura moves round the body, it never trails behind
                     double dx = bx + q.x() - cx, dy = by + q.y() - cy, dz = bz + q.z() - cz;
@@ -213,7 +245,7 @@ final class AuraFx {
                     draw(g, sx, sy, px, q);
                 }
             }
-            if (STATE.size() > 64) STATE.clear();
+            if (STATE.size() > 64) { STATE.clear(); HIST.clear(); }
         } catch (Throwable ignored) { }
     }
 
