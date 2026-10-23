@@ -486,7 +486,7 @@ public class FancyScreen extends Screen {
         if (tab == Tab.ANIMATIONS) return !onLanding();                      // only inside a scene page
         return tab == Tab.SOUNDS && FancyConfig.get().sound && !onLanding() && curSub() < 5;
     }
-    private static final int SW_H = 22;      // the Active switch above the menu
+    private static final int SW_H = 28;      // the Active switch above the menu
     private static int menuHeight(int screenH) { return Math.min(350, screenH - 16 - SW_H - (screenH >= 390 && FancyConfig.get().previewAt != 2 ? DOCK_H + DOCK_GAP : 0)); }
 
     private static String slotName(int sc, int k) { return sc == 10 ? PEST_SLOT_NAMES[k] : sc == 7 ? EXP_SLOT_NAMES[k] : (sc == 6 || sc == 9) ? MYTH_SLOT_NAMES[k] : (sc == 5 || sc == 8) ? FARM_SLOT_NAMES[k] : sc == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k]; }
@@ -1556,7 +1556,7 @@ public class FancyScreen extends Screen {
     }
 
     /** The main switch tile under the title: {x0, y0, x1, y1}. */
-    private int[] masterBox() { int top = FancyConfig.get().previewAt == 0 ? Math.round((DOCK_H + DOCK_GAP) * dockK) : 0; int w = 96, y = Math.max(2, py - top - 21); return new int[]{px + pw - w, y, px + pw, y + 18}; }
+    private int[] masterBox() { int top = FancyConfig.get().previewAt == 0 ? Math.round((DOCK_H + DOCK_GAP) * dockK) : 0; int w = 100, y = Math.max(2, py - top - 25); return new int[]{px, y, px + w, y + 22}; }
 
     /** The header line: the tab, and the page inside it ("Animations  >  Slayers"). */
     private String pageTitle() {
@@ -3405,7 +3405,7 @@ public class FancyScreen extends Screen {
         }
 
         }
-        // the main switch sits above the menu, top right: it turns the whole mod on or off
+        // the main switch sits above the menu, top left: it turns the whole mod on or off
         if (!cosWin()) {
             FancyConfig mc = FancyConfig.get();
             boolean on = mc.masterAnimate || mc.masterAnnounce;
@@ -3416,11 +3416,16 @@ public class FancyScreen extends Screen {
             float pulse = STILL ? 0.5f : 0.5f + 0.5f * (float) Math.sin(now / 420.0);
             pill(g, b[0], b[1], w, h, Canvas.mix(Canvas.mix(Ui.PANEL2, 0xFF1D2338, mv), 0xFF23283A, hv * 0.8f));
             rout(g, b[0], b[1], w, h, Gfx.argb(Math.round(70 + 60 * hv + 70 * pulse * mv), mv > 0.5f ? 0x62E6A8 : 0xE5484D));
-            Gfx.text(g, font, "Active", b[0] + 7, b[1] + 5, Canvas.mix(0xFF9A9AA8, Ui.TEXT, mv));
-            int tw = 34, th = 12, tx = b[2] - tw - 6, ty = b[1] + 3;                               // the switch: a track that fills green, and a knob that slides across
-            pill(g, tx, ty, tw, th, Canvas.mix(0xFF4A2226, 0xFF2F8F5A, mv));
-            Gfx.text(g, font, mv > 0.5f ? "ON" : "OFF", mv > 0.5f ? tx + 5 : tx + tw - 5 - Gfx.w(font, "OFF"), ty + 2, Canvas.mix(0xFFE08A8A, 0xFFD8FFE9, mv));
-            int kx = tx + 1 + Math.round(mv * (tw - th)); pill(g, kx, ty + 1, th - 2, th - 2, Canvas.mix(0xFFD6DAE6, 0xFFFFFFFF, mv));
+            Gfx.text(g, font, "Active", b[0] + 7, b[1] + 3, Canvas.mix(0xFF9A9AA8, Ui.TEXT, mv));
+            Gfx.text(g, font, on ? "ON" : "OFF", b[0] + 7, b[1] + 12, Canvas.mix(0xFFE5484D, 0xFF62E6A8, mv));
+            // a lever: it sits in a slot and is thrown from the left (off) to the right (on)
+            int lx = b[2] - 30, ly = b[1] + 18;                                                   // the pivot, on the little base
+            pill(g, lx - 14, ly - 1, 28, 4, 0xFF0C0E14); rout(g, lx - 14, ly - 1, 28, 4, Canvas.mix(0xFF5A5F74, 0xFF62E6A8, mv));
+            double ang = Math.toRadians(-38 + 76 * mv);                                            // swings from leaning left to leaning right
+            int len = 13; int kx = lx + (int) Math.round(Math.sin(ang) * len), ky = ly - (int) Math.round(Math.cos(ang) * len);
+            for (int st = 0; st <= len; st++) { int sx2 = lx + (int) Math.round(Math.sin(ang) * st), sy2 = ly - (int) Math.round(Math.cos(ang) * st); g.fill(sx2, sy2, sx2 + 2, sy2 + 2, 0xFFB8BECF); g.fill(sx2, sy2, sx2 + 1, sy2 + 1, 0xFFE6EAF4); }
+            int kc = Canvas.mix(0xFFE5484D, 0xFF3FD18A, mv); g.fill(kx - 2, ky - 2, kx + 4, ky + 4, 0xFF0C0E14); g.fill(kx - 1, ky - 1, kx + 3, ky + 3, kc); g.fill(kx - 1, ky - 1, kx + 1, ky, Canvas.mix(kc, 0xFFFFFFFF, 0.55f));
+            g.fill(lx - 2, ly - 2, lx + 3, ly + 3, 0xFF8A90A6);                                    // the pivot bolt
         }
         // page header
         Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 12, Ui.TEXT);
