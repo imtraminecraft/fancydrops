@@ -163,9 +163,15 @@ final class CosmeticData {
     /** How many players hold each set, and each single cosmetic, according to cosmetics.json. */
     static Map<String, Integer> counts() {
         Map<String, Integer> m = new LinkedHashMap<>();
-        for (Set<String> s : grants.values()) for (String g : s) m.merge(g, 1, Integer::sum);
+        Set<String> players = new LinkedHashSet<>(grants.keySet()); players.add(Cosmetics.OWNER);                 // the owner always holds everything
+        for (String p : players) {
+            Set<String> held = heldBy(p);
+            for (SetDef sd : SETS) { List<Def> mem = members(sd); boolean all = !mem.isEmpty(); for (Def d : mem) if (!held.contains(d.id())) all = false; if (all) m.merge(sd.id(), 1, Integer::sum); }
+            for (String id : held) m.merge("c:" + id, 1, Integer::sum);
+        }
         return m;
     }
+    static int countOf(String id) { return counts().getOrDefault("c:" + id, 0); }
     /** What a player is given right now, as a list of cosmetic ids (sets expanded). */
     static Set<String> heldBy(String code) {
         Set<String> o = new LinkedHashSet<>(); Set<String> g = grants.getOrDefault(code, Set.of());

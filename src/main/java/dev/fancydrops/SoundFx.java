@@ -105,6 +105,8 @@ public final class SoundFx {
     public static final Fx SETTLE = reg("settle", "Settle", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
     public static final Fx VACUUM = reg("vacuum", "Vacuum", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
     public static final Fx SQUEAK = reg("squeak", "Squeak", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.85f);
+    public static final Fx BEAM = reg("beam", "Beam", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.85f);
+    public static final Fx FLARE = reg("flare", "Flare", SoundEvents.BEACON_ACTIVATE, 0.8f);
     public static final Fx FLICK = reg("flick", "Tink", SoundEvents.PLAYER_ATTACK_SWEEP, 0.8f);
     // Minecraft's own sounds, picked to work as a set: bright notes for the stepping slices, a solid hit, a reward, a long glow, a soft close
     static {
@@ -159,7 +161,7 @@ public final class SoundFx {
             {"farm", "mc_swish", "mc_harvest", "mc_orb", "mc_pling", "mc_orb"},
             {"mytho", "mc_bolt", "mc_thunder", "mc_power", "mc_hum", "mc_powerdown"},
             {"exp", "mc_page", "mc_enchant", "mc_levelup", "mc_shimmer", "mc_powerdown"},
-            {"helios", "mc_swish", "mc_beacon", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"helios", "mc_swish", "mc_beacon", "mc_orb", "mc_pling", "mc_orb"},
             {"mythnothing", "mc_bolt", "mc_fizzle", NONE, NONE, NONE},
             {"pest", "mc_swish", "mc_crit", "mc_orb", "mc_pling", "mc_orb"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) MC_DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
@@ -177,7 +179,7 @@ public final class SoundFx {
             {"farm", "reap", "rustle", "sprout", "breeze", "settle"},
             {"mytho", "arc", "thump", "halo", "storm", "dusk"},
             {"exp", "page", "glow", "halo", "chant", "dusk"},
-            {"helios", "scythe", "nectar", "halo", "ember", "dusk"},
+            {"helios", "beam", "flare", "sprout", "breeze", "settle"},
             {"mythnothing", "arc", "sigh", NONE, NONE, "dusk"},
             {"pest", "vacuum", "squeak", "sprout", "breeze", "settle"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
@@ -240,7 +242,7 @@ public final class SoundFx {
 
     private static final Map<String, Float> LEN = new java.util.HashMap<>();
     static {
-        String[] d = ("reap 0.24;rustle 0.42;sprout 0.95;breeze 0.95;settle 0.65;vacuum 0.62;squeak 0.3;mc_chime 1.0;mc_bell 1.6;mc_harp 1.0;mc_xylo 0.8;mc_flute 1.0;mc_pling 0.6;mc_bit 0.5;mc_bass 0.8;mc_kick 0.5;mc_snare 0.4;mc_crystal 1.5;mc_shimmer 3.0;mc_swish 0.5;mc_crit 0.5;mc_smack 0.5;mc_orb 0.5;mc_levelup 1.3;mc_fanfare 2.8;mc_totem 3.0;mc_thunder 4.0;mc_bolt 2.0;mc_trident 2.5;mc_beacon 2.5;mc_hum 4.5;mc_powerdown 2.0;mc_power 1.6;mc_conduit 4.0;mc_enchant 1.5;mc_page 0.6;mc_squish 0.5;mc_gift 1.2;mc_fizzle 1.6;mc_warp 0.6;mc_twinkle 1.4;mc_harvest 0.7;mc_anvil 1.0;mc_glass 0.8;mc_nope 0.8;arc 0.6;aurora 1.3;bloom 5.6;burst 0.9;cascade 1.3;chant 5.0;crystal 3.4;drop808 3.0;dusk 1.9;ember 4.7;flick 0.2;glimmer 4.8;glow 2.1;halo 1.8;impact 1.2;lift 0.9;lull 4.6;meadow 4.4;nectar 1.0;page 0.6;plop 0.6;ripple 5.0;rise 2.3;satin 0.7;scythe 0.8;sigh 3.2;silk 0.9;splat 1.1;storm 4.6;swoosh 1.2;thump 0.6;twinkle 1.8;velvet 3.8").split(";");
+        String[] d = ("reap 0.24;beam 0.7;flare 0.7;rustle 0.42;sprout 0.95;breeze 0.95;settle 0.65;vacuum 0.62;squeak 0.3;mc_chime 1.0;mc_bell 1.6;mc_harp 1.0;mc_xylo 0.8;mc_flute 1.0;mc_pling 0.6;mc_bit 0.5;mc_bass 0.8;mc_kick 0.5;mc_snare 0.4;mc_crystal 1.5;mc_shimmer 3.0;mc_swish 0.5;mc_crit 0.5;mc_smack 0.5;mc_orb 0.5;mc_levelup 1.3;mc_fanfare 2.8;mc_totem 3.0;mc_thunder 4.0;mc_bolt 2.0;mc_trident 2.5;mc_beacon 2.5;mc_hum 4.5;mc_powerdown 2.0;mc_power 1.6;mc_conduit 4.0;mc_enchant 1.5;mc_page 0.6;mc_squish 0.5;mc_gift 1.2;mc_fizzle 1.6;mc_warp 0.6;mc_twinkle 1.4;mc_harvest 0.7;mc_anvil 1.0;mc_glass 0.8;mc_nope 0.8;arc 0.6;aurora 1.3;bloom 5.6;burst 0.9;cascade 1.3;chant 5.0;crystal 3.4;drop808 3.0;dusk 1.9;ember 4.7;flick 0.2;glimmer 4.8;glow 2.1;halo 1.8;impact 1.2;lift 0.9;lull 4.6;meadow 4.4;nectar 1.0;page 0.6;plop 0.6;ripple 5.0;rise 2.3;satin 0.7;scythe 0.8;sigh 3.2;silk 0.9;splat 1.1;storm 4.6;swoosh 1.2;thump 0.6;twinkle 1.8;velvet 3.8").split(";");
         for (String e : d) { String[] p = e.split(" "); LEN.put(p[0], Float.parseFloat(p[1])); }
     }
     /** How long a sound lasts, in seconds (an estimate for the ones that are Minecraft's own). */

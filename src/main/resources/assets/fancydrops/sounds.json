@@ -494,5 +494,21 @@
         "stream": false
       }
     ]
+  },
+  "beam": {
+    "sounds": [
+      {
+        "name": "fancydrops:beam",
+        "stream": false
+      }
+    ]
+  },
+  "flare": {
+    "sounds": [
+      {
+        "name": "fancydrops:flare",
+        "stream": false
+      }
+    ]
   }
 }

@@ -635,7 +635,6 @@ public class FancyScreen extends Screen {
             int rgb = dom >= 0 ? SLOT_COL[dom] & 0xFFFFFF : 0x5A6C9A;
             if (e > 0.1f && played) g.fill(xx - 1, cy - hh - 1, xx + 3, cy + hh + 2, Gfx.argb(Math.round(10 + 45 * e), rgb));      // glow
             g.fill(xx, cy - hh, xx + 2, cy + hh + 1, Gfx.argb(dom < 0 ? 120 : played ? 235 : 120, rgb));                          // bar: dimmer until the playhead has passed
-            if (e > 0.5f && played) g.fill(xx, cy - hh, xx + 2, cy - hh + 1, Gfx.argb(230, 0xFFFFFF));
         }
         int phx = x + 4 + Math.min(w - 8, Math.round(Math.min(t, span) / span * (w - 8)));
         g.fill(phx, wy - 2, phx + 1, wy + wh + 2, 0xAAFFFFFF);                                       // the playhead
@@ -1018,72 +1017,107 @@ public class FancyScreen extends Screen {
         catch (Throwable t) { toast("Could not copy.", 0xFFFF8A5C); }
         adminOpen = false;
     }
+    /** The admin windows are a centred card on a dimmed screen: {x, y, w, h}. */
+    private int[] adminCard(GuiGraphicsExtractor g, int maxW, String title, String sub, int accent) {
+        int W = this.width, H = this.height, cw = Math.min(maxW, W - 24), ch = H - 24, cx = (W - cw) / 2, cy = 12;
+        g.fill(0, 0, W, H, 0xC0070910);
+        pill(g, cx, cy, cw, ch, 0xFF12141D); rout(g, cx, cy, cw, ch, 0xFF343A55);
+        g.fill(cx + 1, cy + 1, cx + cw - 1, cy + 35, 0xFF191C29); g.fill(cx + 1, cy + 35, cx + cw - 1, cy + 36, Gfx.argb(150, accent & 0xFFFFFF));
+        g.fill(cx + 8, cy + 8, cx + 11, cy + 28, accent);
+        Gfx.text(g, font, title, cx + 18, cy + 8, Ui.TEXT); Gfx.text(g, font, sub, cx + 18, cy + 20, Ui.SUB);
+        return new int[]{cx, cy, cw, ch};
+    }
+    private int adminButton(GuiGraphicsExtractor g, int right, int y, String label, int col, int mx, int my, Runnable run) {
+        int bw = Gfx.w(font, label) + 20, bx = right - bw; boolean hv = mx >= bx && mx < bx + bw && my >= y && my < y + 18;
+        pill(g, bx, y, bw, 18, hv ? Canvas.mix(col, 0xFFFFFFFF, 0.2f) : col); rout(g, bx, y, bw, 18, Gfx.argb(hv ? 150 : 70, 0xFFFFFF));
+        Gfx.textCentered(g, font, label, bx + bw / 2, y + 5, 0xFFFFFFFF);
+        adminHits.add(new Object[]{bx, y, bx + bw, y + 18, run});
+        return bx - 6;
+    }
+    private void adminTile(GuiGraphicsExtractor g, int x, int y, int w, int h, String label, String right, boolean on, int rgb, boolean hv) {
+        pill(g, x, y, w, h, on ? Canvas.mix(Ui.ROW, 0xFF000000 | rgb, 0.26f) : hv ? Ui.ROW_HOVER : Ui.ROW);
+        if (on || hv) rout(g, x, y, w, h, Gfx.argb(on ? 170 : 80, rgb & 0xFFFFFF));
+        g.fill(x + 1, y + 2, x + 4, y + h - 2, 0xFF000000 | rgb);                                          // the colour of its rarity
+        int by = y + (h - 10) / 2; g.fill(x + 9, by, x + 19, by + 10, 0xFF0B0D14); g.outline(x + 9, by, 10, 10, on ? 0xFF000000 | rgb : 0xFF4A5068);
+        if (on) { g.fill(x + 11, by + 5, x + 13, by + 7, 0xFFFFFFFF); g.fill(x + 12, by + 6, x + 14, by + 8, 0xFFFFFFFF); g.fill(x + 13, by + 4, x + 15, by + 6, 0xFFFFFFFF); g.fill(x + 14, by + 2, x + 17, by + 5, 0xFFFFFFFF); }
+        Gfx.text(g, font, Gfx.fit(font, label, w - 30 - (right == null ? 0 : Gfx.w(font, right) + 6)), x + 24, y + (h - 8) / 2, on ? Ui.TEXT : Ui.SUB);
+        if (right != null) Gfx.text(g, font, right, x + w - 6 - Gfx.w(font, right), y + (h - 8) / 2, on ? 0xFFFFFFFF : Ui.DIM);
+    }
     private void drawAdminHome(GuiGraphicsExtractor g, int mx, int my) {
-        int W = this.width, H = this.height; adminHits.clear();
-        g.fill(0, 0, W, H, 0xF20A0C12);
-        Gfx.text(g, font, "Admin Panel", 16, 12, 0xFFFF6B6B); Gfx.text(g, font, "Only you can see this. Esc closes.", 16, 24, Ui.SUB);
-        int bw = Gfx.w(font, "Close") + 18, bx = W - 16 - bw; boolean hv = mx >= bx && mx < bx + bw && my >= 8 && my < 26;
-        pill(g, bx, 8, bw, 18, hv ? Canvas.mix(0xFF555B6E, 0xFFFFFFFF, 0.18f) : 0xFF555B6E); Gfx.textCentered(g, font, "Close", bx + bw / 2, 13, 0xFFFFFFFF);
-        adminHits.add(new Object[]{bx, 8, bx + bw, 26, (Runnable) () -> { adminHome = false; adminField.setFocused(false); }});
-        int y = 44;
-        Gfx.text(g, font, "GIVE COSMETICS", 16, y, 0xFFFFC857); y += 14;
-        Gfx.text(g, font, "Paste a Cosmetic ID, a UUID or the name of someone online, then press Enter.", 16, y, Ui.SUB); y += 14;
-        int fw = Math.min(420, W - 120);
-        adminField.setVisible(true); adminField.setX(16); adminField.setY(y); adminField.setWidth(fw);
-        adminField.extractRenderState(g, mx, my, 0f);
-        int px2 = 16 + fw + 6; boolean ph = mx >= px2 && mx < px2 + 44 && my >= y && my < y + 16;
+        adminHits.clear();
+        int[] c = adminCard(g, 640, "Admin Panel", "Only you can see this  ·  Esc closes", 0xFFE5484D);
+        int cx = c[0], cy = c[1], cw = c[2], ch = c[3];
+        adminButton(g, cx + cw - 10, cy + 9, "Close", 0xFF555B6E, mx, my, () -> { adminHome = false; adminField.setFocused(false); });
+        int top = cy + 38, bot = cy + ch - 4; g.enableScissor(cx + 1, top, cx + cw - 1, bot);
+        int x0 = cx + 14, y = top + 8 - adminScroll, iw = cw - 28;
+        Gfx.text(g, font, "GIVE COSMETICS", x0, y, 0xFFFFC857); y += 12;
+        Gfx.text(g, font, "Paste a Cosmetic ID, a UUID, or the name of someone online. Press Enter.", x0, y, Ui.SUB); y += 13;
+        int fw = Math.min(iw - 56, 460);
+        adminField.setVisible(true); adminField.setX(x0); adminField.setY(y); adminField.setWidth(fw);
+        if (y >= top - 4 && y < bot - 16) adminField.extractRenderState(g, mx, my, 0f);
+        int px2 = x0 + fw + 6; boolean ph = mx >= px2 && mx < px2 + 44 && my >= y && my < y + 16 && my < bot && my >= top;
         pill(g, px2, y, 44, 16, ph ? Canvas.mix(GREEN, 0xFFFFFFFF, 0.18f) : GREEN); Gfx.textCentered(g, font, "Pick", px2 + 22, y + 4, Ui.TEXT);
-        adminHits.add(new Object[]{px2, y, px2 + 44, y + 16, (Runnable) this::openAdmin});
-        y += 34;
-        Gfx.text(g, font, "PLAYERS PER COSMETIC", 16, y, 0xFFFFC857);
-        String tl = adminCounts ? "On" : "Off"; int tx = 16 + Gfx.w(font, "PLAYERS PER COSMETIC") + 10; boolean th = mx >= tx && mx < tx + 34 && my >= y - 3 && my < y + 12;
-        pill(g, tx, y - 3, 34, 14, adminCounts ? (th ? 0xFF3FA86C : 0xFF2F8F5A) : (th ? 0xFF6A7088 : 0xFF555B6E)); Gfx.textCentered(g, font, tl, tx + 17, y, 0xFFFFFFFF);
-        adminHits.add(new Object[]{tx, y - 3, tx + 34, y + 11, (Runnable) () -> adminCounts = !adminCounts});
+        adminHits.add(new Object[]{px2, Math.max(top, y), px2 + 44, Math.min(bot, y + 16), (Runnable) this::openAdmin});
+        y += 30;
+        g.fill(x0, y - 8, x0 + iw, y - 7, 0x22FFFFFF);
+        Gfx.text(g, font, "PLAYERS PER COSMETIC", x0, y, 0xFFFFC857);
+        int tx = x0 + Gfx.w(font, "PLAYERS PER COSMETIC") + 10; boolean th = mx >= tx && mx < tx + 34 && my >= y - 3 && my < y + 11 && my >= top && my < bot;
+        pill(g, tx, y - 3, 34, 14, adminCounts ? (th ? 0xFF3FA86C : 0xFF2F8F5A) : (th ? 0xFF6A7088 : 0xFF555B6E)); Gfx.textCentered(g, font, adminCounts ? "On" : "Off", tx + 17, y, 0xFFFFFFFF);
+        adminHits.add(new Object[]{tx, Math.max(top, y - 3), tx + 34, Math.min(bot, y + 11), (Runnable) () -> adminCounts = !adminCounts});
         y += 18;
         if (adminCounts) {
-            Map<String, Integer> cn = CosmeticData.counts();
-            for (CosmeticData.SetDef sd : CosmeticData.SETS) { Gfx.text(g, font, sd.name() + " set: " + cn.getOrDefault(sd.id(), 0) + " player(s)", 16, y, Ui.TEXT); y += 12; }
-            for (var e : cn.entrySet()) if (e.getKey().startsWith("c:")) { CosmeticData.Def d = CosmeticData.byId(e.getKey().substring(2)); Gfx.text(g, font, (d == null ? e.getKey().substring(2) : d.name()) + ": " + e.getValue() + " player(s)", 16, y, Ui.SUB); y += 12; }
-            Gfx.text(g, font, "From cosmetics.json (" + CosmeticData.grants.size() + " players listed).", 16, y + 4, Ui.DIM);
+            Map<String, Integer> cn = CosmeticData.counts(); int gap = 6, cols = Math.max(2, Math.min(6, iw / 96)), tw = (iw - (cols - 1) * gap) / cols, i = 0;
+            for (CosmeticData.SetDef sd : CosmeticData.SETS) {                                               // the sets, as big cards with their count
+                int x = x0 + (i % cols) * (tw + gap), yy = y + (i / cols) * 34, n = cn.getOrDefault(sd.id(), 0);
+                pill(g, x, yy, tw, 30, n > 0 ? Canvas.mix(Ui.ROW, 0xFF000000 | sd.color(), 0.22f) : Ui.ROW); rout(g, x, yy, tw, 30, Gfx.argb(n > 0 ? 150 : 50, sd.color() & 0xFFFFFF));
+                g.fill(x + 1, yy + 2, x + 4, yy + 28, 0xFF000000 | sd.color());
+                Gfx.text(g, font, sd.name(), x + 10, yy + 5, Ui.TEXT); Gfx.text(g, font, n + (n == 1 ? " player" : " players"), x + 10, yy + 17, n > 0 ? 0xFF62E6A8 : Ui.DIM); i++;
+            }
+            y += ((i + cols - 1) / cols) * 34 + 8;
+            int lcols = Math.max(1, Math.min(4, iw / 150)), lw = (iw - (lcols - 1) * gap) / lcols; i = 0;
+            for (CosmeticData.Def d : CosmeticData.ALL) {
+                int x = x0 + (i % lcols) * (lw + gap), yy = y + (i / lcols) * 20, n = cn.getOrDefault("c:" + d.id(), 0);
+                pill(g, x, yy, lw, 18, Ui.ROW); g.fill(x + 1, yy + 2, x + 4, yy + 16, RAR_COL[CosmeticData.rarityOf(d)]);
+                Gfx.text(g, font, Gfx.fit(font, d.name(), lw - 34), x + 9, yy + 5, n > 0 ? Ui.TEXT : Ui.SUB);
+                String ns = String.valueOf(n); pill(g, x + lw - 8 - Gfx.w(font, ns), yy + 3, Gfx.w(font, ns) + 6, 12, n > 0 ? 0xFF2F8F5A : 0xFF2A2E3F); Gfx.text(g, font, ns, x + lw - 5 - Gfx.w(font, ns), yy + 5, 0xFFFFFFFF); i++;
+            }
+            y += ((i + lcols - 1) / lcols) * 20 + 6;
+            Gfx.text(g, font, "From cosmetics.json  ·  " + (CosmeticData.grants.size() + (CosmeticData.grants.containsKey(Cosmetics.OWNER) ? 0 : 1)) + " players listed", x0, y, Ui.DIM); y += 12;
         }
+        g.disableScissor();
+        int total = y + adminScroll - top; adminScroll = Math.max(0, Math.min(adminScroll, Math.max(0, total - (bot - top))));
     }
     private void drawAdmin(GuiGraphicsExtractor g, int mx, int my) {
-        int W = this.width, H = this.height; adminHits.clear();
-        g.fill(0, 0, W, H, 0xF20A0C12);
-        Gfx.text(g, font, "Give cosmetics", 16, 12, Ui.TEXT);
-        Gfx.text(g, font, "to " + (adminName.isEmpty() ? "" : adminName + "  ·  ") + adminTarget.substring(0, Math.min(10, adminTarget.length())) + "…   " + adminPicks.size() + " picked", 16, 24, Ui.SUB);
-        int bx = W - 16;
-        int[][] bt = {{0xFF2F8F5A, 0}, {0xFF555B6E, 1}}; String[] bl = {"Copy JSON", "Cancel"};
-        for (int i = 0; i < 2; i++) {
-            int bw = Gfx.w(font, bl[i]) + 18; bx -= bw; boolean hv = mx >= bx && mx < bx + bw && my >= 8 && my < 26;
-            pill(g, bx, 8, bw, 18, hv ? Canvas.mix(bt[i][0], 0xFFFFFFFF, 0.18f) : bt[i][0]); Gfx.textCentered(g, font, bl[i], bx + bw / 2, 13, 0xFFFFFFFF);
-            final int ii = i; adminHits.add(new Object[]{bx, 8, bx + bw, 26, (Runnable) () -> { if (ii == 0) adminFinish(); else adminOpen = false; }}); bx -= 6;
-        }
-        int top = 36, bot = H - 6; g.enableScissor(0, top, W, bot);
-        int y = top + 4 - adminScroll, cw2 = 150, gap = 6, perRow = Math.max(1, (W - 32 + gap) / (cw2 + gap));
-        Gfx.text(g, font, "SETS  (click to tick every member)", 16, y, 0xFFC77DFF); y += 14;
+        adminHits.clear();
+        String who = adminName.isEmpty() ? adminTarget.substring(0, Math.min(10, adminTarget.length())) + "…" : adminName;
+        int[] c = adminCard(g, 720, "Give cosmetics to " + who, adminTarget.substring(0, Math.min(12, adminTarget.length())) + "…  ·  " + adminPicks.size() + " of " + CosmeticData.ALL.size() + " picked", 0xFF62E6A8);
+        int cx = c[0], cy = c[1], cw = c[2], ch = c[3];
+        int rt = adminButton(g, cx + cw - 10, cy + 9, "Copy JSON", 0xFF2F8F5A, mx, my, this::adminFinish);
+        adminButton(g, rt, cy + 9, "Cancel", 0xFF555B6E, mx, my, () -> adminOpen = false);
+        int top = cy + 38, bot = cy + ch - 4; g.enableScissor(cx + 1, top, cx + cw - 1, bot);
+        int x0 = cx + 14, iw = cw - 28, gap = 6, cols = Math.max(2, iw / 150), tw = (iw - (cols - 1) * gap) / cols, y = top + 8 - adminScroll;
+        Gfx.text(g, font, "SETS", x0, y, 0xFFC77DFF); Gfx.text(g, font, "click to tick every member", x0 + 34, y, Ui.DIM); y += 13;
         int i = 0;
         for (CosmeticData.SetDef sd : CosmeticData.SETS) {
-            List<CosmeticData.Def> m = CosmeticData.members(sd); boolean all = !m.isEmpty(); for (CosmeticData.Def d : m) if (!adminPicks.contains(d.id())) all = false;
-            int x = 16 + (i % perRow) * (cw2 + gap), yy = y + (i / perRow) * 24; boolean hv = mx >= x && mx < x + cw2 && my >= yy && my < yy + 20 && my >= top;
-            pill(g, x, yy, cw2, 20, all ? Canvas.mix(sd.color() | 0xFF000000, 0xFF000000, 0.45f) : hv ? Ui.ROW_HOVER : Ui.ROW);
-            rout(g, x, yy, cw2, 20, all ? sd.color() | 0xFF000000 : Ui.BORDER);
-            Gfx.text(g, font, (all ? "[x] " : "[ ] ") + sd.name(), x + 6, yy + 6, Ui.TEXT);
-            adminHits.add(new Object[]{x, Math.max(top, yy), x + cw2, Math.min(bot, yy + 20), (Runnable) () -> adminToggleSet(sd)}); i++;
+            List<CosmeticData.Def> m = CosmeticData.members(sd); int have = 0; for (CosmeticData.Def d : m) if (adminPicks.contains(d.id())) have++;
+            boolean all = !m.isEmpty() && have == m.size();
+            int x = x0 + (i % cols) * (tw + gap), yy = y + (i / cols) * 28; boolean hv = mx >= x && mx < x + tw && my >= yy && my < yy + 24 && my >= top && my < bot;
+            adminTile(g, x, yy, tw, 24, sd.name(), have + "/" + m.size(), all, sd.color() & 0xFFFFFF, hv);
+            adminHits.add(new Object[]{x, Math.max(top, yy), x + tw, Math.min(bot, yy + 24), (Runnable) () -> adminToggleSet(sd)}); i++;
         }
-        y += ((i + perRow - 1) / perRow) * 24 + 8;
+        y += ((i + cols - 1) / cols) * 28 + 8;
         String[] heads = {"SUFFIXES", "NAME EFFECTS", "AURAS"};
         for (CosmeticData.Kind k : CosmeticData.Kind.values()) {
-            Gfx.text(g, font, heads[k.ordinal()], 16, y, 0xFFFFC857); y += 14; i = 0;
+            g.fill(x0, y - 4, x0 + iw, y - 3, 0x1CFFFFFF);
+            Gfx.text(g, font, heads[k.ordinal()], x0, y, 0xFFFFC857); y += 13; i = 0;
             for (CosmeticData.Def d : CosmeticData.ALL) {
                 if (d.kind() != k) continue;
                 boolean on = adminPicks.contains(d.id());
-                int x = 16 + (i % perRow) * (cw2 + gap), yy = y + (i / perRow) * 22; boolean hv = mx >= x && mx < x + cw2 && my >= yy && my < yy + 18 && my >= top;
-                pill(g, x, yy, cw2, 18, on ? Canvas.mix(Ui.ROW, 0xFF2F8F5A, 0.55f) : hv ? Ui.ROW_HOVER : Ui.ROW);
-                Gfx.text(g, font, (on ? "[x] " : "[ ] ") + d.name(), x + 6, yy + 5, on ? Ui.TEXT : Ui.SUB);
-                adminHits.add(new Object[]{x, Math.max(top, yy), x + cw2, Math.min(bot, yy + 18), (Runnable) () -> { if (!adminPicks.remove(d.id())) adminPicks.add(d.id()); }}); i++;
+                int x = x0 + (i % cols) * (tw + gap), yy = y + (i / cols) * 24; boolean hv = mx >= x && mx < x + tw && my >= yy && my < yy + 20 && my >= top && my < bot;
+                adminTile(g, x, yy, tw, 20, d.name(), null, on, RAR_COL[CosmeticData.rarityOf(d)] & 0xFFFFFF, hv);
+                adminHits.add(new Object[]{x, Math.max(top, yy), x + tw, Math.min(bot, yy + 20), (Runnable) () -> { if (!adminPicks.remove(d.id())) adminPicks.add(d.id()); }}); i++;
             }
-            y += ((i + perRow - 1) / perRow) * 22 + 10;
+            y += ((i + cols - 1) / cols) * 24 + 10;
         }
         g.disableScissor();
         int total = y + adminScroll - top; adminScroll = Math.max(0, Math.min(adminScroll, Math.max(0, total - (bot - top))));
@@ -1321,38 +1355,104 @@ public class FancyScreen extends Screen {
         g.disableScissor();
     }
 
-    /** A busy building site behind a page that is not built yet: bulldozers driving, a crane swinging its load, stacks of bricks, barrels and cones. */
-    private void site(GuiGraphicsExtractor g, Row r, float sec) {
-        int mid = r.x + r.w / 2, gy = r.y + r.h - 12;                                 // the ground line
-        int lane = Math.max(40, (r.w - 130) / 2);
-        for (int k = 0; k < 2; k++) {                                                  // a bulldozer on each side, driving back and forth
-            int dir = k == 0 ? 1 : -1; float ph = (sec * 0.16f + k * 0.5f) % 1f, tri = ph < 0.5f ? ph * 2f : 2f - ph * 2f;
-            boolean fwd = ph < 0.5f; int d2 = k == 0 ? (fwd ? 1 : -1) : (fwd ? -1 : 1);
-            int x0 = k == 0 ? r.x + 54 : mid + 66, bx = x0 + Math.round(tri * (lane - 74)), by = gy - 15;
-            bulldozer(g, bx, by, d2, sec);
-            for (int j = 0; j < 4; j++) {                                              // dust behind it
-                float u = (sec * 1.6f + j * 0.25f) % 1f; int dx = bx + (d2 > 0 ? -2 - Math.round(u * 8) : 24 + Math.round(u * 8)), dy = gy - 3 - Math.round(u * 6);
-                g.fill(dx, dy, dx + 2, dy + 2, Gfx.argb(Math.round(110 * (1f - u)), 0xB59A6A));
+    // ------------------------------------------------------------------ the building site behind pages that are not built yet
+    private static final class SiteItem { int kind, w, h; float x, y, dir = 1f; }
+    private final java.util.List<SiteItem> siteItems = new java.util.ArrayList<>();
+    private int siteW = -1, siteDrag = -1; private float siteOffX, siteOffY, siteStartX, siteStartY;
+    private final int[] sitePanel = new int[4]; private long siteSeen, siteLast;
+    private int[] sitePill = {0, 0, 0, 0};
+
+    private SiteItem siteMake(int kind, float x) {
+        SiteItem s = new SiteItem(); s.kind = kind; s.x = x;
+        switch (kind) { case 0 -> { s.w = 24; s.h = 15; } case 1 -> { s.w = 28; s.h = 52; } case 2 -> { s.w = 12; s.h = 15; } case 3 -> { s.w = 8; s.h = 9; } case 4 -> { s.w = 12; s.h = 10; } case 5 -> { s.w = 22; s.h = 24; } default -> { s.w = 19; s.h = 18; } }
+        return s;
+    }
+    private static boolean siteHit(SiteItem a, SiteItem b, float ax, float ay) { return ax < b.x + b.w + 1 && ax + a.w + 1 > b.x && ay < b.y + b.h + 1 && ay + a.h + 1 > b.y; }
+    private boolean siteFree(SiteItem a, float ax, float ay, int pw, int ph) {
+        if (ax < 3 || ay < 14 || ax + a.w > pw - 3 || ay + a.h > ph - 10) return false;
+        for (SiteItem b : siteItems) if (b != a && b.kind != 6 && a.kind != 6 && siteHit(a, b, ax, ay)) return false;
+        return !(ax < sitePill[0] + sitePill[2] + 1 && ax + a.w + 1 > sitePill[0] && ay < sitePill[1] + sitePill[3] + 1 && ay + a.h + 1 > sitePill[1] && a.kind != 6);
+    }
+    private void siteInit(Row r) {
+        siteItems.clear(); siteW = r.w; int gy = r.h - 13;
+        float xl = 8, xr = r.w - 8;
+        int[][] left = {{5, 0}, {2, 0}, {3, 0}, {0, 0}}, right = {{4, 0}, {0, 0}, {3, 0}, {5, 0}};
+        for (int[] it : left) { SiteItem s = siteMake(it[0], xl); s.y = gy - s.h; if (s.kind == 0) s.dir = 1; siteItems.add(s); xl += s.w + (s.kind == 0 ? 30 : 5); }
+        for (int[] it : right) { SiteItem s = siteMake(it[0], 0); xr -= s.w; s.x = xr; s.y = gy - s.h; if (s.kind == 0) s.dir = -1; siteItems.add(s); xr -= (s.kind == 0 ? 30 : 5); }
+        SiteItem cr = siteMake(1, r.w - 38); cr.y = gy - cr.h; siteItems.add(cr);
+        SiteItem h1 = siteMake(6, 8); h1.y = 14; siteItems.add(h1); SiteItem h2 = siteMake(6, r.w - 30); h2.y = 14; siteItems.add(h2);
+        for (int k = 0; k < siteItems.size(); k++) {                                            // anything that starts on top of something else slides away
+            SiteItem a = siteItems.get(k);
+            if (!siteFree(a, a.x, a.y, r.w, r.h) && a.kind != 6) siteSettle(a, r.w, r.h);
+        }
+    }
+    /** Finds the nearest free spot for an item (sideways first, then up) so nothing ever overlaps. */
+    private void siteSettle(SiteItem a, int pw, int ph) {
+        float bx = a.x, by = a.y, best = Float.MAX_VALUE;
+        for (int dy = 0; dy <= 60; dy += 4) for (int dx = -90; dx <= 90; dx += 2) for (int sg = -1; sg <= 1; sg += 2) {
+            float nx = a.x + dx, ny = a.y - dy;
+            if (siteFree(a, nx, ny, pw, ph)) { float d = dx * dx + dy * dy * 1.6f; if (d < best) { best = d; bx = nx; by = ny; } }
+        }
+        if (best < Float.MAX_VALUE) { a.x = bx; a.y = by; } else { a.x = siteStartX; a.y = siteStartY; }
+    }
+
+    private void site(GuiGraphicsExtractor g, Row r, float sec, int mx, int my, int pillX, int pillY, int pillW) {
+        long nowMs = System.currentTimeMillis(); float dt = Math.min(0.1f, siteLast == 0 ? 0f : (nowMs - siteLast) / 1000f); siteLast = nowMs;
+        sitePanel[0] = r.x; sitePanel[1] = r.y; sitePanel[2] = r.w; sitePanel[3] = r.h; siteSeen = nowMs;
+        sitePill = new int[]{pillX - r.x, pillY - r.y, pillW, 16};
+        if (siteItems.isEmpty() || siteW != r.w) siteInit(r);
+        for (SiteItem a : siteItems) {                                                           // the bulldozers patrol, and turn round before they would touch anything
+            if (a.kind != 0 || siteItems.indexOf(a) == siteDrag) continue;
+            float nx = a.x + a.dir * 16f * dt;
+            if (siteFree(a, nx, a.y, r.w, r.h)) a.x = nx; else a.dir = -a.dir;
+        }
+        for (int k = 0; k < siteItems.size(); k++) {
+            SiteItem a = siteItems.get(k); int ax = r.x + Math.round(a.x), ay = r.y + Math.round(a.y);
+            boolean grab = k == siteDrag, hov = siteDrag < 0 && mx >= ax && mx < ax + a.w && my >= ay && my < ay + a.h;
+            if (grab) { g.fill(ax + 1, ay + a.h + 1, ax + a.w - 1, ay + a.h + 3, 0x66000000); ay -= 2; }
+            switch (a.kind) {
+                case 0 -> { bulldozer(g, ax, ay, a.dir > 0 ? 1 : -1, sec); if (!grab) for (int j = 0; j < 3; j++) { float u = (sec * 1.6f + j * 0.33f) % 1f; int dx = a.dir > 0 ? ax - 2 - Math.round(u * 7) : ax + a.w + 1 + Math.round(u * 7), dy = ay + a.h - 3 - Math.round(u * 6); g.fill(dx, dy, dx + 2, dy + 2, Gfx.argb(Math.round(110 * (1f - u)), 0xB59A6A)); } }
+                case 1 -> crane(g, ax, ay, a.w, a.h, sec);
+                case 2 -> { for (int j = 0; j < 3; j++) { g.fill(ax, ay + a.h - 5 - j * 5, ax + a.w, ay + a.h - 1 - j * 5, 0xFFB5532E); g.fill(ax, ay + a.h - 5 - j * 5, ax + a.w, ay + a.h - 4 - j * 5, 0xFFD9703E); g.fill(ax + 6, ay + a.h - 5 - j * 5, ax + 7, ay + a.h - 1 - j * 5, 0xFF7A3418); } }
+                case 3 -> { g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); }
+                case 4 -> { g.fill(ax, ay, ax + 12, ay + 4, 0xFFF2F2F2); for (int j = 0; j < 12; j += 4) g.fill(ax + j, ay, ax + j + 2, ay + 4, 0xFFE06A20); g.fill(ax + 1, ay + 4, ax + 3, ay + 10, 0xFF6A6A74); g.fill(ax + 9, ay + 4, ax + 11, ay + 10, 0xFF6A6A74); }
+                case 5 -> { Gfx.push(g); Gfx.translate(g, ax - 2, ay - 2); Gfx.scale(g, 1.5f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); }
+                default -> { Gfx.push(g); Gfx.translate(g, ax - 1, ay - 1); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g); }
             }
+            if (hov || grab) rout(g, ax - 1, ay - 1, a.w + 2, a.h + 2, Gfx.argb(grab ? 200 : 90, 0xFFC857));
         }
-        int cx = r.x + r.w - 26;                                                       // a crane in the corner: the arm turns and the load sways
-        g.fill(cx, r.y + 18, cx + 3, gy, 0xFFE0A020); g.fill(cx - 3, gy - 3, cx + 6, gy, 0xFF6B5410);
-        for (int y = r.y + 20; y < gy - 4; y += 5) g.fill(cx, y, cx + 3, y + 1, 0xFF8A6410);
-        float sw = (float) Math.sin(sec * 1.2f); int ax = cx - 26 + Math.round(sw * 4);
-        g.fill(ax, r.y + 17, cx + 12, r.y + 19, 0xFFE0A020); g.fill(cx + 12, r.y + 17, cx + 18, r.y + 20, 0xFF5A5A66);
-        int hx = ax + 5, hl = 16 + Math.round((float) Math.sin(sec * 0.9f) * 4);
-        g.fill(hx, r.y + 19, hx + 1, r.y + 19 + hl, 0xFFB0B0B8); g.fill(hx - 4, r.y + 19 + hl, hx + 6, r.y + 22 + hl, 0xFFB5532E); g.fill(hx - 4, r.y + 19 + hl, hx + 6, r.y + 20 + hl, 0xFFD9703E);
-        for (int k = 0; k < 3; k++) {                                                  // brick stacks, barrels and cones, scattered
-            int bx2 = r.x + 20 + k * 34 + (k == 1 ? 6 : 0);
-            if (bx2 > mid - 70 && bx2 < mid + 70) continue;
-            for (int j = 0; j <= k; j++) { g.fill(bx2, gy - 5 - j * 5, bx2 + 12, gy - 1 - j * 5, 0xFFB5532E); g.fill(bx2, gy - 5 - j * 5, bx2 + 12, gy - 4 - j * 5, 0xFFD9703E); g.fill(bx2 + 6, gy - 5 - j * 5, bx2 + 7, gy - 1 - j * 5, 0xFF7A3418); }
-        }
-        int[] bar = {r.x + 8, mid + 56, r.x + r.w - 52};
-        for (int b : bar) { g.fill(b, gy - 9, b + 7, gy - 1, 0xFFE06A20); g.fill(b, gy - 7, b + 7, gy - 6, 0xFFF2F2F2); g.fill(b, gy - 4, b + 7, gy - 3, 0xFFF2F2F2); g.fill(b + 1, gy - 10, b + 6, gy - 9, 0xFF3A3A3A); }
-        for (int k = 0; k < 3; k++) {                                                  // a few welding sparks and flickering work lights
+        for (int k = 0; k < 3; k++) {                                                            // welding sparks drifting up
             float u = (sec * 0.9f + k * 0.31f) % 1f; int sx = r.x + 30 + k * 40, sy = r.y + r.h - 22 - Math.round(u * 24);
             g.fill(sx, sy, sx + 2, sy + 2, Gfx.argb(Math.round(220 * (1f - u)), k % 2 == 0 ? 0xFFC857 : 0xFF8A2E));
         }
+    }
+
+    private boolean siteGrab(double mx, double my) {
+        if (System.currentTimeMillis() - siteSeen > 120) return false;
+        for (int k = siteItems.size() - 1; k >= 0; k--) {
+            SiteItem a = siteItems.get(k); double ax = sitePanel[0] + a.x, ay = sitePanel[1] + a.y;
+            if (mx >= ax && mx < ax + a.w && my >= ay && my < ay + a.h) { siteDrag = k; siteOffX = (float) (mx - ax); siteOffY = (float) (my - ay); siteStartX = a.x; siteStartY = a.y; return true; }
+        }
+        return false;
+    }
+    private void siteMove(double mx, double my) {
+        if (siteDrag < 0 || siteDrag >= siteItems.size()) return;
+        SiteItem a = siteItems.get(siteDrag);
+        a.x = Math.max(3, Math.min(sitePanel[2] - 3 - a.w, (float) (mx - sitePanel[0]) - siteOffX)); a.y = Math.max(14, Math.min(sitePanel[3] - 10 - a.h, (float) (my - sitePanel[1]) - siteOffY));
+    }
+    private void siteDrop() {
+        if (siteDrag < 0 || siteDrag >= siteItems.size()) { siteDrag = -1; return; }
+        SiteItem a = siteItems.get(siteDrag); siteDrag = -1;
+        if (a.kind != 6 && !siteFree(a, a.x, a.y, sitePanel[2], sitePanel[3])) siteSettle(a, sitePanel[2], sitePanel[3]);        // dropped on something: slide to the nearest free spot
+    }
+
+    private static void crane(GuiGraphicsExtractor g, int x, int y, int w, int h, float sec) {
+        int mx = x + w - 5, top = y + 2;
+        g.fill(mx, top, mx + 3, y + h, 0xFFE0A020); g.fill(mx - 3, y + h - 3, mx + 6, y + h, 0xFF6B5410);
+        for (int yy = top + 3; yy < y + h - 4; yy += 5) g.fill(mx, yy, mx + 3, yy + 1, 0xFF8A6410);
+        g.fill(x, top - 1, mx + 6, top + 1, 0xFFE0A020); g.fill(mx + 3, top - 3, mx + 6, top, 0xFF5A5A66);
+        float sw = (float) Math.sin(sec * 1.2f); int hx = x + 6 + Math.round(sw * 2), hl = 16 + Math.round((float) Math.sin(sec * 0.9f) * 4);
+        g.fill(hx, top + 1, hx + 1, top + 1 + hl, 0xFFB0B0B8); g.fill(hx - 4, top + 1 + hl, hx + 6, top + 4 + hl, 0xFFB5532E); g.fill(hx - 4, top + 1 + hl, hx + 6, top + 2 + hl, 0xFFD9703E);
     }
 
     private static void bulldozer(GuiGraphicsExtractor g, int x, int y, int dir, float sec) {
@@ -1371,6 +1471,7 @@ public class FancyScreen extends Screen {
     }
 
     private void tabIcon(GuiGraphicsExtractor g, Tab t, int x, int y, long now, boolean lively) {
+        if (!STILL) y -= Math.sin(now / 520.0 + t.ordinal() * 1.3) > 0.45 ? 1 : 0;                  // every menu icon hops up and down, each on its own beat
         switch (t) {
             case DROPS -> Icons.draw(g, "library", x, y, now);
             case HOME -> Icons.draw(g, "home", x, y, now);
@@ -3320,11 +3421,6 @@ public class FancyScreen extends Screen {
                         float ph = ((sec * 0.7f + k * 0.37f) % 1f); int sx2 = mid - 40 + k * 16 + (int) (Math.sin(k * 5.1) * 6), sy2 = r.y + r.h - 16 - Math.round(ph * 34);
                         g.fill(sx2, sy2, sx2 + 2, sy2 + 2, Gfx.argb(Math.round(220 * (1f - ph)), k % 2 == 0 ? 0xFFC857 : 0xFF8A2E));
                     }
-                    Gfx.push(g); Gfx.translate(g, r.x + 14, r.y + r.h - 46); Gfx.scale(g, 2f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g);
-                    Gfx.push(g); Gfx.translate(g, r.x + r.w - 46, r.y + r.h - 46); Gfx.scale(g, 2f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g);
-                    site(g, r, sec);
-                    Gfx.push(g); Gfx.translate(g, r.x + 12, r.y + 12); Gfx.scale(g, 1.5f); Icons.draw(g, "fd:wip", 0, 0, nw); Gfx.pop(g);
-                    Gfx.push(g); Gfx.translate(g, r.x + r.w - 36, r.y + 12); Gfx.scale(g, 1.5f); Icons.draw(g, "fd:wip", 0, 0, nw); Gfx.pop(g);
                 } else for (int i = 0; i < 5; i++) {                                    // sparkles orbiting the icon
                     double an = sec * 1.3 + i * Math.PI * 2 / 5; int sx2 = mid + (int) (Math.cos(an) * 30), sy2 = cyi + (int) (Math.sin(an) * 12);
                     int al = 120 + (int) (120 * Math.sin(sec * 5 + i)); g.fill(sx2, sy2, sx2 + 2, sy2 + 2, Gfx.argb(Math.max(0, Math.min(255, al)), i % 2 == 0 ? 0xFFC857 : 0x9DB2CC));
@@ -3339,6 +3435,7 @@ public class FancyScreen extends Screen {
                 int tc = Gfx.argb(Math.min(255, gl + 40), 0xFFC857);
                 Gfx.text(g, font, wt, hx + 10, hy + 4, tc);
                 Gfx.push(g); Gfx.translate(g, hx + 10 + Gfx.w(font, wt) + 1, hy + 3); Gfx.scale(g, 0.6f); Gfx.text(g, font, tm, 0, 0, tc); Gfx.pop(g);
+                site(g, r, sec, mx, my, hx, hy, pw2);
                 continue;
             }
             if (r.kind == TEXT) {                                                   // plain text: a heading and its paragraph, no card
@@ -3573,6 +3670,7 @@ public class FancyScreen extends Screen {
             if (!inBox) endTyping(true);
         }
         if (editor != 0) { editorClick(event.x(), event.y(), event.button()); return true; }
+        if (event.button() == 0 && siteGrab(event.x(), event.y())) return true;                       // pick up something on a building site
         if (event.button() == 0 && totalH > lb - lt && event.x() >= cx + cw && event.x() < cx + cw + 12 && event.y() >= lt && event.y() < lb) { dragScroll = true; scrollTo(event.y()); return true; }          // the bar on the right can be grabbed
         {   // an open drop-down list sits on top of everything, so it gets the click before the boxes underneath it
             double px0 = event.x(), py0 = event.y();
@@ -3676,6 +3774,7 @@ public class FancyScreen extends Screen {
 
     @Override public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
         if (editor != 0) { if (eDrag != 0) eSet(event.x(), event.y()); return true; }
+        if (siteDrag >= 0) { siteMove(event.x(), event.y()); return true; }
         if (dragScroll) { scrollTo(event.y()); return true; }
         if (dragFig) { figYaw += (float) dx * 0.03f; return true; }
         if (dragFarm) { farmDrag(event.x(), event.y(), false); return true; }
@@ -3684,13 +3783,13 @@ public class FancyScreen extends Screen {
     }
 
     @Override public boolean mouseReleased(MouseButtonEvent event) {
-        eDrag = 0;
+        eDrag = 0; siteDrop();
         dragCtl = null; dragFarm = false; dragFig = false; dragScroll = false;
         return super.mouseReleased(event);
     }
 
     @Override public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
-        if (adminOpen) { adminScroll = Math.max(0, adminScroll - (int) (scrollY * 24)); return true; }
+        if (adminOpen || adminHome) { adminScroll = Math.max(0, adminScroll - (int) (scrollY * 24)); return true; }
         if (editor != 0) return true;
         if (popup != null && mx >= popX0 && mx < popX1 && my >= popY && my < popY + popVis * POP_H + 4 && popup.pickLabels.size() > popVis) {
             popScroll -= (int) Math.signum(scrollY) * 2;
