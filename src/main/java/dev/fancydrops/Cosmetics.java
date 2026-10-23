@@ -492,12 +492,12 @@ final class Cosmetics {
                 info.setTabListDisplayName(out); tabTouched++;
             }
             tabMoving = anyMoving;
-            if (now - tabLogAt > 4000 && (anyMoving || tabTouched > 0)) { tabLogAt = now; System.err.println("[FancyDrops] tab: moving=" + anyMoving + " entries restyled=" + tabTouched + " skyblocker hook=" + (sbkUpd != null ? "method" : sbkFlag != null ? "flag" : "none") + " nudges=" + sbkNudges + " nudgeErrors=" + sbkErr); tabTouched = 0; }
+            if (now - tabLogAt > 4000 && (anyMoving || tabTouched > 0)) { tabLogAt = now; System.err.println("[FancyDrops] tab: moving=" + anyMoving + " entries restyled=" + tabTouched + " skyblocker hook=" + (sbkUpd != null ? "method" : sbkFlag != null ? "flag" : "none") + " nudges=" + sbkNudges + " nudgeErrors=" + sbkErr + " skysoft nudges=" + ssNudges); tabTouched = 0; }
             if (anyMoving) nudgeCustomTabs(now);
         } catch (Throwable ignored) { }
     }
 
-    private static int tabTouched, sbkNudges, sbkErr; private static long tabLogAt;
+    private static int tabTouched, sbkNudges, sbkErr, ssNudges; private static Object ssInst; private static java.lang.reflect.Method ssDirty; private static long tabLogAt;
     private static java.lang.reflect.Field sbkFlag; private static java.lang.reflect.Method sbkUpd; private static boolean sbkTried; private static long sbkAt;
     /** Custom tab lists (Skyblocker's) copy the player list once in a while instead of every frame, so a moving name would stand still there. Ask it to copy again, a few times a second, while a name is moving. */
     private static void nudgeCustomTabs(long now) {
@@ -511,12 +511,19 @@ final class Cosmetics {
                     System.err.println("[FancyDrops] tab-related mods: " + mods);
                 } catch (Throwable ignored) { }
                 try {
+                    Class<?> t = Class.forName("com.skysoft.data.hypixel.TabListApi");
+                    ssInst = t.getField("INSTANCE").get(null);
+                    for (var m : t.getDeclaredMethods()) if (m.getName().startsWith("markDirty") && m.getParameterCount() == 0) { m.setAccessible(true); ssDirty = m; break; }
+                    System.err.println("[FancyDrops] SkySoft tab found: " + (ssDirty != null ? ssDirty.getName() : "no hook"));
+                } catch (Throwable ignored) { }
+                try {
                     Class<?> c = Class.forName("de.hysky.skyblocker.skyblock.tabhud.util.PlayerListManager");
                     try { sbkFlag = c.getDeclaredField("shouldUpdateNextTick"); sbkFlag.setAccessible(true); } catch (Throwable ignored) { }
                     try { sbkUpd = c.getDeclaredMethod("updateListNow"); sbkUpd.setAccessible(true); } catch (Throwable ignored) { }
                     System.err.println("[FancyDrops] custom tab list found (Skyblocker): " + (sbkFlag != null ? "flag" : sbkUpd != null ? "method" : "no hook"));
                 } catch (Throwable ignored) { }
             }
+            if (ssDirty != null) { ssDirty.invoke(ssInst); ssNudges++; }                                   // SkySoft's Better Tab keeps its own copy of the list: mark it stale so it reads the new names
             if (sbkUpd != null) { sbkUpd.invoke(null); sbkNudges++; }                                       // copy the list right now (the flag only copies on the next tick, after the server's own rewrite)
             else if (sbkFlag != null) { sbkFlag.setBoolean(null, true); sbkNudges++; }
         } catch (Throwable t) { if (sbkErr++ < 3) System.err.println("[FancyDrops] tab nudge failed: " + t); }
