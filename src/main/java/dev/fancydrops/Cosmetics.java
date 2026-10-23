@@ -10,13 +10,13 @@ import net.minecraft.resources.Identifier;
 import java.util.*;
 
 /**
- * Little name suffixes for chosen players (ImTra gets an "Active ON" button after the name: still in chat, animated in the tab list).
+ * Little name suffixes for chosen players (owners get an animated picture after the name in chat and the tab list).
  * The player is identified by UUID: we look their current name up in the tab list (or use your own account), then add the
  * emoji after that name in incoming chat lines. It only changes how YOU see the message; nobody else sees it.
  * The emoji is drawn with a font of our own (assets/fancydrops/font/emoji.json), because Minecraft's default font has no emoji.
  */
 final class Cosmetics {
-    /** A pre-made animated suffix: 6 glyphs of our emoji font, one per frame. Chat shows a twinkling still, the tab list plays all of them. */
+    /** A pre-made animated suffix: 6 glyphs of our emoji font, one per frame. Chat and the tab list show it as the same animated picture. */
     record Suffix(String id, String name, String since, String[] frames) {}
     private static String[] fr(int base) { String[] f = new String[6]; for (int i = 0; i < 6; i++) f[i] = String.valueOf((char) (base + i)); return f; }
     static final Suffix[] SUFFIXES = {
@@ -30,35 +30,43 @@ final class Cosmetics {
         new Suffix("snow", "Snowflake", "v0.8.0", fr(0xE0A0)),
         new Suffix("star", "Shooting Star", "v0.8.0", fr(0xE0B0)),
         new Suffix("ghost", "Ghost", "v0.8.0", fr(0xE0C0))};
-    /** Who may use the cosmetics in the public release (the dev build is open to everyone). */
+    /** Who owns cosmetics. Everyone with the mod sees their suffix; only they can open the Cosmetics page. */
     static final Set<UUID> WHITELIST = Set.of(UUID.fromString("1350c2e2-3c1e-45fe-984f-fe2e9c2e868a"));
     private static final Map<UUID, Component> TAB_BASE = new HashMap<>();
+    private static final Map<UUID, Component> TAB_SET = new HashMap<>();       // the name we put in the tab list for each player (compared by identity: if it changed, the server rewrote it)
+    private static final Map<UUID, String> TAB_ID = new HashMap<>();
+    /** What the owners picked, read from cosmetics.json in the GitHub repo so everybody with the mod sees the same thing. */
+    private static final String REMOTE_URL = "https://raw.githubusercontent.com/imtraminecraft/fancydrops/main/cosmetics.json";
+    private static volatile Map<UUID, String> remote = Map.of();
+    private static long remoteAt;
+    private static void refreshRemote() {
+        long now = System.currentTimeMillis();
+        if (now - remoteAt < 600_000L) return;
+        remoteAt = now;
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                var res = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(REMOTE_URL)).header("User-Agent", "FancyDrops").GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+                if (res.statusCode() != 200) return;
+                Map<UUID, String> m = new HashMap<>();
+                for (var e : com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject().entrySet()) { UUID u = UUID.fromString(e.getKey()); if (WHITELIST.contains(u)) m.put(u, e.getValue().getAsString()); }
+                remote = m;
+            } catch (Throwable ignored) { }
+        });
+    }
     static final FontDescription EMOJI = new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "emoji"));
 
     private record Seg(String text, Style style) {}
-    /** The chat font of a suffix: one still frame. The optional "FancyDrops Animated Suffix" resource pack replaces it with all six frames, and chat then flickers through them (the obfuscated style picks one at random every frame). */
-    static FontDescription chatFont(Suffix s) { return new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "chat_" + s.id())); }
-    private static long packAt; private static boolean packOn;
-    /** True while the animated-suffix resource pack is switched on (it carries a marker file the mod alone does not have). */
-    static boolean packActive() {
-        long now = System.currentTimeMillis();
-        if (now - packAt > 1000) {
-            packAt = now;
-            try { packOn = Minecraft.getInstance().getResourceManager().getResource(Identifier.fromNamespaceAndPath("fancydrops", "pack_animated.txt")).isPresent(); } catch (Throwable t) { packOn = false; }
-        }
-        return packOn;
-    }
-
     static UUID me() { try { var u = Minecraft.getInstance().getUser(); return u == null ? null : u.getProfileId(); } catch (Throwable t) { return null; } }
-    /** The dev build is open to everyone; the public build only to whitelisted UUIDs. */
-    static boolean allowed() { if (!"Main".equals(FancyDropsMod.CHANNEL)) return true; UUID m = me(); return m != null && WHITELIST.contains(m); }
+    /** The Cosmetics page and your own pick: only for whitelisted UUIDs (every build). */
+    static boolean allowed() { UUID m = me(); return m != null && WHITELIST.contains(m); }
     static Suffix byId(String id) { for (Suffix s : SUFFIXES) if (s.id().equals(id)) return s; return null; }
     /** Your own pick (null = no suffix). */
     static Suffix chosen() { return byId(FancyConfig.get().suffix); }
-    /** Everybody who gets a suffix on this screen: whitelisted players (the classic sparkle) and you (your pick, when allowed). */
+    /** Everybody who gets a suffix on this screen: the owners (what they picked in cosmetics.json, else the sparkle) and you (your own pick, when allowed). */
     private static Map<UUID, Suffix> active() {
         Map<UUID, Suffix> m = new LinkedHashMap<>(); UUID me = me();
-        for (UUID u : WHITELIST) if (!u.equals(me)) m.put(u, SUFFIXES[0]);
+        refreshRemote();
+        for (UUID u : WHITELIST) if (!u.equals(me)) { Suffix r = byId(remote.get(u)); m.put(u, r != null ? r : SUFFIXES[0]); }
         if (me != null && allowed()) { Suffix c = chosen(); if (c != null) m.put(me, c); }
         return m;
     }
@@ -113,8 +121,6 @@ final class Cosmetics {
         });
     }
 
-    private static boolean ours(String curStr) { for (Suffix s : SUFFIXES) for (String f : s.frames()) if (curStr.contains(f)) return true; return false; }
-
     /** Also puts the animated suffix after the name in the tab list. SkyBlock draws its tab from many fake entries ("[496] imtra [x]" is one of them), so every entry is checked for an owner's name, not only the real one. Called every few ticks; the server rewriting an entry is picked up as its new base. */
     static void tickTab(Minecraft mc) {
         try {
@@ -128,8 +134,7 @@ final class Cosmetics {
                 if (info.getProfile() == null) continue;
                 UUID id = info.getProfile().id();
                 Component cur = info.getTabListDisplayName();
-                String curStr = cur == null ? "" : cur.getString();
-                boolean ours = ours(curStr);
+                boolean ours = cur != null && cur == TAB_SET.get(id);
                 Component base = ours ? TAB_BASE.get(id) : cur;
                 String baseStr = base == null ? "" : base.getString();
                 Map.Entry<String, Suffix> hit = null; int at = -1;
@@ -138,20 +143,19 @@ final class Cosmetics {
                     else if (act.containsKey(id) && e.getKey().equals(info.getProfile().name())) { hit = e; break; }                 // your own entry with no display name yet
                 }
                 if (hit == null) {                                                                                                    // not (or no longer) an entry that carries a suffix: take ours off
-                    if (ours && TAB_BASE.containsKey(id)) { info.setTabListDisplayName(TAB_BASE.get(id)); }
+                    if (ours && TAB_BASE.containsKey(id)) info.setTabListDisplayName(TAB_BASE.get(id));
+                    TAB_SET.remove(id); TAB_ID.remove(id);
                     continue;
                 }
-                String frame = frameNow(hit.getValue(), now);
-                if (curStr.contains(frame)) continue;
+                if (ours && hit.getValue().id().equals(TAB_ID.get(id))) continue;             // already showing it: the picture animates by itself, same as in chat
+                Component out;
                 if (base == null) {
                     base = Component.literal(info.getProfile().name());
                     try { base = net.minecraft.world.scores.PlayerTeam.formatNameForTeam(info.getTeam(), base); } catch (Throwable ignored) { }
-                    TAB_BASE.put(id, base);
-                    info.setTabListDisplayName(Component.empty().append(base).append(Component.literal(" ")).append(glyph(frame)));
-                } else {
-                    if (!ours) TAB_BASE.put(id, base);
-                    info.setTabListDisplayName(insert(base, at + hit.getKey().length(), frame, Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)));
-                }
+                    out = Component.empty().append(base).append(Component.literal(" ")).append(chatGlyph(hit.getValue()));
+                } else out = insert(base, at + hit.getKey().length(), chatGlyph(hit.getValue()));
+                TAB_BASE.put(id, base); TAB_SET.put(id, out); TAB_ID.put(id, hit.getValue().id());
+                info.setTabListDisplayName(out);
             }
         } catch (Throwable ignored) { }
     }

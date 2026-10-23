@@ -2114,7 +2114,7 @@ public class FancyScreen extends Screen {
 
     private void cosmeticsPage() {
         if (!Cosmetics.allowed()) {
-            Row wp = row(0, "fd:sparkle", "Cosmetics are disabled", "Cosmetics are only open to whitelisted players in this build. Everything else in FancyDrops works as usual.", Ui.DIM);
+            Row wp = row(0, "fd:sparkle", "Cosmetics are disabled", "Cosmetics are only open to ImTra. Everything else in FancyDrops works as usual. (You will still see his suffix in chat and the tab list.)", Ui.DIM);
             wp.kind = PANEL; wp.h = 130; wp.noSearch = true; rows.add(wp); return;
         }
         FancyConfig c = FancyConfig.get();
