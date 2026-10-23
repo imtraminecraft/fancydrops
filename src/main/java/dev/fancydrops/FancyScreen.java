@@ -863,7 +863,7 @@ public class FancyScreen extends Screen {
     private static int figDx, figDy;
     private boolean dragFig;
     private final int[] auraBox = {-1, -1, -1, -1};
-    private void drawCosPanels(GuiGraphicsExtractor g, int mx, int my) {
+    private void drawCosPanels(GuiGraphicsExtractor g, int mx, int my, float intro) {
         auraBox[0] = auraBox[1] = auraBox[2] = auraBox[3] = -1;
         if (cosK < 0.97f) { hoverCos = null; return; }
         long now = System.currentTimeMillis();
@@ -3033,7 +3033,7 @@ public class FancyScreen extends Screen {
         Gfx.pop(g);
         drawDock(g, mx, my, intro, now);
         drawShowBar(g, mx, my);
-        drawCosPanels(g, mx, my);
+        drawCosPanels(g, mx, my, intro);
         drawStrip(g, mx, my);
         drawToast(g, now);
         drawTileTip(g, mx, my);
