@@ -388,12 +388,16 @@ final class Cosmetics {
     }
 
     /** Also puts the animated suffix after the name in the tab list. SkyBlock draws its tab from many fake entries ("[496] imtra [x]" is one of them), so every entry is checked for an owner's name, not only the real one. Called every few ticks; the server rewriting an entry is picked up as its new base. */
+    static volatile boolean tabMoving;
+    /** Called every frame just before the tab list is drawn: moving name effects need a new colour every frame, not every tick. */
+    static void tickTabFrame(Minecraft mc) { if (tabMoving) tickTab(mc); }
     static void tickTab(Minecraft mc) {
         try {
             var conn = mc.getConnection();
             if (conn == null) return;
             long now = System.currentTimeMillis();
             Map<UUID, Look> act = active();
+            boolean anyMoving = false;
             Map<String, Look> byName = new LinkedHashMap<>();
             for (Map.Entry<UUID, Look> e : act.entrySet()) { String n = nameOf(mc, e.getKey()); if (n != null) byName.put(n, e.getValue()); }
             for (var info : conn.getOnlinePlayers()) {
@@ -415,7 +419,7 @@ final class Cosmetics {
                     continue;
                 }
                 Look lk = hit.getValue(); String key = (lk.suffix() == null ? "" : lk.suffix().id()) + "|" + (lk.fx() == null ? "" : lk.fx());
-                boolean moving = lk.fx() != null && NameFx.animated(lk.fx());
+                boolean moving = lk.fx() != null && NameFx.animated(lk.fx()); anyMoving |= moving;
                 if (ours && key.equals(TAB_ID.get(id)) && !moving) continue;                    // already showing it (the suffix picture animates by itself, same as in chat)
                 if (base == null) {
                     base = Component.literal(info.getProfile().name());
@@ -429,6 +433,7 @@ final class Cosmetics {
                 TAB_BASE.put(id, base); TAB_SET.put(id, out); TAB_ID.put(id, key);
                 info.setTabListDisplayName(out);
             }
+            tabMoving = anyMoving;
         } catch (Throwable ignored) { }
     }
 
