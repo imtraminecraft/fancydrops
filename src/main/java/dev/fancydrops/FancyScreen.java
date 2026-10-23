@@ -263,7 +263,7 @@ public class FancyScreen extends Screen {
     private static long tabChanged, seenTabChange;
     private static float pageK = 1f;
     private static boolean STILL;                                             // menu animations off: no waving, no glints
-    private static float selY = Float.NaN;
+    private static float selY = Float.NaN, selV;
     private final long born;
     private long closeAt;                                    // set when Esc is pressed: the menu fades out, then closes
 
@@ -372,8 +372,10 @@ public class FancyScreen extends Screen {
         g.disableScissor();
     }
 
-    private static final long OPEN_MS = 280L, CLOSE_MS = 210L;
+    private static final long OPEN_MS = 420L, CLOSE_MS = 220L;
     private static float easeIn(float t) { t = Math.max(0f, Math.min(1f, t)); return t * t * (3f - 2f * t); }
+    /** Rises past 1 a little and settles back: the window springs into place. */
+    private static float backOut(float t) { t = Math.max(0f, Math.min(1f, t)) - 1f; return 1f + t * t * (3.2f * t + 2.2f); }
     private static float ease(float t) { t = Math.max(0f, Math.min(1f, t)); return 1f - (1f - t) * (1f - t) * (1f - t); }
 
     /** The menu's own panel colours get the translucency; everything else (buttons, text, accents) stays solid. */
@@ -971,9 +973,13 @@ public class FancyScreen extends Screen {
         g.enableScissor(x + 1, y + 28, x + w - 1, y + h - 1);
         g.fill(fx - 13, feet + 1, fx + 13, feet + 3, 0x40000000);
         List<AuraFx.P> parts = ad == null ? List.of() : AuraFx.particles(aura, now);
+        float cyw = (float) Math.cos(figYaw), syw = (float) Math.sin(figYaw);
         for (int pass = 0; pass < 2; pass++) {
             if (pass == 1) SkinMock.draw(g, fx, feet, figYaw);
-            for (AuraFx.P q : parts) if ((q.z() < 0) == (pass == 0)) AuraFx.draw(g, fx + q.x() * ppb, feet - q.y() * ppb, Math.max(1f, q.size() * ppb * 1.3f), q);
+            for (AuraFx.P q : parts) {                                                              // the aura turns with the figure, so from behind it surrounds the back too
+                float rx = q.x() * cyw + q.z() * syw, rz = -q.x() * syw + q.z() * cyw;
+                if ((rz < 0) == (pass == 0)) AuraFx.draw(g, fx + rx * ppb, feet - q.y() * ppb, Math.max(1f, q.size() * ppb * 1.3f), q);
+            }
         }
         g.disableScissor();
         Gfx.textCentered(g, font, "Drag to turn", x + w / 2, y + h - 11, Ui.DIM);
@@ -2824,7 +2830,8 @@ public class FancyScreen extends Screen {
         perf[0] += System.nanoTime() - pf0; perfFrom = pf0;
 
         g.fill(0, 0, width, height, Gfx.argb(Math.round((0x28 + 0x78 * TR) * intro), 0x000000));
-        float zoom = 0.94f + 0.06f * intro;
+        float openLin = animOn ? Math.min(1f, (now - born) / (float) OPEN_MS) : 1f;
+        float zoom = closeAt > 0 ? 0.9f + 0.1f * intro : 0.84f + 0.16f * backOut(openLin);                    // springs open (a little past full size, then settles), shrinks away on Esc
         if (cosWin()) zoom *= 0.9f + 0.1f * ease(Math.min(1f, (now - cosAt) / 300f));                  // the Cosmetics window opens outwards from the menu                                    // the whole menu grows into place (and shrinks away on Esc)
         Gfx.push(g); Gfx.translate(g, px + pw / 2f, py + ph / 2f); Gfx.scale(g, zoom); Gfx.translate(g, -(px + pw / 2f), -(py + ph / 2f));
         pill(g, px, py, pw, ph, Ui.PANEL);
@@ -2868,8 +2875,9 @@ public class FancyScreen extends Screen {
         sideScroll = Math.max(0, Math.min(sideMax(), sideScroll));
         g.enableScissor(px + 4, py + 66, px + sw, py + ph - 4);
         float want = tabBox(tab.ordinal())[1];
-        selY = Float.isNaN(selY) || !animOn ? want : selY + (want - selY) * (1f - (float) Math.exp(-dt * 16f));
-        if (Math.abs(want - selY) < 0.3f) selY = want;
+        if (Float.isNaN(selY) || !animOn) { selY = want; selV = 0f; }
+        else { float h = Math.min(dt, 0.03f); for (int sp = 0; sp < 2; sp++) { selV += ((want - selY) * 420f - selV * 24f) * h / 2f; selY += selV * h / 2f; } }       // a spring: the highlight slides to the tab, overshoots a hair and settles
+        if (Math.abs(want - selY) < 0.25f && Math.abs(selV) < 4f) { selY = want; selV = 0f; }
         int sy = Math.round(selY);
         pill(g, px + 8, sy, sw - 14, 22, Ui.ROW);
         tabAcc = Canvas.mix(tabAcc == 0 ? tabCol(tab) : tabAcc, tabCol(tab), animOn ? 0.2f : 1f);
@@ -2878,11 +2886,14 @@ public class FancyScreen extends Screen {
             Tab t = Tab.values()[i]; if (t == Tab.COSMETICS) continue; int[] b = tabBox(i);
             boolean act = t == tab, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
             float hv = anim("tab|" + i, hov && !act ? 1f : 0f, 48f);
+            float tin = !animOn || born == 0L ? 1f : ease(((now - born) / 1000f - 0.08f - vi(i) * 0.045f) / 0.3f);        // the tabs slide in one after the other
+            Gfx.push(g); Gfx.translate(g, Math.round((1f - tin) * -22f + hv * 2f), 0);
             if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
             int dx = 0;
             iconBack(g, b[0] + 14 + dx, b[1] + 11, 9, act, tabCol(t));
             tabIcon(g, t, b[0] + 6 + dx, b[1] + 3, act && cfg.menuIcons ? now : 2400L, act);   // only the open page's icon moves
             Gfx.text(g, font, t.label, b[0] + 28 + dx, b[1] + 7, act ? Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.35f) : Canvas.mix(Canvas.mix(0xFF8A8A96, tabCol(t), 0.45f), 0xFFFFFFFF, hv * 0.4f));
+            Gfx.pop(g);
         }
 
         subExp = anim("subExp", subs().length > 0 && query.isBlank() ? 1f : 0f, 40f);
@@ -3000,7 +3011,9 @@ public class FancyScreen extends Screen {
         popup = null;
         g.enableScissor(cx - 2, lt, cx + cw + 2, lb);
         Gfx.push(g);
-        Gfx.translate(g, Math.round((1f - pageIn) * 8f), 0);
+        float rowAge = !animOn ? 9f : (now - Math.max(tabChanged, born + 140L)) / 1000f;          // rows rise into place one after the other, whenever a page opens
+        int[] rowOff = new int[rows.size()]; int rn = 0;
+        for (Row r : rows) { int off = rowAge >= 0.9f ? 0 : Math.round((1f - ease((rowAge - Math.min(rn, 14) * 0.032f) / 0.26f)) * 14f); rowOff[rn++] = off; r.y += off; }
         for (Row r : rows) {
             if (r.y + r.h < lt || r.y > lb) continue;
             if (r.kind == SECTION) { drawSection(g, r); continue; }
@@ -3085,6 +3098,7 @@ public class FancyScreen extends Screen {
                 }
             }
         }
+        { int rn2 = 0; for (Row r : rows) r.y -= rowOff[rn2++]; }
         for (Row r : rows) if (r.field != null && r.field.visible) r.field.extractRenderState(g, mx, my, delta);
         if (editor == 0) {
             if (typing != null && !numShow) endTyping(false);      // its row scrolled away or the page changed
@@ -3092,7 +3106,6 @@ public class FancyScreen extends Screen {
             if (numField.visible) numField.extractRenderState(g, mx, my, delta);
         }
         Gfx.pop(g);
-        if (pageIn < 1f) g.fill(cx - 2, lt, cx + cw + 2, lb, Gfx.argb(Math.round((1f - pageIn) * 90), 0x121218));
         g.disableScissor();
         placePopup();
         drawPopup(g, mx, my);

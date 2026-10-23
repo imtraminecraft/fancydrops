@@ -2,6 +2,11 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.32
+- Menu animations redone: the window springs open and shrinks away on close, sidebar tabs slide in one by one, the tab highlight is a spring, and each page's rows rise in with a stagger.
+- Redrew the suffix icons by hand in one consistent style (outline, three tones, one highlight), in the menu, chat and tab list.
+- Aura preview: the aura now turns with the figure, so it wraps the back too.
+
 ## 0.8.31
 - Cosmetics is its own window now. The button is at the bottom left of the menu (no longer in the sidebar); it opens a separate window with no sidebar, with the chat and tab preview above it and the aura preview beside it. The X or Esc takes you back to the page you were on.
 - Turning the mod off (the Active switch) also hides cosmetics on your own screen: yours and other players'. Other players still see yours.
