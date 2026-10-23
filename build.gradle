@@ -19,8 +19,11 @@ processResources {
     def branch = System.getenv("GITHUB_REF_NAME")
     if (branch == null || branch.isEmpty()) {
         try {
-            def proc = ["git", "rev-parse", "--abbrev-ref", "HEAD"].execute([], rootDir)
-            branch = proc.text.trim()
+            branch = providers.exec {
+                commandLine "git", "rev-parse", "--abbrev-ref", "HEAD"
+                workingDir = rootDir
+                ignoreExitValue = true
+            }.standardOutput.asText.get().trim()
         } catch (Throwable ignored) {
             branch = ""
         }
