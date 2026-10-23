@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.40
+- Farming animations no longer hide your hotbar and hearts, and they play faster (about 2.6 seconds, no slow-down).
+
 ## 0.8.39
 - The hover card on a player's name now matches the chat: the gradient [FancyDrops] on top, a divider, then one tidy line per cosmetic (name in its colour, rarity beside it).
 - Custom tab list: the list is now refreshed right away every time a name effect moves, and the log says what happened (look for "[FancyDrops] tab:" lines). Not confirmed fixed.
