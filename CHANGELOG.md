@@ -1,3 +1,7 @@
+## 0.8.58
+- Fixed: the new animated suffix icons were only drawn in the menu list, not in chat, the tab list or the preview (those use their own sprite files). Every suffix sprite is now the new animation
+- Note: when Active is OFF, your own suffix, name effect and aura are hidden on your screen
+
 ## 0.8.57
 - The Active switch is now a lever at the top left above the menu: throw it right for on, left for off
 
