@@ -182,6 +182,17 @@ final class CosmeticData {
         }
         return o;
     }
+    /** What the Admin Panel shows ticked: exactly what cosmetics.json gives this player (the owner, who can wear everything anyway, starts with everything ticked until something is saved for them). */
+    static Set<String> pickedFor(String code) {
+        Set<String> o = new LinkedHashSet<>(); Set<String> g = grants.getOrDefault(code, Set.of());
+        for (String x : g) {
+            if (x.startsWith("c:")) o.add(x.substring(2));
+            else { SetDef sd = setById(x); if (sd != null) for (Def d : members(sd)) o.add(d.id()); }
+        }
+        if (code.equals(Cosmetics.OWNER) && (remoteRawHasOwner() ? false : true)) return heldBy(code);
+        return o;
+    }
+    private static boolean remoteRawHasOwner() { String r = Cosmetics.remoteRaw; return r != null && r.contains(Cosmetics.OWNER); }
     /** cosmetics.json with this player's gifts replaced by the picks: whole Special sets go in their list, anything else under "extra". */
     static String buildJson(String code, Set<String> picks) {
         com.google.gson.JsonObject root;

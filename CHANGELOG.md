@@ -1,3 +1,11 @@
+## 0.8.56
+- Pest icon: the ladybug flaps its wings. Dye (a flask that takes a falling drop and changes colour), Mythological (a flashing lightning bolt in laurel) and Experiments (the book flips its pages) have real animations instead of a shine
+- Slayers > Animation Type > Default uses a spinning gold coin instead of a sword
+- Drop Library uses the spinning diamond icon
+- The Active switch moved above the menu, top right, and looks like a real switch that slides on and off
+- The small line under a category title is smaller than the title
+- Admin: changes save themselves a moment after every click. The picker now shows exactly what is saved (before, as the owner you always saw everything ticked again)
+
 ## 0.8.55
 - Newcomer, Discord, First Drop, Collector, Secret, Hoarder and Legend suffixes have new animated icons (the Discord one matches the new Discord logo)
 - Auras have a moving animation: while you move, a curtain of light streams out behind you along your path. It follows your speed, so it shortens and slows as you do, fades into the resting aura as you stop, and the idle animation starts after 5 seconds as before
