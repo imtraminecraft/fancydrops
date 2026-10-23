@@ -1,4 +1,3 @@
-
 plugins {
     id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id 'maven-publish'
@@ -11,15 +10,16 @@ repositories {
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    implementation "net.fabricmc.fabric-api:${project.fabric_api_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
 processResources {
     def version = project.version
+    def channel = "dev"
 
-    // GitHub Actions: main = Full, other branches = Beta.
-    // Local builds default to dev.
-    def channel = System.getenv("GITHUB_REF_NAME") == "main" ? "main" : "dev"
+    if (System.getenv("GITHUB_REF_NAME") == "main") {
+        channel = "main"
+    }
 
     inputs.property "version", version
     inputs.property "channel", channel
