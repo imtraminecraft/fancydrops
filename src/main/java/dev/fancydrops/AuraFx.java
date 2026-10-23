@@ -13,7 +13,10 @@ final class AuraFx {
     private AuraFx() {}
 
     /** One particle: x/z in blocks round the player, y up from the feet, size in blocks, colour with alpha, shape 0 = square, 1 = star, 2 = flat slice. */
-    record P(float x, float y, float z, float size, int argb, int shape) {}
+    record P(float x, float y, float z, float size, int argb, int shape, float lag) {
+        P(float x, float y, float z, float size, int argb, int shape) { this(x, y, z, size, argb, shape, 0f); }
+    }
+    // lag: seconds the particle stays behind in the world while you move (0 = it follows you)
 
     private static int hash(int a, long b) {
         int h = a * 73856093 ^ (int) b * 19349663; h ^= h >>> 13; h *= 0x5bd1e995; h ^= h >>> 15;
@@ -34,7 +37,7 @@ final class AuraFx {
                 for (int strand = 0; strand < 2; strand++) for (int i = 0; i < 14; i++) {
                     float ph = (float) (((t / 3600.0) + i / 14.0) % 1.0), ang = (float) (ph * Math.PI * 3 + strand * Math.PI + t / 1700.0), r = 0.5f + 0.06f * (float) Math.sin(ph * 9);
                     float al = (float) Math.sin(Math.PI * ph);
-                    o.add(new P((float) Math.cos(ang) * r, 0.05f + ph * 1.95f, (float) Math.sin(ang) * r, 0.04f + 0.012f * al, argb(0.3f + 0.7f * al, mix(strand == 0 ? 0x4DD6FF : 0x8FA8FF, 0xE8FFFF, ph)), 0));
+                    o.add(new P((float) Math.cos(ang) * r, 0.05f + ph * 1.95f, (float) Math.sin(ang) * r, 0.04f + 0.012f * al, argb(0.3f + 0.7f * al, mix(strand == 0 ? 0x4DD6FF : 0x8FA8FF, 0xE8FFFF, ph)), 0, ph * 0.7f));
                 }
                 for (int i = 0; i < 10; i++) {                                         // the halo
                     float ang = (float) (i * Math.PI * 2 / 10 - t / 1300.0), tw = 0.5f + 0.5f * (float) Math.sin(t / 260.0 + i * 1.3);
@@ -43,7 +46,7 @@ final class AuraFx {
                 for (int i = 0; i < 5; i++) {                                          // stars that rise and fade
                     long off = i * 560L, step = (t + off) / 2800L; float ph = ((t + off) % 2800L) / 2800f;
                     float ang = hash(i, step) % 628 / 100f;
-                    o.add(new P((float) Math.cos(ang) * 0.62f, 0.2f + ph * 1.6f, (float) Math.sin(ang) * 0.62f, 0.08f * (float) Math.sin(Math.PI * ph), argb(0.95f, 0xE8FFFF), 1));
+                    o.add(new P((float) Math.cos(ang) * 0.62f, 0.2f + ph * 1.6f, (float) Math.sin(ang) * 0.62f, 0.08f * (float) Math.sin(Math.PI * ph), argb(0.95f, 0xE8FFFF), 1, ph * 0.9f));
                 }
                 break;
             }
@@ -56,7 +59,7 @@ final class AuraFx {
                 for (int i = 0; i < 5; i++) {                                          // bursts: a star that swells and dies
                     long off = i * 330L, step = (t + off) / 1500L; float ph = ((t + off) % 1500L) / 1500f;
                     float ang = hash(i, step) % 628 / 100f, r = 0.35f + (hash(i + 50, step) % 45) / 100f, y = 0.1f + (hash(i + 99, step) % 180) / 100f;
-                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.13f * (float) Math.sin(Math.PI * ph), argb(1f, 0xFFFFFF), 1));
+                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.13f * (float) Math.sin(Math.PI * ph), argb(1f, 0xFFFFFF), 1, ph * 0.8f));
                 }
                 for (int i = 0; i < 12; i++) {                                         // a ring of light at your feet
                     float ang = (float) (i * Math.PI * 2 / 12 + t / 2200.0), tw = 0.5f + 0.5f * (float) Math.sin(t / 300.0 + i * 1.7);
@@ -64,7 +67,7 @@ final class AuraFx {
                 }
                 for (int i = 0; i < 8; i++) {
                     float ph = (float) (((t / 3000.0) + i / 8.0) % 1.0), ang = i * 1.9f;
-                    o.add(new P((float) Math.cos(ang) * 0.5f, ph * 2f, (float) Math.sin(ang) * 0.5f, 0.03f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0xFFF2C0), 0));
+                    o.add(new P((float) Math.cos(ang) * 0.5f, ph * 2f, (float) Math.sin(ang) * 0.5f, 0.03f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0xFFF2C0), 0, ph * 0.9f));
                 }
                 break;
             }
@@ -91,7 +94,7 @@ final class AuraFx {
                 }
                 for (int i = 0; i < 5; i++) {                                         // bits falling like code
                     float ph = (float) (((t / 1800.0) + i / 5.0) % 1.0), ang = i * 1.3f;
-                    o.add(new P((float) Math.cos(ang) * 0.6f, 2f - ph * 2f, (float) Math.sin(ang) * 0.6f, 0.035f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0x6BFF9C), 0));
+                    o.add(new P((float) Math.cos(ang) * 0.6f, 2f - ph * 2f, (float) Math.sin(ang) * 0.6f, 0.035f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0x6BFF9C), 0, ph * 0.6f));
                 }
                 break;
             }
@@ -109,7 +112,16 @@ final class AuraFx {
     }
 
     // ------------------------------------------------------------------ in the world: our particles projected onto the screen
-    private static final Map<UUID, double[]> SMOOTH = new HashMap<>();
+    private static final Map<UUID, ArrayDeque<double[]>> HIST = new HashMap<>();
+    /** The player's position at time t (ms), from the recorded history. */
+    private static double[] at(ArrayDeque<double[]> h, long t) {
+        double[] prev = null;
+        for (double[] e : h) {
+            if (e[0] >= t) { if (prev == null) return new double[]{e[1], e[2], e[3]}; double k = (t - prev[0]) / Math.max(1.0, e[0] - prev[0]); return new double[]{prev[1] + (e[1] - prev[1]) * k, prev[2] + (e[2] - prev[2]) * k, prev[3] + (e[3] - prev[3]) * k}; }
+            prev = e;
+        }
+        return new double[]{prev[1], prev[2], prev[3]};
+    }
     private static Object call(Object o, String... names) {
         if (o == null) return null;
         for (String n : names) { try { var m = o.getClass().getMethod(n); m.setAccessible(true); return m.invoke(o); } catch (Throwable ignored) { } }
@@ -171,14 +183,23 @@ final class AuraFx {
             int W = mc.getWindow().getGuiScaledWidth(), H = mc.getWindow().getGuiScaledHeight();
             double fov = Math.toRadians(mc.options.fov().get()), th = Math.tan(fov / 2), asp = W / (double) H;
             long now = System.currentTimeMillis();
+            float pt = 1f; try { pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false); } catch (Throwable ignored) { }
             for (var p : mc.level.players()) {
                 Cosmetics.Look l = looks.get(p.getUUID());
                 if (l == null || l.aura() == null) continue;
                 if (p != mc.player && (mc.player.distanceTo(p) > 40 || !mc.player.hasLineOfSight(p))) continue;
-                double[] sm = SMOOTH.computeIfAbsent(p.getUUID(), k -> new double[]{p.getX(), p.getY(), p.getZ()});
-                sm[0] += (p.getX() - sm[0]) * 0.6; sm[1] += (p.getY() - sm[1]) * 0.6; sm[2] += (p.getZ() - sm[2]) * 0.6;
+                double ox = fieldD(p, "xOld"), oy = fieldD(p, "yOld"), oz = fieldD(p, "zOld");           // where the player is drawn this frame: between the last tick and this one
+                if (ox == 0 && oy == 0 && oz == 0) { ox = p.getX(); oy = p.getY(); oz = p.getZ(); }
+                double ex = ox + (p.getX() - ox) * pt, ey = oy + (p.getY() - oy) * pt, ez = oz + (p.getZ() - oz) * pt;
+                ArrayDeque<double[]> hist = HIST.computeIfAbsent(p.getUUID(), k -> new ArrayDeque<>());       // the last two seconds of where the player was
+                if (hist.isEmpty() || now - (long) hist.peekLast()[0] >= 8) hist.addLast(new double[]{now, ex, ey, ez});
+                while (hist.size() > 1 && now - (long) hist.peekFirst()[0] > 2000) hist.pollFirst();
                 for (P q : particles(l.aura(), now)) {
-                    double dx = sm[0] + q.x() - cx, dy = sm[1] + q.y() - cy, dz = sm[2] + q.z() - cz;
+                    double bx = ex, by = ey, bz = ez;
+                    if (q.lag() > 0f && hist.size() > 1) {                                                   // it was let go a moment ago: it stays where you were then
+                        double[] at = at(hist, now - (long) (q.lag() * 1000f)); bx = at[0]; by = at[1]; bz = at[2];
+                    }
+                    double dx = bx + q.x() - cx, dy = by + q.y() - cy, dz = bz + q.z() - cz;
                     double zc = dx * fx + dy * fy + dz * fz;
                     if (zc < 0.25) continue;
                     double xc = dx * rx + dy * ry + dz * rz, yc = dx * ux + dy * uy + dz * uz;
@@ -187,7 +208,7 @@ final class AuraFx {
                     draw(g, sx, sy, px, q);
                 }
             }
-            if (SMOOTH.size() > 64) SMOOTH.clear();
+            if (HIST.size() > 64) HIST.clear();
         } catch (Throwable ignored) { }
     }
 
