@@ -31,13 +31,16 @@ final class Cosmetics {
         new Suffix("star", "Shooting Star", "v0.8.0", fr(0xE0B0)),
         new Suffix("ghost", "Ghost", "v0.8.0", fr(0xE0C0))};
     /** Who owns cosmetics. Everyone with the mod sees their suffix; only they can open the Cosmetics page. */
-    static final Set<UUID> WHITELIST = Set.of(UUID.fromString("1350c2e2-3c1e-45fe-984f-fe2e9c2e868a"));
+    /** Owners are stored as SHA-256 codes of their UUID, never as the UUID itself. This one is built in; more come from cosmetics.json. */
+    private static final String OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8";
+    private static final Map<UUID, String> CODES = new HashMap<>();
+    static String code(UUID u) { return u == null ? "" : CODES.computeIfAbsent(u, k -> { try { var md = java.security.MessageDigest.getInstance("SHA-256"); StringBuilder b = new StringBuilder(); for (byte x : md.digest(k.toString().toLowerCase(Locale.ROOT).getBytes(java.nio.charset.StandardCharsets.UTF_8))) b.append(String.format("%02x", x)); return b.toString(); } catch (Exception e) { return ""; } }); }
     private static final Map<UUID, Component> TAB_BASE = new HashMap<>();
     private static final Map<UUID, Component> TAB_SET = new HashMap<>();       // the name we put in the tab list for each player (compared by identity: if it changed, the server rewrote it)
     private static final Map<UUID, String> TAB_ID = new HashMap<>();
     /** What the owners picked, read from cosmetics.json in the GitHub repo so everybody with the mod sees the same thing. */
     private static final String REMOTE_URL = "https://raw.githubusercontent.com/imtraminecraft/fancydrops/main/cosmetics.json";
-    private static volatile Map<UUID, String> remote = Map.of();
+    private static volatile Map<String, String> remote = Map.of(OWNER, "sparkle");       // owner code -> suffix id
     private static long remoteAt;
     private static void refreshRemote() {
         long now = System.currentTimeMillis();
@@ -47,8 +50,8 @@ final class Cosmetics {
             try {
                 var res = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(REMOTE_URL)).header("User-Agent", "FancyDrops").GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
                 if (res.statusCode() != 200) return;
-                Map<UUID, String> m = new HashMap<>();
-                for (var e : com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject().entrySet()) { UUID u = UUID.fromString(e.getKey()); if (WHITELIST.contains(u)) m.put(u, e.getValue().getAsString()); }
+                Map<String, String> m = new HashMap<>(); m.put(OWNER, "sparkle");
+                for (var e : com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject().getAsJsonObject("owners").entrySet()) m.put(e.getKey().toLowerCase(Locale.ROOT), e.getValue().getAsString());
                 remote = m;
             } catch (Throwable ignored) { }
         });
@@ -57,8 +60,8 @@ final class Cosmetics {
 
     private record Seg(String text, Style style) {}
     static UUID me() { try { var u = Minecraft.getInstance().getUser(); return u == null ? null : u.getProfileId(); } catch (Throwable t) { return null; } }
-    /** The Cosmetics page and your own pick: only for whitelisted UUIDs (every build). */
-    static boolean allowed() { UUID m = me(); return m != null && WHITELIST.contains(m); }
+    /** The Cosmetics page and your own pick: only for owners (every build). */
+    static boolean allowed() { refreshRemote(); return remote.containsKey(code(me())); }
     static Suffix byId(String id) { for (Suffix s : SUFFIXES) if (s.id().equals(id)) return s; return null; }
     /** Your own pick (null = no suffix). */
     static Suffix chosen() { return byId(FancyConfig.get().suffix); }
@@ -66,7 +69,12 @@ final class Cosmetics {
     private static Map<UUID, Suffix> active() {
         Map<UUID, Suffix> m = new LinkedHashMap<>(); UUID me = me();
         refreshRemote();
-        for (UUID u : WHITELIST) if (!u.equals(me)) { Suffix r = byId(remote.get(u)); m.put(u, r != null ? r : SUFFIXES[0]); }
+        var conn = Minecraft.getInstance().getConnection();
+        if (conn != null) for (var info : conn.getOnlinePlayers()) {
+            if (info.getProfile() == null) continue;
+            UUID u = info.getProfile().id(); String pick = remote.get(code(u));
+            if (pick != null && !u.equals(me)) { Suffix r = byId(pick); m.put(u, r != null ? r : SUFFIXES[0]); }
+        }
         if (me != null && allowed()) { Suffix c = chosen(); if (c != null) m.put(me, c); }
         return m;
     }

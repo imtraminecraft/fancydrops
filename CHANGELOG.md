@@ -2,6 +2,10 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.16
+- Cosmetics owners are now stored as codes (SHA-256 of the UUID), not as UUIDs, in the mod and in cosmetics.json. New owners and their suffix come from cosmetics.json on GitHub, so adding one needs no new build. The Cosmetics page shows your own ID code with a Copy ID button.
+- The Cosmetics preview: the RARE DROP! line now sits above the chat line, and the tab list mock is closer to SkyBlock's (three columns, ranks, header and footer) with moving ping bars.
+
 ## 0.8.15
 - Everyone with the mod now sees ImTra's suffix, in chat and in the tab list. What it is comes from cosmetics.json in the GitHub repo.
 - The Cosmetics page and picking a suffix are only for ImTra's account, in every build.
