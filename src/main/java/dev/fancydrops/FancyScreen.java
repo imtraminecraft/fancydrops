@@ -1321,6 +1321,55 @@ public class FancyScreen extends Screen {
         g.disableScissor();
     }
 
+    /** A busy building site behind a page that is not built yet: bulldozers driving, a crane swinging its load, stacks of bricks, barrels and cones. */
+    private void site(GuiGraphicsExtractor g, Row r, float sec) {
+        int mid = r.x + r.w / 2, gy = r.y + r.h - 12;                                 // the ground line
+        int lane = Math.max(40, (r.w - 130) / 2);
+        for (int k = 0; k < 2; k++) {                                                  // a bulldozer on each side, driving back and forth
+            int dir = k == 0 ? 1 : -1; float ph = (sec * 0.16f + k * 0.5f) % 1f, tri = ph < 0.5f ? ph * 2f : 2f - ph * 2f;
+            boolean fwd = ph < 0.5f; int d2 = k == 0 ? (fwd ? 1 : -1) : (fwd ? -1 : 1);
+            int x0 = k == 0 ? r.x + 54 : mid + 66, bx = x0 + Math.round(tri * (lane - 74)), by = gy - 15;
+            bulldozer(g, bx, by, d2, sec);
+            for (int j = 0; j < 4; j++) {                                              // dust behind it
+                float u = (sec * 1.6f + j * 0.25f) % 1f; int dx = bx + (d2 > 0 ? -2 - Math.round(u * 8) : 24 + Math.round(u * 8)), dy = gy - 3 - Math.round(u * 6);
+                g.fill(dx, dy, dx + 2, dy + 2, Gfx.argb(Math.round(110 * (1f - u)), 0xB59A6A));
+            }
+        }
+        int cx = r.x + r.w - 26;                                                       // a crane in the corner: the arm turns and the load sways
+        g.fill(cx, r.y + 18, cx + 3, gy, 0xFFE0A020); g.fill(cx - 3, gy - 3, cx + 6, gy, 0xFF6B5410);
+        for (int y = r.y + 20; y < gy - 4; y += 5) g.fill(cx, y, cx + 3, y + 1, 0xFF8A6410);
+        float sw = (float) Math.sin(sec * 1.2f); int ax = cx - 26 + Math.round(sw * 4);
+        g.fill(ax, r.y + 17, cx + 12, r.y + 19, 0xFFE0A020); g.fill(cx + 12, r.y + 17, cx + 18, r.y + 20, 0xFF5A5A66);
+        int hx = ax + 5, hl = 16 + Math.round((float) Math.sin(sec * 0.9f) * 4);
+        g.fill(hx, r.y + 19, hx + 1, r.y + 19 + hl, 0xFFB0B0B8); g.fill(hx - 4, r.y + 19 + hl, hx + 6, r.y + 22 + hl, 0xFFB5532E); g.fill(hx - 4, r.y + 19 + hl, hx + 6, r.y + 20 + hl, 0xFFD9703E);
+        for (int k = 0; k < 3; k++) {                                                  // brick stacks, barrels and cones, scattered
+            int bx2 = r.x + 20 + k * 34 + (k == 1 ? 6 : 0);
+            if (bx2 > mid - 70 && bx2 < mid + 70) continue;
+            for (int j = 0; j <= k; j++) { g.fill(bx2, gy - 5 - j * 5, bx2 + 12, gy - 1 - j * 5, 0xFFB5532E); g.fill(bx2, gy - 5 - j * 5, bx2 + 12, gy - 4 - j * 5, 0xFFD9703E); g.fill(bx2 + 6, gy - 5 - j * 5, bx2 + 7, gy - 1 - j * 5, 0xFF7A3418); }
+        }
+        int[] bar = {r.x + 8, mid + 56, r.x + r.w - 52};
+        for (int b : bar) { g.fill(b, gy - 9, b + 7, gy - 1, 0xFFE06A20); g.fill(b, gy - 7, b + 7, gy - 6, 0xFFF2F2F2); g.fill(b, gy - 4, b + 7, gy - 3, 0xFFF2F2F2); g.fill(b + 1, gy - 10, b + 6, gy - 9, 0xFF3A3A3A); }
+        for (int k = 0; k < 3; k++) {                                                  // a few welding sparks and flickering work lights
+            float u = (sec * 0.9f + k * 0.31f) % 1f; int sx = r.x + 30 + k * 40, sy = r.y + r.h - 22 - Math.round(u * 24);
+            g.fill(sx, sy, sx + 2, sy + 2, Gfx.argb(Math.round(220 * (1f - u)), k % 2 == 0 ? 0xFFC857 : 0xFF8A2E));
+        }
+    }
+
+    private static void bulldozer(GuiGraphicsExtractor g, int x, int y, int dir, float sec) {
+        int W = 24; int shake = ((int) (sec * 14f)) % 2;
+        java.util.function.IntBinaryOperator fx = (ox, w) -> dir > 0 ? x + ox : x + W - ox - w;
+        int by = y + shake;
+        g.fill(fx.applyAsInt(1, 20), y + 11, fx.applyAsInt(1, 20) + 20, y + 15, 0xFF2A2A30);                   // tracks
+        for (int k = 0; k < 5; k++) { int tx = fx.applyAsInt(2 + k * 4 + ((int) (sec * 8f)) % 4 * dir, 2); g.fill(Math.max(Math.min(tx, x + 22), x), y + 12, Math.max(Math.min(tx, x + 22), x) + 1, y + 14, 0xFF5A5A66); }
+        g.fill(fx.applyAsInt(3, 16), by + 5, fx.applyAsInt(3, 16) + 16, by + 11, 0xFFF2B400);                  // body
+        g.fill(fx.applyAsInt(3, 16), by + 5, fx.applyAsInt(3, 16) + 16, by + 6, 0xFFFFD84A);
+        g.fill(fx.applyAsInt(9, 8), by, fx.applyAsInt(9, 8) + 8, by + 6, 0xFFF2B400);                          // cab
+        g.fill(fx.applyAsInt(11, 4), by + 1, fx.applyAsInt(11, 4) + 4, by + 4, 0xFF7ACBF0);
+        g.fill(fx.applyAsInt(3, 2), by - 3, fx.applyAsInt(3, 2) + 2, by + 5, 0xFF3A3A3A);                       // exhaust
+        g.fill(fx.applyAsInt(21, 3), by + 3 + shake, fx.applyAsInt(21, 3) + 3, by + 13, 0xFF8A8A94);            // blade
+        g.fill(fx.applyAsInt(19, 3), by + 8, fx.applyAsInt(19, 3) + 3, by + 9, 0xFF5A5A66);
+    }
+
     private void tabIcon(GuiGraphicsExtractor g, Tab t, int x, int y, long now, boolean lively) {
         switch (t) {
             case DROPS -> Icons.draw(g, "library", x, y, now);
@@ -3273,6 +3322,7 @@ public class FancyScreen extends Screen {
                     }
                     Gfx.push(g); Gfx.translate(g, r.x + 14, r.y + r.h - 46); Gfx.scale(g, 2f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g);
                     Gfx.push(g); Gfx.translate(g, r.x + r.w - 46, r.y + r.h - 46); Gfx.scale(g, 2f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g);
+                    site(g, r, sec);
                     Gfx.push(g); Gfx.translate(g, r.x + 12, r.y + 12); Gfx.scale(g, 1.5f); Icons.draw(g, "fd:wip", 0, 0, nw); Gfx.pop(g);
                     Gfx.push(g); Gfx.translate(g, r.x + r.w - 36, r.y + 12); Gfx.scale(g, 1.5f); Icons.draw(g, "fd:wip", 0, 0, nw); Gfx.pop(g);
                 } else for (int i = 0; i < 5; i++) {                                    // sparkles orbiting the icon
@@ -3283,10 +3333,12 @@ public class FancyScreen extends Screen {
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
                 int wy = r.y + 70; for (String ln : wrap(r.sub, r.w - 120)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; }
                 if (r.kind == HERO) continue;
-                String wt = "UNDER CONSTRUCTION"; int wtw = Gfx.w(font, wt), pw2 = wtw + 20, hx = mid - pw2 / 2, hy = r.y + r.h - 34;
+                String wt = "Coming Soon", tm = "TM"; int tmw = Math.round(Gfx.w(font, tm) * 0.6f) + 1, wtw = Gfx.w(font, wt) + tmw, pw2 = wtw + 20, hx = mid - pw2 / 2, hy = r.y + r.h - 34;
                 int gl = 170 + (int) (80 * Math.sin(sec * 3));
                 pill(g, hx, hy, pw2, 16, 0xFF1A1710); rout(g, hx, hy, pw2, 16, Gfx.argb(gl, 0xFFC857));
-                Gfx.textCentered(g, font, wt, mid, hy + 4, Gfx.argb(Math.min(255, gl + 40), 0xFFC857));
+                int tc = Gfx.argb(Math.min(255, gl + 40), 0xFFC857);
+                Gfx.text(g, font, wt, hx + 10, hy + 4, tc);
+                Gfx.push(g); Gfx.translate(g, hx + 10 + Gfx.w(font, wt) + 1, hy + 3); Gfx.scale(g, 0.6f); Gfx.text(g, font, tm, 0, 0, tc); Gfx.pop(g);
                 continue;
             }
             if (r.kind == TEXT) {                                                   // plain text: a heading and its paragraph, no card
