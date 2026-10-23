@@ -2,6 +2,13 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.11
+- Rare drops this mod doesn't list (like "VERY RARE DROP! (Duplex I)") are now tracked too; the name in brackets was being read as a stat and the whole line was dropped.
+- Any boss kill plays exactly one animation: a drop we don't list no longer cancels the "nothing dropped" scene, and it doesn't play that scene over a real drop.
+- Animations play about 30% slower.
+- The animated chat suffix now twinkles slowly instead of flickering every frame.
+- The kill line is now written to the drop log (config/fancydrops/drop-log.txt) to help trace a missing animation.
+
 ## 0.8.10
 - The animated chat-suffix resource pack is now built into the mod: installed and turned on automatically (can be switched off in Options > Resource Packs).
 
