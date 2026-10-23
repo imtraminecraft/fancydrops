@@ -36,6 +36,8 @@ final class Cosmetics {
     static final FontDescription EMOJI = new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "emoji"));
 
     private record Seg(String text, Style style) {}
+    /** A font holding only this suffix's frames: with the obfuscated style the game picks one of them at random every frame, so the suffix twinkles in chat. */
+    static FontDescription chatFont(Suffix s) { return new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "suf_" + s.id())); }
 
     static UUID me() { try { var u = Minecraft.getInstance().getUser(); return u == null ? null : u.getProfileId(); } catch (Throwable t) { return null; } }
     /** The dev build is open to everyone; the public build only to whitelisted UUIDs. */
@@ -81,7 +83,7 @@ final class Cosmetics {
                 if (name == null) continue;
                 int at = find(full, name);
                 if (at < 0) continue;
-                return insert(message, at + name.length(), e.getValue().frames()[0]);
+                return insert(message, at + name.length(), e.getValue().frames()[0], Style.EMPTY.withFont(chatFont(e.getValue())).withColor(0xFFFFFF).withObfuscated(true));
             }
         } catch (Exception ignored) { }
         return message;
@@ -89,33 +91,43 @@ final class Cosmetics {
 
     private static boolean ours(String curStr) { for (Suffix s : SUFFIXES) for (String f : s.frames()) if (curStr.contains(f)) return true; return false; }
 
-    /** Also puts the animated suffix after the name in the tab list (called every few ticks: the frame changes about 9 times a second; the server may rewrite the entry, which is picked up as the new base). */
+    /** Also puts the animated suffix after the name in the tab list. SkyBlock draws its tab from many fake entries ("[496] imtra [x]" is one of them), so every entry is checked for an owner's name, not only the real one. Called every few ticks; the server rewriting an entry is picked up as its new base. */
     static void tickTab(Minecraft mc) {
         try {
-            if (mc.getConnection() == null) return;
+            var conn = mc.getConnection();
+            if (conn == null) return;
             long now = System.currentTimeMillis();
-            Map<UUID, Suffix> act = active(); UUID me = me();
-            if (me != null && !act.containsKey(me)) {                                              // you switched your suffix off: give the tab entry its plain name back
-                var info = mc.getConnection().getPlayerInfo(me);
-                if (info != null) { Component cur = info.getTabListDisplayName(); if (cur != null && ours(cur.getString())) info.setTabListDisplayName(TAB_BASE.get(me)); }
-            }
-            for (Map.Entry<UUID, Suffix> e : act.entrySet()) {
-                String frame = frameNow(e.getValue(), now);
-                var info = mc.getConnection().getPlayerInfo(e.getKey());
-                if (info == null || info.getProfile() == null) continue;
+            Map<UUID, Suffix> act = active();
+            Map<String, Suffix> byName = new LinkedHashMap<>();
+            for (Map.Entry<UUID, Suffix> e : act.entrySet()) { String n = nameOf(mc, e.getKey()); if (n != null) byName.put(n, e.getValue()); }
+            for (var info : conn.getOnlinePlayers()) {
+                if (info.getProfile() == null) continue;
+                UUID id = info.getProfile().id();
                 Component cur = info.getTabListDisplayName();
                 String curStr = cur == null ? "" : cur.getString();
                 boolean ours = ours(curStr);
+                Component base = ours ? TAB_BASE.get(id) : cur;
+                String baseStr = base == null ? "" : base.getString();
+                Map.Entry<String, Suffix> hit = null; int at = -1;
+                for (Map.Entry<String, Suffix> e : byName.entrySet()) {
+                    if (base != null) { int f = find(baseStr, e.getKey()); if (f >= 0) { hit = e; at = f; break; } }
+                    else if (act.containsKey(id) && e.getKey().equals(info.getProfile().name())) { hit = e; break; }                 // your own entry with no display name yet
+                }
+                if (hit == null) {                                                                                                    // not (or no longer) an entry that carries a suffix: take ours off
+                    if (ours && TAB_BASE.containsKey(id)) { info.setTabListDisplayName(TAB_BASE.get(id)); }
+                    continue;
+                }
+                String frame = frameNow(hit.getValue(), now);
                 if (curStr.contains(frame)) continue;
-                Component base = ours ? TAB_BASE.get(e.getKey()) : cur;
                 if (base == null) {
                     base = Component.literal(info.getProfile().name());
                     try { base = net.minecraft.world.scores.PlayerTeam.formatNameForTeam(info.getTeam(), base); } catch (Throwable ignored) { }
+                    TAB_BASE.put(id, base);
+                    info.setTabListDisplayName(Component.empty().append(base).append(Component.literal(" ")).append(glyph(frame)));
+                } else {
+                    if (!ours) TAB_BASE.put(id, base);
+                    info.setTabListDisplayName(insert(base, at + hit.getKey().length(), frame, Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)));
                 }
-                TAB_BASE.put(e.getKey(), base);
-                MutableComponent out = Component.empty().append(base).append(Component.literal(" "));
-                out.append(glyph(frame));
-                info.setTabListDisplayName(out);
             }
         } catch (Throwable ignored) { }
     }
@@ -141,7 +153,7 @@ final class Cosmetics {
     }
     private static boolean word(char c) { return Character.isLetterOrDigit(c) || c == '_'; }
 
-    private static Component insert(Component message, int offset, String glyph) {
+    private static Component insert(Component message, int offset, String glyph, Style gs) {
         List<Seg> segs = new ArrayList<>();
         message.visit((style, text) -> { segs.add(new Seg(text, style)); return Optional.empty(); }, Style.EMPTY);
         MutableComponent out = Component.empty();
@@ -152,7 +164,7 @@ final class Cosmetics {
                 int cut = offset - pos;
                 out.append(Component.literal(s.text().substring(0, cut)).withStyle(s.style()));
                 out.append(Component.literal(" ").withStyle(s.style()));
-                out.append(Component.literal(glyph).withStyle(Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)));      // obfuscated = the game re-picks one of the same-width sparkle frames every frame, so it twinkles in chat
+                out.append(Component.literal(glyph).withStyle(gs));
                 if (cut < len) out.append(Component.literal(s.text().substring(cut)).withStyle(s.style()));
                 done = true;
             } else out.append(Component.literal(s.text()).withStyle(s.style()));

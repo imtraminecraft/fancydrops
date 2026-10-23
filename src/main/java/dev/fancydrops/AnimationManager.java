@@ -151,7 +151,8 @@ public final class AnimationManager {
         boolean custom = farm && p9 == 9;
         if (custom) { col = 1; row = c.farmY < 0.5f ? 0 : 2; }
         boolean below = row == 0 || (row == 1 && c.textPos == 1);
-        float roomH = row == 1 ? H - 2 * (mg + textH + gap) : H - 2 * mg - textH - gap;
+        int lift = row == 2 && col == 1 && !custom ? Math.max(0, 64 - mg) : 0;               // bottom centre sits above the held item's name, which hangs over the hotbar
+        float roomH = (row == 1 ? H - 2 * (mg + textH + gap) : H - 2 * mg - textH - gap) - lift;
         float cell = Math.max(0.2f, Math.min(want, Math.min(roomH / (Scene.H * 0.92f), (W - 2 * mg) / (float) Scene.W)));
         int sw = Math.round(Scene.W * cell), sh = Math.round(Scene.H * cell), vis = Math.round(Scene.H * cell * 0.92f);
         int half = Math.min((W - 2 * mg) / 2, Math.max(sw / 2, Math.round(110 * tsc)));
@@ -166,7 +167,7 @@ public final class AnimationManager {
             oy = (H - sh) / 2;
             nameY = below ? oy + vis + gap : oy + Math.round(0.04f * sh) - textH - gap;
         } else {
-            int blockH = vis + gap + textH, top = row == 0 ? mg : H - mg - blockH;
+            int blockH = vis + gap + textH, top = row == 0 ? mg : H - mg - lift - blockH;
             if (below) { oy = top; nameY = top + vis + gap; } else { nameY = top; oy = top + textH + gap - Math.round(0.04f * sh); }
         }
         int bx0 = cx - half, bx1 = cx + half, by0 = Math.min(oy, nameY), by1 = Math.max(oy + sh, nameY + textH);

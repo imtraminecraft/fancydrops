@@ -43,6 +43,7 @@ public final class DropListener {
             } else {
                 ChatParser.Drop d = ChatParser.parseDrop(line);
                 if (d != null) {
+                    dlog("heard: " + line.trim() + "  ->  " + d.kind() + " / " + d.name() + " x" + d.amount());
                     if (FarmData.isFarm(d)) { if (playFarm(d)) drop = true; }          // farming drops have no kill: they play at once
                     else if (MythData.isMyth(d)) { if (playMyth(d)) drop = true; }     // so do mythological creature drops
                     else { TRACKER.drop(d, now); drop = true; }
@@ -103,6 +104,16 @@ public final class DropListener {
 
     // ------------------------------------------------------------------ one kill
 
+    /** A few lines about what was heard and what happened to it: config/fancydrops/drop-log.txt, so a missing animation can be traced. */
+    static void dlog(String s) {
+        try {
+            java.nio.file.Path f = DataFiles.dir().resolve("drop-log.txt");
+            if (java.nio.file.Files.exists(f) && java.nio.file.Files.size(f) > 200_000) java.nio.file.Files.delete(f);
+            java.nio.file.Files.createDirectories(f.getParent());
+            java.nio.file.Files.writeString(f, java.time.LocalTime.now().withNano(0) + "  " + s + "\n", java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+        } catch (Throwable ignored) { }
+    }
+
     private static final class Res { final Item item = new Item(); boolean animate, announce, known; }
 
     private static Res resolve(ChatParser.Drop d) {
@@ -141,6 +152,8 @@ public final class DropListener {
         if (!(c.masterAnimate || c.masterAnnounce)) { s.close(); return; }
         List<Res> found = new ArrayList<>();
         for (ChatParser.Drop d : s.drops) found.add(resolve(d));
+        for (Res r : found) dlog("scene for " + r.item.name + ": known=" + r.known + " animate=" + r.animate + " announce=" + r.announce + (s.fromKill ? " (kill)" : " (no kill line)"));
+        if (found.isEmpty()) dlog("kill with no drops: the 'nothing' scene");
         final int seen = s.drops.size();
         final Runnable start = () -> {                       // the scene is starting: close the session, and treat stragglers as their own drops
             s.close();
@@ -208,20 +221,21 @@ public final class DropListener {
             if (quick >= 0) { it.price = quick; it.source = PriceService.source(it.id, it.name); }
         }
         final String slayerName = it.slayer.name;
-        CompletableFuture.supplyAsync(() -> it.untradeable ? -1.0 : PriceService.lookup(it.id, it.name, true)).thenAccept(price ->
+        if (!it.sim && tracked) {                                             // counted the moment it drops: never waits for a price, and a failed price lookup can't lose it
+            try {
+                boolean book = "enchanted_book".equals(it.icon);
+                int col = book ? 0xFFFFFFFF : it.odds.isEmpty() ? 0xFF55FF55 : Ui.odds(it.odds);
+                boolean meter = it.odds.equals("Rare") || it.odds.equals("Extraordinary") || Ui.significant(it.odds);
+                ProfitTracker.drop(it.slayer.id, it.name, it.id, it.icon, it.amount, col, it.untradeable, meter, meter || it.rank >= 1);   // only significant drops fill the tracker list
+                dlog("tracked " + it.name + " x" + it.amount + " (" + it.slayer.id + ")");
+            } catch (Throwable t) { dlog("tracking failed for " + it.name + ": " + t); }
+        }
+        CompletableFuture.supplyAsync(() -> it.untradeable ? -1.0 : PriceService.lookup(it.id, it.name, true)).exceptionally(ex -> -1.0).thenAccept(price ->
             Minecraft.getInstance().execute(() -> {
                 it.price = price;
                 if (price >= 0) it.source = PriceService.source(it.id, it.name);
                 double total = price < 0 ? price : price * Math.max(1, it.amount);        // a stack of 40 is worth 40 of them
-                if (!it.sim) {                                                    // simulated drops never touch the ledger or the profit tracker
-                    LEDGER.add(new Rec(it.name, slayerName, total, System.currentTimeMillis()));
-                    if (tracked) {
-                        boolean book = "enchanted_book".equals(it.icon);
-                        int col = book ? 0xFFFFFFFF : it.odds.isEmpty() ? 0xFF55FF55 : Ui.odds(it.odds);
-                        boolean meter = it.odds.equals("Rare") || it.odds.equals("Extraordinary") || Ui.significant(it.odds);
-                        ProfitTracker.drop(it.slayer.id, it.name, it.id, it.icon, it.amount, col, it.untradeable, meter, meter || it.rank >= 1);   // only significant drops fill the tracker list
-                    }
-                }
+                if (!it.sim) LEDGER.add(new Rec(it.name, slayerName, total, System.currentTimeMillis()));     // simulated drops never touch the ledger or the profit tracker
                 if (announce) queueAnnounce(it, total);
             }));
     }
