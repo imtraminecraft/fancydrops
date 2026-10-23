@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.14
+- The suffix in chat no longer covers the colon after the name (a small gap), and the tab suffix plays at the same speed as the chat one.
+
 ## 0.8.13
 - The chat suffix is animated again, this time as a small animated picture inside the mod itself (no resource pack, no flicker). If this Minecraft can't draw it, chat falls back to the still glyph and the reason is printed in the game log.
 
