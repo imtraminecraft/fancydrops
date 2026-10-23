@@ -2,6 +2,10 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.29
+- Cosmetic tiles all line up the same way now: the icon in one column on the left and the name right after it, so no tile has a big empty gap on one side.
+- Suffix icons sit flush at the bottom of their slot (the crown had a gap under it), and the extra spaces around them in chat and the tab list are gone when a space is already there.
+
 ## 0.8.28
 - Beta and Common name effects have their own colour now (Shimmer ice-blue, Pulse pink, Ripple teal, Glow gold, Fresh mint). On a white name, like in the tab list, they were all white and could not be seen. A coloured name keeps half of its own colour. Pulse is not as dark any more.
 - Name effect tiles tell you what the effect does when you hover them.
