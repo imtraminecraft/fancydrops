@@ -1,16 +1,20 @@
 {
   "special": {
     "sparkle": [
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
+      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7"
     ],
     "patreon": [
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
+      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7"
     ],
     "bughunter": [
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
+      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7"
     ],
     "contributor": [
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
+      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7"
     ]
   },
   "owners": {
@@ -39,6 +43,29 @@
       "newcomer",
       "gem",
       "hoarder"
+    ],
+    "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7": [
+      "newcomer",
+      "fresh",
+      "flame",
+      "pulse",
+      "crown",
+      "gem",
+      "clover",
+      "star",
+      "secret",
+      "firstdrop",
+      "legend",
+      "discord",
+      "snow",
+      "bolt",
+      "hoarder",
+      "collector",
+      "ghost",
+      "heart",
+      "shimmer",
+      "wave",
+      "glow"
     ]
   }
 }
