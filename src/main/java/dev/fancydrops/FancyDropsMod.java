@@ -72,6 +72,10 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                 Identifier.fromNamespaceAndPath("fancydrops", "drop_animation"),
                 (graphics, deltaTracker) -> AnimationManager.render(graphics));
 
+        HudElementRegistry.attachElementAfter(VanillaHudElements.CHAT,
+                Identifier.fromNamespaceAndPath("fancydrops", "auras"),
+                (graphics, deltaTracker) -> AuraFx.render(graphics));
+
         // While a scene plays, the bottom of the screen slides away: the hearts and bars with the hotbar. When it ends the hearts slide back first, then the hotbar.
         for (String el : new String[]{"hotbar", "health_bar", "armor_bar", "food_bar", "air_bar", "mount_health", "info_bar", "experience_level"}) {
             final boolean hotbar = el.equals("hotbar");

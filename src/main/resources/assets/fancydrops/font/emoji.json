@@ -125,6 +125,42 @@
       "chars": [
         "\ue0d0\ue0d1\ue0d2\ue0d3\ue0e0\ue0e1\ue0e2\ue0e3\ue0e4\ue0e5"
       ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_glitchsfx.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue100\ue101\ue102\ue103\ue104\ue105"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_contrib.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue110\ue111\ue112\ue113\ue114\ue115"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/suffix_patron.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue120\ue121\ue122\ue123\ue124\ue125"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "fancydrops:font/free2.png",
+      "ascent": 8,
+      "height": 9,
+      "chars": [
+        "\ue130\ue131"
+      ]
     }
   ]
 }
