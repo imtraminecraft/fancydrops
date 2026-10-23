@@ -1,1 +1,1 @@
-Bundled fonts: Poppins Medium (OFL 1.1), Liberation Sans Bold / Serif Bold (OFL 1.1), DejaVu Sans Mono / Condensed (Bitstream Vera license, free to redistribute).
+Bundled fonts: Poppins Medium (OFL 1.1), Liberation Sans Bold / Serif Bold (OFL 1.1). Mini font: a 3x5 pixel font drawn for this mod.

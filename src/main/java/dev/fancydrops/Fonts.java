@@ -7,9 +7,9 @@ import net.minecraft.resources.Identifier;
 
 /** The fonts the mod can write in: the menu (Settings > Menu) and the drop texts (Text Changes). 0 is the game's own. */
 public final class Fonts {
-    public static final String[] NAMES = {"Default", "Clean", "Bold", "Serif", "Mono", "Narrow", "Enchanting", "Illager"};
-    public static final String[] SUBS = {"The game's own look", "Round and modern", "Heavy sans", "Old-book serif", "Even-width letters", "Tall and slim", "Enchanting table runes", "Illager runes"};
-    private static final String[][] IDS = {null, {"fancydrops", "f_clean"}, {"fancydrops", "f_bold"}, {"fancydrops", "f_serif"}, {"fancydrops", "f_mono"}, {"fancydrops", "f_narrow"}, {"minecraft", "alt"}, {"minecraft", "illageralt"}};
+    public static final String[] NAMES = {"Default", "Clean", "Bold", "Serif", "Mini font"};
+    public static final String[] SUBS = {"The game's own look", "Round and modern", "Heavy sans", "Old-book serif", "Tiny pixel letters"};
+    private static final String[][] IDS = {null, {"fancydrops", "f_clean"}, {"fancydrops", "f_bold"}, {"fancydrops", "f_serif"}, {"fancydrops", "f_mini"}};
     private static final FontDescription[] DESC = new FontDescription[IDS.length];
     static { for (int i = 1; i < IDS.length; i++) DESC[i] = new FontDescription.Resource(Identifier.fromNamespaceAndPath(IDS[i][0], IDS[i][1])); }
 

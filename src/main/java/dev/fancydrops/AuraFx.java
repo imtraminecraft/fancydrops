@@ -186,8 +186,9 @@ final class AuraFx {
                 while (hist.size() > 1 && now - (long) hist.peekFirst()[0] > 2000) hist.pollFirst();
                 for (P q : particles(l.aura(), now)) {
                     double bx = ex, by = ey, bz = ez;
-                    if (q.lag() > 0f && hist.size() > 1) {                                                   // it was let go a moment ago: it stays where you were then
-                        double[] at = at(hist, now - (long) (q.lag() * 1000f)); bx = at[0]; by = at[1]; bz = at[2];
+                    float lagS = q.lag() > 0f ? q.lag() : 0.07f + 0.2f * Math.max(0f, Math.min(1f, q.y() / 2.1f));      // everything trails behind you: the higher it is, the further behind
+                    if (hist.size() > 1) {                                                                  // it stays where you were a moment ago
+                        double[] at = at(hist, now - (long) (lagS * 1000f)); bx = at[0]; by = at[1]; bz = at[2];
                     }
                     double dx = bx + q.x() - cx, dy = by + q.y() - cy, dz = bz + q.z() - cz;
                     double zc = dx * fx + dy * fy + dz * fz;

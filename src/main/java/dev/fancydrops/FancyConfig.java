@@ -57,20 +57,22 @@ public class FancyConfig {
     public int slayerStyle = 0;               // 0 Sword (sword slices), 1 Spirit (soul slashes)
     public int barPx = 15;                    // bar height in pixels of the 96-pixel-tall scene (5..15); barHeight (a percentage) follows it
     public int barOpacity = 90;                 // Bar Changes: how solid the bars are (%)
-    public boolean barPillars = true, barLine = false;       // Bar Changes: the side pillars, a thin line along the bars' inner edge
+    public boolean barPillars = true, barLine = false;       // Bar Changes: the side pillars (barLine is retired and unused)
+    public int barCurve = 0;                   // Bar Changes: how round the window's corners are (0..100, a share of the bar height)
+    public boolean barSoft = false;            // Bar Changes: the bars fade out softly along their inner edge
     public float itemBobAmp = 1f;               // Item Changes: how far the item floats (a multiple)
     public boolean itemSpinRev = false, textBold = false, textOutline = true;
     public boolean barCustom = false;         // true: the bars use barColor instead of the drop's colour
     public int barColor = 0xFF0B0E2A;
     public float textDelayAll = 4f;           // seconds after an animation starts until its words appear (3..10)
-    public boolean fxPop = true, fxShine = true, fxWave = false, fxRainbow = false, fxDrop = false, fxPulse = false, fxGlitch = false, fxGlow = false, fxBounce = false, fxType = false, fxFloat = false, fxShake = false, fxFire = false, fxFrost = false, fxTwinkle = false, fxFade = true, fxRise = false, fxShrink = false, fxScatter = false;
+    public boolean fxPop = true, fxShine = true, fxWave = false, fxRainbow = false, fxDrop = false, fxPulse = false, fxGlitch = false, fxGlow = false, fxBounce = false, fxType = false, fxFloat = false, fxShake = false, fxFire = false, fxFrost = false, fxTwinkle = false, fxFade = true, fxRise = false, fxShrink = false, fxScatter = false, fxSlide = false, fxFlip = false, fxSwing = false, fxGold = false, fxSlideOut = false, fxMelt = false;
     public float itemSpin = 1f, itemGlow = 1f;                   // Item Changes: how fast the item spins and how strong its glow is (a multiple)
     public boolean itemBob = true, itemGlints = true, itemOutline = true;   // Item Changes: floats up and down, little glints round flat items, soft outline   // text effects (Animations > Text Changes)
     public float titleScale = 1f, subScale = 1f;   // title and sub title size, as a multiple
     public float subDelay = 0.35f;            // seconds between the title and the sub title coming in
     public boolean popups = true;             // notices pop up under the menu instead of going to chat
-    public boolean fx(int i) { return switch (i) { case 0 -> fxPop; case 1 -> fxShine; case 2 -> fxWave; case 3 -> fxRainbow; case 4 -> fxDrop; case 5 -> fxPulse; case 6 -> fxGlitch; case 7 -> fxGlow; case 8 -> fxBounce; case 9 -> fxType; case 10 -> fxFloat; case 11 -> fxShake; case 12 -> fxFire; case 13 -> fxFrost; case 14 -> fxTwinkle; case 15 -> fxFade; case 16 -> fxRise; case 17 -> fxShrink; default -> fxScatter; }; }
-    public void setFx(int i, boolean v) { switch (i) { case 0 -> fxPop = v; case 1 -> fxShine = v; case 2 -> fxWave = v; case 3 -> fxRainbow = v; case 4 -> fxDrop = v; case 5 -> fxPulse = v; case 6 -> fxGlitch = v; case 7 -> fxGlow = v; case 8 -> fxBounce = v; case 9 -> fxType = v; case 10 -> fxFloat = v; case 11 -> fxShake = v; case 12 -> fxFire = v; case 13 -> fxFrost = v; case 14 -> fxTwinkle = v; case 15 -> fxFade = v; case 16 -> fxRise = v; case 17 -> fxShrink = v; default -> fxScatter = v; } }
+    public boolean fx(int i) { return switch (i) { case 0 -> fxPop; case 1 -> fxShine; case 2 -> fxWave; case 3 -> fxRainbow; case 4 -> fxDrop; case 5 -> fxPulse; case 6 -> fxGlitch; case 7 -> fxGlow; case 8 -> fxBounce; case 9 -> fxType; case 10 -> fxFloat; case 11 -> fxShake; case 12 -> fxFire; case 13 -> fxFrost; case 14 -> fxTwinkle; case 15 -> fxFade; case 16 -> fxRise; case 17 -> fxShrink; case 18 -> fxScatter; case 19 -> fxSlide; case 20 -> fxFlip; case 21 -> fxSwing; case 22 -> fxGold; case 23 -> fxSlideOut; default -> fxMelt; }; }
+    public void setFx(int i, boolean v) { switch (i) { case 0 -> fxPop = v; case 1 -> fxShine = v; case 2 -> fxWave = v; case 3 -> fxRainbow = v; case 4 -> fxDrop = v; case 5 -> fxPulse = v; case 6 -> fxGlitch = v; case 7 -> fxGlow = v; case 8 -> fxBounce = v; case 9 -> fxType = v; case 10 -> fxFloat = v; case 11 -> fxShake = v; case 12 -> fxFire = v; case 13 -> fxFrost = v; case 14 -> fxTwinkle = v; case 15 -> fxFade = v; case 16 -> fxRise = v; case 17 -> fxShrink = v; case 18 -> fxScatter = v; case 19 -> fxSlide = v; case 20 -> fxFlip = v; case 21 -> fxSwing = v; case 22 -> fxGold = v; case 23 -> fxSlideOut = v; default -> fxMelt = v; } }
     public int barStyle = 0;                  // cinematic bar colour preset (AnimationManager.BAR_NAMES)
     public boolean cinematic = true;          // blur the game and close black bars from the top and bottom while a scene plays
     public boolean epicEffects = true;        // the RNG Drop scene for expensive drops
