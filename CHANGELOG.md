@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.41
+- ImTra now has every cosmetic: the Special sets, the whole Beta line and the earned ones are all in cosmetics.json. In the Admin Panel picker your own ID shows everything ticked, and the Beta set ticks all 13 of its items.
+
 ## 0.8.40
 - Farming animations no longer hide your hotbar and hearts, and they play faster (about 2.6 seconds, no slow-down).
 

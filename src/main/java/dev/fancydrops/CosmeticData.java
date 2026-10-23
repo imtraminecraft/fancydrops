@@ -133,7 +133,7 @@ final class CosmeticData {
     }
     static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 2 : d.line() == Line.BETA ? 1 : 0; }
     static String rarityName(int r) { return r == 2 ? "Special" : r == 1 ? "Beta" : "Common"; }
-    static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set())) o.add(d); return o; }
+    static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set()) || s.id().equals("beta") && d.line() == Line.BETA) o.add(d); return o; }
     static int owned(SetDef s) { int n = 0; for (Def d : members(s)) if (unlocked(d)) n++; return n; }
     static boolean unlockedId(String id) { return unlocked(byId(id)); }
 
@@ -168,6 +168,7 @@ final class CosmeticData {
     /** What a player is given right now, as a list of cosmetic ids (sets expanded). */
     static Set<String> heldBy(String code) {
         Set<String> o = new LinkedHashSet<>(); Set<String> g = grants.getOrDefault(code, Set.of());
+        if (code.equals(Cosmetics.OWNER)) { for (Def d : ALL) o.add(d.id()); return o; }                              // the owner has everything
         for (String x : g) {
             if (x.startsWith("c:")) o.add(x.substring(2));
             else { SetDef sd = setById(x); if (sd != null) for (Def d : members(sd)) o.add(d.id()); }
