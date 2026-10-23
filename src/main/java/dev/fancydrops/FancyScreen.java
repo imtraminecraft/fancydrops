@@ -823,7 +823,7 @@ public class FancyScreen extends Screen {
             String nm = Gfx.fit(font, r.pLabels[i], Math.round(avN / nk));
             String sb2 = r.pSubs != null ? Gfx.fit(font, r.pSubs[i], b[2] - 18 - iw) : null;
             int tw2 = Math.max(Gfx.w(font, nm), sb2 == null ? 0 : Gfx.w(font, sb2)), gx = b[0] + 9, tx = gx + iw;          // every tile lines up the same way: the icon in one column on the left, the text right after it
-            if (ico) Icons.draw(g, r.pIcons[i], gx, iy, r.pOn != null ? 2400L : on || hv ? now : 2400L);          // cosmetic icons stand still
+            if (ico) Icons.draw(g, r.pIcons[i], gx, iy, hv ? now : r.pOn != null ? 2400L : on ? now : 2400L);          // cosmetic icons stand still
             int ny = sb2 != null ? b[1] + 7 : b[1] + (b[3] - 8) / 2 - 1, nx = tx;
             if (r.pFx != null && r.pFx[i] != null) { int lx = nx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, ny, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, now)); lx += Gfx.w(font, chs); } }
             else if (r.pFontTiles) g.text(font, Fonts.text(nm, i), nx, ny, on ? Ui.TEXT : Ui.SUB, true);
@@ -2993,16 +2993,6 @@ public class FancyScreen extends Screen {
         long mins = ProfitTracker.activeMs(all, now) / 60_000;
         statsProfit(rows, total, sv, ProfitTracker.perHour(all, now), mins < 1 ? "Since you started the game" : "Since you started the game  ·  " + (mins >= 60 ? (mins / 60) + "h " + (mins % 60) + "m" : mins + " min") + " played", Ui.ACCENT);
 
-        rows.add(section("Categories"));
-        String[] lb = new String[4], ts = new String[4], ic = new String[4]; int[] cl = new int[4], goTo = new int[4];
-        for (int di = 0; di < 4; di++) {                                                       // one tile per category: click to open its page
-            final int ci = new int[]{0, 3, 1, 2}[di];
-            List<ProfitTracker.Item> so = catItems(os, ci);
-            lb[di] = STAT_CATS[ci]; ic[di] = STAT_ICON[ci]; cl[di] = STAT_COL[ci];
-            ts[di] = amountOf(so) + " drops  ·  " + coinsText(valueOf(so));
-            goTo[di] = ci == 0 ? 1 : ci == 3 ? 2 : ci == 1 ? 3 : 4;
-        }
-        rows.add(picker("Open a category", "Your drops and what they are worth", lb, ts, ic, cl, null, 4, () -> -1, i2 -> goStats(goTo[i2])));
         rows.add(section("Drops"));
         statsDropList(rows, os, ss, -1);
     }
