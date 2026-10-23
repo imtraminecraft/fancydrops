@@ -2,6 +2,18 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.33
+- Drop Library: the top button inside a boss / creature now reads "< Slayers" (or the page you came from) and takes you back to where you were in that list.
+- New hand-pixeled icons for every Slayer boss and every Mythological creature, plus new icons for Spirit, Animated menu / icons, Tip card, Other players' cosmetics, Back and Cosmetics.
+- Animation style (Sword / Spirit): the descriptions sit on their own buttons, and Spirit has its own icon.
+- Text Changes: Shrink now shows in the preview. The menu has page tabs (Effects, Layout, Font) and a font picker, bold and outline switches.
+- Bar Changes: pages for Size and Colour, with new bar opacity, side pillars and an edge line. Item Changes: pages for Size and Extras, with new float height and spin direction. All three Changes menus share one layout.
+- Settings > Menu is tidied into Look, Layout, Notices and Other players' cosmetics, and has a new Menu font picker (Clean, Bold, Serif, Mono, Narrow, Enchanting, Illager).
+- Live preview panel: LIVE badge, the animation's icon and name, and a frame in its colour.
+- The Cosmetics button moved outside the menu (bottom right, under the community buttons).
+- Buttons, tiles, and outlines now have rounded corners.
+- Skin preview: logs how many turns it built, so a missing back view can be traced; the aura still turns with the figure.
+
 ## 0.8.32
 - Menu animations redone: the window springs open and shrinks away on close, sidebar tabs slide in one by one, the tab highlight is a spring, and each page's rows rise in with a stagger.
 - Redrew the suffix icons by hand in one consistent style (outline, three tones, one highlight), in the menu, chat and tab list.

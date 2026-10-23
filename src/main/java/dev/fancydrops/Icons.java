@@ -71,6 +71,7 @@ final class Icons {
             disc(g, x, y, 7.5f, 7.5f, 7.6f, al(40 + Math.round(30 * pu), 0xFFC857)); disc(g, x, y, 7.5f, 7.5f, 6.2f, al(34, 0x12101E));
             for (int k = 0; k < 2; k++) { double an = s * 1.3 + k * Math.PI; r(g, x, y, Math.round(7.5f + (float) Math.cos(an) * 7.2f), Math.round(7.5f + (float) Math.sin(an) * 7.2f), 1, 1, al(210, 0xFFE9A8)); }
         }
+        if (PixArt.draw(g, name, x, y, s)) return;                                                          // the hand-pixeled pictures
         if (name.startsWith("suf_")) { Cosmetics.drawIcon(g, name.substring(4), x, y, now); return; }
         switch (name) {
             case "home" -> {                                                                            // a house, its window glowing, smoke fading in and out

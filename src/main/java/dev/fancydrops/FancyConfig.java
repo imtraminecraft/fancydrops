@@ -56,6 +56,10 @@ public class FancyConfig {
     public int barHeight = 16;                // each black cinematic bar, as a percentage of the screen height
     public int slayerStyle = 0;               // 0 Sword (sword slices), 1 Spirit (soul slashes)
     public int barPx = 15;                    // bar height in pixels of the 96-pixel-tall scene (5..15); barHeight (a percentage) follows it
+    public int barOpacity = 90;                 // Bar Changes: how solid the bars are (%)
+    public boolean barPillars = true, barLine = false;       // Bar Changes: the side pillars, a thin line along the bars' inner edge
+    public float itemBobAmp = 1f;               // Item Changes: how far the item floats (a multiple)
+    public boolean itemSpinRev = false, textBold = false, textOutline = true;
     public boolean barCustom = false;         // true: the bars use barColor instead of the drop's colour
     public int barColor = 0xFF0B0E2A;
     public float textDelayAll = 4f;           // seconds after an animation starts until its words appear (3..10)
@@ -123,6 +127,7 @@ public class FancyConfig {
     public int menuTranslucency = 25;        // 0 = solid menu .. 70 = see-through (General settings)
     public boolean menuIcons = true;          // sidebar and row icons move
     public boolean menuAnimated = true;       // menu slides in, pages fade, accent bar flows
+    public int uiFont = 0, textFont = 0;                       // Fonts: the menu (Settings > Menu) and the drop texts (Text Changes)
     public boolean othersSuffix = true, othersName = true, othersAura = true;      // see other players' cosmetics: suffixes, name effects, auras
     public boolean showTips = true;           // the rotating tip card on the Home page
     public boolean showCommunity = true;      // Discord, Patreon and GitHub buttons beside the menu

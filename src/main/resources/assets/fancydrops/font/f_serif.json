@@ -1,0 +1,19 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "fancydrops:serif.ttf",
+      "shift": [
+        0.0,
+        0.0
+      ],
+      "size": 9.2,
+      "oversample": 4.0,
+      "skip": ""
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:include/default"
+    }
+  ]
+}
