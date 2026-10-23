@@ -2,6 +2,15 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.20
+- Special cosmetics are now four sets, each a suffix + name effect + aura, with a Wear set button: Special Set (Sparkle, Starlight, Twinkle), Bug Finder Set (Glitch Spark, a calmer Glitch, Static), Contributors Set (Contributor, Aqua Flow, Stardust) and Patreon Set (Patron, Royal Gold, Gilded Embers). Other players see the whole set you were given.
+- Auras are drawn with our own particles (no Minecraft particles) and also play in a new Aura preview menu on the left, using your own skin. Drag the skin to move it. Hover an aura tile to preview it.
+- The chat and tab preview moved into their own menu above the window. It uses the same animated suffix picture as the real chat.
+- Beta name effects are much stronger, and name effect tiles now show the name itself wearing the effect.
+- New earned suffixes: Hoarder (100 rare drops) and Legend (500 rare drops).
+- Changing what you wear now redoes the chat lines already on screen. Chat name effects try a new way to animate and write what they find to the log.
+- Test menu changes also update chat.
+
 ## 0.8.19
 - Cosmetics page redone: Special Cosmetics first, then Beta, then Earned (was Everyone's). Suffixes, Name effects and Auras each have their own section, the words under the tiles are gone (hover a tile to see how to get it), and the tiles no longer flash.
 - Hover a player's name or suffix in chat to see a FancyDrops card: which cosmetics they have and how they got each one.
