@@ -1,3 +1,6 @@
+## 0.8.48
+- The menu preview now plays exactly like the real animation: same speed, the words stay 2 seconds after the scene, the same fades, then a short rest before it repeats
+
 ## 0.8.47
 - New short sound effects for Farming and Pest Drop (Reap, Rustle, Sprout, Breeze, Settle, Vacuum, Squeak). Every sound is now at most 2.6 s, so none run past the animation
 - The Sounds graph draws each sound's real loudness, with no random jitter
