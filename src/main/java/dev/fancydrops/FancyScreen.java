@@ -723,14 +723,14 @@ public class FancyScreen extends Screen {
             }
             else g.outline(b[0], b[1], b[2], b[3], Gfx.argb(hv ? 210 : rar == 2 ? 130 : rar >= 0 ? 90 : 50, (rar >= 0 ? sch : col) & 0xFFFFFF));
             boolean ico = r.pIcons[i] != null; int iw = ico ? 21 : 0, iy = b[1] + (b[3] - 16) / 2;
-            String nm = font.plainSubstrByWidth(r.pLabels[i], b[2] - 10 - iw - (wip ? 22 : 0));
-            String sb2 = r.pSubs != null ? font.plainSubstrByWidth(r.pSubs[i], b[2] - 10 - iw) : null;
-            int tw2 = Math.max(font.width(nm), sb2 == null ? 0 : font.width(sb2)), gx = b[0] + (b[2] - iw - tw2) / 2, tx = gx + iw;          // icon and text sit together, in the middle of the tile
+            String nm = font.plainSubstrByWidth(r.pLabels[i], b[2] - 18 - iw - (wip ? 22 : 0));
+            String sb2 = r.pSubs != null ? font.plainSubstrByWidth(r.pSubs[i], b[2] - 18 - iw) : null;
+            int tw2 = Math.max(font.width(nm), sb2 == null ? 0 : font.width(sb2)), gx = b[0] + 9, tx = gx + iw;          // every tile lines up the same way: the icon in one column on the left, the text right after it
             if (ico) Icons.draw(g, r.pIcons[i], gx, iy, r.pOn != null ? 2400L : on || hv ? now : 2400L);          // cosmetic icons stand still
-            int ny = sb2 != null ? b[1] + 7 : b[1] + (b[3] - 8) / 2 - 1, nx = tx + (tw2 - font.width(nm)) / 2;
+            int ny = sb2 != null ? b[1] + 7 : b[1] + (b[3] - 8) / 2 - 1, nx = tx;
             if (r.pFx != null && r.pFx[i] != null) { int lx = nx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, ny, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, now)); lx += font.width(chs); } }
             else Gfx.text(g, font, nm, nx, ny, on ? Ui.TEXT : wip ? Ui.DIM : sb2 != null ? Canvas.mix(Ui.SUB, Ui.TEXT, 0.5f) : Ui.SUB);
-            if (sb2 != null) Gfx.text(g, font, sb2, tx + (tw2 - font.width(sb2)) / 2, b[1] + 18, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM);
+            if (sb2 != null) Gfx.text(g, font, sb2, tx, b[1] + 18, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM);
             if (wip) { pill(g, b[0] + b[2] - 22, b[1] + 5, 18, 10, 0xFF3A3220); Gfx.text(g, font, "WIP", b[0] + b[2] - 20, b[1] + 6, 0xFFFFC857); }
             if (lk) {                                                                                  // locked: dimmed, with a padlock
                 g.fill(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1, 0x70080A10);

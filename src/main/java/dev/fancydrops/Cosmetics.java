@@ -472,9 +472,10 @@ final class Cosmetics {
             if (!done && offset <= pos + len) {
                 int cut = offset - pos;
                 out.append(Component.literal(s.text().substring(0, cut)).withStyle(s.style()));
-                out.append(Component.literal(" ").withStyle(s.style()));
+                String all = message.getString(); boolean spBefore = offset > 0 && offset <= all.length() && all.charAt(offset - 1) == ' ', spAfter = offset < all.length() && all.charAt(offset) == ' ';
+                if (!spBefore) out.append(Component.literal(" ").withStyle(s.style()));
                 out.append(glyphComp);
-                out.append(Component.literal(" ").withStyle(s.style()));      // the picture is a little wider than its slot: a gap keeps the colon after the name from hiding behind it
+                if (!spAfter) out.append(Component.literal(" ").withStyle(s.style()));      // a gap keeps the colon after the name from hiding behind the picture (not needed when a space follows anyway)
                 if (cut < len) out.append(Component.literal(s.text().substring(cut)).withStyle(s.style()));
                 done = true;
             } else out.append(Component.literal(s.text()).withStyle(s.style()));
