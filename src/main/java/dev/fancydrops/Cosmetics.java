@@ -93,13 +93,25 @@ final class Cosmetics {
                 if (name == null) continue;
                 int at = find(full, name);
                 if (at < 0) continue;
-                return insert(message, at + name.length(), e.getValue().frames()[0], chatStyle(e.getValue()));
+                return insert(message, at + name.length(), chatGlyph(e.getValue()));
             }
         } catch (Exception ignored) { }
         return message;
     }
 
-    private static Style chatStyle(Suffix s) { return Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF); }      // the same glyph the tab list uses (chat can't be re-drawn every frame, so it stands still)
+    private static final Map<String, Component> CHAT_GLYPH = new HashMap<>();
+    /** The suffix as it goes into chat: an animated GUI sprite (assets/fancydrops/textures/gui/sprites/suffix/<id>.png + .mcmeta play on their own), or the still emoji if this Minecraft can't draw one. */
+    private static Component chatGlyph(Suffix s) {
+        return CHAT_GLYPH.computeIfAbsent(s.id(), id -> {
+            try {
+                var json = com.google.gson.JsonParser.parseString("{\"object\":\"atlas\",\"atlas\":\"minecraft:gui\",\"sprite\":\"fancydrops:suffix/" + id + "\"}");
+                var res = net.minecraft.network.chat.ComponentSerialization.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, json);
+                Component c = res.result().orElse(null);
+                if (c != null) return c;
+            } catch (Throwable t) { System.err.println("[FancyDrops] animated chat suffix unavailable: " + t); }
+            return glyph(s.frames()[0]);
+        });
+    }
 
     private static boolean ours(String curStr) { for (Suffix s : SUFFIXES) for (String f : s.frames()) if (curStr.contains(f)) return true; return false; }
 
@@ -165,7 +177,9 @@ final class Cosmetics {
     }
     private static boolean word(char c) { return Character.isLetterOrDigit(c) || c == '_'; }
 
-    private static Component insert(Component message, int offset, String glyph, Style gs) {
+    private static Component insert(Component message, int offset, String glyph, Style gs) { return insert(message, offset, Component.literal(glyph).withStyle(gs)); }
+
+    private static Component insert(Component message, int offset, Component glyphComp) {
         List<Seg> segs = new ArrayList<>();
         message.visit((style, text) -> { segs.add(new Seg(text, style)); return Optional.empty(); }, Style.EMPTY);
         MutableComponent out = Component.empty();
@@ -176,7 +190,7 @@ final class Cosmetics {
                 int cut = offset - pos;
                 out.append(Component.literal(s.text().substring(0, cut)).withStyle(s.style()));
                 out.append(Component.literal(" ").withStyle(s.style()));
-                out.append(Component.literal(glyph).withStyle(gs));
+                out.append(glyphComp);
                 if (cut < len) out.append(Component.literal(s.text().substring(cut)).withStyle(s.style()));
                 done = true;
             } else out.append(Component.literal(s.text()).withStyle(s.style()));
