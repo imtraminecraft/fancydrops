@@ -658,15 +658,21 @@ public final class AnimationManager {
         boolean farm = cat == 2, cine = c.cine(cat) && !farm;
         Font font = Minecraft.getInstance().font;
         float sec = syncSec >= 0f ? syncSec * speed : ((System.currentTimeMillis() - previewT0) % 600_000L) / 1000f * speed;
-        float ts = Scene.splitTime(p), len = tm == null ? Scene.length(p) + 0.4f : naturalScene(p, p.farm), t = syncSec >= 0f ? Math.min(sec, len - 0.02f) : sec % len;
+        float ts = Scene.splitTime(p), len = tm == null ? Scene.length(p) + 0.4f : naturalScene(p, p.farm);
+        float full = tm == null ? len : len + TEXT_EXTRA * speed;                                  // like the real thing: the words stay 2 real seconds after the scene ends
+        float t = syncSec >= 0f ? Math.min(sec, full - 0.02f) : sec % (full + (tm == null ? 0f : 0.6f * speed));       // then a short rest before it plays again
+        if (t > full - 0.02f) t = full - 0.02f;
         float rv0 = tm == null ? ts + 0.15f : tm[1];
         if (freezeT >= 0f) { t = Math.min(len - 1.0f, rv0 + freezeT); sec = t; }                 // a still frame: the words are in, nothing moves
         else if (loopTxt) { t = Math.min(len - 1.0f, rv0 - 0.3f + ((System.currentTimeMillis() - textT0) % 4600L) / 1000f); sec = t; }       // the words play again and again
-        int frame = (int) (t * 30f);
+        boolean sceneOn = tm == null || t < len || freezeT >= 0f || loopTxt;                      // after the scene ends only the words remain, as in the game
+        int frame = (int) (Math.min(t, len) * 30f);
         if (frame != previewFrame) { previewFrame = frame; Scene.draw(OUT, L3, p, frame / 30f); if (cine) feather(OUT); SceneTexture.upload(OUT); }
         float rv = tm == null ? ts + 0.15f : tm[1];
-        revealT = t - rv; waveIn = clamp((t - rv) / 0.6f); waveOut = clamp((t - (len - 0.8f)) / 0.6f); waveT = sec; bounceT = t - (rv + 0.6f);
-        float ga = 1f - waveOut * 0f;
+        float ga = tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f));            // the scene fades in and out like the real one
+        float gt = tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((full - t) / 0.5f));
+        int tal = Math.round(255 * gt);
+        revealT = t - rv; waveIn = clamp((t - rv) / 0.6f); waveOut = tm == null ? clamp((t - (len - 0.8f)) / 0.6f) : clamp((t - (full - 1.0f)) / 0.7f); waveT = sec; bounceT = t - (rv + 0.6f);
         int barFull = cine ? Math.round(H * c.barHeight / 100f) : 0;
         Item pi = cat == 4 ? PREVIEW_EXP : farm ? PREVIEW_FARM : PREVIEW;
         Layout L = layout(W, H, c, cat == 2 ? farmRows(pi, c) : rows(pi, c), cat);
@@ -680,13 +686,13 @@ public final class AnimationManager {
             int side = Math.round(barFull * sideK());
             bars(g, W, H, barFull, side, p.rarity | 0xFF000000, p.rarity | 0xFF000000);
             g.enableScissor(side, barFull, W - side, H - barFull);
-            if (!textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), 1f)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), 1f);
+            if (sceneOn && !textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), ga)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), ga);
             g.disableScissor();
-            barText(g, font, cat == 4 ? PREVIEW_ANIM_EXP : farm ? PREVIEW_ANIM_FARM : PREVIEW_ANIM, c, 255, W, H, barFull);
+            barText(g, font, cat == 4 ? PREVIEW_ANIM_EXP : farm ? PREVIEW_ANIM_FARM : PREVIEW_ANIM, c, tal, W, H, barFull);
             return;
         }
-        if (!textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), 1f)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), 1f);
-        if (cat == 2) farmText(g, font, L, pi, c, 255); else text(g, font, L, pi, c, 255);
+        if (sceneOn && !textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), ga)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), ga);
+        if (cat == 2) farmText(g, font, L, pi, c, tal); else text(g, font, L, pi, c, tal);
     }
 
     /** Fades the scene's edges to see-through so it melts into the blurred world instead of sitting there as a hard box. */
