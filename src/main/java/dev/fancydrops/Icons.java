@@ -295,6 +295,17 @@ final class Icons {
                 for (int i = 0; i < 8; i++) { double an = i * Math.PI / 4 + 0.3; int px = Math.round(8 + (float) Math.cos(an) * rad), py = Math.round(8 + (float) Math.sin(an) * rad);
                     r(g, x, y, px - 1, py - 1, 2, 2, al(Math.round(255 * (1f - u * 0.7f)), cols[i % 4])); }
             }
+            case "slot_chop_pest" -> {                                                                  // a vacuum nozzle pulling a pest in
+                float u = (s * 1.4f) % 1f; int bx = Math.round(14 - u * 8);
+                r(g, x, y, 1, 5, 4, 6, 0xFF8A93B0); r(g, x, y, 0, 6, 2, 4, 0xFF4A5068);
+                for (int i = 0; i < 3; i++) { float v = (u + i / 3f) % 1f; r(g, x, y, Math.round(14 - v * 9), 4 + i * 4, 2, 1, al(Math.round(200 * (1f - v)), 0xBFE6FF)); }
+                r(g, x, y, bx, 7, 3, 3, 0xFFE0453A); r(g, x, y, bx + 1, 6, 1, 1, 0xFF7A1A14);
+            }
+            case "slot_split_pest" -> {                                                                 // the pest pops into red bits
+                float u = (s * 1.3f) % 1f;
+                if (u < 0.3f) { r(g, x, y, 6, 6, 4, 4, 0xFFE0453A); r(g, x, y, 7, 5, 2, 1, 0xFF7A1A14); }
+                else for (int i = 0; i < 6; i++) { double an = i * Math.PI / 3; float rr = (u - 0.3f) * 11; r(g, x, y, Math.round(8 + (float) Math.cos(an) * rr), Math.round(8 + (float) Math.sin(an) * rr), 2, 2, al(Math.round(255 * (1f - u)), i % 2 == 0 ? 0xE0453A : 0xFFD36B)); }
+            }
             case "slot_chop_farm" -> {                                                                  // a scythe swinging through the crops
                 float ph = 0.5f + 0.5f * (float) Math.sin(s * 3.2f); float ang = -0.9f + ph * 1.5f;
                 float hx = 3, hy = 14; float tx = hx + (float) Math.cos(ang - 0.35) * 10, ty = hy + (float) Math.sin(ang - 0.35) * 11 - 1;
