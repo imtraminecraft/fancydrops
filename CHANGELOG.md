@@ -2,6 +2,11 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.30
+- The Bug Finder set is new and no longer green: Hazard (a blinking warning triangle), Critical (hot red-orange with a warning stripe and a letter flashing white) and Alarm (red and amber sparks circling you, a ring of light climbing your body, sparks flaring as it passes).
+- Tile backgrounds: every Special set has its own (twinkling stars, warning stripes, an aqua wave, gold embers), Beta tiles have a passing light, Common tiles have none.
+- Less lag on the Cosmetics page: the menu is built once per frame instead of twice, and unlock checks are remembered for a moment. The mod also writes how long each part takes to the log (`[FancyDrops] perf`), so any remaining slowness can be pinned down.
+
 ## 0.8.29
 - Cosmetic tiles all line up the same way now: the icon in one column on the left and the name right after it, so no tile has a big empty gap on one side.
 - Suffix icons sit flush at the bottom of their slot (the crown had a gap under it), and the extra spaces around them in chat and the tab list are gone when a space is already there.

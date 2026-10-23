@@ -39,7 +39,7 @@ final class Cosmetics {
         new Suffix("firstdrop", "First Drop", "Everyone", one(0xE0D2)),
         new Suffix("collector", "Collector", "Everyone", one(0xE0D3)),
         new Suffix("secret", "Secret", "Everyone", fr(0xE0E0)),
-        new Suffix("glitchsfx", "Glitch Spark", "Special", fr(0xE100)),
+        new Suffix("glitchsfx", "Hazard", "Special", fr(0xE100)),
         new Suffix("contrib", "Contributor", "Special", fr(0xE110)),
         new Suffix("patron", "Patron", "Special", fr(0xE120)),
         new Suffix("hoarder", "Hoarder", "Everyone", one(0xE130)),
