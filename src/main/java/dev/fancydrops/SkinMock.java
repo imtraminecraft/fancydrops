@@ -24,21 +24,11 @@ final class SkinMock {
     static void ensure() {
         if (!started) {
             started = true; skin = standIn(); gen = 1;
-            UUID id = Cosmetics.me();
-            if (id != null) java.util.concurrent.CompletableFuture.runAsync(() -> {
-                try {
-                    var http = java.net.http.HttpClient.newHttpClient();
-                    String body = http.send(java.net.http.HttpRequest.newBuilder(java.net.URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + id.toString().replace("-", ""))).header("User-Agent", "FancyDrops").GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString()).body();
-                    var props = com.google.gson.JsonParser.parseString(body).getAsJsonObject().getAsJsonArray("properties");
-                    String val = props.get(0).getAsJsonObject().get("value").getAsString();
-                    var tex = com.google.gson.JsonParser.parseString(new String(java.util.Base64.getDecoder().decode(val))).getAsJsonObject().getAsJsonObject("textures").getAsJsonObject("SKIN");
-                    byte[] png = http.send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(tex.get("url").getAsString())).GET().build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray()).body();
-                    var img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(png));
-                    int[] o = new int[64 * 64];
-                    for (int y = 0; y < Math.min(64, img.getHeight()); y++) for (int x = 0; x < 64; x++) o[y * 64 + x] = img.getRGB(x, y);
-                    if (img.getHeight() == 32) for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) { o[(48 + y) * 64 + 16 + x] = o[(16 + y) * 64 + x]; o[(48 + y) * 64 + 32 + x] = o[(16 + y) * 64 + 40 + x]; }
-                    skin = o; gen++;
-                } catch (Throwable t) { }
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                for (int attempt = 0; attempt < 4; attempt++) {                                      // the session server can say "slow down": try again a little later
+                    try { if (fetch()) return; } catch (Throwable t) { System.out.println("[FancyDrops] skin fetch failed (" + attempt + "): " + t); }
+                    try { Thread.sleep(8000L * (attempt + 1)); } catch (InterruptedException e) { return; }
+                }
             });
         }
         if (cacheGen != gen && !building) {                                                          // (re)draw the 36 pictures in the background
@@ -59,6 +49,66 @@ final class SkinMock {
                 } catch (Throwable t) { System.out.println("[FancyDrops] skin preview error: " + t); cacheGen = g0; } finally { building = false; }
             });
         }
+    }
+
+    /** The base64 "textures" value of the logged-in profile, straight from the game when it has it. */
+    private static String localTextures() {
+        try {
+            Object prof = net.minecraft.client.Minecraft.getInstance().getGameProfile();
+            Object props = null;
+            for (String m : new String[]{"properties", "getProperties"}) { try { props = prof.getClass().getMethod(m).invoke(prof); if (props != null) break; } catch (Throwable ignored) { } }
+            if (props == null) return null;
+            Object col = props.getClass().getMethod("get", Object.class).invoke(props, "textures");
+            if (col instanceof java.util.Collection<?> cl) for (Object pr : cl) {
+                for (String m : new String[]{"value", "getValue"}) { try { Object v = pr.getClass().getMethod(m).invoke(pr); if (v != null) return v.toString(); } catch (Throwable ignored) { } }
+            }
+        } catch (Throwable ignored) { }
+        return null;
+    }
+    /** The web address of the skin the game itself is wearing, found by looking through the player's skin object. */
+    private static String gameSkinUrl() {
+        try {
+            var mc = net.minecraft.client.Minecraft.getInstance(); Object pl = mc.player; if (pl == null) return null;
+            for (String m : new String[]{"getSkin", "skin"}) {
+                try { Object sk = pl.getClass().getMethod(m).invoke(pl); String u = findUrl(sk, 0); if (u != null) return u; } catch (Throwable ignored) { }
+            }
+        } catch (Throwable ignored) { }
+        return null;
+    }
+    private static String findUrl(Object o, int depth) {
+        if (o == null || depth > 3) return null;
+        if (o instanceof String s) return s.startsWith("http") && s.contains("textures") ? s : null;
+        Class<?> k = o.getClass(); if (!k.getName().startsWith("net.minecraft")) return null;
+        for (Class<?> c = k; c != null && c != Object.class; c = c.getSuperclass()) for (var f : c.getDeclaredFields()) {
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+            try { f.setAccessible(true); String u = findUrl(f.get(o), depth + 1); if (u != null) return u; } catch (Throwable ignored) { }
+        }
+        return null;
+    }
+    private static boolean fetch() throws Exception {
+        var http = java.net.http.HttpClient.newHttpClient();
+        String url = null, val = localTextures();
+        if (val != null) { try { url = com.google.gson.JsonParser.parseString(new String(java.util.Base64.getDecoder().decode(val))).getAsJsonObject().getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString(); } catch (Throwable t) { System.out.println("[FancyDrops] skin: profile data unreadable: " + t); } }
+        if (url == null) url = gameSkinUrl();
+        if (url == null) {
+            UUID id = null; var mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc.player != null) id = mc.player.getUUID();
+            if (id == null) id = Cosmetics.me(); if (id == null) id = mc.getUser().getProfileId();
+            if (id == null) { System.out.println("[FancyDrops] skin: no player id yet"); return false; }
+            var rq = java.net.http.HttpRequest.newBuilder(java.net.URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + id.toString().replace("-", ""))).header("User-Agent", "FancyDrops").GET().build();
+            var rs = http.send(rq, java.net.http.HttpResponse.BodyHandlers.ofString());
+            if (rs.statusCode() != 200) { System.out.println("[FancyDrops] skin: session server said " + rs.statusCode()); return false; }
+            val = com.google.gson.JsonParser.parseString(rs.body()).getAsJsonObject().getAsJsonArray("properties").get(0).getAsJsonObject().get("value").getAsString();
+            url = com.google.gson.JsonParser.parseString(new String(java.util.Base64.getDecoder().decode(val))).getAsJsonObject().getAsJsonObject("textures").getAsJsonObject("SKIN").get("url").getAsString();
+        }
+        System.out.println("[FancyDrops] skin: reading " + url);
+        byte[] png = http.send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(url)).header("User-Agent", "FancyDrops").GET().build(), java.net.http.HttpResponse.BodyHandlers.ofByteArray()).body();
+        var img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(png));
+        int[] o = new int[64 * 64];
+        for (int y = 0; y < Math.min(64, img.getHeight()); y++) for (int x = 0; x < 64; x++) o[y * 64 + x] = img.getRGB(x, y);
+        if (img.getHeight() == 32) for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) { o[(48 + y) * 64 + 16 + x] = o[(16 + y) * 64 + x]; o[(48 + y) * 64 + 32 + x] = o[(16 + y) * 64 + 40 + x]; }
+        skin = o; gen++; System.out.println("[FancyDrops] skin loaded");
+        return true;
     }
 
     private static int[] standIn() {
@@ -151,13 +201,38 @@ final class SkinMock {
     }
 
     /** The figure with its feet at (cx, feetY), turned by yaw (radians; 0 = facing you). One GUI pixel per picture pixel (about 150 tall). */
+    // the 36 pictures live in one texture, so the figure is ONE quad instead of hundreds of rectangles
+    private static final int COLS = 6, AT_W = COLS * W, AT_H = COLS * H;
+    private static final net.minecraft.resources.Identifier TID = net.minecraft.resources.Identifier.fromNamespaceAndPath("fancydrops", "skinmock");
+    private static net.minecraft.client.renderer.texture.DynamicTexture stex; private static int texGen = -2; private static boolean texFailed;
+    private static void buildTex(int[][] c, int gen0) {
+        try {
+            if (stex == null) { stex = new net.minecraft.client.renderer.texture.DynamicTexture(() -> "fancydrops skin", AT_W, AT_H, true); net.minecraft.client.Minecraft.getInstance().getTextureManager().register(TID, stex); }
+            var img = stex.getPixels(); if (img == null) { texFailed = true; return; }
+            for (int y = 0; y < AT_H; y++) for (int x = 0; x < AT_W; x++) img.setPixelABGR(x, y, 0);
+            for (int a = 0; a < N; a++) {
+                int[] r = c[a]; if (r == null) continue; int ox = a % COLS * W, oy = a / COLS * H;
+                for (int i = 0; i < r.length; i += 5) {
+                    int p = r[i + 4], abgr = (p & 0xFF00FF00) | ((p >> 16) & 0xFF) | ((p & 0xFF) << 16);
+                    for (int yy = r[i + 1]; yy < r[i + 1] + r[i + 3]; yy++) for (int xx = r[i]; xx < r[i] + r[i + 2]; xx++) img.setPixelABGR(ox + xx, oy + yy, abgr);
+                }
+            }
+            stex.upload(); texGen = gen0;
+        } catch (Throwable t) { texFailed = true; System.out.println("[FancyDrops] skin texture: " + t); }
+    }
     static void draw(GuiGraphicsExtractor g, int cx, int feetY, float yaw) {
         ensure();
         int a = Math.floorMod(Math.round(yaw / (float) (Math.PI * 2 / N)), N);
-        int[][] c = cache; int[] r = c[a];
-        for (int d = 1; r == null && d < N / 2; d++) { r = c[(a + d) % N]; if (r == null) r = c[Math.floorMod(a - d, N)]; }
+        int[][] c = cache; int[] r = c[a]; int ai = a;
+        for (int d = 1; r == null && d < N / 2; d++) { ai = (a + d) % N; r = c[ai]; if (r == null) { ai = Math.floorMod(a - d, N); r = c[ai]; } }
         if (r == null) return;
         int left = cx - W / 2, top = feetY - FEET;
+        int cg = cacheGen;
+        if (!texFailed && cg >= 0 && texGen != cg) buildTex(c, cg);
+        if (!texFailed && texGen == cg && stex != null) {
+            try { g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, TID, left, top, (float) (ai % COLS * W), (float) (ai / COLS * H), W, H, W, H, AT_W, AT_H, 0xFFFFFFFF); return; }
+            catch (Throwable t) { texFailed = true; }
+        }
         for (int i = 0; i < r.length; i += 5) g.fill(left + r[i], top + r[i + 1], left + r[i] + r[i + 2], top + r[i + 1] + r[i + 3], r[i + 4]);
     }
     static int height() { return 32 * K; }

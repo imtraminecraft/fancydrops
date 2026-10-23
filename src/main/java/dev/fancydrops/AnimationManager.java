@@ -272,7 +272,7 @@ public final class AnimationManager {
 
     /** The pieces of a line in the font chosen in Text Changes. */
     private static Object[] restyle(Object[] p) {
-        FancyConfig fc = FancyConfig.get(); int f = fc.textFont; if (f <= 0 && !fc.textBold) return p;
+        FancyConfig fc = FancyConfig.get(); int f = Fonts.fix(fc.textFont); if (f <= 0 && !fc.textBold) return p;
         Object[] o = p.clone();
         for (int i = 0; i < o.length; i += 2) { Component c = (Component) p[i]; net.minecraft.network.chat.Style st = c.getStyle(); if (f > 0) st = st.withFont(Fonts.desc(f)); if (fc.textBold) st = st.withBold(true); o[i] = c.copy().withStyle(st); }
         return o;

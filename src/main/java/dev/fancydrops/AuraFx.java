@@ -216,19 +216,16 @@ final class AuraFx {
                     int c = (ad << 24) | rgb;
                     g.fill(x + d, y, x + d + 1, y + 1, c); g.fill(x - d, y, x - d + 1, y + 1, c); g.fill(x, y + d, x + 1, y + d + 1, c); g.fill(x, y - d, x + 1, y - d + 1, c);
                 }
-                g.fill(x - 1, y - 1, x + 2, y + 2, ((al / 3) << 24) | rgb);
                 g.fill(x, y, x + 1, y + 1, (Math.min(255, al + 60) << 24) | 0xFFFFFF);
                 break;
             }
             case 2: {                                                                  // a flat slice of light
                 int w = Math.max(4, Math.min(18, Math.round(px * 3f)));
                 g.fill(x - w / 2, y, x + w / 2, y + 1, a);
-                g.fill(x - w / 2, y - 1, x + w / 2, y, ((al / 4) << 24) | rgb); g.fill(x - w / 2, y + 1, x + w / 2, y + 2, ((al / 4) << 24) | rgb);
                 break;
             }
             default: {
                 int s = Math.max(1, Math.round(px));
-                if (s >= 2) g.fill(x - s / 2 - 1, y - s / 2 - 1, x - s / 2 + s + 1, y - s / 2 + s + 1, ((al / 4) << 24) | rgb);
                 g.fill(x - s / 2, y - s / 2, x - s / 2 + s, y - s / 2 + s, a);
             }
         }

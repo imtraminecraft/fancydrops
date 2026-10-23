@@ -271,12 +271,13 @@ public class FancyScreen extends Screen {
     private long closeAt;                                    // set when Esc is pressed: the menu fades out, then closes
 
     /** Set by /fd stats and /fd <search>: the next menu opens on the Stats page, or with this text in the search box. */
-    static boolean pendingStats; static String pendingSearch;
+    static boolean pendingStats, pendingCos; static String pendingSearch;
 
     public FancyScreen() {
         super(Component.literal("FancyDrops"));
         if (!skipIntro) { tab = Tab.HOME; scroll = 0; query = ""; }
         if (pendingStats) { pendingStats = false; tab = Tab.STATS; subSel[Tab.STATS.ordinal()] = -1; scroll = 0; }
+        if (pendingCos) { pendingCos = false; prevTab = Tab.HOME; tab = Tab.COSMETICS; query = ""; scroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; }
         if (pendingSearch != null) { query = pendingSearch; pendingSearch = null; scroll = 0; }          // a fresh /fd opens on Home; coming back from a preview keeps your page
         born = skipIntro ? 0L : System.currentTimeMillis();
         skipIntro = false;
@@ -302,7 +303,7 @@ public class FancyScreen extends Screen {
         addField.setHint(Component.literal("e.g. Dark Claymore"));
         addRenderableWidget(addField);
         searchField = new EditBox(font, 0, 0, 120, 14, Component.literal("search"));
-        searchField.setMaxLength(30);
+        searchField.setMaxLength(30); searchField.setBordered(false);
         searchField.setHint(Component.literal("Search..."));
         searchField.setValue(query);
         searchField.setResponder(v -> { query = v; scroll = 0; sideScroll = 0; if (tab == Tab.COSMETICS && !v.isBlank()) closeCos(); });
@@ -319,6 +320,7 @@ public class FancyScreen extends Screen {
         hexField.setVisible(false);
         prevBoxes.clear();
         formatField.setVisible(false); addField.setVisible(false);
+        if (pendingCos) { pendingCos = false; openCos(); }                       // /fd cosmetics
     }
 
     private void beginTyping(Slider s) {
@@ -393,8 +395,7 @@ public class FancyScreen extends Screen {
     /** A soft round backdrop in the mod's blue, so an icon never floats on the bare panel. */
     private static void iconBack(GuiGraphicsExtractor g, int cx, int cy, int r, boolean lit) { iconBack(g, cx, cy, r, lit, Ui.ACCENT); }
     private static void iconBack(GuiGraphicsExtractor g, int cx, int cy, int r, boolean lit, int tint) {
-        int col = lit ? Gfx.argb(110, tint & 0xFFFFFF) : Gfx.argb(60, tint & 0xFFFFFF);
-        for (int dy = -r; dy <= r; dy++) { int hw = (int) Math.round(Math.sqrt(Math.max(0, r * r + 0.25 - dy * dy))); g.fill(cx - hw, cy + dy, cx + hw + 1, cy + dy + 1, col); }
+        // no circle behind icons any more: the pictures stand on their own (and the fills they cost are gone)
     }
     /** Corner cut of a rounded box: taller boxes get rounder corners. */
     private static int[] corner(int w, int h) { int m = Math.min(w, h); return m >= 18 ? new int[]{3, 2, 1, 1} : m >= 11 ? new int[]{2, 1} : m >= 6 ? new int[]{1} : new int[0]; }
@@ -789,7 +790,7 @@ public class FancyScreen extends Screen {
             if (rar >= 1) {                                                                              // special and beta tiles have a background of their own (common has none)
                 g.enableScissor(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1);
                 if (rar == 2) { int seg = 8, sw2 = b[2] / seg + 1; for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF)); }
-                tileFx(g, b, i, sch, rar == 2 && r.pSetId != null ? r.pSetId[i] : "beta", now, hv);
+                if (hv || on) tileFx(g, b, i, sch, rar == 2 && r.pSetId != null ? r.pSetId[i] : "beta", now, hv);          // only the tile you point at (or wear) animates: the rest stay calm and cheap
                 g.disableScissor();
             }
             if (on) {
@@ -975,8 +976,8 @@ public class FancyScreen extends Screen {
         }
         rows.add(note("Click to wear, click again to take off. Hover a tile to see its rarity and how to get it.", Ui.DIM));
         Row rf = row(0, "fd:sparkle", "Cosmetics list", Cosmetics.refreshNote(), Ui.ACCENT); rf.noSearch = true;
-        rf.ctls.add(new Btn("Refresh", 0xFF2F8F5A, () -> { Cosmetics.forceRefresh(); build(); }));
-        rf.ctls.add(new Btn("Copy ID", 0xFF3A4FA0, () -> { try { net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(Cosmetics.code(Cosmetics.me())); } catch (Throwable ignored) { } }));
+        rf.ctls.add(new Btn("Refresh", 0xFF2F8F5A, () -> { Cosmetics.forceRefresh(); build(); toast("Refreshing the cosmetics list.", 0xFF62E6A8); }));
+        rf.ctls.add(new Btn("Copy ID", 0xFF3A4FA0, () -> { try { net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(Cosmetics.code(Cosmetics.me())); toast("Your ID was copied.", 0xFF62A8FF); } catch (Throwable ignored) { toast("Could not copy your ID.", 0xFFFF8A5C); } }));
         rows.add(rf);
     }
     private void lockedToast(CosmeticData.Def d) {
@@ -1081,7 +1082,7 @@ public class FancyScreen extends Screen {
             int[] b = commBox(i); boolean hv = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
             float k = anim("comm" + i, hv ? 1f : 0f, 40f);
             pill(g, b[0], b[1], 22, 22, Canvas.mix(Ui.ROW, Ui.ROW_HOVER, k));
-            Icons.draw(g, "fd:" + COMM[i], b[0] + 3, b[1] + 3 - Math.round(k), System.currentTimeMillis());
+            Icons.draw(g, "fd:" + COMM[i], b[0] + 3, b[1] + 3, 2400L);
             if (hv) { tipText = COMM_NAME[i]; tipX = b[0]; tipY = b[3] + 3; }
         }
         if (tipText != null) { int w = Gfx.w(font, tipText) + 8; int x0 = Math.max(px + 2, tipX + 22 - w); pill(g, x0, tipY, w, 13, 0xFF0D0F16); rout(g, x0, tipY, w, 13, Ui.BORDER); Gfx.text(g, font, tipText, x0 + 4, tipY + 3, Ui.TEXT); }
@@ -1732,6 +1733,7 @@ public class FancyScreen extends Screen {
                 }
             }
             case GENERAL -> {
+                rows.add(section("Menu"));                                           // the page filter keys on this header: without it the Menu page came up empty
                 rows.add(section("Look"));
                 Row tr = row(0, "fd:glass", "Menu translucency", "0% is solid, higher lets the game show through", Ui.ACCENT);
                 tr.ctls.add(new Slider(0, 70, 5, () -> c.menuTranslucency, v -> c.menuTranslucency = (int) v, () -> c.menuTranslucency + "%").typed(1));
@@ -1766,7 +1768,7 @@ public class FancyScreen extends Screen {
                     ah.indent = 1; rows.add(ah);
                 }
                 Row rf = row(0, "fd:refresh", "Refresh prices now", "Status: " + PriceService.status, Ui.ACCENT);
-                rf.ctls.add(new Btn("Refresh", Ui.ROW_HOVER, PriceService::refreshAsync));
+                rf.ctls.add(new Btn("Refresh", Ui.ROW_HOVER, () -> { PriceService.refreshAsync(); toast("Refreshing prices.", 0xFF62E6A8); }));
                 rows.add(rf);
                 rows.add(toggle("fd:rng", "RNG Drop scene", "The big scene for expensive drops", () -> c.epicEffects, v -> c.epicEffects = v));
                 rows.add(stepper("fd:coin", "RNG Drop from", "Drops worth this much get the big scene and a chat alert",
@@ -1774,7 +1776,7 @@ public class FancyScreen extends Screen {
                         d -> c.epicThreshold = EPIC[wrap(idx(EPIC, c.epicThreshold) + d, EPIC.length)], 90));
                             rows.add(section("Drop Data"));
                 Row rl = row(0, "fd:refresh", "Reload drop data", "Reloads the drop data.  " + DataFiles.status, Ui.ACCENT);
-                rl.ctls.add(new Btn("Reload", Ui.ROW_HOVER, DataFiles::reloadAll));
+                rl.ctls.add(new Btn("Reload", Ui.ROW_HOVER, () -> { DataFiles.reloadAll(); toast("Reloading the drop data.", 0xFF62E6A8); }));
                 rows.add(rl);
             }
             case COSMETICS -> cosmeticsPage();
@@ -2902,7 +2904,7 @@ public class FancyScreen extends Screen {
     }
 
     @Override public void extractRenderState(GuiGraphicsExtractor g, int mx0, int my0, float delta) {
-        Gfx.uiFont = FancyConfig.get().uiFont;
+        Gfx.uiFont = Fonts.fix(FancyConfig.get().uiFont);
         final int mx = editor != 0 ? -9999 : mx0, my = editor != 0 ? -9999 : my0;       // an open editor sits on top: nothing behind it lights up
         formatField.setVisible(false); addField.setVisible(false);
         searchField.setVisible(false); numShow = false; lastMx = mx;
@@ -3081,7 +3083,7 @@ public class FancyScreen extends Screen {
                 g.fill(b[0] + 2, b[1] + h - 2, b[2] - 2, b[1] + h - 1, Gfx.argb(Math.round((120 + 100 * pulse) * mv), 0x62E6A8));
                 gleam(g, b[0], b[1], w, h, now);
             } else g.fill(b[0] + 2, b[1] + h - 2, b[2] - 2, b[1] + h - 1, Gfx.argb(150, 0xE5484D));
-            Icons.draw(g, "fd:sparkle", b[0] + 4, b[1] + 3 - (STILL ? 0 : Math.round(mv * (float) Math.sin(now / 300.0) * 0.9f)), on ? now : 2400L);
+            Icons.draw(g, "fd:sparkle", b[0] + 4, b[1] + 3, on ? now : 2400L);
             if (mv < 0.98f) g.fill(b[0] + 4, b[1] + 3, b[0] + 20, b[1] + 19, Gfx.argb(Math.round(170 * (1f - mv)), tbg & 0xFFFFFF));      // dims the icon with the tile's own colour, so no dark box shows
             Gfx.text(g, font, "Active", b[0] + 24, b[1] + 4, Canvas.mix(0xFF7A7A86, Ui.TEXT, mv));
             Gfx.text(g, font, on ? "ON" : "OFF", b[0] + 24, b[1] + 14, Canvas.mix(0xFFE5484D, 0xFF62E6A8, mv));
@@ -3205,7 +3207,9 @@ public class FancyScreen extends Screen {
         placePopup();
         drawPopup(g, mx, my);
 
-        searchField.setVisible(true); searchField.setX(cx + cw - 124); searchField.setY(py + 12); searchField.setWidth(124);
+        searchField.setBordered(false); searchField.setVisible(true); searchField.setX(cx + cw - 118); searchField.setY(py + 14); searchField.setWidth(112);
+        pill(g, cx + cw - 124, py + 11, 124, 16, searchField.isFocused() ? Canvas.mix(Ui.PANEL2, Ui.ACCENT, 0.25f) : Ui.PANEL2);
+        if (searchField.isFocused()) rout(g, cx + cw - 124, py + 11, 124, 16, Gfx.argb(190, Ui.ACCENT & 0xFFFFFF));
         searchField.extractRenderState(g, mx, my, delta);
 
         if (totalH > viewH) {
@@ -3237,7 +3241,7 @@ public class FancyScreen extends Screen {
         long pf1 = System.nanoTime(); perf[1] += pf1 - perfFrom;                // everything since the build: the window and its rows
         drawCosPanels(g, mx, my, intro);
         perf[2] += System.nanoTime() - pf1;
-        drawToast(g, now);
+        drawToast(g, now); PixArt.flush();
         drawTileTip(g, mx, my);
         if (editor == 0) drawX(g, mainClose(), in(mx0, my0, mainClose()), "mx");
         drawEditor(g, mx0, my0);

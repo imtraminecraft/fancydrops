@@ -1,6 +1,11 @@
 package dev.fancydrops;
 
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,20 +36,19 @@ final class PixArt {
         ART.put("myth_minos_inquisitor", new Art(new String[]{"......ff......","...f.ffff.f...","..ff.ffff.ff..","..ffffffffff..","...ffffffff...","...OOOOOOOO...",".OOwwwwwwwwOO.","OwwwwOOOOwwwwO","OwwOiikkiiOwwO","OwwOieeeeiOwwO","OwwOiikkiiOwwO","OwwwOOOOOOwwwO",".OOwwwwwwwwOO.","...OOOOOOOO..."}, "OwikE", new int[]{0xFF3A1408,0xFFFFE7B0,0xFFE0601A,0xFF1A0A04,0xFFFF3030}, 0xFFFF3030, 0xFFFFC080, 0xFFFF8A1A, 0xFFFFD24A, 1));
         ART.put("home", new Art(new String[]{".......aa..bc...","......addabefc..",".....adggdcffc..","....adggdddffc..","...hdgdddddffc..","..hggdddddddda..",".hggdddddddddda.",".hgijjjjjjjjjk..","..lijjjjjjjjjk..","..limmjnnnjmmo..","..limmjnnnjmmo..","..lijjjnnpjjjk..","..lijjjnnnjjjk..","..qrrrrrrrrrrq..","...qqqqqqqqqq...","................"}, "abcdefghijklmnopqr", new int[]{0xFF451713,0xFF3D221A,0xFF311813,0xFFD8483A,0xFFBF6A52,0xFF9A4A3A,0xFFF2705A,0xFF4D241D,0xFFFFF3D2,0xFFEBDDBA,0xFF4B473C,0xFF524E43,0xFF6FC8F0,0xFF7A4A28,0xFF24404D,0xFFFFD23C,0xFF423D31,0xFFCDBE98}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("library", new Art(new String[]{"................","...abaaaaaaba...","..acdccccccdca..",".effdffggffdffe.",".accdcghggcdcca.",".accdccggccdcca.",".accdccccccdcca.",".ijjdjjkljjdjji.",".mnndnnllnndnnm.",".mnndnnllnndnnm.",".mnndnnnnnndnnm.",".mnndnnnnnndnnm.",".mnndnnnnnndnnm.",".oppdppppppdppo.","..oobooooooboo..","................"}, "abcdefghijklmnop", new int[]{0xFF382714,0xFF4A3A0B,0xFFB07A40,0xFFE6B422,0xFF42301C,0xFFCE9658,0xFF56D8FF,0xFFC8F4FF,0xFF3B2716,0xFFB87A44,0xFFFFF0A0,0xFFFFD23C,0xFF311E0F,0xFF9A5E2E,0xFF23150A,0xFF6E4220}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
-        ART.put("animations", new Art(new String[]{"................","..aabbaabbaabb..",".accddccddccddb.",".accddccddccddb.",".accddccddccddb.",".effffffffffffe.",".ghhhhhhhhhhhhg.",".ijjjjjjjjjjjji.",".ijjjjjkkjjjjji.",".ijjjjkkkkjjjji.",".ijjjkkkkkjjjji.",".ijjjjkkkkjjjji.",".ijjjjkkkkjjjji.",".ijjjjjjjjjjjji.","..iiiiiiiiiiii..","................"}, "abcdefghijk", new int[]{0xFF4D4E52,0xFF131521,0xFFF2F4FF,0xFF3A4166,0xFF383B45,0xFFB0B8D8,0xFF181A26,0xFF4A5278,0xFF0D0F18,0xFF2A2F4A,0xFFFFD23C}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
+        ART.put("animations", new Art(new String[]{"................",".aabaabaabaabaa.","accdccdccdccdcca","accdccdccdccdcca","bdccdccdccdccdcc","efffffffffffffea","ghhhhhhhhhhhhhg.","ijjjjjjjjjjjjji.","ijjjjklkjjjjjji.","ijjjjkkllkjjjji.","ijjjjkkkklljjji.","ijjjjkkkjjjjjji.","ijjjjjjjjjjjjji.","mnnnnnnnnnnnnnm.",".mmmmmmmmmmmmm..","................"}, "abcdefghijklmn", new int[]{0xFF4D4E52,0xFF090A0F,0xFFF2F4FF,0xFF1C2030,0xFF383B45,0xFFB0B8D8,0xFF181A26,0xFF4A5278,0xFF0D0F18,0xFF2A2F4A,0xFFFFD23C,0xFFFFF0A0,0xFF080A11,0xFF1A1E34}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("sounds", new Art(new String[]{"................","...........a....","......b..cada...",".....bebcffada..","....beeb.cffdda.","gggheeebcfcfada.","iiijeeebcffffda.","iiijeeeb.cfcfda.","iiijeeeb.cfcfdda","iiijeeebcffffda.","gggbeeebcfcfada.","....beeb.cffdda.",".....bebcffada..","......b..cada...","...........a....","................"}, "abcdefghij", new int[]{0xFF523900,0xFF36393F,0xFF1C4552,0xFFFFB300,0xFFA9B2C4,0xFF56D8FF,0xFF3F4145,0xFF494B4E,0xFFC4CBD9,0xFFE4E9F4}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("chat", new Art(new String[]{"................","abbbbbbbbbbbba..","bbbbbbbbbbbbbba.","bbbbbbbbbbbbbba.","bbbbbbbbbbbbbba.","bbbccbddbeebbba.","bbbccbddbeebbba.","bbbbbbbbbbbbbba.","bbbbbbbbbbbbbba.","bffffffffffffba.","bffffffffffffba.","abbbbbbbbbbbba..",".abbaaaaaaaaa...",".aba............","..a.............","................"}, "abcdef", new int[]{0xFF4D4E50,0xFFF2F5FB,0xFF6C86FF,0xFF8FA8FF,0xFFB8C8FF,0xFFD2D8E8}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("settings", new Art(new String[]{".....abba.......","..aa.abba.aa....",".abbabbbbabba...",".abbccbbbbbba...","..accbbbbbba....","aabbbbddbbbbaa..","bbbbbddddbbbbba.","bbbbbddddbbbbba.","aabbbbddbbbbaa..","..abbbbbbbba....",".abbbbbbbbbba...",".abbabbbbabba...","..aa.abba.aa....",".....abba.......","......aa........","................"}, "abcd", new int[]{0xFF3A3D43,0xFFB4BED2,0xFFDADEE8,0xFF1C2030}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
-        ART.put("wip", new Art(new String[]{".....abba.......","..aa.abba.aa....",".abbabbbbabba...",".abbccbbbbbba...","..accbbbbbba....","aabbbbddbbbbaa..","bbbbbddddbbbbba.","bbbbbddddbbbbba.","aabbbbddbbbbaa..","..abbbbbbbba....",".abbbbbbbbbba...",".abbabbbbabba...","..aa.abba.aa....",".....abba.......","......aa........","................"}, "abcd", new int[]{0xFF523900,0xFFFFB300,0xFFFFD980,0xFF3A2A00}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
+        ART.put("wip", new Art(new String[]{"................",".....abcda......","...aaefgheaa....","..aeeefgheeea...",".aeefefgheeeea..",".aeffefgheffea..","aeeeeefgheeeeea.","aeeeeefgheeeeea.","aeeeeefgheeeeea.","ijjjjjfghjjjjji.","deeeeeeeeeeeeed.","hhhhhhhhhhhhhhhd","hhhhhhhhhhhhhhhd","ddddaeeeeeadddd.",".....aaaaa......","................"}, "abcdefghij", new int[]{0xFF523900,0xFF52492C,0xFF524013,0xFF482C00,0xFFFFB300,0xFFFFE58A,0xFFFFC93C,0xFFE08A00,0xFF524313,0xFFFFD23C}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("stats", new Art(new String[]{"..........aa....",".........abba...",".........cddc...","....ee...cddc...","...effe..cddc...","...ghhgiicddc...","...ghhijjcddc...",".kkghhlmmcddc...","knnghhlmmcddc...","oppghhlmmcddc...","oppghhlmmcddc...","oppghhlmmcddc...","oppghhlmmcddcq..","rrrrrrrrrrrrrrq.","qqqqqqqqqqqqqq..","................"}, "abcdefghijklmnopqr", new int[]{0xFF523647,0xFFFFAADD,0xFF52243F,0xFFFF72C6,0xFF443552,0xFFD3A6FF,0xFF3A2252,0xFFB56BFF,0xFF524321,0xFFFFD166,0xFF314A52,0xFF523900,0xFFFFB300,0xFF9AE8FF,0xFF1C4552,0xFF56D8FF,0xFF232429,0xFF6C7080}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
-        ART.put("slayers", new Art(new String[]{"...........aaa..","..........abbba.",".........abccba.","........abccba..",".......abccba...","..dd..abccba....",".deedabccba.....",".deeebccba......",".deeeecba.......","..feeeed........",".fgggeeed.......","fggggeeeed......","ggggfdeeed......","gggf..ddd.......","hgf.............","if.............."}, "abcdefghi", new int[]{0xFF46494D,0xFFDCE3F2,0xFFFFFFFF,0xFF4A3A0B,0xFFE6B422,0xFF2C1D0E,0xFF8A5A2C,0xFFFFD23C,0xFF524313}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("chop", new Art(new String[]{".aaa.......bbb..","accca.....bdddb.","effcca...bdffdb.",".effcca.bdffdb..","..effccadffdb...","..ghffccffdg....","..ghhffccdhhg...","..ghhhffchhhg...","...ihhhfhhhg....","..ijjjjjjhg.....",".ijjjjjjjhg.....","ijjjjjjhhhg.....","kjjjjjiggg......","lljjji..........","kkijji..........","...ii..........."}, "abcdefghijkl", new int[]{0xFF3D4046,0xFF46494D,0xFFBFC8DA,0xFFDCE3F2,0xFF525252,0xFFFFFFFF,0xFF4A3A0B,0xFFE6B422,0xFF2C1D0E,0xFF8A5A2C,0xFF524313,0xFFFFD23C}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("mytho", new Art(new String[]{"................",".......ab.......","..cc..adeb.cc...",".cffcadeb.cffc..","cccc.adeb..cccc.","fffcadebaaacfffc","ccc.aeeddddaccc.","cc.adedddda..cc.","ffcdeeddda..cffc","cc.bebadda...cc.","ccc.badda...ccc.","fffc.ada...cfffc","ccc..ada....ccc.","....ada.........",".....a..........","................"}, "abcdef", new int[]{0xFF524313,0xFF524E38,0xFF193618,0xFFFFD23C,0xFFFFF4B0,0xFF4FA84A}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("dye", new Art(new String[]{"................",".....abbbba.....",".....abbbba.....",".....cddddc.....",".....cddddc.....",".....cddddc.....","....eddddddc....","...efddddddc....","...effddddddc...","...cgfggggggc...","..cdgffgggggdc..","..hggggggiiggh..",".hgjjjggggggggh.",".hgjjjggggggggh.","..hkkkhhhhhhhh..","................"}, "abcdefghijk", new int[]{0xFF2C1D0E,0xFF8A5A2C,0xFF444A4D,0xFFD6E6F2,0xFF525252,0xFFFFFFFF,0xFFE0409A,0xFF481431,0xFFB02878,0xFFFF8AD0,0xFF522C43}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
-        ART.put("farm", new Art(new String[]{".....abba.......",".....abbac......","....cdbbddc.....","...cdeddedc.....","....cddfddc.....","....gedfedc.....","....cddfddc.....","....cdcfdc......","....gedfedc.....","...hcddfddch....","..hihedfedhih...","...hiidfdiih....","....hiifiih.....",".....hhihh......",".......h........","................"}, "abcdefghi", new int[]{0xFF4D3D14,0xFFF0C040,0xFF4A3A0B,0xFFE6B422,0xFFFFE88A,0xFFC8A030,0xFF524A2C,0xFF27310F,0xFF7A9A30}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
+        ART.put("farm", new Art(new String[]{"......abc.......","...c.adbe..c....","..abcadefeabc...",".adbeadafadbe...",".adefadefadefe..",".adafadafadafe..",".adefadafadefe..",".adafeaefadafe..",".adafe.ghadafe..","..aefe.ghgaefe..","..iihiiihiiihg..",".ijjjjjjjjjjji..",".klllllllllllk..","..kkhkkkhkkkhg..","...ghg.ghg.ghg..","....g...g...g..."}, "abcdefghijkl", new int[]{0xFF4D3D14,0xFFFFE070,0xFF524824,0xFFF0C040,0xFF45360D,0xFFD9A82A,0xFF3B310D,0xFFB89A2A,0xFF452414,0xFFD9703E,0xFF3A1B0F,0xFFB5532E}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("experiments", new Art(new String[]{"................","......aba.......",".....abbba......","cc....aba...dd..","eefcccgadddhiid.","jjjeeekkiiillid.","jjjjjjkklllllid.","jjmmmjkklmmmlid.","jjjjjjkklllllid.","jjmmmjkklmmmlid.","jjjjjjkklllllid.","jjjjjjkklllllid.","eeeejjkklliiiid.","cccceekkiidddd..","....ccggdd......","................"}, "abcdefghijklm", new int[]{0xFF524313,0xFFFFD23C,0xFF232B52,0xFF2E3652,0xFF6C86FF,0xFF4D4E50,0xFF131831,0xFF484A4F,0xFF8FA8FF,0xFFF2F5FB,0xFF3A4A9A,0xFFE0E6F6,0xFF9AA6C8}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
-        ART.put("mining", new Art(new String[]{".....aaaa.......","...aabbbbaa.....","..abbbbbbbba....","..abbbbbbbbba...","...cddddddbbba..","....ccccccdddc..",".......efffcc...","......effffe....",".....effffeg....","....effffeghi...","...effffeghjjg..","..effffe.ghjhhg.",".effffe..ghhhg..",".klffe....ghg...",".effe......g....","..ee............"}, "abcdefghijkl", new int[]{0xFF3B3D43,0xFFB8C0D0,0xFF4A4C4F,0xFFE8EEF8,0xFF2C1D0E,0xFF8A5A2C,0xFF1C4552,0xFF56D8FF,0xFF404E52,0xFFC8F4FF,0xFF1D1309,0xFF5A3A1C}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
-        ART.put("fishing", new Art(new String[]{"........aaa.....",".......abbbaaa..","......abbbbbbba.","......abbbaacdc.",".....abbba..cdc.","....abbba...cdc.","....abbba...cdc.","...abbbeffffcdg.","..abbbhijjjjfgkg",".abbbiliiiiiikkg",".abbbiiiiiiikkkg","abbbeiiiiiiiikkg","bbba.eeiiiieegkg","bbba..fjjjjf..g.","bba....ffff.....","aa.............."}, "abcdefghijkl", new int[]{0xFF2C1D0E,0xFF8A5A2C,0xFF43454A,0xFFD0D8E8,0xFF523113,0xFF523D24,0xFF48260D,0xFF0D0805,0xFFFF9A3C,0xFFFFC070,0xFFE07828,0xFF2A1A10}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
+        ART.put("mining", new Art(new String[]{".....aaaaa......","....abbbbba.....","...abbbbbbbcc...","..abdddddddddc..",".abbdeccabbbbe..","..abefe.gaabffe.","...a.e.ghiiabfe.","......ghihhgae..",".....ghihgg.....","....ghihg.......","...ghihg........","..ghihg.........",".ghihg..........","ghihg...........","ghhg............",".gg............."}, "abcdefghi", new int[]{0xFF3B3D43,0xFFB8C0D0,0xFF4A4C4F,0xFFE8EEF8,0xFF2C2F35,0xFF8A93A6,0xFF2C1D0E,0xFF8A5A2C,0xFFB07A40}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
+        ART.put("fishing", new Art(new String[]{".........aab....","........accdbb..",".......aceecddb.","......accefabbdb","......aceca..bdb",".....aceea...bdb","....accef....bdb","....aceca...ghdb","...aceca...gijig","..aceea...giiiii","..aceca...klllll",".aceca....hjjjjj","aceea......hhhhh","aceca...........","acca............","................"}, "abcdefghijkl", new int[]{0xFF2C1D0E,0xFF43454A,0xFF8A5A2C,0xFFD0D8E8,0xFFB07A40,0xFF382714,0xFF4D4E50,0xFF491719,0xFFF2F5FB,0xFFE5484D,0xFF525252,0xFFFFFFFF}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("refresh", new Art(new String[]{"................",".....aaaa..a....","...aabbbbaaba...","..abbbbbbbbbba..",".abbbbaabbbbbba.",".abbaa..abbbaa..",".abba....aaa....","..aa............","..........aa....","..aaa....abba...","aabbba..aabba...","bbbbbbaabbbba...","abbbbbbbbbba....",".abaabbbbaa.....","..a..aaaa.......","................"}, "ab", new int[]{0xFF1C4552,0xFF56D8FF}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("nothing", new Art(new String[]{".aaa.......aaa..","abbba.....abbba.","abcbba...abbbba.","abbcbba.abbbbba.",".abbcbbabbbbba..","..abbcbbbbbba...","...abbcbbbba....","....abbbbba.....","...abbbbbbba....","..abbbbbbbbba...",".abbbbbabbbbba..","abbbbba.abbbbba.","abbbba...abbbba.","abbba.....abbba.",".aaa.......aaa..","................"}, "abc", new int[]{0xFF491719,0xFFE5484D,0xFFFF8A8E}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("rare", new Art(new String[]{"................","..abbbbccccd....",".abbbbbcccccd...","abeeeebcccccd...","abbbbbbccccccd..","bbbbbbbcccccccd.","fffffffgggggggh.","iffffffggggggh..",".ifffffgggggh...","..iffffggggh....","..iffffgggh.....","...ifffgggh.....","....iffggh......",".....ifgh.......","......ih........","................"}, "abcdefghi", new int[]{0xFF443652,0xFFD6A8FF,0xFF9A4EE8,0xFF31194A,0xFFF2E0FF,0xFF8A3ED8,0xFF6A24B8,0xFF220C3B,0xFF2C1445}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
@@ -53,6 +57,7 @@ final class PixArt {
         ART.put("patreon", new Art(new String[]{"aaab..cddddc....","aaab.cddddddc...","aaabcddddddddc..","aaacddeeeeddddc.","aaacddeeeeddddc.","aaacddeeeeddddc.","aaacddddddddddc.","aaacddddddddddc.","aaabcddddddddc..","aaab.cddddddc...","aaab..cddddc....","aaab...cccc.....","aaab............","aaab............","bbb.............","................"}, "abcde", new int[]{0xFFF2F5FB,0xFF4D4E50,0xFF521D18,0xFFFF5A4A,0xFFFF9A8A}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("discord", new Art(new String[]{"..aaaaaaaaaa....",".abbbbbbbbbba...","cddddddddddddc..","bbbbbbbbbbbbbba.","bbbbbbbbbbbbbba.","bbbbbbbbbbbbbba.","bbbeeebbeeebbba.","bbbefebbefebbba.","bbbefebbefebbba.","bbbbbbbbbbbbbba.","bbbbbbbbbbbbbba.","bbbbbbbbbbbbbba.","abbbbbbbbbbbba..",".aabbbaabbbaa...","...aaa..aaa.....","................"}, "abcdef", new int[]{0xFF1C204D,0xFF5865F2,0xFF2C2F52,0xFF8A94FF,0xFFFFFFFF,0xFF1E2468}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("griffin", new Art(new String[]{"................",".....abbaba.....","c...abbbbbba....","Tcc..addddde....","TTTceddddddde...","TUTTddddfgddde..","TTUUddddfghdde..","cTTUddddddhhhi..","jUUTddddddhhhhk.","cTUUUdddddhllllk","cTTTUUmmmmhikkk.",".cTTTTmmmmn.....","..cccTmmmmn.....",".....cnnnn......","................","................"}, "abcTdeUfghijklmn", new int[]{0xFF2C1D0E,0xFF8A5A2C,0xFF40434A,0xFFC9D2E6,0xFFB5803E,0xFF3A2914,0xFFE8EEF8,0xFFFFFFFF,0xFF2A1A10,0xFFFFC93C,0xFF524013,0xFF4A4C4F,0xFF483409,0xFFE0A21B,0xFFF2E6C8,0xFF4D4A40}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
+        ART.put("logo", new Art(new String[]{"..abaccddccab...",".aefeddddddefg..","aehfhhhddhhhfha.","aeefeeedeeeefeea","aeefeeeeeeeefeea","ijjfjjjjjjjjfjji","kllfllmmmmllfllk","noofoopjjpoofoon","ijjfjjpjjpjjfjji","noofooppjpoofoon","noofoooooooofoon","noofoooooooofoon","noofoooooooofoon","noofoooooooofoon","qrrfrrrrrrrrfrrq",".qqbqqqqqqqqbqq."}, "abcdefghijklmnopqr", new int[]{0xFF382714,0xFF4A3A0B,0xFF1C4552,0xFF56D8FF,0xFFB07A40,0xFFE6B422,0xFF42301C,0xFFCE9658,0xFF28180B,0xFF7E4A22,0xFF3B2716,0xFFB87A44,0xFFFFF0A0,0xFF311E0F,0xFF9A5E2E,0xFFFFD23C,0xFF23150A,0xFF6E4220}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("back", new Art(new String[]{"................","................",".......OO.......","......OBBO......",".....OBBO.......","....OBBO........","...OBBBOOOOOOO..","..OBBAAAAAAAAAO.","..OAAAAAAAAAAAO.","...OAAAOOOOOOO..","....OAAO........",".....OAAO.......","......OAAO......",".......OO.......","................","................"}, "OAB", new int[]{0xFF2A3350,0xFF9FB8FF,0xFFD6E2FF}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("spirit", new Art(new String[]{"................",".......OO.......","......OWWO......",".....OWWWWO.....","....OWWWWWWO....","...OWWWWWWWWO...","..OWWkWWWWkWWO..","..OWWkWwwWkWWO..","..OWWWwwwwWWWO..","..OWwwwccwwwWO..","...OwwcWWcwwO...","...OwccWWccwO...","....OccOOccO....",".....OcOOcO.....","......OOOO......","................"}, "OWwcke", new int[]{0xFF1B5E80,0xFFE8FCFF,0xFF8FE0FF,0xFF3CB8E8,0xFF0E3048,0xFFFFFFFF}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
         ART.put("anim_icons", new Art(new String[]{".......OO.......","......OYYO......","......OYYO......",".....OYyyYO.....","....OOYyyYOO....","..OOOYyyyyYOOO..","OOYYYYyyyyYYYYOO","OYyyyyyyyyyyyyYO","OYyyyyyyyyyyyyYO","OOYYYYyyyyYYYYOO","..OOOYyyyyYOOO..","....OOYyyYOO....",".....OYyyYO.....","......OYYO......","......OYYO......",".......OO......."}, "OYy", new int[]{0xFF6B4A00,0xFFFFF4A8,0xFFFFC93C}, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0));
@@ -68,26 +73,107 @@ final class PixArt {
         int r = Math.round(((a >> 16) & 255) * (1 - t) + ((b >> 16) & 255) * t), g = Math.round(((a >> 8) & 255) * (1 - t) + ((b >> 8) & 255) * t), bl = Math.round((a & 255) * (1 - t) + (b & 255) * t);
         return 0xFF000000 | (r << 16) | (g << 8) | bl;
     }
+
+    // ---- drawing: every picture (and every frame of its motion) is baked ONCE into a small texture atlas, so an icon costs one quad, not a rectangle per pixel
+    private static final int AT = 512, CELL = 16, PER = AT / CELL;
+    private static final Identifier ID = Identifier.fromNamespaceAndPath("fancydrops", "icons");
+    private static DynamicTexture tex; private static boolean failed, dirty; private static int used; private static long dirtyAt;
+    private static final Map<String, Integer> SLOT = new HashMap<>();
+    private static final int NONE = 0, SPIN = 1, SWING = 2, SWAY = 3, SHINE = 4;
+    private record Info(int minX, int minY, int maxX, int maxY, boolean hasE, boolean hasF, int mode, float amp) {}
+    private static final Map<String, Info> INFO = new HashMap<>();
+    private static Info info(String name, Art a) {
+        return INFO.computeIfAbsent(name, k -> {
+            int x0 = 99, y0 = 99, x1 = -1, y1 = -1; boolean e = false, f = false;
+            for (int j = 0; j < a.rows.length; j++) for (int i = 0; i < a.rows[j].length(); i++) {
+                char ch = a.rows[j].charAt(i); if (ch == '.') continue;
+                x0 = Math.min(x0, i); y0 = Math.min(y0, j); x1 = Math.max(x1, i); y1 = Math.max(y1, j); if (ch == 'e') e = true; if (ch == 'f') f = true;
+            }
+            int ox = (CELL - (x1 - x0 + 1)) / 2 - x0, oy = (CELL - (y1 - y0 + 1)) / 2 - y0;                    // every picture sits in the middle of its square
+            int mode = a.off == 1 ? NONE : switch (name) { case "settings", "refresh" -> SPIN; case "mining" -> SWING; case "fishing" -> SWING; case "farm" -> SWAY; default -> SHINE; };
+            float amp = name.equals("mining") ? 0.75f : name.equals("fishing") ? 0.3f : 0.22f;
+            return new Info(x0 + ox, y0 + oy, x1 + ox, y1 + oy, e, f, mode, amp);
+        });
+    }
     static boolean draw(GuiGraphicsExtractor g, String name, int x, int y, float s) { return draw(g, name, x, y, s, 0); }
-    /** Draws the picture of this name (true) or does nothing (false). s is the time in seconds; tint (when set) colours the T / U parts. */
+    /** Draws the picture of this name (true) or does nothing (false). s is the time in seconds (2.4 = at rest); tint (when set) colours the T / U parts. */
     static boolean draw(GuiGraphicsExtractor g, String name, int x, int y, float s, int tint) {
         Art a = ART.get(name); if (a == null) return false;
-        float pu = 0.5f + 0.5f * (float) Math.sin(s * 4.2f);
-        boolean blink = s % 3.6f < 0.12f;
-        int eye = blink ? 0 : mix(a.e0, a.e1, pu), fl = ((int) (s * 6f)) % 2 == 0 ? a.f0 : a.f1;
-        int bob = a.off == 0 ? Math.round((float) Math.sin((s - 2.4f) * 3f)) : 0;                  // interface icons bob a pixel while animated (still at rest)
+        Info in = info(name, a);
+        boolean anim = Math.abs(s - 2.4f) > 0.002f;
+        int var = 0;
+        if (anim) {
+            if (a.off == 1) { int pu = (int) ((0.5f + 0.5f * (float) Math.sin(s * 4.2f)) * 3.99f), fl = ((int) (s * 6f)) % 2; var = 1 + pu + 4 * fl + (s % 3.6f < 0.12f ? 8 : 0); }
+            else if (in.mode == SPIN) var = 1 + (int) (s * 0.45f * 32f) % 32;
+            else if (in.mode == SWING || in.mode == SWAY) var = 6 + Math.round((float) Math.sin(s * 3f) * 5f);
+            else if (in.mode == SHINE) { int st = (int) (((s * 0.75f) % 1.8f) / 1.8f * 16f); var = st < 12 ? 1 + st : 0; }
+        }
+        String key = name + '|' + tint + '|' + var;
+        Integer sl = SLOT.get(key);
+        int[] px = null;
+        if (sl == null) { px = bake(a, in, tint, var); sl = place(px); SLOT.put(key, sl); }
+        long nowMs = System.currentTimeMillis();
+        if (dirty && nowMs - dirtyAt > 40) flush();
+        if (sl >= 0 && !failed && tex != null) {
+            try { g.blit(RenderPipelines.GUI_TEXTURED, ID, x, y, (float) (sl % PER * CELL), (float) (sl / PER * CELL), CELL, CELL, CELL, CELL, AT, AT, 0xFFFFFFFF); return true; }
+            catch (Throwable e) { failed = true; }
+        }
+        if (px == null) px = bake(a, in, tint, var);                                                  // no texture: plain rectangles (slower)
+        for (int j = 0; j < CELL; j++) for (int i = 0; i < CELL; i++) if (px[j * CELL + i] != 0) g.fill(x + i, y + j, x + i + 1, y + j + 1, px[j * CELL + i]);
+        return true;
+    }
+    /** Sends newly baked pictures to the graphics card. Called at the end of a menu frame. */
+    static void flush() { if (dirty && tex != null && !failed) { try { tex.upload(); } catch (Throwable e) { failed = true; } } dirty = false; }
+
+    private static int place(int[] px) {
+        if (failed || used >= PER * PER) return -1;
+        try {
+            if (tex == null) { tex = new DynamicTexture(() -> "fancydrops icons", AT, AT, true); Minecraft.getInstance().getTextureManager().register(ID, tex); }
+            NativeImage img = tex.getPixels(); if (img == null) { failed = true; return -1; }
+            int n = used++, bx = n % PER * CELL, by = n / PER * CELL;
+            for (int j = 0; j < CELL; j++) for (int i = 0; i < CELL; i++) { int p = px[j * CELL + i]; img.setPixelABGR(bx + i, by + j, p == 0 ? 0 : (p & 0xFF00FF00) | ((p >> 16) & 0xFF) | ((p & 0xFF) << 16)); }
+            dirty = true; dirtyAt = System.currentTimeMillis();
+            return n;
+        } catch (Throwable e) { failed = true; return -1; }
+    }
+
+    /** One frame of one picture as 16x16 ARGB (0 = clear). */
+    private static int[] bake(Art a, Info in, int tint, int var) {
+        int[] base = new int[CELL * CELL];
+        float pu = 0.5f, fl0 = 0; boolean blink = false; int fl = 0;
+        if (a.off == 1 && var > 0) { int v = var - 1; pu = ((v & 3) + 0.5f) / 4f; fl = (v >> 2) & 1; blink = (v >> 3) == 1; }
+        int eye = blink ? 0 : mix(a.e0, a.e1, pu), fc = fl == 0 ? a.f0 : a.f1;
+        int ox = in.minX() - firstX(a), oy = in.minY() - firstY(a);
         for (int j = 0; j < a.rows.length; j++) {
             String row = a.rows[j];
             for (int i = 0; i < row.length(); i++) {
                 char ch = row.charAt(i); int c;
                 if (ch == '.') continue;
                 else if (ch == 'e') { c = eye; if (c == 0) c = a.cols[Math.max(0, a.keys.indexOf('O'))]; }
-                else if (ch == 'f') c = (i + j) % 2 == 0 ? fl : mix(a.f0, a.f1, 0.5f);
+                else if (ch == 'f') c = (i + j) % 2 == 0 ? fc : mix(a.f0, a.f1, 0.5f);
                 else if ((ch == 'T' || ch == 'U') && tint != 0) c = ch == 'T' ? (0xFF000000 | tint) : mix(0xFF000000 | tint, 0xFFFFFFFF, 0.45f);
                 else { int k = a.keys.indexOf(ch); if (k < 0) continue; c = a.cols[k]; }
-                g.fill(x + a.off + i, y + a.off + j + bob, x + a.off + i + 1, y + a.off + j + bob + 1, c);
+                int xx = i + ox, yy = j + oy; if (xx >= 0 && xx < CELL && yy >= 0 && yy < CELL) base[yy * CELL + xx] = c;
             }
         }
-        return true;
+        if (var == 0 || a.off == 1) return base;
+        if (in.mode == SHINE) {                                                                       // a soft band of light sweeps across
+            float b = (var - 1) / 11f * 34f - 6f; int[] o = base.clone();
+            for (int j = 0; j < CELL; j++) for (int i = 0; i < CELL; i++) { int c = o[j * CELL + i]; if (c == 0) continue; float d = Math.abs(i + j - b); if (d < 2.5f) o[j * CELL + i] = mix(c, 0xFFFFFFFF, 0.55f * (1f - d / 2.5f)); }
+            return o;
+        }
+        float ang, pxv, pyv;
+        if (in.mode == SPIN) { ang = (var - 1) / 32f * 6.2831855f; pxv = (in.minX() + in.maxX() + 1) / 2f; pyv = (in.minY() + in.maxY() + 1) / 2f; }
+        else if (in.mode == SWING) { ang = (var - 6) / 5f * in.amp(); pxv = in.minX() + 2.5f; pyv = in.maxY() - 1.5f; }
+        else { ang = (var - 6) / 5f * in.amp(); pxv = (in.minX() + in.maxX() + 1) / 2f; pyv = in.maxY() + 1f; }
+        float cs = (float) Math.cos(ang), sn = (float) Math.sin(ang); int[] o = new int[CELL * CELL];
+        for (int j = 0; j < CELL; j++) for (int i = 0; i < CELL; i++) {
+            float dx = i + 0.5f - pxv, dy = j + 0.5f - pyv, sx = cs * dx + sn * dy + pxv, sy = -sn * dx + cs * dy + pyv;
+            int ix = (int) Math.floor(sx), iy = (int) Math.floor(sy);
+            if (ix >= 0 && ix < CELL && iy >= 0 && iy < CELL) o[j * CELL + i] = base[iy * CELL + ix];
+        }
+        return o;
     }
+    private static int firstX(Art a) { int m = 99; for (String r : a.rows) for (int i = 0; i < r.length(); i++) if (r.charAt(i) != '.') { m = Math.min(m, i); break; } return m; }
+    private static int firstY(Art a) { for (int j = 0; j < a.rows.length; j++) for (int i = 0; i < a.rows[j].length(); i++) if (a.rows[j].charAt(i) != '.') return j; return 0; }
 }
