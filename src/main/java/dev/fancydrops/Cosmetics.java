@@ -98,7 +98,7 @@ final class Cosmetics {
             if (u.equals(me)) continue;
             Set<String> g = CosmeticData.grantsOf(u);                    // everybody sees what an owner has been given
             if (g.isEmpty()) continue;
-            for (CosmeticData.SetDef sd : CosmeticData.SETS) if (g.contains(sd.id())) { m.put(u, new Look(byId(sd.suffix()), sd.fx(), sd.aura())); break; }       // what they were given: the whole set
+            for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 2 && g.contains(sd.id())) { m.put(u, new Look(byId(sd.suffix()), sd.fx(), sd.aura())); break; }       // what they were given: the whole set
         }
         if (me != null) {                                                // you see what you picked
             FancyConfig c = FancyConfig.get();
@@ -365,7 +365,8 @@ final class Cosmetics {
             String t = "Aa"; int cx = x + 2;
             for (int i = 0; i < t.length(); i++) { Gfx.text(g, font, String.valueOf(t.charAt(i)), cx, y + 4, 0xFF000000 | NameFx.color(id, i, t.length(), d.color(), now)); cx += font.width(String.valueOf(t.charAt(i))) + 1; }
         } else {
-            for (AuraFx.P q : AuraFx.particles(id, now)) {
+            for (AuraFx.P q : AuraFx.particles(id, 2400L)) {
+                if (q.shape() == 2) continue;
                 float sx = x + 8 + q.x() * 9f, sy = y + 15 - q.y() * 7f;
                 if (sx < x + 1 || sx > x + 15 || sy < y + 1 || sy > y + 15) continue;
                 AuraFx.draw(g, sx, sy, Math.max(1f, q.size() * 18f), q);
@@ -390,7 +391,8 @@ final class Cosmetics {
     /** Also puts the animated suffix after the name in the tab list. SkyBlock draws its tab from many fake entries ("[496] imtra [x]" is one of them), so every entry is checked for an owner's name, not only the real one. Called every few ticks; the server rewriting an entry is picked up as its new base. */
     static volatile boolean tabMoving;
     /** Called every frame just before the tab list is drawn: moving name effects need a new colour every frame, not every tick. */
-    static void tickTabFrame(Minecraft mc) { if (tabMoving) tickTab(mc); }
+    private static long tabFrameAt;
+    static void tickTabFrame(Minecraft mc) { long n = System.currentTimeMillis(); if (tabMoving && n - tabFrameAt >= 30) { tabFrameAt = n; tickTab(mc); } }
     static void tickTab(Minecraft mc) {
         try {
             var conn = mc.getConnection();

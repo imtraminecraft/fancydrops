@@ -12,18 +12,20 @@ final class CosmeticData {
         Def(String id, String name, Line line, Kind kind, String how, int color) { this(id, name, line, kind, how, color, null); }
     }
     /** A Special set: a suffix, a name effect and an aura that belong together. */
-    record SetDef(String id, String name, String how, int color, String suffix, String fx, String aura) {}
+    record SetDef(String id, String name, String how, int color, String suffix, String fx, String aura, int rarity) {}
     static final List<SetDef> SETS = List.of(
-        new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura"),
-        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFF55FF9A, "glitchsfx", "glitch", "glitchaura"),
-        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "contrib", "contribfx", "stardust"),
-        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, "patron", "royal", "patronaura"));
+        new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura", 2),
+        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFF55FF9A, "glitchsfx", "glitch", "glitchaura", 2),
+        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "contrib", "contribfx", "stardust", 2),
+        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, "patron", "royal", "patronaura", 2),
+        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "crown", "shimmer", null, 1),
+        new SetDef("common", "Common", "Everyone gets this set.", 0xFF9AA3B5, "newcomer", "fresh", null, 0));
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
     private static final String BETA_HOW = "Downloaded the mod before v1.0";
     static final List<Def> ALL = List.of(
         // Beta: kept by everyone who had the mod before 1.0
-        new Def("crown", "Crown", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFC857),
+        new Def("crown", "Crown", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFC857, "beta"),
         new Def("gem", "Gem", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF55D8FF),
         new Def("flame", "Flame", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFF8A3D),
         new Def("clover", "Clover", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF62E6A8),
@@ -32,7 +34,7 @@ final class CosmeticData {
         new Def("snow", "Snow", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF9AD8FF),
         new Def("star", "Star", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFD36B),
         new Def("ghost", "Ghost", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFC9D2FF),
-        new Def("shimmer", "Shimmer", Line.BETA, Kind.NAME, BETA_HOW, 0xFFBFD4FF),
+        new Def("shimmer", "Shimmer", Line.BETA, Kind.NAME, BETA_HOW, 0xFFBFD4FF, "beta"),
         new Def("pulse", "Pulse", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFF9AC8),
         new Def("wave", "Ripple", Line.BETA, Kind.NAME, BETA_HOW, 0xFF7FE0D0),
         new Def("glow", "Glow", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFFE9A8),
@@ -50,7 +52,8 @@ final class CosmeticData {
         new Def("royal", "Royal", Line.SPECIAL, Kind.NAME, "Patreon Set", 0xFFFFC832, "patreon"),
         new Def("patronaura", "Embers", Line.SPECIAL, Kind.AURA, "Patreon Set", 0xFFFF9B2E, "patreon"),
         // Everyone: earn them yourself (all still, except the secret one)
-        new Def("newcomer", "Newcomer", Line.FREE, Kind.SUFFIX, "Downloaded the mod", 0xFF7BE07B),
+        new Def("newcomer", "Newcomer", Line.FREE, Kind.SUFFIX, "Downloaded the mod", 0xFF7BE07B, "common"),
+        new Def("fresh", "Fresh", Line.FREE, Kind.NAME, "Downloaded the mod", 0xFF9BE8A8, "common"),
         new Def("discord", "Discord", Line.FREE, Kind.SUFFIX, "Pressed the Discord button", 0xFF7289DA),
         new Def("firstdrop", "1st Drop", Line.FREE, Kind.SUFFIX, "Got a first rare drop", 0xFFFFD700),
         new Def("collector", "Collector", Line.FREE, Kind.SUFFIX, "Got 25 rare drops", 0xFFD9A05B),
@@ -92,7 +95,7 @@ final class CosmeticData {
             case BETA: return betaEligible();
             case SPECIAL: return grantsOf(Cosmetics.me()).contains(d.set());
             default:
-                if (d.id().equals("newcomer")) return true;
+                if (d.id().equals("newcomer") || d.id().equals("fresh")) return true;
                 return switch (d.id()) {
                     case "discord" -> c.discordJoined;
                     case "secret" -> c.secretFound;
@@ -117,6 +120,10 @@ final class CosmeticData {
             default -> "Find the hidden button.";
         };
     }
+    static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 2 : d.line() == Line.BETA ? 1 : 0; }
+    static String rarityName(int r) { return r == 2 ? "Special" : r == 1 ? "Beta" : "Common"; }
+    static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set())) o.add(d); return o; }
+    static int owned(SetDef s) { int n = 0; for (Def d : members(s)) if (unlocked(d)) n++; return n; }
     static boolean unlockedId(String id) { return unlocked(byId(id)); }
 
     static String equipped(Kind k) { FancyConfig c = FancyConfig.get(); return k == Kind.SUFFIX ? c.suffix : k == Kind.NAME ? c.nameFx : c.aura; }
@@ -130,11 +137,11 @@ final class CosmeticData {
     /** Wear a whole set, or take all three off when you already wear it. */
     static void toggleSet(SetDef s) {
         FancyConfig c = FancyConfig.get();
-        boolean on = s.suffix().equals(c.suffix) && s.fx().equals(c.nameFx) && s.aura().equals(c.aura);
-        c.suffix = on ? "" : s.suffix(); c.nameFx = on ? "" : s.fx(); c.aura = on ? "" : s.aura();
+        boolean on = wearingSet(s);
+        c.suffix = on ? "" : s.suffix(); c.nameFx = on ? "" : s.fx(); if (s.aura() != null) c.aura = on ? "" : s.aura();
         FancyConfig.save(); changed();
     }
-    static boolean wearingSet(SetDef s) { FancyConfig c = FancyConfig.get(); return s.suffix().equals(c.suffix) && s.fx().equals(c.nameFx) && s.aura().equals(c.aura); }
+    static boolean wearingSet(SetDef s) { FancyConfig c = FancyConfig.get(); return s.suffix().equals(c.suffix) && s.fx().equals(c.nameFx) && (s.aura() == null || s.aura().equals(c.aura)); }
     /** Something you wear changed: chat lines already on screen are redone with the new look. */
     static void changed() { Cosmetics.historyDirty = true; }
     static String kindLabel(Kind k) { return k == Kind.SUFFIX ? "Suffix" : k == Kind.NAME ? "Name effect" : "Aura"; }

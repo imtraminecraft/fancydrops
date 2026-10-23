@@ -65,6 +65,9 @@ final class NameFx {
                 float gl = (float) Math.pow(Math.max(0.0, Math.sin(t / 260.0 - i * 1.4)), 10);
                 return mix(c, 0xFFFFFF, 0.75f * gl);
             }
+            case "fresh":                                                   // a calm mint tint that drifts slowly along the name
+                ph = 0.5f + 0.5f * (float) Math.sin(t / 1100.0 - i * 0.5);
+                return mix(base, 0xB8FFD0, 0.45f * ph);
             default: return base;
         }
     }

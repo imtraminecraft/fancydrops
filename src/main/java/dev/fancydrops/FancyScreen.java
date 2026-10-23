@@ -223,7 +223,7 @@ public class FancyScreen extends Screen {
         EditBox field; String fieldBtn; int btnX0, btnX1;
         boolean dropCols;              // section header that labels the Play / Animate / Announce columns
         int cell;                      // > 0: every control sits centred in its own column of this width
-        String[] pLabels, pIcons, pSubs; int pTh = 27, pColsForce, pTop = 22; int[] pColors; boolean[] pWip; int pCols; IntSupplier pSel; IntConsumer pSet; java.util.function.IntPredicate pOn; boolean[] pLock; String[] pTips, pFx, pIds; int[] pRar; Runnable[] pAct;      // PICKER rows: the tiles (pOn: which are switched on, pLock: which are locked)
+        String[] pLabels, pIcons, pSubs; int pTh = 27, pColsForce, pTop = 22; int[] pColors; boolean[] pWip; int pCols; IntSupplier pSel; IntConsumer pSet; java.util.function.IntPredicate pOn; boolean[] pLock; String[] pTips, pFx, pIds; int[] pRar, pBg; Runnable[] pAct;      // PICKER rows: the tiles (pOn: which are switched on, pLock: which are locked)
         boolean locked;               // greyed out, not clickable (coming soon)
         boolean wrapSub;              // the second line is a paragraph, wrapped over several lines
         boolean wip;                  // gets the slanted WORK IN PROGRESS tape across it
@@ -703,36 +703,34 @@ public class FancyScreen extends Screen {
             Long shk = lk ? lockShake.get(r.pLabels[i]) : null;
             if (shk != null) { long ag = now - shk; if (ag < 420) b[0] += Math.round((float) Math.sin(ag / 24.0) * 4f * (1f - ag / 420f)); }          // a locked tile shakes when you press it
             float k = anim("pick|" + r.title + "|" + r.pLabels[i], on ? 1f : hv ? 0.4f : 0f, 40f);
-            if (hv && r.pTips != null) { tipText = r.pTips[i]; tipCol = col; }
+            if (hv && r.pTips != null) { tipText = r.pTips[i]; tipCol = r.pBg != null ? r.pBg[i] : col; }
             if (hv && r.pIds != null) hoverCos = r.pIds[i];
-            int rar = r.pRar == null ? -1 : r.pRar[i];                                                  // rarity: 0 earned (grey), 1 beta (green), 2 special (gradient)
-            int tint = rar == 1 ? 0xFF3FD16A : 0xFF8C93A6;
-            int bgBase = rar < 0 ? Ui.PANEL2 : rar == 2 ? Canvas.mix(Ui.PANEL2, col, 0.10f) : Canvas.mix(Ui.PANEL2, tint, rar == 1 ? 0.13f : 0.07f);
-            pill(g, b[0], b[1], b[2], b[3], Canvas.mix(bgBase, Canvas.mix(Ui.ROW_HOVER, col, 0.22f), k));
-            if (rar == 2) {                                                                              // a special box: a colour gradient glides across it
+            int rar = r.pRar == null ? -1 : r.pRar[i];                                                  // rarity: 0 common (grey), 1 beta (green), 2 special (the colours of its set)
+            int sch = r.pBg != null ? r.pBg[i] : rar == 1 ? 0xFF3FD16A : rar == 0 ? 0xFF9AA3B5 : col;     // the colour scheme of the tile: every tile of a set shares it
+            int bgBase = rar < 0 ? Ui.PANEL2 : Canvas.mix(Ui.PANEL2, sch, rar == 2 ? 0.10f : rar == 1 ? 0.13f : 0.07f);
+            pill(g, b[0], b[1], b[2], b[3], Canvas.mix(bgBase, Canvas.mix(Ui.ROW_HOVER, sch, 0.22f), k));
+            if (rar == 2) {                                                                              // special: a still gradient in the set's colour, with one light slowly passing over
                 g.enableScissor(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1);
-                for (int gx = 0; gx < b[2]; gx += 2) { float u = gx / (float) b[2]; int gc = Canvas.mix(Canvas.mix(col, 0xFFFF72C6, 0.6f * u), 0xFF8F6BFF, 0.5f * (0.5f + 0.5f * (float) Math.sin(now / 1400.0 + u * 3))); g.fill(b[0] + gx, b[1] + 1, b[0] + gx + 2, b[1] + b[3] - 1, Gfx.argb(Math.round(26 + 26 * u), gc & 0xFFFFFF)); }
+                int seg = 8, sw2 = b[2] / seg + 1;
+                for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF));
+                int shx = b[0] + (int) ((now / 18 + i * 37L) % (b[2] + 40)) - 20; g.fill(shx, b[1] + 1, shx + 5, b[1] + b[3] - 1, Gfx.argb(hv ? 34 : 18, 0xFFFFFF));
                 g.disableScissor();
             }
             if (on) {
                 int pulse = r.pOn != null ? Math.round(30 * (0.5f + 0.5f * (float) Math.sin(now / 500.0))) : 0;                    // a worn cosmetic glows softly
-                g.outline(b[0], b[1], b[2], b[3], Gfx.argb(200 + pulse, col & 0xFFFFFF)); g.fill(b[0] + 3, b[1] + b[3] - 3, b[0] + b[2] - 3, b[1] + b[3] - 2, col);
-                if (r.pOn != null) { int cx2 = b[0] + b[2] - 12, cy2 = b[1] + 6; g.fill(cx2 + 4, cy2 + 5, cx2 + 6, cy2 + 7, col); g.fill(cx2 + 2, cy2 + 3, cx2 + 4, cy2 + 5, col); g.fill(cx2 + 6, cy2 + 1, cx2 + 8, cy2 + 5, col); g.fill(cx2 + 7, cy2 - 1, cx2 + 9, cy2 + 1, col); }
+                g.outline(b[0], b[1], b[2], b[3], Gfx.argb(200 + pulse, sch & 0xFFFFFF)); g.fill(b[0] + 3, b[1] + b[3] - 3, b[0] + b[2] - 3, b[1] + b[3] - 2, sch);
+                if (r.pOn != null) { int cx2 = b[0] + b[2] - 12, cy2 = b[1] + 6; g.fill(cx2 + 4, cy2 + 5, cx2 + 6, cy2 + 7, sch); g.fill(cx2 + 2, cy2 + 3, cx2 + 4, cy2 + 5, sch); g.fill(cx2 + 6, cy2 + 1, cx2 + 8, cy2 + 5, sch); g.fill(cx2 + 7, cy2 - 1, cx2 + 9, cy2 + 1, sch); }
             }
-            else if (rar == 2) {
-                for (int gx = 0; gx < b[2]; gx++) { float u = gx / (float) b[2]; int gc = Canvas.mix(Canvas.mix(col, 0xFFFF72C6, 0.7f * u), 0xFF8F6BFF, 0.4f); g.fill(b[0] + gx, b[1], b[0] + gx + 1, b[1] + 1, Gfx.argb(hv ? 230 : 160, gc & 0xFFFFFF)); g.fill(b[0] + gx, b[1] + b[3] - 1, b[0] + gx + 1, b[1] + b[3], Gfx.argb(hv ? 230 : 160, gc & 0xFFFFFF)); }
-                g.fill(b[0], b[1], b[0] + 1, b[1] + b[3], Gfx.argb(hv ? 230 : 160, col & 0xFFFFFF)); g.fill(b[0] + b[2] - 1, b[1], b[0] + b[2], b[1] + b[3], Gfx.argb(hv ? 230 : 160, 0xFF72C6));
-            }
-            else g.outline(b[0], b[1], b[2], b[3], Gfx.argb(hv ? 150 : rar >= 0 ? 90 : 50, (rar >= 0 ? tint : col) & 0xFFFFFF));
+            else g.outline(b[0], b[1], b[2], b[3], Gfx.argb(hv ? 210 : rar == 2 ? 130 : rar >= 0 ? 90 : 50, (rar >= 0 ? sch : col) & 0xFFFFFF));
             int tx = b[0] + 6, iy = b[1] + (b[3] - 16) / 2;
             if (r.pIcons[i] != null) { Icons.draw(g, r.pIcons[i], b[0] + 5, iy, r.pOn != null ? 2400L : on || hv ? now : 2400L); tx = b[0] + 25; }          // cosmetic icons stand still, in the middle
             String nm = font.plainSubstrByWidth(r.pLabels[i], b[2] - (tx - b[0]) - 4 - (wip ? 22 : 0));
             if (r.pSubs != null) {
-                if (r.pFx != null && r.pFx[i] != null) { int lx = tx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, b[1] + 7, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, now)); lx += font.width(chs); } }
+                if (r.pFx != null && r.pFx[i] != null) { int lx = tx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, b[1] + 7, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, lk ? 2400L : now)); lx += font.width(chs); } }
                 else Gfx.text(g, font, nm, tx, b[1] + 7, on ? Ui.TEXT : wip ? Ui.DIM : Canvas.mix(Ui.SUB, Ui.TEXT, 0.5f));
                 Gfx.text(g, font, font.plainSubstrByWidth(r.pSubs[i], b[2] - (tx - b[0]) - 6), tx, b[1] + 18, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM);
             } else if (r.pFx != null && r.pFx[i] != null) {                                           // a name effect: the name itself, wearing the effect
-                int lx = tx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, b[1] + (b[3] - 8) / 2 - 1, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, now)); lx += font.width(chs); }
+                int lx = tx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, b[1] + (b[3] - 8) / 2 - 1, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, lk ? 2400L : now)); lx += font.width(chs); }
             } else Gfx.text(g, font, nm, tx, b[1] + (b[3] - 8) / 2 - 1, on ? Ui.TEXT : wip ? Ui.DIM : Ui.SUB);
             if (wip) { pill(g, b[0] + b[2] - 22, b[1] + 5, 18, 10, 0xFF3A3220); Gfx.text(g, font, "WIP", b[0] + b[2] - 20, b[1] + 6, 0xFFFFC857); }
             if (lk) {                                                                                  // locked: dimmed, with a padlock
@@ -745,13 +743,35 @@ public class FancyScreen extends Screen {
     }
     private static final Map<String, Long> lockShake = new HashMap<>();
     private static String tipText, hoverCos; private static int tipCol;                      // the hover card of the tile under the mouse (drawn last, on top of everything)
+    private static final int[] RAR_COL = {0xFF9AA3B5, 0xFF3FD16A, 0xFFC77DFF};
+    /** The little rarity pin: a tiny gem on a pin, in the colour of the rarity. */
+    private static void rarityPin(GuiGraphicsExtractor g, int x, int y, int rar) {
+        int c = RAR_COL[Math.max(0, Math.min(2, rar))], lt = Canvas.mix(c, 0xFFFFFFFF, 0.55f), dk = Canvas.mix(c, 0xFF000000, 0.45f);
+        g.fill(x + 2, y, x + 5, y + 1, lt); g.fill(x + 1, y + 1, x + 6, y + 3, c); g.fill(x, y + 3, x + 7, y + 4, c);
+        g.fill(x + 1, y + 4, x + 6, y + 5, dk); g.fill(x + 2, y + 5, x + 5, y + 6, dk); g.fill(x + 3, y + 6, x + 4, y + 7, dk);
+        g.fill(x + 2, y + 1, x + 3, y + 2, 0xFFFFFFFF);
+        if (rar == 2) { g.fill(x + 6, y - 1, x + 7, y, 0xFFFFFFFF); g.fill(x - 1, y + 5, x, y + 6, lt); }
+    }
+    /** The hover card. tipText lines: name | what it is | rarity (0, 1, 2) | 1 yours / 0 locked | extra line (may be empty) | how to get it. */
     private void drawTileTip(GuiGraphicsExtractor g, int mx, int my) {
         String t = tipText; tipText = null;
         if (t == null || t.isEmpty()) return;
-        String[] ln = t.split("\n"); int w = 0; for (String x : ln) w = Math.max(w, font.width(x));
-        w += 14; int h = ln.length * 11 + 8, x = Math.min(mx + 10, width - w - 2), y = Math.min(my + 12, height - h - 2);
-        pill(g, x, y, w, h, 0xF010141D); g.outline(x, y, w, h, Gfx.argb(190, tipCol & 0xFFFFFF)); g.fill(x, y + 2, x + 2, y + h - 2, tipCol);
-        for (int i = 0; i < ln.length; i++) Gfx.text(g, font, ln[i], x + 7, y + 5 + i * 11, i == 0 ? Canvas.mix(tipCol, 0xFFFFFFFF, 0.45f) : i == 1 ? Ui.SUB : Ui.DIM);
+        String[] ln = t.split("\n", -1); if (ln.length < 6) return;
+        int rar = 0; try { rar = Integer.parseInt(ln[2]); } catch (NumberFormatException ignored) { }
+        boolean yours = "1".equals(ln[3]); int rc = RAR_COL[Math.max(0, Math.min(2, rar))];
+        List<String> how = new ArrayList<>(); String cur = "";
+        for (String wd : ln[5].split(" ")) { if (!cur.isEmpty() && font.width(cur + " " + wd) > 150) { how.add(cur); cur = wd; } else cur = cur.isEmpty() ? wd : cur + " " + wd; }
+        if (!cur.isEmpty()) how.add(cur);
+        int w = Math.max(Math.max(font.width(ln[0]) + font.width(ln[1]) + 10, 80 + 30), 150); w += 16;
+        int h = 8 + 12 + 12 + (ln[4].isEmpty() ? 0 : 11) + 3 + how.size() * 10 + 2;
+        int x = Math.min(mx + 10, width - w - 2), y = Math.min(my + 12, height - h - 2);
+        pill(g, x, y, w, h, 0xF4101420); g.outline(x, y, w, h, Gfx.argb(200, rc & 0xFFFFFF)); g.fill(x, y + 2, x + 2, y + h - 2, tipCol);
+        Gfx.text(g, font, ln[0], x + 8, y + 5, Canvas.mix(tipCol, 0xFFFFFFFF, 0.5f)); Gfx.text(g, font, ln[1], x + 8 + font.width(ln[0]) + 6, y + 5, Ui.DIM);
+        int yy = y + 17; rarityPin(g, x + 8, yy + 1, rar); Gfx.text(g, font, CosmeticData.rarityName(rar), x + 20, yy, Canvas.mix(rc, 0xFFFFFFFF, 0.25f));
+        String st = yours ? "Unlocked" : "Locked"; Gfx.text(g, font, st, x + w - 8 - font.width(st), yy, yours ? 0xFF62E6A8 : 0xFFFF7B7B);
+        yy += 12; if (!ln[4].isEmpty()) { Gfx.text(g, font, ln[4], x + 8, yy, Ui.SUB); yy += 11; }
+        g.fill(x + 8, yy, x + w - 8, yy + 1, 0x22FFFFFF); yy += 4;
+        for (String hl : how) { Gfx.text(g, font, hl, x + 8, yy, Ui.DIM); yy += 10; }
     }
 
     /** A category banner: a gradient with a light sweeping over it, the name in shimmering letters, a line under it and a counter on the right. */
@@ -790,11 +810,6 @@ public class FancyScreen extends Screen {
     /** The previews get their own menus round the window (which stays in the middle) when the screen has the room for them. */
     private boolean cosPanels() { return tab == Tab.COSMETICS && query.isBlank() && height - 2 * (COS_H + DOCK_GAP + 6) >= 210 && width - 2 * (AURA_W + DOCK_GAP + 6) >= 430; }
 
-    private static String kindName(CosmeticData.Kind k) { return k == CosmeticData.Kind.SUFFIX ? "Suffix" : k == CosmeticData.Kind.NAME ? "Name effect" : "Aura"; }
-    private static int rarityOf(CosmeticData.Def d) { return d.line() == CosmeticData.Line.SPECIAL ? 2 : d.line() == CosmeticData.Line.BETA ? 1 : 0; }
-    private static String tipOf(CosmeticData.Def d, String label, boolean open2) {
-        return label + "\n" + (open2 ? "Yours: " + d.how() : "Locked") + "\n" + (open2 ? (CosmeticData.isEquipped(d) ? "Click to take it off" : "Click to wear it") : CosmeticData.lockText(d));
-    }
     private void clickDef(CosmeticData.Def d, String label) {
         if (CosmeticData.editMode) {                                                           // test menu: add or remove it on yourself
             boolean had = CosmeticData.unlocked(d); CosmeticData.force.put(d.id(), !had); CosmeticData.changed();
@@ -803,59 +818,69 @@ public class FancyScreen extends Screen {
         if (!CosmeticData.unlocked(d)) { lockShake.put(label, System.currentTimeMillis()); lockedToast(d); }
         else CosmeticData.toggle(d);
     }
+    /** The colour scheme every tile of a set shares (beta green, common grey for the rest). */
+    private static int schemeOf(CosmeticData.Def d) {
+        CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
+        return sd != null ? sd.color() : d.line() == CosmeticData.Line.BETA ? 0xFF3FD16A : 0xFF9AA3B5;
+    }
+    private static String tipLines(String name, String what, int rar, boolean yours, String extra, String how) {
+        return name + "\n" + what + "\n" + rar + "\n" + (yours ? "1" : "0") + "\n" + extra + "\n" + how;
+    }
 
-    /** One grid of tiles. entries: a Def, or a SetDef (the first tile of a Special row: wear or take off the whole set). */
+    /** One grid of tiles: sets (SetDef) or single cosmetics (Def). */
     private Row grid(List<Object> items, int cols) {
         int n = items.size();
-        String[] lb = new String[n], sb = new String[n], ic = new String[n], tp = new String[n], fxs = new String[n], ids = new String[n]; int[] cl = new int[n], rar = new int[n]; boolean[] lk = new boolean[n], eq = new boolean[n];
+        String[] lb = new String[n], sb = new String[n], ic = new String[n], tp = new String[n], fxs = new String[n], ids = new String[n]; int[] cl = new int[n], rar = new int[n], bg = new int[n]; boolean[] lk = new boolean[n], eq = new boolean[n]; boolean sets = false;
         for (int k = 0; k < n; k++) {
             Object it = items.get(k);
             if (it instanceof CosmeticData.SetDef sd) {
-                boolean owned = CosmeticData.unlocked(CosmeticData.byId(sd.suffix())), wearing = CosmeticData.wearingSet(sd);
-                lb[k] = sd.name(); sb[k] = !owned ? "Set · locked" : wearing ? "Wearing set" : "Wear set"; ic[k] = null; cl[k] = sd.color(); rar[k] = 2; lk[k] = !owned; eq[k] = owned && wearing;
-                tp[k] = sd.name() + " Set\n" + (owned ? "Yours" : "Locked") + "\n" + (owned ? (wearing ? "Click to take the set off" : "Click to wear all three") : sd.how());
+                sets = true;
+                List<CosmeticData.Def> ms = CosmeticData.members(sd);
+                boolean owned = CosmeticData.unlocked(ms.get(0)), wearing = CosmeticData.wearingSet(sd);
+                lb[k] = sd.name(); sb[k] = !owned ? "Locked" : wearing ? "Wearing" : "Wear set"; ic[k] = "fd:suf_" + sd.suffix(); cl[k] = sd.color(); bg[k] = sd.color(); rar[k] = sd.rarity(); lk[k] = !owned; eq[k] = owned && wearing; fxs[k] = sd.fx();
+                tp[k] = tipLines(sd.name(), "Set", sd.rarity(), owned, "Items " + CosmeticData.owned(sd) + " / " + ms.size(), sd.how());
             } else {
                 CosmeticData.Def d = (CosmeticData.Def) it; boolean open2 = CosmeticData.unlocked(d);
-                lb[k] = !open2 && d.id().equals("secret") ? "???" : d.name(); sb[k] = kindName(d.kind()); cl[k] = d.color(); rar[k] = rarityOf(d); lk[k] = !open2; eq[k] = open2 && CosmeticData.isEquipped(d); ids[k] = d.id();
+                lb[k] = !open2 && d.id().equals("secret") ? "???" : d.name(); cl[k] = d.color(); bg[k] = schemeOf(d); rar[k] = CosmeticData.rarityOf(d); lk[k] = !open2; eq[k] = open2 && CosmeticData.isEquipped(d); ids[k] = d.id();
                 ic[k] = d.kind() == CosmeticData.Kind.NAME ? null : d.kind() == CosmeticData.Kind.SUFFIX ? "fd:suf_" + d.id() : "fd:cx_" + d.id();
                 fxs[k] = d.kind() == CosmeticData.Kind.NAME ? d.id() : null;
-                tp[k] = tipOf(d, lb[k], open2);
+                CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
+                boolean hid = !open2 && d.id().equals("secret");
+                tp[k] = tipLines(hid ? "???" : d.name(), CosmeticData.kindLabel(d.kind()), rar[k], open2, sd != null ? sd.name() + " set" : "", open2 && d.line() != CosmeticData.Line.SPECIAL ? d.how() : CosmeticData.lockText(d));
             }
         }
-        Row pk = picker("", "", lb, sb, ic, cl, null, cols, () -> -1, i -> {
-            Object it = items.get(i);
-            if (it instanceof CosmeticData.SetDef sd) {
-                List<CosmeticData.Def> ds = new ArrayList<>(); for (CosmeticData.Def d : CosmeticData.line(CosmeticData.Line.SPECIAL)) if (sd.id().equals(d.set())) ds.add(d);
-                boolean owned = CosmeticData.unlocked(ds.get(0));
-                if (CosmeticData.editMode) { for (CosmeticData.Def d : ds) CosmeticData.force.put(d.id(), !owned); CosmeticData.changed(); toast((owned ? "Removed " : "Added ") + sd.name() + " set\n(test only, nothing is saved)", owned ? 0xFFFF8A5A : 0xFF62E6A8); return; }
-                if (!owned) { lockShake.put(lb[i], System.currentTimeMillis()); toast("LOCKED!\n" + sd.how(), 0xFFFF5A5A); toastShake = true; } else CosmeticData.toggleSet(sd);
-            } else clickDef((CosmeticData.Def) it, lb[i]);
-        });
-        pk.pTop = 6; fit(pk);
-        pk.pOn = i -> eq[i]; pk.pLock = lk; pk.pTips = tp; pk.pFx = fxs; pk.pIds = ids; pk.pRar = rar;
+        Row pk = sets ? picker("", "", lb, sb, ic, cl, null, cols, () -> -1, i -> {
+            CosmeticData.SetDef sd = (CosmeticData.SetDef) items.get(i);
+            List<CosmeticData.Def> ds = CosmeticData.members(sd); boolean owned = CosmeticData.unlocked(ds.get(0));
+            if (CosmeticData.editMode) { for (CosmeticData.Def d : ds) CosmeticData.force.put(d.id(), !owned); CosmeticData.changed(); toast((owned ? "Removed " : "Added ") + sd.name() + " set\n(test only, nothing is saved)", owned ? 0xFFFF8A5A : 0xFF62E6A8); return; }
+            if (!owned) { lockShake.put(lb[i], System.currentTimeMillis()); toast("LOCKED!\n" + sd.how(), 0xFFFF5A5A); toastShake = true; } else CosmeticData.toggleSet(sd);
+        }) : picker("", "", lb, ic, cl, null, () -> -1, i -> clickDef((CosmeticData.Def) items.get(i), lb[i]));
+        pk.pCols = cols; pk.pColsForce = 0; pk.pTop = 6; fit(pk);
+        pk.pOn = i -> eq[i]; pk.pLock = lk; pk.pTips = tp; pk.pFx = fxs; pk.pIds = ids; pk.pRar = rar; pk.pBg = bg;
         return pk;
     }
 
     private void cosmeticsPage() {
         if (!cosPanels() && query.isBlank()) { Row cp = new Row(); cp.kind = COSPREV; cp.noSearch = true; cp.h = 150; rows.add(cp); }          // small screens keep the previews inside the page
-        // --- special: one row per set (the set tile, then its suffix, name effect and aura)
-        int have = CosmeticData.unlockedCount(CosmeticData.Line.SPECIAL), total = CosmeticData.line(CosmeticData.Line.SPECIAL).size();
-        rows.add(catHeader("SPECIAL SETS", "A suffix, a name effect and an aura that belong together.", have + " / " + total, 0xFFC77DFF));
-        List<Object> sp = new ArrayList<>();
-        for (CosmeticData.SetDef sd : CosmeticData.SETS) {
-            sp.add(sd);
-            for (CosmeticData.Def d : CosmeticData.line(CosmeticData.Line.SPECIAL)) if (sd.id().equals(d.set())) sp.add(d);
-        }
-        rows.add(grid(sp, 4));
-        // --- everything else, rarest first: beta (green), then earned (grey)
-        int have2 = CosmeticData.unlockedCount(CosmeticData.Line.BETA) + CosmeticData.unlockedCount(CosmeticData.Line.FREE), total2 = CosmeticData.line(CosmeticData.Line.BETA).size() + CosmeticData.line(CosmeticData.Line.FREE).size();
-        rows.add(catHeader("COLLECTION", CosmeticData.betaEligible() ? "Green: beta, yours to keep. Grey: earned by playing." : "Green: beta (over, locked). Grey: earned by playing.", have2 + " / " + total2, 0xFF62E6A8));
-        List<Object> col = new ArrayList<>();
         CosmeticData.Kind[] kinds = {CosmeticData.Kind.SUFFIX, CosmeticData.Kind.NAME, CosmeticData.Kind.AURA};
-        for (CosmeticData.Line ln : new CosmeticData.Line[]{CosmeticData.Line.BETA, CosmeticData.Line.FREE})
-            for (CosmeticData.Kind kd : kinds) for (CosmeticData.Def d : CosmeticData.line(ln)) if (d.kind() == kd) col.add(d);
-        rows.add(grid(col, 4));
-        rows.add(note("Click to wear, click again to take off. Hover a tile to see how to get it. Other players see the set you were given.", Ui.DIM));
+        String[] heads = {"SUFFIX", "NAME EFFECT", "AURA"}, subs = {"A little icon after your name.", "Your name in moving colours.", "Particles around your character."};
+        int[] accents = {0xFFFFC857, 0xFFFF9AC8, 0xFF8FD0FF};
+        // --- sets: the rarest first
+        int ownedSets = 0; for (CosmeticData.SetDef sd : CosmeticData.SETS) if (CosmeticData.unlocked(CosmeticData.members(sd).get(0))) ownedSets++;
+        rows.add(catHeader("SETS", "A suffix, a name effect and an aura that belong together.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
+        List<Object> st = new ArrayList<>(); for (int r2 = 2; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) st.add(sd);
+        rows.add(grid(st, 3));
+        // --- one section per kind, ordered by rarity (special, then beta, then common); a set's items keep the set's colours
+        for (int ki = 0; ki < kinds.length; ki++) {
+            List<Object> li = new ArrayList<>(); int have = 0;
+            for (int r2 = 2; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2)
+                for (CosmeticData.Def d : CosmeticData.members(sd)) if (d.kind() == kinds[ki]) li.add(d);
+            for (int r2 = 1; r2 >= 0; r2--) for (CosmeticData.Def d : CosmeticData.ALL) if (d.kind() == kinds[ki] && d.set() == null && CosmeticData.rarityOf(d) == r2) li.add(d);
+            for (Object o : li) if (CosmeticData.unlocked((CosmeticData.Def) o)) have++;
+            rows.add(catHeader(heads[ki], subs[ki], have + " / " + li.size(), accents[ki]));
+            rows.add(grid(li, 4));
+        }
+        rows.add(note("Click to wear, click again to take off. Hover a tile to see its rarity and how to get it.", Ui.DIM));
         Row rf = row(0, "fd:sparkle", "Cosmetics list", Cosmetics.refreshNote(), Ui.ACCENT); rf.noSearch = true;
         rf.ctls.add(new Btn("Refresh", 0xFF2F8F5A, () -> { Cosmetics.forceRefresh(); build(); }));
         rf.ctls.add(new Btn("Copy ID", 0xFF3A4FA0, () -> { try { net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(Cosmetics.code(Cosmetics.me())); } catch (Throwable ignored) { } }));
@@ -879,8 +904,8 @@ public class FancyScreen extends Screen {
         return new String[]{"Add / remove mine: " + (CosmeticData.editMode ? "ON" : "OFF"), "Give me all", "Remove all from me", "Reset test + secret + drops"};
     }
     // ------------------------------------------------------------------ the two Cosmetics side menus: chat + tab list above the window, the aura preview (your skin) to its left
-    private static int figDx, figDy; private static float figYaw = 0.5f;
-    private boolean dragFig, dragRot;
+    private static float figYaw = 0.5f;
+    private boolean dragFig;
     private final int[] auraBox = {-1, -1, -1, -1};
     private void drawCosPanels(GuiGraphicsExtractor g, int mx, int my, float intro) {
         auraBox[0] = auraBox[1] = auraBox[2] = auraBox[3] = -1;
@@ -896,19 +921,17 @@ public class FancyScreen extends Screen {
         if (hd != null && hd.kind() == CosmeticData.Kind.AURA) aura = hd.id(); else if (CosmeticData.unlockedId(c.aura)) aura = c.aura;
         CosmeticData.Def ad = aura == null ? null : CosmeticData.byId(aura);
         Gfx.text(g, font, ad == null ? "No aura worn" : ad.name(), x + 8, y + 17, ad == null ? Ui.DIM : Canvas.mix(Ui.SUB, ad.color(), 0.6f));
-        int s = Math.max(2, Math.min(4, (h - 60) / 36));
-        figDx = Math.max(-(w / 2 - 14), Math.min(w / 2 - 14, figDx)); figDy = Math.max(-(h - 90), Math.min(14, figDy));
-        int fx = x + w / 2 + figDx, feet = y + h - 24 + figDy; float ppb = 32f * s / 1.8f;
+        int fx = x + w / 2, feet = y + h - 22; float ppb = SkinMock.height() / 1.8f;
         auraBox[0] = x; auraBox[1] = y + 28; auraBox[2] = x + w; auraBox[3] = y + h;
         g.enableScissor(x + 1, y + 28, x + w - 1, y + h - 1);
-        g.fill(fx - 11 * s / 2, feet + 1, fx + 11 * s / 2, feet + 3, 0x40000000);
+        g.fill(fx - 13, feet + 1, fx + 13, feet + 3, 0x40000000);
         List<AuraFx.P> parts = ad == null ? List.of() : AuraFx.particles(aura, now);
         for (int pass = 0; pass < 2; pass++) {
-            if (pass == 1) SkinMock.draw(g, fx, feet, s, figYaw + (dragRot ? 0f : 0.25f * (float) Math.sin(now / 1800.0)));
+            if (pass == 1) SkinMock.draw(g, fx, feet, figYaw);
             for (AuraFx.P q : parts) if ((q.z() < 0) == (pass == 0)) AuraFx.draw(g, fx + q.x() * ppb, feet - q.y() * ppb, Math.max(1f, q.size() * ppb * 1.3f), q);
         }
         g.disableScissor();
-        Gfx.textCentered(g, font, "Drag: move  ·  Right-drag: turn", x + w / 2, y + h - 11, Ui.DIM);
+        Gfx.textCentered(g, font, "Drag to turn", x + w / 2, y + h - 11, Ui.DIM);
         if (intro < 1f) { int al = Math.round((1f - intro) * 150); pill(g, tr.x, tr.y, tr.w, tr.h, Gfx.argb(al, 0x0C0E14)); pill(g, x, y, w, h, Gfx.argb(al, 0x0C0E14)); }
     }
     private boolean inAuraPanel(double mx, double my) { return auraBox[0] >= 0 && mx >= auraBox[0] && mx < auraBox[2] && my >= auraBox[1] && my < auraBox[3]; }
@@ -3190,7 +3213,6 @@ public class FancyScreen extends Screen {
         double mx = event.x(), my = event.y(); int button = event.button();
         if (button == 0 && stripClick(mx, my)) return true;
         if (button == 0 && inAuraPanel(mx, my)) { dragFig = true; return true; }
-        if (button == 1 && inAuraPanel(mx, my)) { dragRot = true; return true; }
         if (button == 0 && mx >= px && mx < px + 14 && my >= py && my < py + 12) {                  // the hidden button, in the very corner of the menu
             FancyConfig sc = FancyConfig.get();
             if (!sc.secretFound) { sc.secretFound = true; FancyConfig.save(); toast("You found it!\nThe Secret cosmetic is yours.", 0xFFC08BFF); }
@@ -3279,8 +3301,7 @@ public class FancyScreen extends Screen {
 
     @Override public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
         if (editor != 0) { if (eDrag != 0) eSet(event.x(), event.y()); return true; }
-        if (dragFig) { figDx += (int) dx; figDy += (int) dy; return true; }
-        if (dragRot) { figYaw += (float) dx * 0.03f; return true; }
+        if (dragFig) { figYaw += (float) dx * 0.03f; return true; }
         if (dragFarm) { farmDrag(event.x(), event.y(), false); return true; }
         if (dragCtl != null) return dragCtl.drag(event.x());
         return super.mouseDragged(event, dx, dy);
@@ -3288,7 +3309,7 @@ public class FancyScreen extends Screen {
 
     @Override public boolean mouseReleased(MouseButtonEvent event) {
         eDrag = 0;
-        dragCtl = null; dragFarm = false; dragFig = false; dragRot = false;
+        dragCtl = null; dragFarm = false; dragFig = false;
         return super.mouseReleased(event);
     }
 

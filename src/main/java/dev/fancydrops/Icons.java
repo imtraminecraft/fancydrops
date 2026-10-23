@@ -104,7 +104,7 @@ final class Icons {
                 for (int i = 0; i < 3; i++) r(g, x, y, 4 + i * 3, 5, 2, 3, i == hot ? 0xFF8FA8FF : 0xFFB8BECC);
             }
             case "settings" -> {                                                                        // a gear that turns, a glint running round its rim
-                gear(g, x, y, 7.5f, 7.5f, 5.4f, 6, s * 0.7f, 0xFFB4BED2, 0xFF5C677E, s * 2.4f);
+                gear(g, x, y, 8f, 8f, 5.4f, 6, s * 0.7f, 0xFFB4BED2, 0xFF5C677E, s * 2.4f);
             }
             case "stats" -> {                                                                           // bars that stay put, a glint running along their tops
                 r(g, x, y, 1, 14, 14, 1, 0xFF6C7080);
