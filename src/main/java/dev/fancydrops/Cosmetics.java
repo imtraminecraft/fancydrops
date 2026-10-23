@@ -202,8 +202,9 @@ final class Cosmetics {
     // ---- the hover card: "FancyDrops" on top, then which cosmetics the player has and how they got each one
     private static Component tip(Look l, String player, String marker, HoverEvent orig) {
         MutableComponent t = Component.empty().withStyle(Style.EMPTY.withInsertion(marker));            // the marker tells the chat which letters carry an effect
-        t.append(Component.literal("FancyDrops").withStyle(Style.EMPTY.withColor(0x62E6A8).withBold(true)));
-        t.append(Component.literal("\n" + player + "'s cosmetics").withStyle(Style.EMPTY.withColor(0xAAAAAA)));
+        t.append(Chat.prefix());                                                                          // the same [FancyDrops] as in chat
+        t.append(Component.literal("\n" + player + "'s cosmetics").withStyle(Style.EMPTY.withColor(0xD8D8E8)));
+        t.append(Component.literal("\n──────────────").withStyle(Style.EMPTY.withColor(0x4A4B58)));
         if (l.suffix() != null) tipLine(t, CosmeticData.byId(l.suffix().id()));
         if (l.fx() != null) tipLine(t, CosmeticData.byId(l.fx()));
         if (l.aura() != null) tipLine(t, CosmeticData.byId(l.aura()));
@@ -214,9 +215,9 @@ final class Cosmetics {
         if (d == null) return;
         String how = CosmeticData.force.containsKey(d.id()) ? "Test menu" : d.how();
         String ln = d.line() == CosmeticData.Line.SPECIAL ? "Special" : d.line() == CosmeticData.Line.BETA ? "Beta" : "Earned";
-        t.append(Component.literal("\n" + CosmeticData.kindLabel(d.kind()) + ": ").withStyle(Style.EMPTY.withColor(0x888888)));
-        t.append(Component.literal(d.name()).withStyle(Style.EMPTY.withColor(d.color() & 0xFFFFFF)));
-        t.append(Component.literal("\n   " + ln + " · " + how).withStyle(Style.EMPTY.withColor(0x666666)));
+        t.append(Component.literal("\n" + CosmeticData.kindLabel(d.kind()) + "  ").withStyle(Style.EMPTY.withColor(0x8A93B0)));
+        t.append(Component.literal(d.name()).withStyle(Style.EMPTY.withColor(d.color() & 0xFFFFFF).withBold(true)));
+        t.append(Component.literal("  " + ln).withStyle(Style.EMPTY.withColor(0x6C7388).withItalic(true)));
     }
     private static Component tippedGlyph(Look l, String player) {
         return chatGlyph(l.suffix()).copy().withStyle(Style.EMPTY.withHoverEvent(new HoverEvent.ShowText(tip(l, player, "fd:sfx", null))));
@@ -448,13 +449,15 @@ final class Cosmetics {
                 if (at >= 0 && lk.fx() != null) out = restyle(out, at, at + len, lk.fx(), true, now, null, null);
                 if (lk.suffix() != null) out = at >= 0 ? insert(out, at + len, chatGlyph(lk.suffix())) : Component.empty().append(out).append(Component.literal(" ")).append(chatGlyph(lk.suffix()));
                 TAB_BASE.put(id, base); TAB_SET.put(id, out); TAB_ID.put(id, key);
-                info.setTabListDisplayName(out);
+                info.setTabListDisplayName(out); tabTouched++;
             }
             tabMoving = anyMoving;
+            if (now - tabLogAt > 4000 && (anyMoving || tabTouched > 0)) { tabLogAt = now; System.err.println("[FancyDrops] tab: moving=" + anyMoving + " entries restyled=" + tabTouched + " skyblocker hook=" + (sbkUpd != null ? "method" : sbkFlag != null ? "flag" : "none") + " nudges=" + sbkNudges + " nudgeErrors=" + sbkErr); tabTouched = 0; }
             if (anyMoving) nudgeCustomTabs(now);
         } catch (Throwable ignored) { }
     }
 
+    private static int tabTouched, sbkNudges, sbkErr; private static long tabLogAt;
     private static java.lang.reflect.Field sbkFlag; private static java.lang.reflect.Method sbkUpd; private static boolean sbkTried; private static long sbkAt;
     /** Custom tab lists (Skyblocker's) copy the player list once in a while instead of every frame, so a moving name would stand still there. Ask it to copy again, a few times a second, while a name is moving. */
     private static void nudgeCustomTabs(long now) {
@@ -469,8 +472,9 @@ final class Cosmetics {
                     System.err.println("[FancyDrops] custom tab list found (Skyblocker): " + (sbkFlag != null ? "flag" : sbkUpd != null ? "method" : "no hook"));
                 } catch (Throwable ignored) { }
             }
-            if (sbkFlag != null) sbkFlag.setBoolean(null, true); else if (sbkUpd != null) sbkUpd.invoke(null);
-        } catch (Throwable ignored) { }
+            if (sbkUpd != null) { sbkUpd.invoke(null); sbkNudges++; }                                       // copy the list right now (the flag only copies on the next tick, after the server's own rewrite)
+            else if (sbkFlag != null) { sbkFlag.setBoolean(null, true); sbkNudges++; }
+        } catch (Throwable t) { if (sbkErr++ < 3) System.err.println("[FancyDrops] tab nudge failed: " + t); }
     }
 
     private static String nameOf(Minecraft mc, UUID id) {
