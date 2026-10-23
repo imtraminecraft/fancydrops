@@ -91,7 +91,27 @@ final class AuraFx {
     }
 
     // ------------------------------------------------------------------ in the world: our particles projected onto the screen
-    private static final Map<UUID, ArrayDeque<double[]>> HIST = new HashMap<>();
+    private static final Map<UUID, double[]> STATE = new HashMap<>();
+    private static int auraRgb(String aura) {
+        return switch (aura == null ? "" : aura) { case "glitchaura" -> 0xFF7A2E; case "stardust" -> 0x8FD0FF; case "patronaura" -> 0xFF9B2E; default -> 0xFFE680; };
+    }
+    /** The resting animation (after 5 seconds without moving): two strands of light slowly wind up from the feet past the head, and a soft ring breathes round the waist. */
+    static List<P> idleParticles(String aura, long now, float k) {
+        List<P> o = new ArrayList<>(); int col = auraRgb(aura), pale = mix(col, 0xFFFFFF, 0.55f);
+        float u = (now % 6000L) / 6000f;
+        for (int strand = 0; strand < 2; strand++) for (int i = 0; i < 9; i++) {
+            float ph = (u + i / 9f) % 1f, al = (float) Math.sin(ph * Math.PI) * k;
+            double an = ph * Math.PI * 3.0 + strand * Math.PI + (now % 9000L) / 9000.0 * Math.PI * 2;
+            float r = 0.55f + 0.08f * (float) Math.sin(ph * 9 + strand);
+            o.add(new P((float) Math.cos(an) * r, ph * 2.2f, (float) Math.sin(an) * r, 0.045f, argb(al * 0.95f, i % 3 == 0 ? pale : col), i % 2 == 0 ? 1 : 0));
+        }
+        float br = 0.5f + 0.5f * (float) Math.sin(now / 900.0);
+        for (int i = 0; i < 12; i++) {
+            double an = i * Math.PI / 6 + (now % 12000L) / 12000.0 * Math.PI * 2;
+            o.add(new P((float) Math.cos(an) * (0.62f + 0.06f * br), 0.9f + 0.05f * br, (float) Math.sin(an) * (0.62f + 0.06f * br), 0.035f, argb((0.35f + 0.45f * br) * k, col), 0));
+        }
+        return o;
+    }
     /** The player's position at time t (ms), from the recorded history. */
     private static double[] at(ArrayDeque<double[]> h, long t) {
         double[] prev = null;
@@ -170,15 +190,20 @@ final class AuraFx {
                 double ox = fieldD(p, "xOld"), oy = fieldD(p, "yOld"), oz = fieldD(p, "zOld");           // where the player is drawn this frame: between the last tick and this one
                 if (ox == 0 && oy == 0 && oz == 0) { ox = p.getX(); oy = p.getY(); oz = p.getZ(); }
                 double ex = ox + (p.getX() - ox) * pt, ey = oy + (p.getY() - oy) * pt, ez = oz + (p.getZ() - oz) * pt;
-                ArrayDeque<double[]> hist = HIST.computeIfAbsent(p.getUUID(), k -> new ArrayDeque<>());       // the last two seconds of where the player was
-                if (hist.isEmpty() || now - (long) hist.peekLast()[0] >= 8) hist.addLast(new double[]{now, ex, ey, ez});
-                while (hist.size() > 1 && now - (long) hist.peekFirst()[0] > 2000) hist.pollFirst();
-                for (P q : particles(l.aura(), now)) {
-                    double bx = ex, by = ey, bz = ez;
-                    float lagS = q.lag() > 0f ? q.lag() : 0.07f + 0.2f * Math.max(0f, Math.min(1f, q.y() / 2.1f));      // everything trails behind you: the higher it is, the further behind
-                    if (hist.size() > 1) {                                                                  // it stays where you were a moment ago
-                        double[] at = at(hist, now - (long) (lagS * 1000f)); bx = at[0]; by = at[1]; bz = at[2];
-                    }
+                double[] st = STATE.computeIfAbsent(p.getUUID(), k -> new double[]{0, now, ex, ey, ez, now, 1});     // phase ms, last frame, last position, last time it moved, speed
+                double moved = Math.abs(ex - st[2]) + Math.abs(ey - st[3]) + Math.abs(ez - st[4]);
+                if (moved > 0.004) st[5] = now;
+                st[2] = ex; st[3] = ey; st[4] = ez;
+                boolean idle = now - (long) st[5] > 5000, going = now - (long) st[5] < 250;
+                double want = going ? 2.0 : idle ? 0.55 : 1.0;                                            // moving: the aura swirls faster round you; resting: it slows down
+                double dtm = Math.min(100, now - st[1]); st[1] = now;
+                st[6] += (want - st[6]) * Math.min(1.0, dtm / 250.0);
+                st[0] += dtm * st[6];
+                float idleK = idle ? (float) Math.min(1.0, (now - st[5] - 5000) / 1200.0) : 0f;            // the idle animation fades in over a second
+                List<P> ps = particles(l.aura(), (long) st[0]);
+                if (idleK > 0f) ps.addAll(idleParticles(l.aura(), now, idleK));
+                for (P q : ps) {
+                    double bx = ex, by = ey, bz = ez;                                                       // always on you: the aura moves round the body, it never trails behind
                     double dx = bx + q.x() - cx, dy = by + q.y() - cy, dz = bz + q.z() - cz;
                     double zc = dx * fx + dy * fy + dz * fz;
                     if (zc < 0.25) continue;
@@ -188,7 +213,7 @@ final class AuraFx {
                     draw(g, sx, sy, px, q);
                 }
             }
-            if (HIST.size() > 64) HIST.clear();
+            if (STATE.size() > 64) STATE.clear();
         } catch (Throwable ignored) { }
     }
 

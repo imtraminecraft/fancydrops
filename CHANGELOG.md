@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.43
+- Auras stay with you: they no longer trail behind in the world. While you move the aura swirls round you faster; stand still for 5 seconds and a calm resting animation fades in (two strands of light winding up past your head and a soft ring at your waist).
+
 ## 0.8.42
 - The Admin Panel is now a button outside the menu (red, above the Cosmetics button; only you see it). It opens a full-screen panel with the players-per-cosmetic toggle and the box to pick what to give.
 
