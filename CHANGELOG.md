@@ -1,3 +1,6 @@
+## 0.8.57
+- The Active switch is now a lever at the top left above the menu: throw it right for on, left for off
+
 ## 0.8.56
 - Pest icon: the ladybug flaps its wings. Dye (a flask that takes a falling drop and changes colour), Mythological (a flashing lightning bolt in laurel) and Experiments (the book flips its pages) have real animations instead of a shine
 - Slayers > Animation Type > Default uses a spinning gold coin instead of a sword
