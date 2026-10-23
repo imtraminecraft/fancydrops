@@ -1,3 +1,6 @@
+## 0.8.60
+- Fixed: the animated name effect in SkySoft's Better Tab. It keeps its own cached copy of the tab list, so FancyDrops now tells it to re-read while a name is moving
+
 ## 0.8.59
 - Changed: the Enabled / Animated / Chat Alert / Disabled filter now sits inside the Drop Library pages, under the header, so it no longer covers the Active lever
 
