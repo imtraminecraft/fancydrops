@@ -1,5 +1,6 @@
 name: Build FancyDrops
 
+# Builds the jar on every push so you can test it. Nothing is published here: releases are made by hand with the "Release FancyDrops" workflow.
 on:
   push:
     branches:
@@ -8,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -30,50 +31,12 @@ jobs:
       - name: Build mod
         run: ./gradlew build
 
-      - name: Find production JAR
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "JAR files produced by Gradle:"
-          find build/libs -maxdepth 1 -type f -name '*.jar' -print
-
-          mkdir -p release
-
-          jar_file=$(find build/libs -maxdepth 1 -type f \
-            -name '*.jar' \
-            ! -name '*-sources.jar' \
-            ! -name '*-dev.jar' \
-            -print -quit)
-
-          if [ -z "$jar_file" ]; then
-            echo "::error::No production JAR found in build/libs"
-            exit 1
-          fi
-
-          cp "$jar_file" release/FancyDrops.jar
-          echo "Prepared release/FancyDrops.jar"
-          ls -lh release/FancyDrops.jar
-
-      - name: Read mod version
-        id: mod_version
-        shell: bash
-        run: |
-          VERSION=$(grep -E '^version=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r')
-          if [ -z "$VERSION" ]; then
-            echo "::error::version not found in gradle.properties"
-            exit 1
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-
-      - name: Publish direct JAR download
-        uses: softprops/action-gh-release@v3
+      - name: Keep the jar
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: build-${{ github.ref_name }}-${{ github.run_number }}
-          name: FancyDrops ${{ steps.mod_version.outputs.version }} [${{ github.ref_name == 'main' && 'Full' || 'Beta' }}]
-          body: Automated FancyDrops ${{ github.ref_name == 'main' && 'stable' || 'beta' }} build, version ${{ steps.mod_version.outputs.version }}.
-          prerelease: ${{ github.ref_name != 'main' }}
-          make_latest: ${{ github.ref_name == 'main' }}
-          files: release/FancyDrops.jar
-          fail_on_unmatched_files: true
-
+          name: FancyDrops-${{ github.ref_name }}
+          path: |
+            build/libs/*.jar
+            !build/libs/*-sources.jar
+            !build/libs/*-dev.jar
+          if-no-files-found: error

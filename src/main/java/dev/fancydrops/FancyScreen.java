@@ -295,7 +295,7 @@ public class FancyScreen extends Screen {
         searchField.setMaxLength(30);
         searchField.setHint(Component.literal("Search..."));
         searchField.setValue(query);
-        searchField.setResponder(v -> { query = v; scroll = 0; });
+        searchField.setResponder(v -> { query = v; scroll = 0; sideScroll = 0; });
         addRenderableWidget(searchField);
         numField = new EditBox(font, 0, 0, 40, 14, Component.literal("value"));
         numField.setMaxLength(4);
@@ -839,6 +839,50 @@ public class FancyScreen extends Screen {
 
     /** Every sidebar icon moves a little: a twinkling star, a rocket with sparks, a note floating off the note block, typing dots, a spinning gear, rising bars. */
     /** Every sidebar icon is its own little animation (see Icons). */
+    /** While searching the sidebar lists only the pages that have a match, each with all of its sub pages; a click opens that page and clears the search. */
+    private void drawSearchSide(GuiGraphicsExtractor g, int mx, int my, long now) {
+        sideScroll = Math.max(0, Math.min(sideMax(), sideScroll));
+        searchSide.clear();
+        g.enableScissor(px + 4, py + 66, px + sw, py + ph - 4);
+        String q = query.trim().toLowerCase(Locale.ROOT);
+        int y0 = py + 70 - sideScroll, y = y0, rowH = Math.max(12, Math.min(SUBH, 15));
+        boolean any = false;
+        for (Tab t : Tab.values()) {
+            int ti = t.ordinal();
+            if (!searchVis[ti]) continue;
+            any = true;
+            int[] b = {px + 8, y, px + sw - 6, y + 22};
+            boolean hov = inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3], hit = t.label.toLowerCase(Locale.ROOT).contains(q);
+            float hv = anim("stab|" + ti, hov ? 1f : 0f, 48f);
+            if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
+            iconBack(g, b[0] + 14, b[1] + 11, 9, hit || hov, tabCol(t));
+            tabIcon(g, t, b[0] + 6, b[1] + 3, hit || hov ? now : 2400L, hit || hov);
+            Gfx.text(g, font, t.label, b[0] + 28, b[1] + 7, hit ? Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.35f) : Canvas.mix(Canvas.mix(0xFF8A8A96, tabCol(t), 0.45f), 0xFFFFFFFF, hv * 0.4f));
+            searchSide.add(new int[]{ti, -1, b[0], b[1], b[2], b[3]});
+            y += 24;
+            String[] sn = SUBS[ti];
+            for (int k = 0; k < sn.length; k++) {
+                int[] sb = {px + 16, y, px + sw - 6, y + rowH};
+                boolean sh = inSide(mx, my) && mx >= sb[0] && mx < sb[2] && my >= sb[1] && my < sb[3], sHit = sn[k].toLowerCase(Locale.ROOT).contains(q);
+                float shv = anim("ssub|" + ti + "|" + k, sh ? 1f : 0f, 48f);
+                int sc2 = subCol(t);
+                if (sHit) { pill(g, sb[0], sb[1], sb[2] - sb[0], sb[3] - sb[1], Canvas.mix(Ui.ROW, sc2, 0.22f)); g.fill(sb[0], sb[1] + 2, sb[0] + 2, sb[3] - 2, sc2); }
+                else if (shv > 0.01f) pill(g, sb[0], sb[1], sb[2] - sb[0], sb[3] - sb[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, shv));
+                String[] d = LANDING[ti];
+                String ic = d.length > 3 + k ? d[3 + k].split("\\|")[0] : "fd:note";
+                iconBack(g, sb[0] + 10, sb[1] + rowH / 2, 6, sHit, sc2);
+                Gfx.push(g); Gfx.translate(g, sb[0] + 5, sb[1] + (rowH - 13) / 2); Gfx.scale(g, 0.7f); Icons.draw(g, ic, 0, 0, sHit || sh ? now : 2400L); Gfx.pop(g);
+                Gfx.text(g, font, sn[k], sb[0] + 21, sb[1] + (rowH - 8) / 2, sHit ? Ui.TEXT : Canvas.mix(Canvas.mix(0xFF8A8A96, sc2, 0.4f), 0xFFFFFFFF, shv * 0.4f));
+                searchSide.add(new int[]{ti, k, sb[0], sb[1], sb[2], sb[3]});
+                y += rowH + 1;
+            }
+            y += 2;
+        }
+        if (!any) Gfx.text(g, font, "No page matches", px + 14, y + 4, Ui.DIM);
+        searchSideH = y - y0 + 4;
+        g.disableScissor();
+    }
+
     private void tabIcon(GuiGraphicsExtractor g, Tab t, int x, int y, long now, boolean lively) {
         switch (t) {
             case DROPS -> Icons.draw(g, "library", x, y, now);
@@ -860,12 +904,14 @@ public class FancyScreen extends Screen {
     /** The header line: the tab, and the page inside it ("Animations  >  Slayers"). */
     private String pageTitle() {
         String[] n = subs();
-        if (!query.isBlank() || n.length == 0 || onLanding()) return tab.label;
+        if (!query.isBlank()) return "Search";
+        if (n.length == 0 || onLanding()) return tab.label;
         return tab.label + "  >  " + n[curSub()] + (tab == Tab.DROPS && dropSrc != null && dropSrcName != null ? "  >  " + dropSrcName : "");
     }
 
     /** The line under the header: what the open page is for. */
     private String pageSub() {
+        if (!query.isBlank()) return "Whole pages that match, then single settings";
         int k = curSub();
         if (onLanding()) return tab.sub;
         String[][] t = {
@@ -1082,23 +1128,48 @@ public class FancyScreen extends Screen {
         searching = false;
         if (query.isBlank()) { if (onLanding()) buildLanding(tab); else { buildTab(tab); filterSub(); } }
         else {
-            searching = true;
             String q = query.trim().toLowerCase(Locale.ROOT);
-            List<Row> res = new ArrayList<>();
-            for (Tab t : Tab.values()) {
+            Tab keepTab = tab; int[] keepSub = subSel.clone();
+            java.util.Arrays.fill(searchVis, false);
+            List<Row> pages = new ArrayList<>(), res = new ArrayList<>();
+            java.util.Set<String> shown = new java.util.HashSet<>();
+            int pageCount = 0;
+            for (Tab t : Tab.values()) {                                    // a page whose name matches opens whole: "cosmetics", "mythological", "stats"...
+                int ti = t.ordinal(); String[] sn = SUBS[ti];
+                boolean tabHit = t.label.toLowerCase(Locale.ROOT).contains(q);
+                List<Integer> want = new ArrayList<>();
+                if (tabHit) want.add(-1); else for (int k = 0; k < sn.length; k++) if (sn[k].toLowerCase(Locale.ROOT).contains(q)) want.add(k);
+                for (int k : want) {
+                    searchVis[ti] = true;
+                    searching = false; tab = t; subSel[ti] = k;
+                    rows.clear();
+                    if (k < 0 && sn.length > 0) buildLanding(t); else { if (k < 0) subSel[ti] = -1; buildTab(t); filterSub(); }
+                    Row head = section(t.label + (k >= 0 ? "  >  " + sn[k] : "")); head.noSearch = true;
+                    pages.add(head);
+                    for (Row r : rows) { pages.add(r); if (r.kind == NORMAL) shown.add(r.title); }
+                    pageCount++;
+                }
+            }
+            tab = keepTab; System.arraycopy(keepSub, 0, subSel, 0, keepSub.length);
+            searching = true;
+            for (Tab t : Tab.values()) {                                    // then single settings and drops anywhere that match
                 rows.clear(); buildTab(t);
                 for (Row r : rows) {
                     if (r.kind != NORMAL || r.field != null || r.noSearch || r.locked) continue;
                     if (!(r.title + " " + r.sub).toLowerCase(Locale.ROOT).contains(q)) continue;
+                    searchVis[t.ordinal()] = true;
+                    if (shown.contains(r.title)) continue;
                     r.indent = 0; if (r.arrow) { r.arrow = false; r.click = null; }
                     r.sub = (r.sub.isEmpty() ? "" : r.sub + "  ·  ") + t.label;
                     res.add(r);
                 }
             }
             rows.clear();
-            rows.add(section(res.size() + " result" + (res.size() == 1 ? "" : "s") + " for \"" + query.trim() + "\""));
+            rows.add(section((pageCount + res.size()) + " result" + (pageCount + res.size() == 1 ? "" : "s") + " for \"" + query.trim() + "\""));
+            rows.addAll(pages);
+            if (!pages.isEmpty() && !res.isEmpty()) rows.add(section("Also matching"));
             rows.addAll(res);
-            if (res.isEmpty()) rows.add(note("Nothing matches. Try a drop name, a slayer, or a setting like \"volume\".", 0xFF9AA6FF));
+            if (pages.isEmpty() && res.isEmpty()) rows.add(note("Nothing matches. Try a drop name, a slayer, or a setting like \"volume\".", 0xFF9AA6FF));
             searching = false;
         }
         for (Row r : rows) {                                           // a description too long for its row wraps onto more lines instead of scrolling
@@ -2056,6 +2127,7 @@ public class FancyScreen extends Screen {
             () -> { Cosmetics.Suffix cs = Cosmetics.chosen(); if (cs == null) return 0; for (int k = 0; k < Cosmetics.SUFFIXES.length; k++) if (Cosmetics.SUFFIXES[k] == cs) return k + 1; return 0; },
             i -> { c.suffix = i == 0 ? "" : Cosmetics.SUFFIXES[i - 1].id(); FancyConfig.save(); }));
         rows.add(note(Cosmetics.status(), Ui.DIM));
+        rows.add(note(Cosmetics.packActive() ? "Animated chat suffix pack: ON" : "In chat the suffix stands still. Switch on the FancyDrops Animated Suffix resource pack to animate it (the tab list always animates).", Ui.DIM));
     }
 
     /** A little fake player head: skin, hair and two eyes. */
@@ -2392,6 +2464,9 @@ public class FancyScreen extends Screen {
     private static String jumpTo;                                 // a row title to scroll to after the next build
     private static final int[] subSel = new int[Tab.values().length];
     static { java.util.Arrays.fill(subSel, -1); }   // the chosen sub page of every tab
+    private final boolean[] searchVis = new boolean[Tab.values().length];      // while searching: which pages have something that matches
+    private final List<int[]> searchSide = new ArrayList<>();               // the sidebar entries of the last frame while searching: {tab, sub (-1 = the page itself), x0, y0, x1, y1}
+    private int searchSideH;
     private float subExp;                                         // 0..1: how far the current tab's list has opened in the sidebar
     private static final String[][] SUBS = {
         {},                                                        // Home
@@ -2410,7 +2485,7 @@ public class FancyScreen extends Screen {
     private int sideScroll;                                   // the sidebar scrolls when the tabs and sub pages are taller than the menu
     private int srcExtra() { return tab == Tab.DROPS ? Math.round(srcExp * SRCH * srcList.size()) : 0; }
     private static final int SRCH = 14;
-    private int sideMax() { return Math.max(0, Tab.values().length * 24 + 4 + srcExtra() + Math.round(subExp * subH() * subs().length) - (ph - 70 - 8)); }
+    private int sideMax() { if (!query.isBlank()) return Math.max(0, searchSideH - (ph - 70 - 8)); return Math.max(0, Tab.values().length * 24 + 4 + srcExtra() + Math.round(subExp * subH() * subs().length) - (ph - 70 - 8)); }
     private boolean inSide(double mx, double my) { return mx >= px && mx < px + sw && my >= py + 66 && my < py + ph - 4; }
     private int[] tabBox(int i) {
         int y = py + 70 - sideScroll + i * 24 + (i > tab.ordinal() ? Math.round(subExp * subH() * subs().length) + srcExtra() : 0);
@@ -2513,6 +2588,8 @@ public class FancyScreen extends Screen {
         }
         Gfx.text(g, font, "v" + FancyDropsMod.VERSION + "  \u00B7  " + FancyDropsMod.CHANNEL, px + 40, py + 22, Ui.DIM);
 
+        if (!query.isBlank()) drawSearchSide(g, mx, my, now);
+        else {
         // sidebar tabs: the highlight glides from tab to tab
         sideScroll = Math.max(0, Math.min(sideMax(), sideScroll));
         g.enableScissor(px + 4, py + 66, px + sw, py + ph - 4);
@@ -2582,6 +2659,7 @@ public class FancyScreen extends Screen {
             g.disableScissor();
         }
         g.disableScissor();
+        }
         if (sideMax() > 0) {                                                       // a slim scroll bar shows there is more below
             int trk = ph - 76, bar = Math.max(14, trk * trk / (trk + sideMax())), by0 = py + 68 + Math.round((trk - bar) * (sideScroll / (float) sideMax()));
             g.fill(px + sw - 3, py + 68, px + sw - 1, py + 68 + trk, 0x22FFFFFF); g.fill(px + sw - 3, by0, px + sw - 1, by0 + bar, 0x99B0B8D0);
@@ -2893,6 +2971,14 @@ public class FancyScreen extends Screen {
             mc.setMaster(on, on); FancyConfig.save();
             return true;
         }
+        if (!query.isBlank()) {
+            if (button == 0 && inSide(mx, my)) for (int[] e : searchSide) if (mx >= e[2] && mx < e[4] && my >= e[3] && my < e[5]) {
+                dropSrc = null; waveKey = null; SoundFx.stopPreviews();
+                tab = Tab.values()[e[0]]; subSel[e[0]] = e[1]; query = ""; searchField.setValue(""); scroll = 0; sideScroll = 0; tabChanged = System.currentTimeMillis();
+                open.removeIf(o -> o.startsWith("dd_"));
+                return true;
+            }
+        } else
         for (int i = 0; i < Tab.values().length; i++) {
             int[] b = tabBox(i);
             if (inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = null; if (tab != Tab.values()[i]) { tabChanged = System.currentTimeMillis(); } tab = Tab.values()[i]; subSel[tab.ordinal()] = -1; scroll = 0; open.removeIf(o -> o.startsWith("dd_")); return true; }

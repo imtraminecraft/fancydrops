@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.Minecraft;
@@ -69,11 +70,19 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                 Identifier.fromNamespaceAndPath("fancydrops", "drop_animation"),
                 (graphics, deltaTracker) -> AnimationManager.render(graphics));
 
-        try {                                                               // the hotbar steps aside while a scene plays (only the hotbar: the item name above it stays)
-            HudElementRegistry.replaceElement(VanillaHudElements.HOTBAR, original -> (graphics, deltaTracker) -> {
-                if (!AnimationManager.isPlaying()) callHud(original, graphics, deltaTracker);
-            });
-        } catch (Throwable t) { System.err.println("[FancyDrops] could not wrap the hotbar: " + t); }
+        // While a scene plays, the bottom of the screen slides away: the hearts and bars with the hotbar. When it ends the hearts slide back first, then the hotbar.
+        for (String el : new String[]{"hotbar", "health_bar", "armor_bar", "food_bar", "air_bar", "mount_health", "info_bar", "experience_level"}) {
+            final boolean hotbar = el.equals("hotbar");
+            try {
+                HudElementRegistry.replaceElement(Identifier.withDefaultNamespace(el), original -> (graphics, deltaTracker) -> {
+                    float off = slideOffset(hotbar);
+                    if (off >= 60f) return;                                                    // fully away: nothing to draw
+                    if (off > 0.5f) { Gfx.push(graphics); Gfx.translate(graphics, 0, Math.round(off)); }
+                    callHud(original, graphics, deltaTracker);
+                    if (off > 0.5f) Gfx.pop(graphics);
+                });
+            } catch (Throwable t) { System.err.println("[FancyDrops] could not wrap " + el + ": " + t); }
+        }
 
         // Warm the price cache when joining Hypixel so the first drop already has a price.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
@@ -83,13 +92,30 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     }
 
     private static java.lang.reflect.Method hudCall;
-    /** Runs a vanilla HUD element through its one method, found by shape so the name of that method does not matter. */
-    private static void callHud(Object element, Object graphics, Object deltaTracker) {
+    /** Runs a vanilla HUD element through its one method. The method is found on the HudElement interface by shape, so its exact name does not matter. */
+    private static void callHud(HudElement element, Object graphics, Object deltaTracker) {
         try {
-            if (hudCall == null) for (java.lang.reflect.Method m : element.getClass().getMethods())
-                if (m.getParameterCount() == 2 && java.lang.reflect.Modifier.isPublic(m.getModifiers()) && m.getParameterTypes()[0].isInstance(graphics) && m.getParameterTypes()[1].isInstance(deltaTracker) && m.getDeclaringClass() != Object.class) { hudCall = m; break; }
+            if (hudCall == null) for (java.lang.reflect.Method m : HudElement.class.getMethods())
+                if (java.lang.reflect.Modifier.isAbstract(m.getModifiers()) && m.getParameterCount() == 2) { hudCall = m; break; }
             if (hudCall != null) hudCall.invoke(element, graphics, deltaTracker);
         } catch (Throwable ignored) { }
+    }
+
+    private static float slideStatus, slideHotbar;        // 0 = in place, 1 = slid away
+    private static long slideAt;
+    /** How far (in GUI pixels) the hearts and bars, or the hotbar, are pushed down this frame. The hearts come back first, the hotbar after them. */
+    private static float slideOffset(boolean hotbar) {
+        long now = System.currentTimeMillis();
+        if (now != slideAt) {
+            float dt = slideAt == 0 ? 0f : Math.min(0.1f, (now - slideAt) / 1000f); slideAt = now;
+            boolean away = AnimationManager.isPlaying();
+            float step = dt / 0.35f;
+            slideStatus = away ? Math.min(1f, slideStatus + step) : Math.max(0f, slideStatus - step);
+            boolean hotbarGoes = away || slideStatus > 0.35f;                               // on the way back the hotbar waits until the hearts are most of the way up
+            slideHotbar = hotbarGoes ? Math.min(1f, slideHotbar + step) : Math.max(0f, slideHotbar - step);
+        }
+        float k = hotbar ? slideHotbar : slideStatus;
+        return (k * k * (3f - 2f * k)) * 60f;
     }
 
     // ------------------------------------------------------------------ commands

@@ -15,11 +15,17 @@ dependencies {
 
 processResources {
     def version = project.version
-    def channel = "dev"
-
-    if (System.getenv("GITHUB_REF_NAME") == "main") {
-        channel = "main"
+    // "main" = the Main build, anything else = Dev. Decided by: -Pchannel=main, else the GitHub branch, else the git branch checked out on this computer.
+    def branch = System.getenv("GITHUB_REF_NAME")
+    if (branch == null || branch.isEmpty()) {
+        try {
+            def proc = ["git", "rev-parse", "--abbrev-ref", "HEAD"].execute([], rootDir)
+            branch = proc.text.trim()
+        } catch (Throwable ignored) {
+            branch = ""
+        }
     }
+    def channel = project.hasProperty("channel") ? project.property("channel").toString().toLowerCase() : (branch == "main" ? "main" : "dev")
 
     inputs.property "version", version
     inputs.property "channel", channel
