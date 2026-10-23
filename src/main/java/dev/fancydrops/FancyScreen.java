@@ -788,13 +788,13 @@ public class FancyScreen extends Screen {
             if (hv && r.pTips != null) { tipText = r.pTips[i]; tipCol = r.pBg != null ? r.pBg[i] : col; }
             if (hv && r.pIds != null) hoverCos = r.pIds[i];
             int rar = r.pRar == null ? -1 : r.pRar[i];                                                  // rarity: 0 common (grey), 1 beta (green), 2 special (the colours of its set)
-            int sch = r.pBg != null ? r.pBg[i] : rar == 1 ? 0xFF3FD16A : rar == 0 ? 0xFF9AA3B5 : col;     // the colour scheme of the tile: every tile of a set shares it
-            int bgBase = rar < 0 ? Ui.PANEL2 : Canvas.mix(Ui.PANEL2, sch, rar == 2 ? 0.10f : rar == 1 ? 0.13f : 0.07f);
+            int sch = r.pBg != null ? r.pBg[i] : rar == 2 ? 0xFF3FD16A : rar == 1 ? 0xFF3B5BDB : rar == 0 ? 0xFF9AA3B5 : col;     // the colour scheme of the tile: every tile of a set shares it
+            int bgBase = rar < 0 ? Ui.PANEL2 : Canvas.mix(Ui.PANEL2, sch, rar == 3 ? 0.10f : rar == 2 ? 0.13f : rar == 1 ? 0.14f : 0.07f);
             pill(g, b[0], b[1], b[2], b[3], Canvas.mix(bgBase, Canvas.mix(Ui.ROW_HOVER, sch, 0.22f), k));
             if (rar >= 1) {                                                                              // special and beta tiles have a background of their own (common has none)
                 g.enableScissor(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1);
-                if (rar == 2) { int seg = 8, sw2 = b[2] / seg + 1; for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF)); }
-                if (hv || on) tileFx(g, b, i, sch, rar == 2 && r.pSetId != null ? r.pSetId[i] : "beta", now, hv);          // only the tile you point at (or wear) animates: the rest stay calm and cheap
+                if (rar == 3) { int seg = 8, sw2 = b[2] / seg + 1; for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF)); }
+                if (hv || on) tileFx(g, b, i, sch, rar == 3 && r.pSetId != null ? r.pSetId[i] : "beta", now, hv);          // only the tile you point at (or wear) animates: the rest stay calm and cheap
                 g.disableScissor();
             }
             if (on) {
@@ -802,7 +802,7 @@ public class FancyScreen extends Screen {
                 rout(g, b[0], b[1], b[2], b[3], Gfx.argb(200 + pulse, sch & 0xFFFFFF)); g.fill(b[0] + 3, b[1] + b[3] - 3, b[0] + b[2] - 3, b[1] + b[3] - 2, sch);
                 if (r.pOn != null) { int cx2 = b[0] + b[2] - 12, cy2 = b[1] + 6; g.fill(cx2 + 4, cy2 + 5, cx2 + 6, cy2 + 7, sch); g.fill(cx2 + 2, cy2 + 3, cx2 + 4, cy2 + 5, sch); g.fill(cx2 + 6, cy2 + 1, cx2 + 8, cy2 + 5, sch); g.fill(cx2 + 7, cy2 - 1, cx2 + 9, cy2 + 1, sch); }
             }
-            else rout(g, b[0], b[1], b[2], b[3], Gfx.argb(hv ? 210 : rar == 2 ? 130 : rar >= 0 ? 90 : 50, (rar >= 0 ? sch : col) & 0xFFFFFF));
+            else rout(g, b[0], b[1], b[2], b[3], Gfx.argb(hv ? 210 : rar == 3 ? 130 : rar >= 0 ? 90 : 50, (rar >= 0 ? sch : col) & 0xFFFFFF));
             boolean ico = r.pIcons[i] != null; int iw = ico ? 21 : 0, iy = b[1] + (b[3] - 16) / 2;
             int avN = b[2] - 18 - iw - (wip ? 22 : 0), fullW = Gfx.w(font, r.pLabels[i]);
             float nk = fullW > avN && r.pSubs == null && !r.pFontTiles && r.pFx == null ? Math.max(0.72f, avN / (float) fullW) : 1f;          // a long name shrinks a little instead of losing its end
@@ -827,14 +827,14 @@ public class FancyScreen extends Screen {
     }
     private static final Map<String, Long> lockShake = new HashMap<>();
     private static String tipText, hoverCos; private static int tipCol;                      // the hover card of the tile under the mouse (drawn last, on top of everything)
-    private static final int[] RAR_COL = {0xFF9AA3B5, 0xFF3FD16A, 0xFFC77DFF};
+    private static final int[] RAR_COL = {0xFF9AA3B5, 0xFF4B6BEB, 0xFF3FD16A, 0xFFC77DFF};
     /** The little rarity pin: a tiny gem on a pin, in the colour of the rarity. */
     private static void rarityPin(GuiGraphicsExtractor g, int x, int y, int rar) {
-        int c = RAR_COL[Math.max(0, Math.min(2, rar))], lt = Canvas.mix(c, 0xFFFFFFFF, 0.55f), dk = Canvas.mix(c, 0xFF000000, 0.45f);
+        int c = RAR_COL[Math.max(0, Math.min(3, rar))], lt = Canvas.mix(c, 0xFFFFFFFF, 0.55f), dk = Canvas.mix(c, 0xFF000000, 0.45f);
         g.fill(x + 2, y, x + 5, y + 1, lt); g.fill(x + 1, y + 1, x + 6, y + 3, c); g.fill(x, y + 3, x + 7, y + 4, c);
         g.fill(x + 1, y + 4, x + 6, y + 5, dk); g.fill(x + 2, y + 5, x + 5, y + 6, dk); g.fill(x + 3, y + 6, x + 4, y + 7, dk);
         g.fill(x + 2, y + 1, x + 3, y + 2, 0xFFFFFFFF);
-        if (rar == 2) { g.fill(x + 6, y - 1, x + 7, y, 0xFFFFFFFF); g.fill(x - 1, y + 5, x, y + 6, lt); }
+        if (rar == 3) { g.fill(x + 6, y - 1, x + 7, y, 0xFFFFFFFF); g.fill(x - 1, y + 5, x, y + 6, lt); }
     }
     /** The hover card. tipText lines: name | what it is | rarity (0, 1, 2) | 1 yours / 0 locked | extra line (may be empty) | how to get it. */
     private void drawTileTip(GuiGraphicsExtractor g, int mx, int my) {
@@ -842,7 +842,7 @@ public class FancyScreen extends Screen {
         if (t == null || t.isEmpty()) return;
         String[] ln = t.split("\n", -1); if (ln.length < 6) return;
         int rar = 0; try { rar = Integer.parseInt(ln[2]); } catch (NumberFormatException ignored) { }
-        boolean yours = "1".equals(ln[3]); int rc = RAR_COL[Math.max(0, Math.min(2, rar))];
+        boolean yours = "1".equals(ln[3]); int rc = RAR_COL[Math.max(0, Math.min(3, rar))];
         List<String> how = new ArrayList<>(); String cur = "";
         for (String wd : ln[5].split(" ")) { if (!cur.isEmpty() && Gfx.w(font, cur + " " + wd) > 150) { how.add(cur); cur = wd; } else cur = cur.isEmpty() ? wd : cur + " " + wd; }
         if (!cur.isEmpty()) how.add(cur);
@@ -905,7 +905,7 @@ public class FancyScreen extends Screen {
     /** The colour scheme every tile of a set shares (beta green, common grey for the rest). */
     private static int schemeOf(CosmeticData.Def d) {
         CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
-        return sd != null ? sd.color() : d.line() == CosmeticData.Line.BETA ? 0xFF3FD16A : 0xFF9AA3B5;
+        return sd != null ? sd.color() : d.line() == CosmeticData.Line.BETA ? 0xFF3FD16A : d.line() == CosmeticData.Line.RARE ? 0xFF3B5BDB : 0xFF9AA3B5;
     }
     /** One line on what a name effect does, put in front of how to get it. */
     private static String effectNote(CosmeticData.Def d) {
@@ -968,12 +968,12 @@ public class FancyScreen extends Screen {
         // --- sets: the rarest first
         int ownedSets = 0; for (CosmeticData.SetDef sd : CosmeticData.SETS) if (CosmeticData.unlocked(CosmeticData.members(sd).get(0))) ownedSets++;
         rows.add(catHeader("SETS", "A suffix and a name effect that go together, and an aura for most.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
-        List<Object> st = new ArrayList<>(); for (int r2 = 2; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) st.add(sd);
+        List<Object> st = new ArrayList<>(); for (int r2 = 3; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) st.add(sd);
         rows.add(grid(st, 3));
         // --- one section per kind, ordered by rarity (special, then beta, then common); a set's items keep the set's colours
         for (int ki = 0; ki < kinds.length; ki++) {
             List<Object> li = new ArrayList<>(); int have = 0;
-            for (int r2 = 2; r2 >= 0; r2--) {                                                  // rarest first: a rarity's set items, then its single items
+            for (int r2 = 3; r2 >= 0; r2--) {                                                  // rarest first: a rarity's set items, then its single items
                 for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) for (CosmeticData.Def d : CosmeticData.members(sd)) if (d.kind() == kinds[ki]) li.add(d);
                 for (CosmeticData.Def d : CosmeticData.ALL) if (d.kind() == kinds[ki] && d.set() == null && CosmeticData.rarityOf(d) == r2) li.add(d);
             }
@@ -989,7 +989,7 @@ public class FancyScreen extends Screen {
     }
     // ------------------------------------------------------------------ Admin Panel: the full-screen picker
     private static boolean adminCounts;
-    private boolean adminHome, adminOpen; private String adminTarget = ""; private final Set<String> adminPicks = new LinkedHashSet<>(); private int adminScroll;
+    private boolean adminHome, adminOpen; private String adminTarget = "", adminName = ""; private final Set<String> adminPicks = new LinkedHashSet<>(); private int adminScroll;
     private final List<Object[]> adminHits = new ArrayList<>();
     private void openAdmin() {
         String t = adminField.getValue().trim(); String code = null;
@@ -1002,6 +1002,13 @@ public class FancyScreen extends Screen {
             } catch (Throwable ignored) { }
         }
         if (code == null) { toast("Not an ID, UUID or online name.", 0xFFFF8A5C); return; }
+        String nm = null;
+        try {
+            var con = net.minecraft.client.Minecraft.getInstance().getConnection();
+            if (con != null) for (var pi : con.getOnlinePlayers()) if (Cosmetics.code(pi.getProfile().id()).equals(code)) nm = pi.getProfile().name();
+        } catch (Throwable ignored) { }
+        if (nm == null && code.equals(Cosmetics.OWNER)) nm = "you";
+        adminName = nm != null ? nm : (t.matches("(?i)[0-9a-f]{64}|[0-9a-f-]{36}") ? "" : t);
         adminTarget = code; adminPicks.clear(); adminPicks.addAll(CosmeticData.heldBy(code)); adminScroll = 0; adminOpen = true;
     }
     private void adminToggleSet(CosmeticData.SetDef sd) {
@@ -1047,7 +1054,7 @@ public class FancyScreen extends Screen {
         int W = this.width, H = this.height; adminHits.clear();
         g.fill(0, 0, W, H, 0xF20A0C12);
         Gfx.text(g, font, "Give cosmetics", 16, 12, Ui.TEXT);
-        Gfx.text(g, font, "to " + adminTarget.substring(0, Math.min(12, adminTarget.length())) + "…   " + adminPicks.size() + " picked", 16, 24, Ui.SUB);
+        Gfx.text(g, font, "to " + (adminName.isEmpty() ? "" : adminName + "  ·  ") + adminTarget.substring(0, Math.min(10, adminTarget.length())) + "…   " + adminPicks.size() + " picked", 16, 24, Ui.SUB);
         int bx = W - 16;
         int[][] bt = {{0xFF2F8F5A, 0}, {0xFF555B6E, 1}}; String[] bl = {"Copy JSON", "Cancel"};
         for (int i = 0; i < 2; i++) {
@@ -1194,7 +1201,7 @@ public class FancyScreen extends Screen {
             long cn = System.currentTimeMillis();
             float pulse = 0.5f + 0.5f * (float) Math.sin(cn / 900.0 + i * 1.3);
             int cacc = 0xFF8FB4FF;
-            g.fill(b[0] - 2, b[1] - 2, b[2] + 2, b[3] + 2, Gfx.argb(Math.round(14 + 16 * pulse + 20 * k), cacc & 0xFFFFFF));           // a soft glow behind the button
+            pill(g, b[0] - 2, b[1] - 2, 26, 26, Gfx.argb(Math.round(10 + 14 * pulse + 18 * k), cacc & 0xFFFFFF));                          // a soft rounded glow behind the button
             pill(g, b[0], b[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, cacc, 0.10f), Ui.ROW_HOVER, k));
             rout(g, b[0], b[1], 22, 22, Gfx.argb(Math.round(50 + 50 * pulse + 80 * k), cacc & 0xFFFFFF));
             Icons.draw(g, "fd:" + COMM[i], b[0] + 3, b[1] + 3, 2400L);
@@ -3353,7 +3360,7 @@ public class FancyScreen extends Screen {
             int[] cb = cosBtn(); boolean ch = mx >= cb[0] && mx < cb[2] && my >= cb[1] && my < cb[3];
             float hv2 = anim("cosBtn", ch ? 1f : 0f, 40f); int ac = 0xFFC77DFF;
             float bp = 0.5f + 0.5f * (float) Math.sin(now / 520.0);                                              // the button breathes so the eye finds it
-            for (int gl = 3; gl >= 1; gl--) g.fill(cb[0] - gl * 2, cb[1] - gl * 2, cb[2] + gl * 2, cb[3] + gl * 2, Gfx.argb(Math.round((10 + 22 * bp + 30 * hv2) / gl), ac & 0xFFFFFF));
+            for (int gl = 3; gl >= 1; gl--) pill(g, cb[0] - gl * 2, cb[1] - gl * 2, 22 + gl * 4, 22 + gl * 4, Gfx.argb(Math.round((10 + 22 * bp + 30 * hv2) / gl), ac & 0xFFFFFF));
             pill(g, cb[0], cb[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, ac, 0.32f + 0.12f * bp), ac, 0.3f * hv2));
             rout(g, cb[0], cb[1], 22, 22, Gfx.argb(Math.round(170 + 60 * bp + 25 * hv2), ac & 0xFFFFFF));
             Icons.draw(g, "fd:cosmetics", cb[0] + 3, cb[1] + 3 - Math.round(hv2), ch ? System.currentTimeMillis() : 2400L);

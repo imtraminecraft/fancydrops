@@ -109,7 +109,7 @@ final class Cosmetics {
             if (u.equals(me)) continue;
             Set<String> g = CosmeticData.grantsOf(u);                    // everybody sees what an owner has been given
             if (g.isEmpty()) continue;
-            for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 2 && g.contains(sd.id())) {       // what they were given: the whole set (minus what you chose not to see)
+            for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 3 && g.contains(sd.id())) {       // what they were given: the whole set (minus what you chose not to see)
                 Look ol = new Look(c0.othersSuffix ? byId(sd.suffix()) : null, c0.othersName ? sd.fx() : null, c0.othersAura ? sd.aura() : null);
                 if (ol.suffix() != null || ol.fx() != null || ol.aura() != null) m.put(u, ol);
                 break;
@@ -214,7 +214,7 @@ final class Cosmetics {
     private static void tipLine(MutableComponent t, CosmeticData.Def d) {
         if (d == null) return;
         String how = CosmeticData.force.containsKey(d.id()) ? "Test menu" : d.how();
-        String ln = d.line() == CosmeticData.Line.SPECIAL ? "Special" : d.line() == CosmeticData.Line.BETA ? "Beta" : "Earned";
+        String ln = d.line() == CosmeticData.Line.SPECIAL ? "Special" : d.line() == CosmeticData.Line.BETA ? "Beta" : d.line() == CosmeticData.Line.RARE ? "Rare" : "Earned";
         t.append(Component.literal("\n" + CosmeticData.kindLabel(d.kind()) + "  ").withStyle(Style.EMPTY.withColor(0x8A93B0)));
         t.append(Component.literal(d.name()).withStyle(Style.EMPTY.withColor(d.color() & 0xFFFFFF).withBold(true)));
         t.append(Component.literal("  " + ln).withStyle(Style.EMPTY.withColor(0x6C7388).withItalic(true)));

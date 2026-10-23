@@ -6,7 +6,7 @@ import java.util.*;
 final class CosmeticData {
     private CosmeticData() {}
 
-    enum Line { BETA, SPECIAL, FREE }
+    enum Line { BETA, RARE, SPECIAL, FREE }
     enum Kind { SUFFIX, NAME, AURA }
     record Def(String id, String name, Line line, Kind kind, String how, int color, String set) {
         Def(String id, String name, Line line, Kind kind, String how, int color) { this(id, name, line, kind, how, color, null); }
@@ -14,30 +14,30 @@ final class CosmeticData {
     /** A Special set: a suffix, a name effect and an aura that belong together. */
     record SetDef(String id, String name, String how, int color, String suffix, String fx, String aura, int rarity) {}
     static final List<SetDef> SETS = List.of(
-        new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura", 2),
-        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, "glitchsfx", "glitch", "glitchaura", 2),
-        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "contrib", "contribfx", "stardust", 2),
-        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, "patron", "royal", "patronaura", 2),
-        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "crown", "shimmer", null, 1),
+        new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura", 3),
+        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, "glitchsfx", "glitch", "glitchaura", 3),
+        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "contrib", "contribfx", "stardust", 3),
+        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, "patron", "royal", "patronaura", 3),
+        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "flame", "pulse", null, 2),
         new SetDef("common", "Common", "Everyone gets this set.", 0xFF9AA3B5, "newcomer", "fresh", null, 0));
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
-    private static final String BETA_HOW = "Downloaded the mod before v1.0";
+    private static final String BETA_HOW = "Downloaded the mod before v1.0", RARE_HOW = "Rare: given to the first players of the mod";
     static final List<Def> ALL = List.of(
         // Beta: kept by everyone who had the mod before 1.0
-        new Def("crown", "Crown", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFC857, "beta"),
-        new Def("gem", "Gem", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF55D8FF),
-        new Def("flame", "Flame", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFF8A3D),
-        new Def("clover", "Clover", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF62E6A8),
-        new Def("heart", "Heart", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFF6B8A),
-        new Def("bolt", "Bolt", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFE066),
-        new Def("snow", "Snow", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFF9AD8FF),
-        new Def("star", "Star", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFD36B),
-        new Def("ghost", "Ghost", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFC9D2FF),
-        new Def("shimmer", "Shimmer", Line.BETA, Kind.NAME, BETA_HOW, 0xFFBFD4FF, "beta"),
-        new Def("pulse", "Pulse", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFF9AC8),
-        new Def("wave", "Ripple", Line.BETA, Kind.NAME, BETA_HOW, 0xFF7FE0D0),
-        new Def("glow", "Glow", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFFE9A8),
+        new Def("crown", "Crown", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFFC857),
+        new Def("gem", "Gem", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF55D8FF),
+        new Def("flame", "Flame", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFF8A3D, "beta"),
+        new Def("clover", "Clover", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF62E6A8),
+        new Def("heart", "Heart", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFF6B8A),
+        new Def("bolt", "Bolt", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFFE066),
+        new Def("snow", "Snow", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF9AD8FF),
+        new Def("star", "Star", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFFD36B),
+        new Def("ghost", "Ghost", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFC9D2FF),
+        new Def("shimmer", "Shimmer", Line.RARE, Kind.NAME, RARE_HOW, 0xFFBFD4FF),
+        new Def("pulse", "Pulse", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFF9AC8, "beta"),
+        new Def("wave", "Ripple", Line.RARE, Kind.NAME, RARE_HOW, 0xFF7FE0D0),
+        new Def("glow", "Glow", Line.RARE, Kind.NAME, RARE_HOW, 0xFFFFE9A8),
         // Special: handed out by hand, one set at a time (suffix + name effect + aura)
         new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFB48CFF, "sparkle"),
         new Def("sparklefx", "Starlight", Line.SPECIAL, Kind.NAME, "Special Set", 0xFFFFE9A8, "sparkle"),
@@ -103,7 +103,7 @@ final class CosmeticData {
         if (Cosmetics.isAdmin() || grantsOf(Cosmetics.me()).contains("c:" + d.id())) return true;           // the owner has everything; single cosmetics can be handed out one by one
         FancyConfig c = FancyConfig.get();
         switch (d.line()) {
-            case BETA: return betaEligible();
+            case BETA: case RARE: return betaEligible();
             case SPECIAL: return grantsOf(Cosmetics.me()).contains(d.set());
             default:
                 if (d.id().equals("newcomer") || d.id().equals("fresh")) return true;
@@ -120,6 +120,7 @@ final class CosmeticData {
     }
     /** What to tell a player who presses a locked cosmetic. */
     static String lockText(Def d) {
+        if (d.line() == Line.RARE) return "A rare cosmetic from the early days. Only players who downloaded before v1.0 have it.";
         if (d.line() == Line.BETA) return "The beta is over. Only players who downloaded before v1.0 have it.";
         if (d.line() == Line.SPECIAL) return setById(d.set()).how();
         return switch (d.id()) {
@@ -131,9 +132,9 @@ final class CosmeticData {
             default -> "Find the hidden button.";
         };
     }
-    static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 2 : d.line() == Line.BETA ? 1 : 0; }
-    static String rarityName(int r) { return r == 2 ? "Special" : r == 1 ? "Beta" : "Common"; }
-    static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set()) || s.id().equals("beta") && d.line() == Line.BETA) o.add(d); return o; }
+    static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 3 : d.line() == Line.BETA ? 2 : d.line() == Line.RARE ? 1 : 0; }
+    static String rarityName(int r) { return r == 3 ? "Special" : r == 2 ? "Beta" : r == 1 ? "Rare" : "Common"; }
+    static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set())) o.add(d); return o; }
     static int owned(SetDef s) { int n = 0; for (Def d : members(s)) if (unlocked(d)) n++; return n; }
     static boolean unlockedId(String id) { return unlocked(byId(id)); }
 
