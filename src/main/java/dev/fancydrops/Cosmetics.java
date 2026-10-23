@@ -10,14 +10,17 @@ import net.minecraft.resources.Identifier;
 import java.util.*;
 
 /**
- * Little name suffixes for chosen players (the FancyDrops icon after ImTra's name in chat and in the tab list).
+ * Little name suffixes for chosen players (ImTra gets an "Active ON" button after the name: still in chat, animated in the tab list).
  * The player is identified by UUID: we look their current name up in the tab list (or use your own account), then add the
  * emoji after that name in incoming chat lines. It only changes how YOU see the message; nobody else sees it.
  * The emoji is drawn with a font of our own (assets/fancydrops/font/emoji.json), because Minecraft's default font has no emoji.
  */
 final class Cosmetics {
-    /** player uuid -> glyph in our emoji font (U+E000 = the FancyDrops icon) */
-    private static final Map<UUID, String> SUFFIX = Map.of(UUID.fromString("1350c2e2-3c1e-45fe-984f-fe2e9c2e868a"), "");
+    /** The animated "Active ON" button: 8 glyphs of our emoji font, one per frame. Chat shows a still frame, the tab list plays all of them. */
+    private static final String[] FRAMES = {"\ue010", "\ue011", "\ue012", "\ue013", "\ue014", "\ue015", "\ue016", "\ue017"};
+    /** player uuid -> the still glyph shown in chat */
+    private static final Map<UUID, String> SUFFIX = Map.of(UUID.fromString("1350c2e2-3c1e-45fe-984f-fe2e9c2e868a"), FRAMES[3]);
+    private static final Map<UUID, Component> TAB_BASE = new HashMap<>();
     private static final FontDescription EMOJI = new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "emoji"));
 
     private record Seg(String text, Style style) {}
@@ -38,22 +41,25 @@ final class Cosmetics {
         return message;
     }
 
-    /** Also puts the icon after the name in the tab list (the server may rewrite the entry, so this runs about once a second). */
+    /** Also puts the animated button after the name in the tab list (called every few ticks: the frame changes about 9 times a second; the server may rewrite the entry, which is picked up as the new base). */
     static void tickTab(Minecraft mc) {
         try {
             if (mc.getConnection() == null) return;
+            String frame = FRAMES[(int) ((System.currentTimeMillis() / 110L) % FRAMES.length)];
             for (Map.Entry<UUID, String> e : SUFFIX.entrySet()) {
                 var info = mc.getConnection().getPlayerInfo(e.getKey());
                 if (info == null || info.getProfile() == null) continue;
                 Component cur = info.getTabListDisplayName();
-                if (cur != null && cur.getString().contains(e.getValue())) continue;
-                Component base = cur;
+                String curStr = cur == null ? "" : cur.getString();
+                boolean ours = false; for (String f : FRAMES) if (curStr.contains(f)) { ours = true; if (f.equals(frame)) return; }
+                Component base = ours ? TAB_BASE.get(e.getKey()) : cur;
                 if (base == null) {
                     base = Component.literal(info.getProfile().name());
                     try { base = net.minecraft.world.scores.PlayerTeam.formatNameForTeam(info.getTeam(), base); } catch (Throwable ignored) { }
                 }
+                TAB_BASE.put(e.getKey(), base);
                 MutableComponent out = Component.empty().append(base).append(Component.literal(" "));
-                out.append(Component.literal(e.getValue()).withStyle(Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)));
+                out.append(Component.literal(frame).withStyle(Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)));
                 info.setTabListDisplayName(out);
             }
         } catch (Throwable ignored) { }

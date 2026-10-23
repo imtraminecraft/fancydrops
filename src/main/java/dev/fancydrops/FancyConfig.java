@@ -81,6 +81,8 @@ public class FancyConfig {
     public int pos9 = 7;                // without bars: 3 x 3 grid, row by row (7 = bottom centre)
     public int mythStrikes = 3, mythStrikesRng = 5;   // lightning strikes before the Mythological drop shows (1..10)
     public java.util.Map<String, Float> animSecs = new java.util.HashMap<>();   // how long each animation lasts, in seconds (2..10); missing = its natural length
+    public java.util.Map<String, Float> textSecs = new java.util.HashMap<>();   // seconds after the animation starts until the title and info appear (3..10); missing = 4
+    public float textDelay(String key) { Float v = textSecs == null ? null : textSecs.get(key); return Math.max(3f, Math.min(10f, v == null ? 4f : v)); }
     public int mythPet = 5;                       // Mythological: the Griffin pet rarity drop chances are shown for (0 Common .. 5 Mythic)
     public int mythPosBars = -1, mythPos9 = -1;   // Mythological scene positions (-1 = same as Slayers)
     public int expPosBars = -1, expPos9 = -1;     // Experimentation Table scene positions (-1 = same as Slayers)
@@ -130,6 +132,8 @@ public class FancyConfig {
         instance.farmX = Math.max(0f, Math.min(1f, instance.farmX)); instance.farmY = Math.max(0f, Math.min(1f, instance.farmY));
         instance.mythPet = Math.max(0, Math.min(5, instance.mythPet));
         instance.mythStrikes = Math.max(1, Math.min(10, instance.mythStrikes)); instance.mythStrikesRng = Math.max(1, Math.min(10, instance.mythStrikesRng));
+        if (instance.textSecs == null) instance.textSecs = new java.util.HashMap<>();
+        instance.textSecs.replaceAll((k, v) -> v == null ? 4f : Math.max(3f, Math.min(10f, v)));
         if (instance.animSecs == null) instance.animSecs = new java.util.HashMap<>();
         instance.animSecs.replaceAll((k, v) -> v == null ? null : Math.max(2f, Math.min(10f, v)));
         instance.mythPosBars = Math.max(-1, Math.min(2, instance.mythPosBars)); instance.mythPos9 = Math.max(-1, Math.min(8, instance.mythPos9));

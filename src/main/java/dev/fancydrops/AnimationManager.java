@@ -43,10 +43,11 @@ public final class AnimationManager {
         boolean myth;                            // a Mythological Ritual drop: the lightning-and-rune-circle scene (has bars, blur and a position like Dye)
         boolean farm, helios;                    // a Farming drop: the small bar-less scene (helios: the Ray of Helios, a longer sunrise version)
         float speed = 1f;                        // scene seconds per real second (the animation length setting)
+        float textScene = -1f;                   // when the title and info start, in scene seconds (the text delay setting)
         Scene.Params p; int tier; long start; int frame = -1; float sx, sy;
         boolean isMyth() { return myth || (slayer != null && MythData.ALL.contains(slayer)); }       // every drop of a Mythological creature gets the Mythological scene, whichever way it was started
         boolean isExp() { return exp || (slayer != null && slayer == ExperimentData.slayer()); }
-        String scene() { return helios ? "helios" : farm ? "farm" : isExp() ? "exp" : isMyth() ? "mytho" : item == null ? "nothing" : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
+        String scene() { return helios ? "helios" : farm ? "farm" : item == null && !isExp() ? "nothing" : isExp() ? "exp" : isMyth() ? "mytho" : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
         final boolean[] done = new boolean[24];
         public Anim(SlayerData.Slayer slayer, Item item, int forcedTier, Runnable onStart) {
             this.slayer = slayer; this.item = item; this.forcedTier = forcedTier; this.onStart = onStart;
@@ -193,29 +194,38 @@ public final class AnimationManager {
     static String typeKey(Anim a) {
         if (a.farm) return a.helios ? "helios" : "farm";
         if (a.isExp()) return a.tier == 2 ? "exprng" : "exp";
-        if (a.isMyth()) return a.tier == 2 ? "mythrng" : "myth";
+        if (a.isMyth()) return a.item == null ? "mythnothing" : a.tier == 2 ? "mythrng" : "myth";
         if (a.p != null && a.p.dye) return "dye";
         if (a.item == null) return "nothing";
         return a.tier == 2 ? "rng" : a.tier == 1 ? "rare" : "default";
     }
     /** The whole animation in scene seconds, text included. */
     static float naturalScene(Scene.Params p, boolean farm) { return farm ? Scene.splitTime(p) + 3.15f : Scene.length(p) + 1.8f; }
+    /** {scene seconds per real second, when the words start in scene seconds, total real seconds}. The animation plays first; title and info follow after the text delay. */
+    static float[] timing(Scene.Params p, boolean farm, String key, FancyConfig c) {
+        float natural = naturalScene(p, farm), ts = Scene.splitTime(p), delay = c.textDelay(key);
+        Float want = c.animSecs.get(key);
+        float total = Math.max(want != null ? Math.max(2f, Math.min(10f, want)) : natural, delay + 3.5f);
+        float speed = natural / total;
+        float textReal = Math.max(delay, (ts + 0.12f) / speed + 0.3f);
+        return new float[]{speed, textReal * speed, total};
+    }
     /** How long an animation lasts by default, in real seconds, for the length slider. */
     public static float naturalSecs(String key, FancyConfig c) {
         c.fixChops();
         int t = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
-        Scene.Params p = new Scene.Params(t, !key.equals("nothing"));
+        Scene.Params p = new Scene.Params(t, !key.endsWith("nothing"));
         p.chops = Math.max(1, Math.min(20, t == 2 ? c.chopsEpic : t == 1 ? c.chopsCool : c.chopsDefault));
         p.style = c.slayerStyle;
         boolean farm = false;
         switch (key) {
             case "dye" -> { p.dye = true; p.chops = 1; }
             case "farm", "helios" -> { p.farm = true; p.chops = 3; p.helios = key.equals("helios"); farm = true; }
-            case "myth", "mythrng" -> { p.myth = true; p.chops = key.equals("mythrng") ? c.mythStrikesRng : c.mythStrikes; }
+            case "myth", "mythrng", "mythnothing" -> { p.myth = true; p.chops = key.equals("mythrng") ? c.mythStrikesRng : c.mythStrikes; }
             case "exp", "exprng" -> { p.exp = true; p.chops = key.equals("exprng") ? c.expFlipsRng : c.expFlips; }
             default -> { }
         }
-        return Math.round(naturalScene(p, farm) * 10f) / 10f;
+        return Math.round(Math.max(naturalScene(p, farm), c.textDelay(key) + 3.5f) * 10f) / 10f;
     }
 
     private static Scene.Params params(Anim a, Item it, int tier) {
@@ -257,7 +267,7 @@ public final class AnimationManager {
         for (int i = 0; i < parts.length; i += 2) { n += ((Component) parts[i]).getString().length(); w += font.width((Component) parts[i]); }
         Gfx.push(g); Gfx.translate(g, cx, y); Gfx.scale(g, sc);
         int x = -w / 2, idx = 0;
-        float wi = lineDelay > 0f ? clamp((revealT - lineDelay) / 0.6f) : waveIn;               // later lines start a little after the title
+        float wi = waveIn;               // later lines start a little after the title
         float fin = wi * (n + 6), fout = waveOut * (n + 6);
         float sweep = wi >= 1f ? ((waveT * 0.5f) % 2.2f) / 2.2f * (n + 12) - 6f : -99f;     // a bright band travelling along the letters
         for (int i = 0; i < parts.length; i += 2) {
@@ -321,7 +331,7 @@ public final class AnimationManager {
         for (int i = 0; i < w.length; i++) {
             Object[] k = cols.get(i); float d = (Float) k[3], xc = x + w[i] / 2f;
             if (i > 0) {
-                float prog = clamp((revealT - d) / 0.4f) * (1f - waveOut);
+                float prog = clamp(revealT / 0.4f) * (1f - waveOut);
                 int sx = Math.round(x - pad);
                 g.fill(sx, yLab, sx + 1, yVal + Math.round(9 * sc), Gfx.argb(Math.round(alpha * 0.35f * prog), 0xFFFFFF));
             }
@@ -457,17 +467,17 @@ public final class AnimationManager {
 
     /** The preview scene of one animation type (nothing, default, rare, rng, dye, farm, helios, myth, mythrng), built from the live settings every frame. */
     private static Scene.Params previewForKey(String key, FancyConfig c) {
-        int cat = switch (key) { case "dye" -> 1; case "farm", "helios" -> 2; case "myth", "mythrng" -> 3; case "exp", "exprng" -> 4; default -> 0; };
+        int cat = switch (key) { case "dye" -> 1; case "farm", "helios" -> 2; case "myth", "mythrng", "mythnothing" -> 3; case "exp", "exprng" -> 4; default -> 0; };
         Scene.Params base = previewFor(cat, c);
         int tier = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
         Scene.Params p = KEY_P.get(key);
         if (p == null) {
-            p = new Scene.Params(tier, !key.equals("nothing"));
+            p = new Scene.Params(tier, !key.endsWith("nothing"));
             if (p.hasItem) { p.item = base.item; p.rarity = key.equals("default") ? Ui.R_CRAZY : base.rarity; }
             switch (key) {
                 case "dye" -> { p.dye = true; p.dyeCol = 0xFFE0409A; }
                 case "farm", "helios" -> { p.farm = true; p.helios = key.equals("helios"); p.rarity = 0xFF7BE05A; }
-                case "myth", "mythrng" -> { p.myth = true; p.rarity = 0xFFFFC857; }
+                case "myth", "mythrng", "mythnothing" -> { p.myth = true; p.rarity = 0xFFFFC857; }
                 case "exp", "exprng" -> { p.exp = true; p.rarity = key.equals("exprng") ? 0xFFFF55FF : 0xFFB56BFF; }
                 default -> { }
             }
@@ -477,7 +487,7 @@ public final class AnimationManager {
         switch (key) {
             case "dye" -> p.chops = 1;
             case "farm", "helios" -> p.chops = 3;
-            case "myth" -> p.chops = Math.max(1, Math.min(10, c.mythStrikes));
+            case "myth", "mythnothing" -> p.chops = Math.max(1, Math.min(10, c.mythStrikes));
             case "mythrng" -> p.chops = Math.max(1, Math.min(10, c.mythStrikesRng));
             case "exp" -> p.chops = Math.max(1, Math.min(12, c.expFlips));
             case "exprng" -> p.chops = Math.max(1, Math.min(12, c.expFlipsRng));
@@ -493,8 +503,7 @@ public final class AnimationManager {
     public static float[] soundTimes(String key, FancyConfig c) {
         Scene.Params p = previewForKey(key, c);
         float natural = naturalScene(p, p.farm);
-        Float want = c.animSecs.get(key);
-        float secs = want == null ? natural : Math.max(2f, Math.min(10f, want)), k = secs / Math.max(0.1f, natural);
+        float secs = timing(p, p.farm, key, c)[2], k = secs / Math.max(0.1f, natural);
         int n = Math.max(0, Math.min(p.chops, 20));
         float[] r = new float[n + 6];
         r[0] = secs; r[1] = n;
@@ -512,21 +521,19 @@ public final class AnimationManager {
         FancyConfig c = FancyConfig.get();
         cat = Math.max(0, Math.min(4, cat));
         Scene.Params p = key == null ? previewFor(cat, c) : previewForKey(key, c);
-        float speed = 1f;
-        if (key != null) {
-            Float want = c.animSecs.get(key);
-            if (want != null) speed = naturalScene(p, p.farm) / Math.max(2f, Math.min(10f, want));
-        }
+        float[] tm = key == null ? null : timing(p, p.farm, key, c);
+        float speed = tm == null ? 1f : tm[0];
         if (cat == 3) p.mob = (int) ((System.currentTimeMillis() / 1000L / 9L) % 12L);      // the preview calls a different creature each loop
         String kk = key == null ? "" : key;
         if (previewCat != cat || !kk.equals(previewKeyLast)) { previewCat = cat; previewKeyLast = kk; previewFrame = -1; }
         boolean farm = cat == 2, cine = c.cine(cat) && !farm;
         Font font = Minecraft.getInstance().font;
         float sec = syncSec >= 0f ? syncSec * speed : (System.currentTimeMillis() % 600_000L) / 1000f * speed;
-        float ts = Scene.splitTime(p), len = Scene.length(p) + 0.4f, t = syncSec >= 0f ? Math.min(sec, len - 0.02f) : sec % len;
+        float ts = Scene.splitTime(p), len = tm == null ? Scene.length(p) + 0.4f : naturalScene(p, p.farm), t = syncSec >= 0f ? Math.min(sec, len - 0.02f) : sec % len;
         int frame = (int) (t * 30f);
         if (frame != previewFrame) { previewFrame = frame; Scene.draw(OUT, L3, p, frame / 30f); if (cine) feather(OUT); SceneTexture.upload(OUT); }
-        revealT = t - ts - 0.15f; waveIn = clamp((t - ts - 0.15f) / 0.6f); waveOut = clamp((t - (len - 0.8f)) / 0.6f); waveT = sec; bounceT = t - (ts + 0.15f + 0.6f);
+        float rv = tm == null ? ts + 0.15f : tm[1];
+        revealT = t - rv; waveIn = clamp((t - rv) / 0.6f); waveOut = clamp((t - (len - 0.8f)) / 0.6f); waveT = sec; bounceT = t - (rv + 0.6f);
         float ga = 1f - waveOut * 0f;
         int barFull = cine ? Math.round(H * c.barHeight / 100f) : 0;
         Item pi = cat == 4 ? PREVIEW_EXP : farm ? PREVIEW_FARM : PREVIEW;
@@ -596,13 +603,13 @@ public final class AnimationManager {
             DropListener.announceNow(a.item); DropListener.announceNow(a.item2);          // the chat message goes out together with the scene
             a.tier = a.forcedTier >= 0 ? a.forcedTier : Math.max(tierOf(a.item), tierOf(a.item2));
             a.p = params(a, a.item, a.tier);
-            Float want = c.animSecs.get(typeKey(a));
-            a.speed = want == null ? 1f : naturalScene(a.p, a.farm) / Math.max(2f, Math.min(10f, want));
+            float[] tm = timing(a.p, a.farm, typeKey(a), c);
+            a.speed = tm[0]; a.textScene = tm[1];
             a.start = System.currentTimeMillis();
         }
         Anim a = cur;
         float t = (System.currentTimeMillis() - a.start) / 1000f * a.speed;                // a.speed stretches or squeezes the whole scene to the length the user chose
-        float len = a.farm ? Scene.splitTime(a.p) + 3.15f : Scene.length(a.p) + 1.8f;      // farming: the words stay about 3 seconds, longer than the 1.5 s scene                // the text stays up a good while after the reveal
+        float len = naturalScene(a.p, a.farm);      // farming: the words stay about 3 seconds, longer than the 1.5 s scene                // the text stays up a good while after the reveal
         if (t >= len) { cur = null; SoundFx.stopPreviews(); return; }          // a sound longer than the animation ends with it
         if (a.p.item == null && a.item != null) a.p.item = ItemIcons.model(a.item.id, a.slayer.color());   // art finished loading late
         if (a.p.twin && a.p.item2 == null && a.item2 != null) a.p.item2 = ItemIcons.model(a.item2.id, a.slayer.color());
@@ -612,7 +619,7 @@ public final class AnimationManager {
         float cin = cine ? easeIO(Math.min(clamp(t / 0.6f), clamp((len - t) / 0.6f))) : 0f;
         Font font = Minecraft.getInstance().font;
         Layout L = layout(g.guiWidth(), g.guiHeight(), c, rows(a, c), catOf(a));
-        float ts = Scene.splitTime(a.p), reveal = ts + 0.12f;
+        float ts = Scene.splitTime(a.p), reveal = a.textScene >= 0f ? a.textScene : ts + 0.27f;
         boolean epic = a.tier == 2;
         int W = g.guiWidth(), H = g.guiHeight(), barFull = Math.round(H * c.barHeight / 100f);
         boolean framed = cine;       // the scene fills the picture between the bars; the words sit in the bars
@@ -632,7 +639,7 @@ public final class AnimationManager {
         if (framed) g.enableScissor(sideFull, barFull, W - sideFull, H - barFull);          // a zoomed scene never spills into the bars
         if (!SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga)) OUT.flush(g::fill, sceneX + Math.round(a.sx * cellF), sceneY + Math.round(a.sy * cellF), Math.max(1, Math.round(cellF)), ga);
         if (framed) g.disableScissor();
-        revealT = t - reveal - 0.15f; waveIn = clamp((t - reveal - 0.15f) / 0.6f); waveOut = clamp((t - (len - 1.0f)) / 0.7f); waveT = t; bounceT = t - (reveal + 0.15f + 0.6f);
+        revealT = t - reveal; waveIn = clamp((t - reveal) / 0.6f); waveOut = clamp((t - (len - 1.0f)) / 0.7f); waveT = t; bounceT = t - (reveal + 0.6f);
         if (epic && t > ts) epicFront(g, a, t - ts, W, H, scx, scy, cin * ga);
         if (waveIn > 0f) {
             int al = (int) (255 * ga);

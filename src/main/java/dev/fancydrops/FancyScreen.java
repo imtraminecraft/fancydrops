@@ -203,6 +203,7 @@ public class FancyScreen extends Screen {
     private class Row {
         int kind = NORMAL, indent, accent = Ui.ACCENT, h = 28, x, y, w;
         String icon, iconId, title = "", sub = "";
+        FancyConfig.DropCfg dcfg;      // drop rows: the switches, so the Drop Library "Show" filter can hide rows
         String spriteId;               // a creature picture that replaces the drawn icon once it has downloaded
         int pbw;                       // PREVIEW rows: draw at this width, left aligned (the dock)
         boolean nolabel;               // PREVIEW rows: the caller writes its own caption
@@ -470,6 +471,7 @@ public class FancyScreen extends Screen {
                 case "dye" -> d.add(new String[]{"Splat", "1, in the dye's colour"});
                 case "myth" -> d.add(new String[]{"Strikes", Math.max(1, Math.min(10, c.mythStrikes)) + ""});
                 case "mythrng" -> d.add(new String[]{"Strikes", Math.max(1, Math.min(10, c.mythStrikesRng)) + ""});
+                case "mythnothing" -> d.add(new String[]{"Strikes", Math.max(1, Math.min(10, c.mythStrikes)) + ""});
                 case "exp" -> d.add(new String[]{"Flips", Math.max(1, Math.min(12, c.expFlips)) + ""});
                 case "exprng" -> d.add(new String[]{"Flips", Math.max(1, Math.min(12, c.expFlipsRng)) + ""});
                 case "nothing" -> d.add(new String[]{"Style", STYLE_NAMES[Math.floorMod(c.slayerStyle, STYLE_NAMES.length)]});
@@ -872,8 +874,10 @@ public class FancyScreen extends Screen {
         })));
         dr.ctls.add(tog(() -> dc.animate, v -> dc.animate = v, 0xFF4A6CF0));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
+        dr.dcfg = dc;
         return dr;
     }
+    private static int dropShow = 0;                                           // Drop Library filter: 0 all, 1 animated, 2 announced, 3 muted
     private Row dropRow(SlayerData.Slayer s, SlayerData.Drop d, FancyConfig c) {
         FancyConfig.DropCfg dc = MythData.ALL.contains(s) ? MythData.cfg(c, s, d) : c.drop(s.id, d.name);
         Row dr = row(2, d.icon, d.name, d.chance.isEmpty() ? "chance unknown" : d.chance, s.color());
@@ -882,7 +886,17 @@ public class FancyScreen extends Screen {
         dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (FarmData.ALL.contains(s)) DropListener.playFarmDrop(s, d); else if (MythData.ALL.contains(s)) DropListener.playMythDrop(s, d); else DropListener.playDrop(s, d, "+250%"); })));
         dr.ctls.add(tog(() -> dc.animate, v -> dc.animate = v, 0xFF4A6CF0));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
+        dr.dcfg = dc;
         return dr;
+    }
+
+    /** The Drop Library "Show" tiles: picks which drops stay in the list. */
+    private void dropFilter(List<Row> rows) {
+        if (searching) return;
+        Row pk = picker("Show", "Filter the drops on this page", new String[]{"All", "Animated", "In chat", "Muted"}, new String[]{"fd:library", "fd:animations", "fd:chat", "fd:nothing"}, () -> dropShow, i -> dropShow = i);
+        int at = 0; for (int i = 0; i < rows.size(); i++) if (rows.get(i).kind == HERO) { at = i + 1; break; }
+        rows.add(at, pk);
+        if (dropShow != 0) rows.removeIf(r -> r.dcfg != null && (dropShow == 1 ? !r.dcfg.animate : dropShow == 2 ? !r.dcfg.announce : (r.dcfg.animate || r.dcfg.announce)));
     }
 
     private Row row(int indent, String icon, String title, String sub, int accent) {
@@ -1071,6 +1085,7 @@ public class FancyScreen extends Screen {
                         for (SlayerData.Drop d : s.drops) rows.add(dropRow(s, d, c));
                     }
                 }
+                dropFilter(rows);
             }
             case ANIMATIONS -> {
                 boolean all = searching; int sub = curSub();
@@ -1082,6 +1097,7 @@ public class FancyScreen extends Screen {
                         wp.kind = PANEL; wp.h = 130; wp.noSearch = true; rows.add(wp);
                     } else animCategory(rows, c, cat, all);
                 }
+                if (all || sub == CATS.length) animChanges(rows, c);
             }
             case SOUNDS -> {
                 int ssub = searching ? -1 : curSub();
@@ -1278,13 +1294,14 @@ public class FancyScreen extends Screen {
         {{"Farming Drop", "farm", "5", "fd:farm", "A scythe cuts a row of crops and the last one opens. For crops, feasts and pests.", "Farming"},
          {"Ray of Helios", "helios", "8", "fd:sun", "A longer sunrise, only for the Ray of Helios.", "Helios"}},
         {{"Mythological Drop", "myth", "6", "fd:mytho", "Golden lightning lights a rune circle, which lifts the drop out in laurel.", "Normal"},
-         {"RNG Drop", "mythrng", "6", "fd:rng", "For RNG drops: a bigger last bolt, god rays, rune halos and griffin feathers.", "RNG"}},
+         {"RNG Drop", "mythrng", "6", "fd:rng", "For RNG drops: a bigger last bolt, god rays, rune halos and griffin feathers.", "RNG"},
+         {"Nothing Happens", "mythnothing", "3", "fd:nothing", "When a ritual drops nothing: the circle goes dark.", "Nothing"}},
         {{"Experiment Drop", "exp", "7", "fd:experiments", "The table's book opens, the view zooms in, the pages flip and the drop bursts out.", "Normal"},
          {"RNG Drop", "exprng", "7", "fd:rng", "For RNG items: the book flips more and faster, then god rays and a laurel crown the drop.", "RNG"}}};
 
     private static float secsOf(FancyConfig c, String key) {
         Float v = c.animSecs.get(key);
-        return Math.max(2f, Math.min(10f, v != null ? v : AnimationManager.naturalSecs(key, c)));
+        return Math.max(2f, Math.min(10f, v != null ? Math.max(v, c.textDelay(key) + 3.5f) : AnimationManager.naturalSecs(key, c)));
     }
 
     /** One Animations page: the preview, the animation type (a list when there is more than one), that type's settings and sounds, then the frame and text. */
@@ -1321,6 +1338,7 @@ public class FancyScreen extends Screen {
             case "farm" -> DropListener::playFarmTest;
             case "helios" -> DropListener::playHeliosTest;
             case "myth" -> () -> DropListener.playMythTest(false);
+            case "mythnothing" -> DropListener::playMythNothing;
             case "exp" -> () -> DropListener.playExpTest(false);
             case "exprng" -> () -> DropListener.playExpTest(true);
             default -> () -> DropListener.playMythTest(true);
@@ -1330,7 +1348,7 @@ public class FancyScreen extends Screen {
     /** The settings of one animation type: Play, how many slices / drips / strikes, how long it lasts, and its sounds. */
     private void animType(List<Row> rows, FancyConfig c, String[] t) {
         final String key = t[1]; final int sc = Integer.parseInt(t[2]);
-        int col = switch (key) { case "nothing" -> Ui.DIM; case "default" -> Ui.SUB; case "rare" -> Ui.R_CRAZY; case "dye" -> 0xFFFF72C6; case "farm" -> 0xFF7BE05A; case "myth", "mythrng" -> 0xFFFFC857; case "exp", "exprng" -> 0xFFB56BFF; default -> Ui.ACCENT; };
+        int col = switch (key) { case "nothing" -> Ui.DIM; case "default" -> Ui.SUB; case "rare" -> Ui.R_CRAZY; case "dye" -> 0xFFFF72C6; case "farm" -> 0xFF7BE05A; case "myth", "mythrng", "mythnothing" -> 0xFFFFC857; case "exp", "exprng" -> 0xFFB56BFF; default -> Ui.ACCENT; };
         Row head = row(0, t[3], t[0], t[4], col);
         Runnable go = playerOf(key);
         head.ctls.add(new Btn("▶ Play", GREEN, () -> play(go)));
@@ -1344,7 +1362,7 @@ public class FancyScreen extends Screen {
             if (open.contains(dk) && !searching) rows.add(miniList(cr, sd, counts, clampN(sliceOf(c, sc)) - 1, i -> { setSlice(c, sc, i + 1); c.fixChops(); open.remove(dk); }));
         } else if (key.equals("dye")) {
             // one splat in the dye's own colour: nothing to set here but the length
-        } else if (key.equals("myth") || key.equals("mythrng")) {
+        } else if (key.equals("myth") || key.equals("mythrng") || key.equals("mythnothing")) {
             boolean r = key.equals("mythrng");
             List<String> hits = new ArrayList<>(); for (int n = 1; n <= 10; n++) hits.add(n + (n == 1 ? " strike" : " strikes"));
             Row cr = row(0, "fd:mytho", "Lightning strikes", "Bolts before the drop shows", col);
@@ -1365,6 +1383,10 @@ public class FancyScreen extends Screen {
         dl.ctls.add(new Btn("Default", Ui.ROW_HOVER, () -> c.animSecs.remove(key)));
         dl.ctls.add(new Slider(2, 10, 0.1, () -> secsOf(c, key), v -> c.animSecs.put(key, (float) (Math.round(v * 10) / 10.0)), () -> String.format(java.util.Locale.ROOT, "%.1f s", secsOf(c, key))).typed(1));
         rows.add(dl);
+        Row td = row(0, "fd:text", "Text delay", "The animation plays first; the title and info show after this many seconds (3 to 10)", col);
+        td.ctls.add(new Btn("Default", Ui.ROW_HOVER, () -> c.textSecs.remove(key)));
+        td.ctls.add(new Slider(3, 10, 0.1, () -> c.textDelay(key), v -> c.textSecs.put(key, (float) (Math.round(v * 10) / 10.0)), () -> String.format(java.util.Locale.ROOT, "%.1f s", c.textDelay(key))).typed(1));
+        rows.add(td);
         Row ss = row(0, "fd:sounds", "Sounds", "What every moment of this animation plays", col);
         ss.ctls.add(new Btn("Edit sounds", 0xFF3A4FA0, () -> {
             for (int ci = 0; ci < ATYPES.length; ci++) for (int ti = 0; ti < ATYPES[ci].length; ti++) if (ATYPES[ci][ti][1].equals(key)) { soundCat = ci; animType[ci] = ti; }
@@ -1396,6 +1418,29 @@ public class FancyScreen extends Screen {
     }
 
     /** Position, bars, size and text of one animation page (these used to live in Settings > Scene Settings). */
+    /** Animation Changes: the look every animation shares (bars, sizes). Per-animation pages only keep what is theirs. */
+    private void animChanges(List<Row> rows, FancyConfig c) {
+        rows.add(section("Animation Changes"));
+        Row bc = row(0, "fd:bars", "Bar colour", "The colour of the cinematic bars", Ui.ACCENT);
+        Dd bcDd = new Dd(() -> AnimationManager.BAR_NAMES[Math.floorMod(c.barStyle, AnimationManager.BAR_NAMES.length)], "dd_barc", 130);
+        bc.ctls.add(bcDd);
+        rows.add(bc);
+        if (open.contains("dd_barc") && !searching)
+            rows.add(miniList(bc, bcDd, java.util.Arrays.asList(AnimationManager.BAR_NAMES), Math.floorMod(c.barStyle, AnimationManager.BAR_NAMES.length), i -> { c.barStyle = i; open.remove("dd_barc"); }));
+        Row bh = row(0, "fd:barheight", "Bar height", "How far the bars close in  ·  click the number to type", Ui.ACCENT);
+        bh.ctls.add(new Slider(0, 25, 1, () -> c.barHeight, v -> c.barHeight = (int) v, () -> c.barHeight + "%").typed(1).live());
+        rows.add(bh);
+        Row as = row(0, "fd:size", "Animation size", "Scene size  ·  without bars it never gets smaller than 100%", Ui.ACCENT);
+        as.ctls.add(new Slider(0.6, 1.4, 0.05, () -> c.size, v -> c.size = (float) v, () -> Math.round(c.size * 100) + "%").typed(100).live());
+        rows.add(as);
+        Row fz = row(0, "fd:size", "Farming size", "Size of the Farming scene", 0xFF7BE05A);
+        fz.ctls.add(new Slider(0.5, 1.1, 0.05, () -> c.farmScale, v -> c.farmScale = (float) v, () -> Math.round(c.farmScale * 100) + "%").typed(100).live());
+        rows.add(fz);
+        Row is = row(0, "fd:itemsize", "Item size", "The dropped item inside the scene", Ui.ACCENT);
+        is.ctls.add(new Slider(0.5, 1.1, 0.05, () -> c.itemScale, v -> c.itemScale = (float) v, () -> Math.round(c.itemScale * 100) + "%").typed(100).live());
+        rows.add(is);
+    }
+
     private void sceneSettings(List<Row> rows, FancyConfig c, int cat, boolean all) {
         final int sel = cat, eff = cat;
         final boolean cineCat = cat == 0 || cat == 1 || cat == 3 || cat == 4;
@@ -1420,30 +1465,7 @@ public class FancyScreen extends Screen {
         if (cineCat) {
             rows.add(toggle("fd:bars", CATS[sel] + " cinematic bars", "Bars close in around the scene", () -> c.cine(sel), v -> c.setCine(sel, v)));
             rows.add(toggle("fd:blur", CATS[sel] + " background blur", "Blurs the game behind (needs Blurriness above 0 in Video Settings)", () -> c.blur(sel), v -> c.setBlur(sel, v)));
-            if (c.cine(sel)) {
-                Row bc = row(0, "fd:bars", "Bar colour", "The colour of the cinematic bars", Ui.ACCENT);
-                Dd bcDd = new Dd(() -> AnimationManager.BAR_NAMES[Math.floorMod(c.barStyle, AnimationManager.BAR_NAMES.length)], "dd_barc", 130);
-                bc.ctls.add(bcDd);
-                rows.add(bc);
-                if (open.contains("dd_barc") && !searching)
-                    rows.add(miniList(bc, bcDd, java.util.Arrays.asList(AnimationManager.BAR_NAMES), Math.floorMod(c.barStyle, AnimationManager.BAR_NAMES.length), i -> { c.barStyle = i; open.remove("dd_barc"); }));
-                Row bh = row(0, "fd:barheight", "Bar height", "How far the bars close in  ·  click the number to type", Ui.ACCENT);
-                bh.ctls.add(new Slider(0, 25, 1, () -> c.barHeight, v -> c.barHeight = (int) v, () -> c.barHeight + "%").typed(1));
-                rows.add(bh);
-            }
         }
-        if (eff != 2) {
-            Row as = row(0, "fd:size", "Animation size", c.cine(eff) ? "Scene size inside the frame" : "Scene size, 100% to 140%", Ui.ACCENT);
-            as.ctls.add(new Slider(c.cine(eff) ? 0.6 : 1.0, 1.4, 0.05, () -> c.cine(eff) ? c.size : Math.max(1f, c.size), v -> c.size = (float) v, () -> Math.round((c.cine(eff) ? c.size : Math.max(1f, c.size)) * 100) + "%").typed(100));
-            rows.add(as);
-        } else {
-            Row fz = row(0, "fd:size", "Farming size", "Size of the Farming scene", 0xFF7BE05A);
-            fz.ctls.add(new Slider(0.5, 1.1, 0.05, () -> c.farmScale, v -> c.farmScale = (float) v, () -> Math.round(c.farmScale * 100) + "%").typed(100));
-            rows.add(fz);
-        }
-        Row is = row(0, "fd:itemsize", "Item size", "The dropped item inside the scene", Ui.ACCENT);
-        is.ctls.add(new Slider(0.5, 1.1, 0.05, () -> c.itemScale, v -> c.itemScale = (float) v, () -> Math.round(c.itemScale * 100) + "%").typed(100));
-        rows.add(is);
         if (all && cat > 0) return;                                              // the text settings are shared: listed once when searching
         rows.add(section("Text"));
         rows.add(toggle("fd:cube", "3D drop items", "Thick spinning items (off = flat)", () -> c.show3d, v -> c.show3d = v));
@@ -1498,7 +1520,7 @@ public class FancyScreen extends Screen {
         {"fd:library", "Drop Library", "Every drop the mod knows about, grouped by where it comes from. Open a page to choose which drops get an animation and which get a chat alert.",
             "fd:slayers|Slayers|Slayer boss drops", "fd:dye|Dye|RNG dyes", "fd:farm|Farming|Crops and pests", "fd:mytho|Mythological|Ritual creatures", "fd:experiments|Experiments|Experimentation Table", "fd:mining|Mining|Coming soon", "fd:fishing|Fishing|Coming soon"},
         {"fd:animations", "Animations", "Pick the scene, sounds and look of the animation for each kind of drop, and try them out with the play buttons.",
-            "fd:slayers|Slayers|Boss scenes", "fd:dye|Dye|Paint scene", "fd:farm|Farming|Scythe and sunrise", "fd:mytho|Mythological|Lightning ritual", "fd:experiments|Experiments|Book scene", "fd:mining|Mining|Coming soon", "fd:fishing|Fishing|Coming soon"},
+            "fd:slayers|Slayers|Boss scenes", "fd:dye|Dye|Paint scene", "fd:farm|Farming|Scythe and sunrise", "fd:mytho|Mythological|Lightning ritual", "fd:experiments|Experiments|Book scene", "fd:mining|Mining|Coming soon", "fd:fishing|Fishing|Coming soon", "fd:bars|Animation Changes|Bars, size and look"},
         {"fd:sounds", "Sounds", "Volume, and the sound of every moment of every animation, with a live wave preview.",
             "fd:bell|General|Volume and custom sounds", "fd:note|Animation Sounds|A sound for every moment"},
         {},
@@ -1737,7 +1759,7 @@ public class FancyScreen extends Screen {
     private static final String[][] SUBS = {
         {},                                                        // Home
         CATS,                                                 // Drop Library
-        CATS,                                                      // Animations
+        {"Slayers", "Dye", "Farming", "Mythological", "Experiments", "Mining", "Fishing", "Animation Changes"},   // Animations
         {"General", "Animation Sounds"},                           // Sounds
         {},                                                        // Chat (one page)
         {"Menu", "Prices", "Drop Data"},     // Settings

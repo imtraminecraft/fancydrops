@@ -1,1 +1,4 @@
-{"providers": [{"type": "bitmap", "file": "fancydrops:font/fancy.png", "ascent": 7, "height": 8, "chars": ["\ue000"]}]}
+{"providers": [
+ {"type": "bitmap", "file": "fancydrops:font/fancy.png", "ascent": 7, "height": 8, "chars": [""]},
+ {"type": "bitmap", "file": "fancydrops:font/active_on.png", "ascent": 8, "height": 9, "chars": ["", "", "", "", "", "", "", ""]}
+]}
