@@ -38,6 +38,7 @@ public class FancyScreen extends Screen {
     /** The Cosmetics page is its own window (no sidebar), opened from the button at the bottom left of the menu. */
     private boolean cosWin() { return tab == Tab.COSMETICS; }
     private int[] cosBtn() { int x = Math.max(2, px - 28), y = py + ph - 22; return new int[]{x, y, x + 22, y + 22}; }          // outside the menu, bottom right, under the community buttons
+    private int[] adminBtn() { int[] c = cosBtn(); return new int[]{c[0], c[1] - 28, c[2], c[3] - 28}; }          // admin only: just above the Cosmetics button
     private void openCos() { if (tab != Tab.COSMETICS) prevTab = tab; tab = Tab.COSMETICS; query = ""; searchField.setValue(""); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
     private void closeCos() { tab = prevTab == Tab.COSMETICS ? Tab.HOME : prevTab; scroll = 0; selY = Float.NaN; tabChanged = System.currentTimeMillis(); }
     private static int vi(int ord) { return ord > Tab.COSMETICS.ordinal() ? ord - 1 : ord; }          // the sidebar skips Cosmetics
@@ -985,24 +986,10 @@ public class FancyScreen extends Screen {
         rf.ctls.add(new Btn("Refresh", 0xFF2F8F5A, () -> { Cosmetics.forceRefresh(); build(); toast("Refreshing the cosmetics list.", 0xFF62E6A8); }));
         rf.ctls.add(new Btn("Copy ID", 0xFF3A4FA0, () -> { try { net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(Cosmetics.code(Cosmetics.me())); toast("Your ID was copied.", 0xFF62A8FF); } catch (Throwable ignored) { toast("Could not copy your ID.", 0xFFFF8A5C); } }));
         rows.add(rf);
-        if (Cosmetics.isAdmin()) {
-            rows.add(catHeader("ADMIN PANEL", "Only you can see this.", "", 0xFFFF6B6B));
-            Row cr = row(0, "fd:sparkle", "Players per cosmetic", adminCounts ? "Shown below, from cosmetics.json." : "Hidden.", 0xFFFF6B6B); cr.noSearch = true;
-            cr.ctls.add(new Btn(adminCounts ? "On" : "Off", adminCounts ? 0xFF2F8F5A : 0xFF555B6E, () -> { adminCounts = !adminCounts; build(); }));
-            rows.add(cr);
-            if (adminCounts) {
-                Map<String, Integer> cn = CosmeticData.counts();
-                for (CosmeticData.SetDef sd : CosmeticData.SETS) { Row nr = note(sd.name() + " set: " + cn.getOrDefault(sd.id(), 0) + " player(s)", Ui.SUB); nr.noSearch = true; rows.add(nr); }
-                int single = 0; for (var e : cn.entrySet()) if (e.getKey().startsWith("c:")) single++;
-                for (var e : cn.entrySet()) if (e.getKey().startsWith("c:")) { CosmeticData.Def d = CosmeticData.byId(e.getKey().substring(2)); Row nr = note((d == null ? e.getKey().substring(2) : d.name()) + ": " + e.getValue() + " player(s)", Ui.SUB); nr.noSearch = true; rows.add(nr); }
-            }
-            Row gr = row(0, "fd:plus", "Give cosmetics", "Paste an ID, then press Enter", 0xFFFF6B6B);
-            gr.h = 44; gr.field = adminField; gr.fieldBtn = "Pick"; gr.noSearch = true; rows.add(gr);
-        }
     }
     // ------------------------------------------------------------------ Admin Panel: the full-screen picker
     private static boolean adminCounts;
-    private boolean adminOpen; private String adminTarget = ""; private final Set<String> adminPicks = new LinkedHashSet<>(); private int adminScroll;
+    private boolean adminHome, adminOpen; private String adminTarget = ""; private final Set<String> adminPicks = new LinkedHashSet<>(); private int adminScroll;
     private final List<Object[]> adminHits = new ArrayList<>();
     private void openAdmin() {
         String t = adminField.getValue().trim(); String code = null;
@@ -1026,6 +1013,35 @@ public class FancyScreen extends Screen {
         try { net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(js); toast("cosmetics.json copied.\nPaste it into GitHub.", 0xFF62E6A8); }
         catch (Throwable t) { toast("Could not copy.", 0xFFFF8A5C); }
         adminOpen = false;
+    }
+    private void drawAdminHome(GuiGraphicsExtractor g, int mx, int my) {
+        int W = this.width, H = this.height; adminHits.clear();
+        g.fill(0, 0, W, H, 0xF20A0C12);
+        Gfx.text(g, font, "Admin Panel", 16, 12, 0xFFFF6B6B); Gfx.text(g, font, "Only you can see this. Esc closes.", 16, 24, Ui.SUB);
+        int bw = Gfx.w(font, "Close") + 18, bx = W - 16 - bw; boolean hv = mx >= bx && mx < bx + bw && my >= 8 && my < 26;
+        pill(g, bx, 8, bw, 18, hv ? Canvas.mix(0xFF555B6E, 0xFFFFFFFF, 0.18f) : 0xFF555B6E); Gfx.textCentered(g, font, "Close", bx + bw / 2, 13, 0xFFFFFFFF);
+        adminHits.add(new Object[]{bx, 8, bx + bw, 26, (Runnable) () -> { adminHome = false; adminField.setFocused(false); }});
+        int y = 44;
+        Gfx.text(g, font, "GIVE COSMETICS", 16, y, 0xFFFFC857); y += 14;
+        Gfx.text(g, font, "Paste a Cosmetic ID, a UUID or the name of someone online, then press Enter.", 16, y, Ui.SUB); y += 14;
+        int fw = Math.min(420, W - 120);
+        adminField.setVisible(true); adminField.setX(16); adminField.setY(y); adminField.setWidth(fw);
+        adminField.extractRenderState(g, mx, my, 0f);
+        int px2 = 16 + fw + 6; boolean ph = mx >= px2 && mx < px2 + 44 && my >= y && my < y + 16;
+        pill(g, px2, y, 44, 16, ph ? Canvas.mix(GREEN, 0xFFFFFFFF, 0.18f) : GREEN); Gfx.textCentered(g, font, "Pick", px2 + 22, y + 4, Ui.TEXT);
+        adminHits.add(new Object[]{px2, y, px2 + 44, y + 16, (Runnable) this::openAdmin});
+        y += 34;
+        Gfx.text(g, font, "PLAYERS PER COSMETIC", 16, y, 0xFFFFC857);
+        String tl = adminCounts ? "On" : "Off"; int tx = 16 + Gfx.w(font, "PLAYERS PER COSMETIC") + 10; boolean th = mx >= tx && mx < tx + 34 && my >= y - 3 && my < y + 12;
+        pill(g, tx, y - 3, 34, 14, adminCounts ? (th ? 0xFF3FA86C : 0xFF2F8F5A) : (th ? 0xFF6A7088 : 0xFF555B6E)); Gfx.textCentered(g, font, tl, tx + 17, y, 0xFFFFFFFF);
+        adminHits.add(new Object[]{tx, y - 3, tx + 34, y + 11, (Runnable) () -> adminCounts = !adminCounts});
+        y += 18;
+        if (adminCounts) {
+            Map<String, Integer> cn = CosmeticData.counts();
+            for (CosmeticData.SetDef sd : CosmeticData.SETS) { Gfx.text(g, font, sd.name() + " set: " + cn.getOrDefault(sd.id(), 0) + " player(s)", 16, y, Ui.TEXT); y += 12; }
+            for (var e : cn.entrySet()) if (e.getKey().startsWith("c:")) { CosmeticData.Def d = CosmeticData.byId(e.getKey().substring(2)); Gfx.text(g, font, (d == null ? e.getKey().substring(2) : d.name()) + ": " + e.getValue() + " player(s)", 16, y, Ui.SUB); y += 12; }
+            Gfx.text(g, font, "From cosmetics.json (" + CosmeticData.grants.size() + " players listed).", 16, y + 4, Ui.DIM);
+        }
     }
     private void drawAdmin(GuiGraphicsExtractor g, int mx, int my) {
         int W = this.width, H = this.height; adminHits.clear();
@@ -2193,6 +2209,7 @@ public class FancyScreen extends Screen {
         pill(g, b[0], b[1], b[2], b[3], on ? Canvas.mix(Ui.ROW, Ui.ACCENT, 0.3f) : hv ? Ui.ROW_HOVER : Ui.PANEL2);
         if (on) g.fill(b[0] + 1, b[1] + 4, b[0] + 3, b[1] + b[3] - 4, Ui.ACCENT);
     }
+    private static boolean in2(double mx, double my, int[] b) { return mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]; }
     private static boolean in(double mx, double my, int[] b) { return mx >= b[0] && mx < b[0] + b[2] && my >= b[1] && my < b[1] + b[3]; }
 
     private int[] eClose() { return new int[]{eX() + eW() - 25, eY() + 6, 17, 17}; }
@@ -3347,6 +3364,12 @@ public class FancyScreen extends Screen {
                 g.fill(sx2, sy2 - 1, sx2 + 1, sy2 + 2, sc); g.fill(sx2 - 1, sy2, sx2 + 2, sy2 + 1, sc);
                 if (k % 4 == 0) { g.fill(sx2 - 2, sy2, sx2 + 3, sy2 + 1, Gfx.argb(Math.round(110 * al), 0xFFFFFF)); g.fill(sx2, sy2 - 2, sx2 + 1, sy2 + 3, Gfx.argb(Math.round(110 * al), 0xFFFFFF)); }      // the big ones get longer rays
             }
+            if (Cosmetics.isAdmin()) {
+                int[] ab = adminBtn(); boolean ah = mx >= ab[0] && mx < ab[2] && my >= ab[1] && my < ab[3]; int rc = 0xFFFF6B6B;
+                pill(g, ab[0], ab[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, rc, 0.2f), rc, ah ? 0.3f : 0f)); rout(g, ab[0], ab[1], 22, 22, Gfx.argb(ah ? 230 : 140, rc & 0xFFFFFF));
+                Icons.draw(g, "fd:settings", ab[0] + 3, ab[1] + 3, ah ? System.currentTimeMillis() : 2400L);
+                if (ah) { int w = Gfx.w(font, "Admin Panel") + 8; int x0 = Math.max(2, ab[0]), ty = ab[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Admin Panel", x0 + 4, ty + 3, Ui.TEXT); }
+            }
             if (ch) { int w = Gfx.w(font, "Cosmetics") + 8; int x0 = Math.max(2, cb[0]), ty = cb[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Cosmetics", x0 + 4, ty + 3, Ui.TEXT); }
         }
         if (intro < 1f) pill(g, px, py, pw, ph, Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
@@ -3357,6 +3380,7 @@ public class FancyScreen extends Screen {
         drawCosPanels(g, mx, my, intro);
         perf[2] += System.nanoTime() - pf1;
         drawTileTip(g, mx, my);
+        if (adminHome && !adminOpen) drawAdminHome(g, mx0, my0);
         if (adminOpen) drawAdmin(g, mx0, my0);
         drawToast(g, now); PixArt.flush();
         if (editor == 0) drawX(g, mainClose(), in(mx0, my0, mainClose()), "mx");
@@ -3479,6 +3503,11 @@ public class FancyScreen extends Screen {
 
     @Override public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (adminOpen) return event.button() != 0 || adminClick(event.x(), event.y());
+        if (adminHome) {
+            if (event.button() == 0) for (Object[] h : adminHits) if (event.x() >= (int) h[0] && event.x() < (int) h[2] && event.y() >= (int) h[1] && event.y() < (int) h[3]) { ((Runnable) h[4]).run(); return true; }
+            return super.mouseClicked(event, doubleClick);
+        }
+        if (event.button() == 0 && Cosmetics.isAdmin() && !cosWin() && in2(event.x(), event.y(), adminBtn())) { adminHome = true; adminField.setValue(""); return true; }
         if (typing != null) {
             boolean inBox = event.x() >= numField.getX() && event.x() < numField.getX() + numField.getWidth() && event.y() >= numField.getY() && event.y() < numField.getY() + 14;
             if (!inBox) endTyping(true);
@@ -3615,6 +3644,7 @@ public class FancyScreen extends Screen {
     @Override public boolean keyPressed(KeyEvent event) {
         int key = event.key();
         if (adminOpen) { if (key == 256) adminOpen = false; return true; }
+        if (adminHome) { if (key == 256) { adminHome = false; adminField.setFocused(false); return true; } if (adminField.isFocused() && (key == 257 || key == 335)) { openAdmin(); return true; } return super.keyPressed(event); }
         if (adminField.isFocused() && adminField.visible && (key == 257 || key == 335)) { openAdmin(); return true; }
         if (typing != null && numField.isFocused()) {
             if (key == 257 || key == 335) { endTyping(true); return true; }
