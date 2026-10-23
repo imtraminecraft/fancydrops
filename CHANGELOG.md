@@ -2,6 +2,10 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.46
+- New Pest Drop animation (Animations > Farming > Pest): a vacuum drops in over the field, dust and leaves stream into its nozzle, the pest is plucked off the ground and sucked in, the vacuum gulps and puffs it away, and the drop shoots out of the nozzle. It has its own length, sounds and Play button, and plays for every drop from the Pests list.
+- Fixed a compile error in the two-item drop code.
+
 ## 0.8.45
 - Two-item drops redone: the two items now fly out one after the other in an arc, are drawn a little smaller so they no longer overlap, and each one's name and details sit right under it instead of far out at the sides of the screen.
 

@@ -35,7 +35,7 @@ final class Scene {
         Model item, item2; int rarity2 = 0xFFFF55FF; boolean twin;      // twin = two drops from one kill, shown together
         int base = 0xFF5E9E52, dark = 0xFF3D6B36, eye = 0xFF10200E;
         boolean dye; int dyeCol = 0xFFB03A2E;     // dye drops get their own paint-splash scene instead of the mob
-        boolean farm, helios;                               // the small Farming scene (a growing crop)
+        boolean farm, helios, pest;                               // the small Farming scene (a growing crop)
         int mob;                                            // Mythological scene: which creature is summoned (0 Hunter, 1 Lynxes, 2 Gaia, 3 Minotaur, 4 Champion, 5 Inquisitor)
         boolean exp;                                        // Experimentation Table drops: the table's book opens, zooms in, flips its pages and shows the drop
         boolean myth;                                       // Mythological Ritual drops: three golden lightning strikes light a rune circle between two pillars
@@ -52,11 +52,11 @@ final class Scene {
     /** The first two slices are identical in every scene (0.42 s each); only the later ones differ. */
     static float chopStart(Params p, int k) { return 0.7f + (k < 2 ? k * 0.42f : 0.84f + (k - 2) * interval(p.tier)); }
     static float chopIv(Params p, int k) { return k < 2 ? 0.42f : interval(p.tier); }
-    static float impact(Params p, int k) { return p.exp ? (p.tier == 2 ? 1.45f + 0.3f * k - 0.008f * k * k : 1.45f + 0.36f * k) : p.myth ? 0.55f + 0.5f * k : p.farm ? (p.helios ? 0.5f + 0.35f * k : 0.12f + 0.18f * k) : p.dye ? 0.75f : chopStart(p, k) + 0.8095f * chopIv(p, k); }   // dye: when each paint blob lands
-    static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? impact(p, Math.max(0, p.chops - 1)) + 0.6f : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
+    static float impact(Params p, int k) { return p.exp ? (p.tier == 2 ? 1.45f + 0.3f * k - 0.008f * k * k : 1.45f + 0.36f * k) : p.myth ? 0.55f + 0.5f * k : p.farm ? (p.pest ? 1.15f : p.helios ? 0.5f + 0.35f * k : 0.12f + 0.18f * k) : p.dye ? 0.75f : chopStart(p, k) + 0.8095f * chopIv(p, k); }   // dye: when each paint blob lands
+    static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? impact(p, Math.max(0, p.chops - 1)) + 0.6f : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.pest ? 0.32f : p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
     /** 0 = plain sword (first two slices of every scene); 1 = dramatic (Rare Drop); 2 = super dramatic (RNG Drop). */
     static int drama(Params p, int k) { return k < 2 ? 0 : p.tier; }
-    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (p.tier == 2 ? 5.4f : 3.9f) : p.farm ? splitTime(p) + (p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
+    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (p.tier == 2 ? 5.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
 
     private static float cl(float v) { return Math.max(0f, Math.min(1f, v)); }
     private static float easeOut(float x) { x = cl(x); return 1 - (1 - x) * (1 - x) * (1 - x); }
@@ -1610,12 +1610,134 @@ final class Scene {
         for (int i = 0; i <= n; i++) c.set(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), col);
     }
 
+    /** A pest on the soil, drawn at (x, y) at scale k, facing right (dir 1) or left (-1). dead = belly up with crossed eyes. */
+    private static void bug(Canvas c, float x, float y, float k, float t, int dir, boolean lifted) {
+        int body = 0xFF6E8B2F, shell = 0xFF8FB13C, dark = 0xFF2E3B12, leg = 0xFF1E2A0C;
+        int cx = Math.round(x), cy = Math.round(y), rx = Math.max(2, Math.round(6 * k)), ry = Math.max(2, Math.round(4 * k));
+        float w = lifted ? 1.6f : 0.7f;
+        for (int i = -1; i <= 1; i++) {                                                                // three pairs of legs, scrabbling
+            float ph = (float) Math.sin(t * (lifted ? 38 : 18) + i * 2.1f) * w * k;
+            lin(c, cx + i * 3 * k, cy + ry * 0.4f, cx + i * 3 * k + ph - 2 * k, cy + ry + 3 * k, leg);
+            lin(c, cx + i * 3 * k, cy + ry * 0.4f, cx + i * 3 * k - ph + 2 * k, cy + ry + 3 * k, leg);
+        }
+        if (lifted) {                                                                                    // wings buzz when it is off the ground
+            float fl = (float) Math.sin(t * 60) * 0.5f + 0.5f;
+            ell(c, cx - Math.round(2 * k), cy - ry, Math.max(1, Math.round(5 * k)), Math.max(1, Math.round((2 + 2 * fl) * k)), Canvas.rgb(120, 0xD8F0FF));
+        }
+        ell(c, cx, cy, rx + 1, ry + 1, dark);                                                            // outline
+        ell(c, cx, cy, rx, ry, body);
+        ell(c, cx - dir * Math.round(1 * k), cy - Math.round(1 * k), Math.max(1, rx - 2), Math.max(1, ry - 2), shell);
+        c.rect(cx - 1, cy - ry, cx, cy + ry, dark);                                                      // the shell seam
+        for (int i = -1; i <= 1; i += 2) c.disc(cx + i * Math.round(2.5f * k), cy - Math.round(1 * k), Math.max(1, Math.round(1 * k)), dark);
+        int hx = cx + dir * (rx + Math.round(1 * k)), hr = Math.max(1, Math.round(2.6f * k));            // the head
+        c.disc(hx, cy, hr + 1, dark); c.disc(hx, cy, hr, body);
+        c.set(hx + dir, cy - 1, 0xFFFFFFFF); c.set(hx + dir, cy - 1 + (hr > 2 ? 1 : 0), 0xFFFFFFFF); c.set(hx + dir * 2, cy - 1, 0xFF000000);
+        lin(c, hx, cy - hr, hx + dir * 3 * k, cy - hr - 3 * k, leg); lin(c, hx, cy - hr + 1, hx + dir * 4 * k, cy - hr - 1 * k, leg);   // antennae
+    }
+
+    /**
+     * The Pest scene: a pest scuttles over the soil under a hovering vacuum. The vacuum switches on, dust and leaves stream into its nozzle,
+     * the pest is plucked off the ground, spins and shrinks into the mouth; the vacuum gulps, puffs out a cloud (the pest is gone for good),
+     * and the drop shoots out of the nozzle in a burst of light.
+     */
+    private static void drawPest(Canvas out, Params p, float t) {
+        float ts = splitTime(p), us = Math.max(0f, t - ts - 0.12f), hit = impact(p, 0);
+        boolean split = t >= ts;
+        int gy = (int) CY - 4, cx = (int) CX, nzY = 30;
+        int soil = 0xFF6B4A2E, soilDk = 0xFF3F2B1A, soilLt = 0xFF8A6240;
+        float in = cl(t / 0.3f), a0 = split ? t - ts : 0f, gulp = t >= hit && t < hit + 0.3f ? (t - hit) / 0.3f : -1f;
+        float shake = gulp >= 0f ? (float) Math.sin(gulp * 90) * 2.0f * (1 - gulp) : 0f;
+        if (split && a0 < 0.3f) shake += (float) Math.sin(a0 * 90) * 2.6f * (1 - a0 / 0.3f);
+        p.shakeX = shake * 0.6f; p.shakeY = 0;
+
+        out.glow(cx, gy - 26, 50, 0xFFE9A0, 0.18f * in);
+        ell(out, cx, gy + 5, 50, 9, Canvas.rgb((int) (110 * in), 0xFF07050C));                           // the patch of soil
+        ell(out, cx, gy + 3, 48, 10, soilDk);
+        ell(out, cx, gy + 1, 46, 8, soil);
+        ell(out, cx - 6, gy - 1, 30, 4, soilLt);
+        for (int i = -5; i <= 5; i++) out.rect(cx + i * 8 - 3, gy + 2 + (i % 2 == 0 ? 0 : 2), cx + i * 8 + 3, gy + 3 + (i % 2 == 0 ? 0 : 2), soilDk);
+        for (int j = 0; j < 5; j++) {                                                                      // a few sprouts that sway in the draught
+            int x = cx - 38 + j * 19 + (j > 2 ? 4 : 0), sw = Math.round((float) Math.sin(t * 6 + j) * (t > 0.4f && t < hit ? 1.6f : 0.6f));
+            if (Math.abs(x - cx) < 9) continue;
+            for (int s2 = -1; s2 <= 1; s2 += 2) out.rect(x + s2 * 2 + sw, gy - 7, x + s2 * 2 + 1 + sw, gy, 0xFF5FA03F);
+            out.rect(x - 1 + sw, gy - 9, x + 2 + sw, gy - 6, 0xFF7CCB52);
+        }
+
+        // the vacuum: a hose from the top corner and a flared nozzle that drops in over the middle
+        float drop = easeOut(t / 0.35f), ny = -22 + (nzY + 22) * drop;
+        int nx = cx + Math.round(shake * 0.5f);
+        float hoseA = t < ts + 1.5f ? 1f : 0f;
+        if (hoseA > 0f && t > 0.02f) {
+            for (int i = 0; i <= 40; i++) {                                                                // the hose: a curve from the nozzle's neck out to the top right
+                float u = i / 40f, hx = nx + 4 + (Scene.W + 8 - nx - 4) * u, hy = ny - 14 - 18 * (float) Math.sin(u * Math.PI * 0.9f) + 6 * u;
+                int hxi = Math.round(hx), hyi = Math.round(hy);
+                out.rect(hxi - 2, hyi - 2, hxi + 3, hyi + 3, 0xFF2B2F3A);
+                out.rect(hxi - 1, hyi - 2, hxi + 2, hyi, i % 4 < 2 ? 0xFF6C7488 : 0xFF565D70);
+            }
+        }
+        int ty0 = Math.round(ny) - 16, ty1 = Math.round(ny);
+        for (int y = ty0; y <= ty1; y++) {                                                                   // the nozzle: wider towards the mouth
+            float u = (y - ty0) / (float) Math.max(1, ty1 - ty0); int half = 5 + Math.round(u * u * 8);
+            out.rect(nx - half - 1, y, nx + half + 2, y + 1, 0xFF1A1D26);
+            out.rect(nx - half, y, nx + half + 1, y + 1, y % 6 < 1 ? 0xFF9AA3B8 : 0xFF7A8296);
+            out.rect(nx - half, y, nx - half + 2, y + 1, 0xFFB9C2D6);
+        }
+        out.rect(nx - 14, ty1, nx + 15, ty1 + 3, 0xFF1A1D26); out.rect(nx - 13, ty1, nx + 14, ty1 + 2, 0xFFFFC857);      // the rim, with a glowing core
+        float on = cl((t - 0.3f) / 0.15f) * (t < ts ? 1f : cl(1f - (t - ts) / 0.4f));
+        if (on > 0f) { out.glow(nx, ty1 + 2, 16 + (gulp >= 0f ? 8 * (1 - gulp) : 0), 0x8FE8FF, 0.5f * on); out.rect(nx - 10, ty1 + 3, nx + 11, ty1 + 4, Canvas.rgb((int) (230 * on), 0xBFF4FF)); }
+
+        // dust, leaves and light streaming in
+        if (on > 0f) for (int i = 0; i < 22; i++) {
+            float ph = (t * 1.5f + h(i, 7)) % 1f, ang = (float) Math.toRadians(20 + 140 * h(i, 8)), rad = 8 + 44 * h(i, 9);
+            float f = 1f - ph * ph, sx = nx + (float) Math.cos(ang) * rad * f * 1.3f, sy = ty1 + 3 + (float) Math.sin(ang) * rad * f * 0.95f;
+            if (sy > gy + 2) continue;
+            float tx = (nx - sx) * 0.12f, ty = (ty1 + 3 - sy) * 0.12f; int col = i % 3 == 0 ? 0xFF8FD65A : i % 3 == 1 ? 0xFFD9C9A0 : 0xFFE8F8FF;
+            lin(out, sx, sy, sx + tx, sy + ty, Canvas.rgb((int) (190 * on * Math.sin(ph * Math.PI)), col));
+        }
+
+        // the pest: scuttles about, is lifted, tumbles into the nozzle
+        if (t < hit) {
+            float sxp = cx - 28, syp = gy - 2;
+            float u = cl((t - 0.45f) / (hit - 0.45f)), e = u * u;
+            float hop = t < 0.45f ? Math.abs((float) Math.sin(t * 9)) * 3f : 0f, walk = t < 0.45f ? (float) Math.sin(t * 5) * 6f : 0f;
+            float bx = sxp + walk + (nx - sxp - walk) * e, by = syp - hop + (ty1 + 6 - syp) * e - 12 * (float) Math.sin(u * Math.PI) * (1 - u * 0.4f);
+            float k = 1f - 0.55f * e, wob = (float) Math.sin(t * 30) * 1.2f * u;
+            if (u > 0f) out.glow(bx, by, 10 * k + 6, 0xBFF4FF, 0.3f * u);
+            bug(out, bx + wob, by, k, t, nx > bx ? 1 : -1, u > 0.05f);
+        }
+        // the gulp: a cloud and a cross where the pest was, little stars flying out
+        if (gulp >= 0f) {
+            float f = 1f - gulp;
+            for (int i = 0; i < 4; i++) { int r = Math.round(4 + 12 * easeOut(gulp) + i * 2); out.disc(nx - 6 + i * 4, ty1 + 6 + (i % 2) * 3, r, Canvas.rgb((int) (120 * f / (1 + i * 0.5f)), i % 2 == 0 ? 0xFFEAF2E0 : 0xFFB7C9A0)); }
+            for (int i = 0; i < 3 && gulp < 0.7f; i++) { int xx = nx - 6 + i * 6, yy = ty1 + 12; lin(out, xx - 2, yy - 2, xx + 2, yy + 2, Canvas.rgb((int) (255 * f), 0xFFFFFFFF)); lin(out, xx - 2, yy + 2, xx + 2, yy - 2, Canvas.rgb((int) (255 * f), 0xFFFFFFFF)); }
+            for (int i = 0; i < 8; i++) { double an = Math.PI * (0.1 + 0.8 * h(i, 11)); float sp = 14 + 26 * h(i, 12); out.glint(Math.round(nx + (float) Math.cos(an) * sp * gulp), Math.round(ty1 + 6 + (float) Math.sin(an) * sp * gulp), 2, i % 2 == 0 ? 0xFFFFFF : 0xFFE9A0, f); }
+        }
+        // the drop shoots out of the nozzle in a burst of light
+        if (t >= ts - 0.2f && t < ts) { float f = (t - (ts - 0.2f)) / 0.2f; out.glow(nx, ty1 + 3, 6 + 22 * f, 0xFFFFFF, 0.6f * f); }
+        if (split) {
+            float fl = cl(1f - a0 / 0.3f);
+            out.glow(nx, ty1 + 4, 38, 0xFFFFFF, 0.7f * fl);
+            for (int r = 0; r < 2; r++) {
+                float ra = a0 - r * 0.07f, dur = 0.42f; if (ra < 0f || ra > dur) continue;
+                float rad = 5 + 38 * easeOut(ra / dur);
+                for (int i = 0; i < 100; i++) { double an = i * Math.PI * 2 / 100; out.set((int) (nx + Math.cos(an) * rad), (int) (ty1 + 4 + Math.sin(an) * rad * 0.5), Canvas.rgb((int) (200 * (1f - ra / dur)), r == 0 ? 0xFFFFFF : 0xFFFFE8A0)); }
+            }
+            for (int i = 0; i < 14; i++) {
+                float life = a0 - h(i, 41) * 0.2f; if (life < 0f || life > 1.1f) continue;
+                int x = (int) (nx + (h(i, 42) - 0.5f) * 40), y = (int) (ty1 + 6 + life * (8 + 22 * h(i, 43)) - Math.sin(life * 3) * 8);
+                out.rect(x, y, x + 1, y + 1, Canvas.rgb((int) (230 * (1 - life / 1.1f)), i % 3 == 0 ? 0xFFFFFF : 0xFFE8A030));
+            }
+        }
+        if (split && p.hasItem && p.item != null) { background(out, p, t, ts, us, false, false); drawItem(out, p, t, ts, us); foreground(out, p, t, ts, us, false, false, gy - 18); }
+    }
+
     /**
      * The Farming scene: a row of ripe crops, cut down by three quick golden slashes that sweep across the field (left, middle, right),
      * then the soil heaves and the rare crop springs out in a column of light. Ray of Helios (p.helios, 1 in 500,000,000) gets a longer one:
      * a sun rises behind the field, its rays turn, and the reveal is a huge burst.
      */
     private static void drawFarm(Canvas out, Params p, float t) {
+        if (p.pest) { drawPest(out, p, t); return; }
         boolean hel = p.helios;
         float ts = splitTime(p), us = Math.max(0f, t - ts - 0.12f);
         boolean split = t >= ts;

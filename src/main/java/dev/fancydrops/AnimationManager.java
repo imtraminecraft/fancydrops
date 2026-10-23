@@ -41,13 +41,13 @@ public final class AnimationManager {
         final Runnable onStart;                  // lets the kill tracker close its session
         boolean exp;                             // an Experimentation Table drop: the book scene
         boolean myth;                            // a Mythological Ritual drop: the lightning-and-rune-circle scene (has bars, blur and a position like Dye)
-        boolean farm, helios;                    // a Farming drop: the small bar-less scene (helios: the Ray of Helios, a longer sunrise version)
+        boolean farm, helios, pest;             // a Farming drop: the small bar-less scene (helios: the Ray of Helios, a longer sunrise version)
         float speed = 1f;                        // scene seconds per real second (the animation length setting)
         float textScene = -1f;                   // when the title and info start, in scene seconds (the text delay setting)
         Scene.Params p; int tier; long start; int frame = -1; float sx, sy;
         boolean isMyth() { return myth || (slayer != null && MythData.ALL.contains(slayer)); }       // every drop of a Mythological creature gets the Mythological scene, whichever way it was started
         boolean isExp() { return exp || (slayer != null && slayer == ExperimentData.slayer()); }
-        String scene() { return helios ? "helios" : farm ? "farm" : item == null && !isExp() ? (isMyth() ? "mythnothing" : "nothing") : isExp() ? "exp" : isMyth() ? "mytho" : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
+        String scene() { return pest ? "pest" : helios ? "helios" : farm ? "farm" : item == null && !isExp() ? (isMyth() ? "mythnothing" : "nothing") : isExp() ? "exp" : isMyth() ? "mytho" : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
         final boolean[] done = new boolean[24];
         public Anim(SlayerData.Slayer slayer, Item item, int forcedTier, Runnable onStart) {
             this.slayer = slayer; this.item = item; this.forcedTier = forcedTier; this.onStart = onStart;
@@ -199,7 +199,7 @@ public final class AnimationManager {
 
     /** The settings key of an animation's length: nothing, default, rare, rng, dye, farm, helios, myth, mythrng. */
     static String typeKey(Anim a) {
-        if (a.farm) return a.helios ? "helios" : "farm";
+        if (a.farm) return a.pest ? "pest" : a.helios ? "helios" : "farm";
         if (a.isExp()) return a.tier == 2 ? "exprng" : "exp";
         if (a.isMyth()) return a.item == null ? "mythnothing" : a.tier == 2 ? "mythrng" : "myth";
         if (a.p != null && a.p.dye) return "dye";
@@ -228,7 +228,7 @@ public final class AnimationManager {
         boolean farm = false;
         switch (key) {
             case "dye" -> { p.dye = true; p.chops = 1; }
-            case "farm", "helios" -> { p.farm = true; p.chops = 3; p.helios = key.equals("helios"); farm = true; }
+            case "farm", "helios", "pest" -> { p.farm = true; p.chops = key.equals("pest") ? 1 : 3; p.helios = key.equals("helios"); p.pest = key.equals("pest"); farm = true; }
             case "myth", "mythrng", "mythnothing" -> { p.myth = true; p.chops = key.equals("mythrng") ? c.mythStrikesRng : c.mythStrikes; }
             case "exp", "exprng" -> { p.exp = true; p.chops = key.equals("exprng") ? c.expFlipsRng : c.expFlips; }
             default -> { }
@@ -244,7 +244,7 @@ public final class AnimationManager {
         SlayerData.Cube cube = a.slayer.cube;
         p.base = SlayerData.hex(cube.base, p.base); p.dark = SlayerData.hex(cube.dark, p.dark); p.eye = SlayerData.hex(cube.eye, p.eye);
         p.style = c.slayerStyle;
-        if (a.farm) { p.farm = true; p.chops = 3; p.helios = a.helios; }
+        if (a.farm) { p.farm = true; p.chops = a.pest ? 1 : 3; p.helios = a.helios; p.pest = a.pest; }
         if (a.isExp()) { p.exp = true; p.chops = tier == 2 ? c.expFlipsRng : c.expFlips; }
         else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); }
         p.seed = Math.abs(a.slayer.id.hashCode() % 97);                                   // the mob's look stays the same
@@ -456,7 +456,7 @@ public final class AnimationManager {
         }
         if (a.item2 != null) {
             float tb = big * 0.82f;
-            int lx = twinCell > 0f ? Math.round(W / 2f - Scene.TWIN_DX * twinCell) : Math.round(W * 0.27f), rx = twinCell > 0f ? Math.round(W / 2f + Scene.TWIN_DX * twinCell) : Math.round(W * 0.73f);
+            int lx = twinCell > 0f ? Math.round(W / 2f - (float) Scene.TWIN_DX * twinCell) : Math.round(W * 0.27f), rx = twinCell > 0f ? Math.round(W / 2f + (float) Scene.TWIN_DX * twinCell) : Math.round(W * 0.73f);
             line(g, font, lx, ty, tb, alpha, lit(a.item.title()).withStyle(ChatFormatting.BOLD), a.item.color());
             detailAt(g, font, lx, dy, small * 0.95f, a.item, c, alpha);
             line(g, font, rx, ty, tb, alpha, lit(a.item2.title()).withStyle(ChatFormatting.BOLD), a.item2.color());
@@ -584,7 +584,7 @@ public final class AnimationManager {
 
     /** The preview scene of one animation type (nothing, default, rare, rng, dye, farm, helios, myth, mythrng), built from the live settings every frame. */
     private static Scene.Params previewForKey(String key, FancyConfig c) {
-        int cat = switch (key) { case "dye" -> 1; case "farm", "helios" -> 2; case "myth", "mythrng", "mythnothing" -> 3; case "exp", "exprng" -> 4; default -> 0; };
+        int cat = switch (key) { case "dye" -> 1; case "farm", "helios", "pest" -> 2; case "myth", "mythrng", "mythnothing" -> 3; case "exp", "exprng" -> 4; default -> 0; };
         Scene.Params base = previewFor(cat, c);
         int tier = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
         Scene.Params p = KEY_P.get(key);
@@ -593,7 +593,7 @@ public final class AnimationManager {
             if (p.hasItem) { p.item = base.item; p.rarity = key.equals("default") ? Ui.R_CRAZY : base.rarity; }
             switch (key) {
                 case "dye" -> { p.dye = true; p.dyeCol = 0xFFE0409A; }
-                case "farm", "helios" -> { p.farm = true; p.helios = key.equals("helios"); p.rarity = 0xFF7BE05A; }
+                case "farm", "helios", "pest" -> { p.farm = true; p.helios = key.equals("helios"); p.pest = key.equals("pest"); p.rarity = 0xFF7BE05A; }
                 case "myth", "mythrng", "mythnothing" -> { p.myth = true; p.rarity = 0xFFFFC857; }
                 case "exp", "exprng" -> { p.exp = true; p.rarity = key.equals("exprng") ? 0xFFFF55FF : 0xFFB56BFF; }
                 default -> { }
@@ -604,6 +604,7 @@ public final class AnimationManager {
         switch (key) {
             case "dye" -> p.chops = 1;
             case "farm", "helios" -> p.chops = 3;
+            case "pest" -> p.chops = 1;
             case "myth", "mythnothing" -> p.chops = Math.max(1, Math.min(10, c.mythStrikes));
             case "mythrng" -> p.chops = Math.max(1, Math.min(10, c.mythStrikesRng));
             case "exp" -> p.chops = Math.max(1, Math.min(12, c.expFlips));
