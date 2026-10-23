@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.34
+- Fixed a build error in Gfx (a text type that does not exist under that name in 26.2).
+
 ## 0.8.33
 - Drop Library: the top button inside a boss / creature now reads "< Slayers" (or the page you came from) and takes you back to where you were in that list.
 - New hand-pixeled icons for every Slayer boss and every Mythological creature, plus new icons for Spirit, Animated menu / icons, Tip card, Other players' cosmetics, Back and Cosmetics.

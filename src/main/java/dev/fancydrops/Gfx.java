@@ -31,7 +31,6 @@ public final class Gfx {
     public static int uiFont;
     public static int w(Font f, String s) { return uiFont <= 0 ? f.width(s) : f.width(Fonts.text(s, uiFont)); }
     public static int w(Font f, net.minecraft.network.chat.FormattedText c) { return f.width(c); }
-    public static int w(Font f, net.minecraft.network.chat.FormattedCharSequence c) { return f.width(c); }
     public static String fit(Font f, String s, int max) {
         if (uiFont <= 0) return f.plainSubstrByWidth(s, max);
         while (!s.isEmpty() && w(f, s) > max) s = s.substring(0, s.length() - 1);
