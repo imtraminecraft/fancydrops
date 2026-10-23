@@ -2,6 +2,12 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.44
+- Beta set is now just Flame and Pulse. Crown, Gem, Clover, Heart, Bolt, Snow, Star, Ghost, Shimmer, Ripple and Glow are Rare cosmetics, in dark blue (still held by players who downloaded before v1.0).
+- Rarities now run Common, Rare, Beta, Special.
+- The gift panel shows the name of the player you are giving to.
+- Community buttons: the flat square glow behind them is gone; they and the Cosmetics button glow with a soft rounded halo.
+
 ## 0.8.43
 - Auras stay with you: they no longer trail behind in the world. While you move the aura swirls round you faster; stand still for 5 seconds and a calm resting animation fades in (two strands of light winding up past your head and a soft ring at your waist).
 
