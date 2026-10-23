@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.25
+- The LOCKED shake is slower and eases out, so it looks smoother. The Sets header no longer says every set has an aura (Beta and Common do not).
+
 ## 0.8.24
 - Name effects keep animating on locked tiles (and the lock dimming is lighter), so you can see how the name would look.
 
