@@ -37,27 +37,29 @@ final class NameFx {
                 return mix(mix(base, 0x000000, 0.22f), mix(base, 0xFFFFFF, 0.3f), ph);
             case "glow":                                                    // a still fade from the name's colour to a lighter tint
                 return mix(base, 0xFFFFFF, n <= 1 ? 0f : 0.5f * i / (n - 1));
-            case "royal": {                                                 // liquid gold with white glints
+            case "royal": {                                                 // liquid gold, with a white glint that runs along the name
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 240.0 - i * 0.9);
                 int c = mix(0xFFAA00, 0xFFF3A0, ph);
-                return Math.sin(t / 150.0 + i * 1.7) > 0.9 ? 0xFFFFFF : c;
+                float pos = (t % 1900L) / 1900f * (n + 10) - 5, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.2f);
+                return mix(c, 0xFFFFFF, k);
             }
-            case "glitch": {                                                // the name's colour, torn by quick flashes of green, magenta and cyan
-                int h = hash(i, t / 100L) % 9;
-                return h == 0 ? 0x55FF55 : h == 1 ? 0xFF55FF : h == 2 ? 0x55FFFF : h == 3 ? 0xFFFFFF : base;
+            case "glitch": {                                                // the name's colour, torn by flashes of green, magenta and cyan; now and then the whole name goes wild
+                int h = hash(i, t / 90L) % (burst(t) ? 5 : 10);
+                return h == 0 ? 0x55FF55 : h == 1 ? 0xFF55FF : h == 2 ? 0x55FFFF : h == 3 ? (burst(t) ? 0xFF5555 : 0xFFFFFF) : base;
             }
             default: return base;
         }
     }
 
-    /** The style for letter i: the name's own style with the effect's colour. live = animated (tab list); false = a frozen look for chat lines. */
+    private static boolean burst(long t) { return hash(7, t / 900L) % 3 == 0 && (t % 900L) < 240L; }
+
+    /** The style for letter i: the name's own style with the effect's colour. live = animated; false = a frozen look (only used if chat can't animate). */
     static Style style(String fx, int i, int n, Style base, boolean live, long t) {
         int b = base.getColor() == null ? 0xFFFFFF : base.getColor().getValue();
-        Style st = base.withColor(color(fx, i, n, b, live ? t : 1500L + i * 90L));
-        if ("glitch".equals(fx)) {
-            boolean on = live ? hash(i, t / 130L) % 11 == 0 : i % 5 == 2;                // in chat, the odd letter is always scrambled
-            if (on) st = st.withObfuscated(true);
-        }
+        long tt = live ? t : 1500L + i * 90L;
+        Style st = base.withColor(color(fx, i, n, b, tt));
+        if ("glitch".equals(fx)) st = st.withObfuscated(live ? hash(i, t / 110L) % (burst(t) ? 3 : 9) == 0 : i % 5 == 2);
+        else if ("royal".equals(fx)) st = st.withBold(color(fx, i, n, b, tt) == 0xFFFFFF);
         return st;
     }
 }

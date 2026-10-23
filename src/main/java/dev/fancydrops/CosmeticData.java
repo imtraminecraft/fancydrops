@@ -10,7 +10,7 @@ final class CosmeticData {
     enum Kind { SUFFIX, NAME, AURA }
     record Def(String id, String name, Line line, Kind kind, String how, int color) {}
 
-    private static final String BETA_HOW = "Only for players who downloaded before v1.0";
+    private static final String BETA_HOW = "Downloaded the mod before v1.0";
     static final List<Def> ALL = List.of(
         // Beta: kept by everyone who had the mod before 1.0
         new Def("crown", "Crown", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFFC857),
@@ -27,22 +27,23 @@ final class CosmeticData {
         new Def("wave", "Ripple", Line.BETA, Kind.NAME, BETA_HOW, 0xFF7FE0D0),
         new Def("glow", "Soft Glow", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFFE9A8),
         // Special: handed out by hand, one by one
-        new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Given to the original supporters", 0xFFB48CFF),
-        new Def("royal", "Royal Gold", Line.SPECIAL, Kind.NAME, "Given to Patreon supporters", 0xFFFFC832),
-        new Def("glitch", "Glitch", Line.SPECIAL, Kind.NAME, "Given to players who help with bug reports", 0xFF55FF9A),
-        new Def("stardust", "Stardust", Line.SPECIAL, Kind.AURA, "Given to players who contribute to the mod", 0xFF8FD0FF),
+        new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Original supporter", 0xFFB48CFF),
+        new Def("royal", "Royal Gold", Line.SPECIAL, Kind.NAME, "Patreon supporter", 0xFFFFC832),
+        new Def("glitch", "Glitch", Line.SPECIAL, Kind.NAME, "Helped with bug reports", 0xFF55FF9A),
+        new Def("stardust", "Stardust", Line.SPECIAL, Kind.AURA, "Contributed to the mod", 0xFF8FD0FF),
         // Everyone: earn them yourself (all still, except the secret one)
-        new Def("newcomer", "Newcomer", Line.FREE, Kind.SUFFIX, "Download the mod", 0xFF7BE07B),
-        new Def("discord", "Discord", Line.FREE, Kind.SUFFIX, "Press the Discord button", 0xFF7289DA),
-        new Def("firstdrop", "First Drop", Line.FREE, Kind.SUFFIX, "Get your first rare drop", 0xFFFFD700),
-        new Def("collector", "Collector", Line.FREE, Kind.SUFFIX, "Get 25 rare drops", 0xFFD9A05B),
-        new Def("secret", "Secret", Line.FREE, Kind.SUFFIX, "Find the hidden button", 0xFFC08BFF));
+        new Def("newcomer", "Newcomer", Line.FREE, Kind.SUFFIX, "Downloaded the mod", 0xFF7BE07B),
+        new Def("discord", "Discord", Line.FREE, Kind.SUFFIX, "Pressed the Discord button", 0xFF7289DA),
+        new Def("firstdrop", "First Drop", Line.FREE, Kind.SUFFIX, "Got a first rare drop", 0xFFFFD700),
+        new Def("collector", "Collector", Line.FREE, Kind.SUFFIX, "Got 25 rare drops", 0xFFD9A05B),
+        new Def("secret", "Secret", Line.FREE, Kind.SUFFIX, "Found the hidden button", 0xFFC08BFF));
 
     static Def byId(String id) { for (Def d : ALL) if (d.id().equals(id)) return d; return null; }
     static List<Def> line(Line l) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (d.line() == l) o.add(d); return o; }
 
-    // ---- testing aids (the small test menu under the main menu)
-    static boolean testNewPlayer, testUnlockAll;
+    // ---- testing aids (the small test menu under the main menu): add or remove single cosmetics on yourself. Never touches the real progress.
+    static boolean editMode;
+    static final Map<String, Boolean> force = new HashMap<>();
 
     // ---- Special cosmetics: who has which. cosmetics.json lists the players of each one separately.
     /** The names used in cosmetics.json, and the cosmetic each one gives. */
@@ -52,8 +53,6 @@ final class CosmeticData {
 
     // ---- Beta
     static boolean betaEligible() {
-        if (testNewPlayer) return false;
-        if (testUnlockAll) return true;
         return versionLess(FancyConfig.get().firstVersion, "1.0.0");
     }
     static boolean versionLess(String a, String b) {
@@ -67,14 +66,13 @@ final class CosmeticData {
 
     static boolean unlocked(Def d) {
         if (d == null) return false;
-        if (testUnlockAll) return true;
+        Boolean f = force.get(d.id()); if (f != null) return f;
         FancyConfig c = FancyConfig.get();
         switch (d.line()) {
             case BETA: return betaEligible();
-            case SPECIAL: return !testNewPlayer && grantsOf(Cosmetics.me()).contains(d.id());
+            case SPECIAL: return grantsOf(Cosmetics.me()).contains(d.id());
             default:
                 if (d.id().equals("newcomer")) return true;
-                if (testNewPlayer) return false;
                 return switch (d.id()) {
                     case "discord" -> c.discordJoined;
                     case "secret" -> c.secretFound;
@@ -83,6 +81,17 @@ final class CosmeticData {
                     default -> false;
                 };
         }
+    }
+    /** What to tell a player who presses a locked cosmetic. */
+    static String lockText(Def d) {
+        if (d.line() == Line.BETA) return "The beta is over. Only players who downloaded before v1.0 have it.";
+        if (d.line() == Line.SPECIAL) return "Given by hand to supporters, bug hunters and contributors.";
+        return switch (d.id()) {
+            case "discord" -> "Press the Discord button in the menu.";
+            case "firstdrop" -> "Get your first rare drop.";
+            case "collector" -> "Get 25 rare drops.";
+            default -> "Find the hidden button.";
+        };
     }
     static boolean unlockedId(String id) { return unlocked(byId(id)); }
 

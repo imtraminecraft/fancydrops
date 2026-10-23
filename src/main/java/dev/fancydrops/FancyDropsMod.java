@@ -58,6 +58,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             DropListener.tick(mc);
             if (++tabTick >= 1) { tabTick = 0; Cosmetics.tickTab(mc); }
             Cosmetics.tickAura(mc);
+            Cosmetics.tickChat(mc);
         });
 
         ClientReceiveMessageEvents.MODIFY_GAME.register((message, overlay) -> overlay ? message : Cosmetics.apply(message));

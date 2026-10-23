@@ -3,6 +3,7 @@ package dev.fancydrops;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.core.particles.ParticleTypes;
@@ -79,8 +80,6 @@ final class Cosmetics {
 
     private record Seg(String text, Style style) {}
     static UUID me() { try { var u = Minecraft.getInstance().getUser(); return u == null ? null : u.getProfileId(); } catch (Throwable t) { return null; } }
-    /** The Cosmetics page and your own pick: only for owners (every build). */
-    static boolean allowed() { refreshRemote(); return CosmeticData.grants.containsKey(code(me())); }
     static Suffix byId(String id) { for (Suffix s : SUFFIXES) if (s.id().equals(id)) return s; return null; }
     /** Your own pick (null = no suffix). */
     static Suffix chosen() { Suffix s = byId(FancyConfig.get().suffix); return s != null && CosmeticData.unlockedId(s.id()) ? s : null; }
@@ -114,17 +113,6 @@ final class Cosmetics {
         Gfx.pop(g);
     }
 
-    /** One line for the Cosmetics page: is the suffix reaching the game right now? */
-    static String status() {
-        try {
-            Minecraft mc = Minecraft.getInstance(); UUID me = me();
-            if (mc.getConnection() == null || me == null) return "Join a server to see it in the game. The preview above shows how it will look.";
-            Suffix c = chosen();
-            if (c == null) return "No suffix picked, so nothing is added to your name.";
-            return mc.getConnection().getPlayerInfo(me) != null ? "Live: your " + c.name() + " suffix is showing after your name in chat and the tab list." : "Waiting for the tab list to load your name.";
-        } catch (Throwable t) { return ""; }
-    }
-
     static Component apply(Component message) {
         try {
             Minecraft mc = Minecraft.getInstance();
@@ -136,33 +124,133 @@ final class Cosmetics {
                 int at = find(full, name);
                 if (at < 0) continue;
                 Look l = e.getValue(); Component out = message;
-                if (l.fx() != null) out = restyle(out, at, at + name.length(), l.fx(), false, 0L);
-                if (l.suffix() != null) out = insert(out, at + name.length(), chatGlyph(l.suffix()));
+                if (l.fx() != null && NameFx.animated(l.fx())) chatFx = true;
+                out = restyle(out, at, at + name.length(), l.fx(), false, 0L, l, name);            // the name: its effect (frozen here, chat animates it), and the hover card
+                if (l.suffix() != null) out = insert(out, at + name.length(), tippedGlyph(l, name));
                 return out;
             }
         } catch (Exception ignored) { }
         return message;
     }
 
-    /** The same text with the letters from..to dressed in a name effect. */
-    private static Component restyle(Component msg, int from, int to, String fx, boolean live, long t) {
+    /** The same text with the letters from..to dressed in a name effect (fx may be null) and, when look is given, carrying the FancyDrops hover card. */
+    private static Component restyle(Component msg, int from, int to, String fx, boolean live, long t, Look look, String player) {
         List<Seg> segs = new ArrayList<>();
         msg.visit((style, text) -> { segs.add(new Seg(text, style)); return Optional.empty(); }, Style.EMPTY);
         MutableComponent out = Component.empty();
         int pos = 0;
         for (Seg s : segs) {
             StringBuilder run = new StringBuilder();
+            Component tp = null;
             for (int k = 0; k < s.text().length(); k++) {
                 int g = pos + k;
                 if (g >= from && g < to) {
                     if (run.length() > 0) { out.append(Component.literal(run.toString()).withStyle(s.style())); run.setLength(0); }
-                    out.append(Component.literal(String.valueOf(s.text().charAt(k))).withStyle(NameFx.style(fx, g - from, to - from, s.style(), live, t)));
+                    Style cs = fx == null ? s.style() : NameFx.style(fx, g - from, to - from, s.style(), live, t);
+                    if (look != null) {
+                        if (tp == null) {
+                            int rgb = s.style().getColor() == null ? 0xFFFFFF : s.style().getColor().getValue();
+                            tp = tip(look, player, fx == null ? "fd:nm" : "fd:fx:" + fx + ":" + String.format("%06x", rgb & 0xFFFFFF), s.style().getHoverEvent());
+                        }
+                        cs = cs.withHoverEvent(new HoverEvent.ShowText(tp));
+                    }
+                    out.append(Component.literal(String.valueOf(s.text().charAt(k))).withStyle(cs));
                 } else run.append(s.text().charAt(k));
             }
             if (run.length() > 0) out.append(Component.literal(run.toString()).withStyle(s.style()));
             pos += s.text().length();
         }
         return out;
+    }
+
+    // ---- the hover card: "FancyDrops" on top, then which cosmetics the player has and how they got each one
+    private static Component tip(Look l, String player, String marker, HoverEvent orig) {
+        MutableComponent t = Component.empty().withStyle(Style.EMPTY.withInsertion(marker));            // the marker tells the chat which letters carry an effect
+        t.append(Component.literal("FancyDrops").withStyle(Style.EMPTY.withColor(0x62E6A8).withBold(true)));
+        t.append(Component.literal("\n" + player + "'s cosmetics").withStyle(Style.EMPTY.withColor(0xAAAAAA)));
+        if (l.suffix() != null) tipLine(t, CosmeticData.byId(l.suffix().id()));
+        if (l.fx() != null) tipLine(t, CosmeticData.byId(l.fx()));
+        if (l.aura() != null) tipLine(t, CosmeticData.byId(l.aura()));
+        if (orig instanceof HoverEvent.ShowText st) { t.append(Component.literal("\n")); t.append(st.value()); }       // whatever the server showed here is kept underneath
+        return t;
+    }
+    private static void tipLine(MutableComponent t, CosmeticData.Def d) {
+        if (d == null) return;
+        String how = CosmeticData.force.containsKey(d.id()) ? "Test menu" : d.how();
+        String ln = d.line() == CosmeticData.Line.SPECIAL ? "Special" : d.line() == CosmeticData.Line.BETA ? "Beta" : "Earned";
+        t.append(Component.literal("\n" + CosmeticData.kindLabel(d.kind()) + ": ").withStyle(Style.EMPTY.withColor(0x888888)));
+        t.append(Component.literal(d.name()).withStyle(Style.EMPTY.withColor(d.color() & 0xFFFFFF)));
+        t.append(Component.literal("\n   " + ln + " · " + how).withStyle(Style.EMPTY.withColor(0x666666)));
+    }
+    private static Component tippedGlyph(Look l, String player) {
+        MutableComponent g = Component.empty().append(chatGlyph(l.suffix()));
+        g.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent.ShowText(tip(l, player, "fd:sfx", null))));
+        return g;
+    }
+
+    // ---- chat lines can't animate on their own, so the lines that carry an animated name effect get a wrapper that recolours the letters every frame
+    private static boolean chatFx, chatFail;
+    private static java.lang.reflect.Field chatLines; private static Class<?> lineCls; private static java.lang.reflect.RecordComponent[] lineRc; private static java.lang.reflect.Constructor<?> lineCtor; private static int lineSeq;
+
+    private static String[] fxMark(Style s) {
+        if (s.getHoverEvent() instanceof HoverEvent.ShowText st) {
+            String ins = st.value().getStyle().getInsertion();
+            if (ins != null && ins.startsWith("fd:fx:")) { String[] p = ins.split(":"); if (p.length == 4) return p; }
+        }
+        return null;
+    }
+    private static final class FxSeq implements net.minecraft.util.FormattedCharSequence {
+        final net.minecraft.util.FormattedCharSequence in;
+        FxSeq(net.minecraft.util.FormattedCharSequence in) { this.in = in; }
+        @Override public boolean accept(net.minecraft.util.FormattedCharSink sink) {
+            List<Style> sty = new ArrayList<>(); List<Integer> idx = new ArrayList<>(), cps = new ArrayList<>();
+            in.accept((i, s, cp) -> { idx.add(i); sty.add(s); cps.add(cp); return true; });
+            int n = 0; for (Style s : sty) if (fxMark(s) != null) n++;
+            long now = System.currentTimeMillis(); int j = 0;
+            for (int k = 0; k < sty.size(); k++) {
+                Style s = sty.get(k); String[] m = fxMark(s);
+                if (m != null) { try { s = NameFx.style(m[2], j++, n, s.withColor(Integer.parseInt(m[3], 16)), true, now); } catch (Exception ignored) { } }
+                if (!sink.accept(idx.get(k), s, cps.get(k))) return false;
+            }
+            return true;
+        }
+    }
+    private static boolean hasFx(net.minecraft.util.FormattedCharSequence cs) {
+        boolean[] hit = {false};
+        cs.accept((i, s, cp) -> { String[] m = fxMark(s); if (m != null && NameFx.animated(m[2])) { hit[0] = true; return false; } return true; });
+        return hit[0];
+    }
+    /** Every tick: wrap the freshly added chat lines that carry an animated name effect. Found by reflection; if anything is different in this Minecraft, chat just keeps the still look. */
+    static void tickChat(Minecraft mc) {
+        if (!chatFx || chatFail) return;
+        try {
+            Object chat = mc.gui.getChat();
+            if (chatLines == null) {
+                for (var f : chat.getClass().getDeclaredFields()) {
+                    if (!List.class.isAssignableFrom(f.getType())) continue;
+                    f.setAccessible(true); List<?> l = (List<?>) f.get(chat);
+                    if (l == null || l.isEmpty() || l.get(0) == null) continue;
+                    Class<?> c = l.get(0).getClass();
+                    if (!c.isRecord() || !c.getSimpleName().equals("Line")) continue;
+                    var rc = c.getRecordComponents(); Class<?>[] types = new Class<?>[rc.length]; int seq = -1;
+                    for (int i = 0; i < rc.length; i++) { types[i] = rc[i].getType(); rc[i].getAccessor().setAccessible(true); if (net.minecraft.util.FormattedCharSequence.class.isAssignableFrom(types[i])) seq = i; }
+                    if (seq < 0) { chatFail = true; return; }
+                    var ct = c.getDeclaredConstructor(types); ct.setAccessible(true);
+                    chatLines = f; lineCls = c; lineRc = rc; lineCtor = ct; lineSeq = seq; break;
+                }
+                if (chatLines == null) return;
+            }
+            @SuppressWarnings("unchecked") List<Object> list = (List<Object>) chatLines.get(chat);
+            for (int i = 0; i < list.size(); i++) {
+                Object ln = list.get(i);
+                if (ln == null || ln.getClass() != lineCls) continue;
+                var cs = (net.minecraft.util.FormattedCharSequence) lineRc[lineSeq].getAccessor().invoke(ln);
+                if (cs instanceof FxSeq || !hasFx(cs)) continue;
+                Object[] args = new Object[lineRc.length];
+                for (int k = 0; k < args.length; k++) args[k] = k == lineSeq ? new FxSeq(cs) : lineRc[k].getAccessor().invoke(ln);
+                list.set(i, lineCtor.newInstance(args));
+            }
+        } catch (Throwable t) { chatFail = true; System.err.println("[FancyDrops] animated chat names unavailable: " + t); }
     }
 
     /** A name in the menu preview: the colour you have on the server, with the effect on top. */
@@ -190,18 +278,23 @@ final class Cosmetics {
     }
 
     private static int auraTick;
-    /** The aura: a few sparks rise round every player who wears one (you, and the owners who were given it). */
+    /** The aura: two rings of sparks spiral up round every player who wears one (you, and the owners who were given it). */
     static void tickAura(Minecraft mc) {
         try {
-            if (mc.level == null || ++auraTick % 3 != 0) return;
+            if (mc.level == null) return;
             Map<UUID, Look> act = active();
             if (act.isEmpty()) return;
+            auraTick++;
             for (var p : mc.level.players()) {
                 Look l = act.get(p.getUUID());
                 if (l == null || !"stardust".equals(l.aura())) continue;
                 var rnd = mc.level.getRandom();
-                for (int k = 0; k < 2; k++)
-                    mc.level.addParticle(ParticleTypes.END_ROD, p.getX() + (rnd.nextDouble() - 0.5) * 1.0, p.getY() + rnd.nextDouble() * 1.9, p.getZ() + (rnd.nextDouble() - 0.5) * 1.0, 0.0, 0.02, 0.0);
+                for (int k = 0; k < 3; k++) {
+                    double ang = auraTick * 0.25 + k * Math.PI * 2 / 3, h = ((auraTick * 0.04 + k / 3.0) % 1.0) * 2.0;
+                    mc.level.addParticle(ParticleTypes.END_ROD, p.getX() + Math.cos(ang) * 0.7, p.getY() + h, p.getZ() + Math.sin(ang) * 0.7, 0.0, 0.01, 0.0);
+                }
+                if (auraTick % 2 == 0)
+                    mc.level.addParticle(ParticleTypes.END_ROD, p.getX() + (rnd.nextDouble() - 0.5) * 1.3, p.getY() + rnd.nextDouble() * 2.0, p.getZ() + (rnd.nextDouble() - 0.5) * 1.3, 0.0, 0.03, 0.0);
             }
         } catch (Throwable ignored) { }
     }
@@ -257,7 +350,7 @@ final class Cosmetics {
                 }
                 int len = hit.getKey().length();
                 Component out = base;
-                if (at >= 0 && lk.fx() != null) out = restyle(out, at, at + len, lk.fx(), true, now);
+                if (at >= 0 && lk.fx() != null) out = restyle(out, at, at + len, lk.fx(), true, now, null, null);
                 if (lk.suffix() != null) out = at >= 0 ? insert(out, at + len, chatGlyph(lk.suffix())) : Component.empty().append(out).append(Component.literal(" ")).append(chatGlyph(lk.suffix()));
                 TAB_BASE.put(id, base); TAB_SET.put(id, out); TAB_ID.put(id, key);
                 info.setTabListDisplayName(out);
