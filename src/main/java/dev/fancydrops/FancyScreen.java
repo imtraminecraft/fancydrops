@@ -246,7 +246,7 @@ public class FancyScreen extends Screen {
     private static final Set<String> open = new HashSet<>();
     private static int scroll;                 // kept when the menu reopens after a preview, so you land where you were
     private int totalH; private boolean dragScroll;
-    private void scrollTo(double my) { int bh = Math.max(16, viewH * viewH / Math.max(1, totalH)); float f = (float) ((my - lt - bh / 2.0) / Math.max(1, viewH - bh)); scroll = Math.max(0, Math.min(totalH - viewH, Math.round(f * (totalH - viewH)))); }
+    private void scrollTo(double my) { int viewH = lb - lt, bh = Math.max(16, viewH * viewH / Math.max(1, totalH)); float f = (float) ((my - lt - bh / 2.0) / Math.max(1, viewH - bh)); scroll = Math.max(0, Math.min(totalH - viewH, Math.round(f * (totalH - viewH)))); }
     private static String query = "";
     private boolean searching;
     private EditBox searchField;
@@ -3369,7 +3369,7 @@ public class FancyScreen extends Screen {
             if (!inBox) endTyping(true);
         }
         if (editor != 0) { editorClick(event.x(), event.y(), event.button()); return true; }
-        if (event.button() == 0 && totalH > viewH && event.x() >= cx + cw && event.x() < cx + cw + 12 && event.y() >= lt && event.y() < lb) { dragScroll = true; scrollTo(event.y()); return true; }          // the bar on the right can be grabbed
+        if (event.button() == 0 && totalH > lb - lt && event.x() >= cx + cw && event.x() < cx + cw + 12 && event.y() >= lt && event.y() < lb) { dragScroll = true; scrollTo(event.y()); return true; }          // the bar on the right can be grabbed
         {   // an open drop-down list sits on top of everything, so it gets the click before the boxes underneath it
             double px0 = event.x(), py0 = event.y();
             if (popup != null && px0 >= popX0 && px0 < popX1 && py0 >= popY && py0 < popY + popVis * POP_H + 4) {

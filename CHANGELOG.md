@@ -2,6 +2,9 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.36
+- Fixed a build error in the draggable scroll bar (a variable used outside its method).
+
 ## 0.8.35
 - Redrawn icons: Nothing, Default, Rare, RNG, Home, Mining, Fishing, Reload, the gears (Settings and WIP), Tip card, GitHub, Patreon and more. They no longer sit on circles, and they are centred. The Griffin has a new icon that follows the pet's rarity colour.
 - Mythological: the Griffin pet row, its list and the page accent use the rarity colours (Common to Mythic).
