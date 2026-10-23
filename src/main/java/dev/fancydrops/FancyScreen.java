@@ -722,16 +722,15 @@ public class FancyScreen extends Screen {
                 if (r.pOn != null) { int cx2 = b[0] + b[2] - 12, cy2 = b[1] + 6; g.fill(cx2 + 4, cy2 + 5, cx2 + 6, cy2 + 7, sch); g.fill(cx2 + 2, cy2 + 3, cx2 + 4, cy2 + 5, sch); g.fill(cx2 + 6, cy2 + 1, cx2 + 8, cy2 + 5, sch); g.fill(cx2 + 7, cy2 - 1, cx2 + 9, cy2 + 1, sch); }
             }
             else g.outline(b[0], b[1], b[2], b[3], Gfx.argb(hv ? 210 : rar == 2 ? 130 : rar >= 0 ? 90 : 50, (rar >= 0 ? sch : col) & 0xFFFFFF));
-            int tx = b[0] + 6, iy = b[1] + (b[3] - 16) / 2;
-            if (r.pIcons[i] != null) { Icons.draw(g, r.pIcons[i], b[0] + 5, iy, r.pOn != null ? 2400L : on || hv ? now : 2400L); tx = b[0] + 25; }          // cosmetic icons stand still, in the middle
-            String nm = font.plainSubstrByWidth(r.pLabels[i], b[2] - (tx - b[0]) - 4 - (wip ? 22 : 0));
-            if (r.pSubs != null) {
-                if (r.pFx != null && r.pFx[i] != null) { int lx = tx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, b[1] + 7, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, lk ? 2400L : now)); lx += font.width(chs); } }
-                else Gfx.text(g, font, nm, tx, b[1] + 7, on ? Ui.TEXT : wip ? Ui.DIM : Canvas.mix(Ui.SUB, Ui.TEXT, 0.5f));
-                Gfx.text(g, font, font.plainSubstrByWidth(r.pSubs[i], b[2] - (tx - b[0]) - 6), tx, b[1] + 18, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM);
-            } else if (r.pFx != null && r.pFx[i] != null) {                                           // a name effect: the name itself, wearing the effect
-                int lx = tx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, b[1] + (b[3] - 8) / 2 - 1, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, lk ? 2400L : now)); lx += font.width(chs); }
-            } else Gfx.text(g, font, nm, tx, b[1] + (b[3] - 8) / 2 - 1, on ? Ui.TEXT : wip ? Ui.DIM : Ui.SUB);
+            boolean ico = r.pIcons[i] != null; int iw = ico ? 21 : 0, iy = b[1] + (b[3] - 16) / 2;
+            String nm = font.plainSubstrByWidth(r.pLabels[i], b[2] - 10 - iw - (wip ? 22 : 0));
+            String sb2 = r.pSubs != null ? font.plainSubstrByWidth(r.pSubs[i], b[2] - 10 - iw) : null;
+            int tw2 = Math.max(font.width(nm), sb2 == null ? 0 : font.width(sb2)), gx = b[0] + (b[2] - iw - tw2) / 2, tx = gx + iw;          // icon and text sit together, in the middle of the tile
+            if (ico) Icons.draw(g, r.pIcons[i], gx, iy, r.pOn != null ? 2400L : on || hv ? now : 2400L);          // cosmetic icons stand still
+            int ny = sb2 != null ? b[1] + 7 : b[1] + (b[3] - 8) / 2 - 1, nx = tx + (tw2 - font.width(nm)) / 2;
+            if (r.pFx != null && r.pFx[i] != null) { int lx = nx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, ny, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, lk ? 2400L : now)); lx += font.width(chs); } }
+            else Gfx.text(g, font, nm, nx, ny, on ? Ui.TEXT : wip ? Ui.DIM : sb2 != null ? Canvas.mix(Ui.SUB, Ui.TEXT, 0.5f) : Ui.SUB);
+            if (sb2 != null) Gfx.text(g, font, sb2, tx + (tw2 - font.width(sb2)) / 2, b[1] + 18, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM);
             if (wip) { pill(g, b[0] + b[2] - 22, b[1] + 5, 18, 10, 0xFF3A3220); Gfx.text(g, font, "WIP", b[0] + b[2] - 20, b[1] + 6, 0xFFFFC857); }
             if (lk) {                                                                                  // locked: dimmed, with a padlock
                 g.fill(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1, 0x99080A10);
@@ -873,9 +872,10 @@ public class FancyScreen extends Screen {
         // --- one section per kind, ordered by rarity (special, then beta, then common); a set's items keep the set's colours
         for (int ki = 0; ki < kinds.length; ki++) {
             List<Object> li = new ArrayList<>(); int have = 0;
-            for (int r2 = 2; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2)
-                for (CosmeticData.Def d : CosmeticData.members(sd)) if (d.kind() == kinds[ki]) li.add(d);
-            for (int r2 = 1; r2 >= 0; r2--) for (CosmeticData.Def d : CosmeticData.ALL) if (d.kind() == kinds[ki] && d.set() == null && CosmeticData.rarityOf(d) == r2) li.add(d);
+            for (int r2 = 2; r2 >= 0; r2--) {                                                  // rarest first: a rarity's set items, then its single items
+                for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) for (CosmeticData.Def d : CosmeticData.members(sd)) if (d.kind() == kinds[ki]) li.add(d);
+                for (CosmeticData.Def d : CosmeticData.ALL) if (d.kind() == kinds[ki] && d.set() == null && CosmeticData.rarityOf(d) == r2) li.add(d);
+            }
             for (Object o : li) if (CosmeticData.unlocked((CosmeticData.Def) o)) have++;
             rows.add(catHeader(heads[ki], subs[ki], have + " / " + li.size(), accents[ki]));
             rows.add(grid(li, 4));
