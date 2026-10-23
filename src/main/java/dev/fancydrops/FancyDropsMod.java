@@ -69,11 +69,27 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                 Identifier.fromNamespaceAndPath("fancydrops", "drop_animation"),
                 (graphics, deltaTracker) -> AnimationManager.render(graphics));
 
+        try {                                                               // the hotbar steps aside while a scene plays (only the hotbar: the item name above it stays)
+            HudElementRegistry.replaceElement(VanillaHudElements.HOTBAR, original -> (graphics, deltaTracker) -> {
+                if (!AnimationManager.isPlaying()) callHud(original, graphics, deltaTracker);
+            });
+        } catch (Throwable t) { System.err.println("[FancyDrops] could not wrap the hotbar: " + t); }
+
         // Warm the price cache when joining Hypixel so the first drop already has a price.
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             var server = Minecraft.getInstance().getCurrentServer();
             if (server != null && server.ip.toLowerCase().contains("hypixel")) PriceService.warm();
         });
+    }
+
+    private static java.lang.reflect.Method hudCall;
+    /** Runs a vanilla HUD element through its one method, found by shape so the name of that method does not matter. */
+    private static void callHud(Object element, Object graphics, Object deltaTracker) {
+        try {
+            if (hudCall == null) for (java.lang.reflect.Method m : element.getClass().getMethods())
+                if (m.getParameterCount() == 2 && java.lang.reflect.Modifier.isPublic(m.getModifiers()) && m.getParameterTypes()[0].isInstance(graphics) && m.getParameterTypes()[1].isInstance(deltaTracker) && m.getDeclaringClass() != Object.class) { hudCall = m; break; }
+            if (hudCall != null) hudCall.invoke(element, graphics, deltaTracker);
+        } catch (Throwable ignored) { }
     }
 
     // ------------------------------------------------------------------ commands
