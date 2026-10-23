@@ -66,16 +66,15 @@ final class NameFx {
                 else if (n > 1 && hash(11, st) % n == i) c = mix(c, 0xFFD6F2, 0.7f * en);
                 return c;
             }
-            case "glitch": {                                                // calm green with a scan line sliding over it; every couple of seconds the whole name tears: letters flash cyan / magenta / white
-                float pos = (t % 1900L) / 1900f * (n + 8) - 2, d = i - pos;
-                int c = mix(0x1FAE72, 0x39FFA8, 0.5f + 0.5f * (float) Math.sin(t / 500.0 - i * 0.6));
-                if (d > -0.7f && d < 0.7f) c = 0xFFFFFF;
-                else if (d <= -0.7f && d > -3.5f) c = mix(0xB6FFE0, c, (-d - 0.7f) / 2.8f);
-                long cyc = t % 2300L;
-                if (cyc < 380L) {                                          // the tear
-                    int h = hash(i, t / 55L) % 6;
-                    c = h == 0 ? 0xFF3DDC : h == 1 ? 0x3DFFF0 : h == 2 ? 0xFFFFFF : h == 3 ? mix(c, 0x000000, 0.5f) : c;
-                } else if (hash(i, t / 90L) % 40 == 0) c = 0x3DFFF0;
+            case "glitch": {                                                // hot red-orange; a warning stripe (amber, then dark red) sweeps over it; a letter flashes white; now and then the whole name blinks like a siren
+                int c = mix(0xFF4A2E, 0xFF8A2E, 0.5f + 0.5f * (float) Math.sin(t / 650.0 - i * 0.5));
+                float pos = (t % 1800L) / 1800f * (n + 8) - 3, d = i - pos;
+                if (d > -1.3f && d <= 0.3f) c = 0xFFD23D;
+                else if (d > -2.8f && d <= -1.3f) c = 0xB01E14;
+                long cyc = t % 3000L;
+                if (cyc < 420L) c = ((i + (int) (t / 90L)) & 1) == 0 ? 0xFF3A2A : 0xFFC03D;
+                long st = t / 800L; float en = (float) Math.sin(Math.PI * ((t % 800L) / 800f));
+                if (n > 0 && hash(3, st) % n == i) c = mix(c, 0xFFFFFF, 0.9f * en);
                 return c;
             }
             case "contribfx": {                                             // deep water to bright aqua with two waves crossing, a bright foam crest, and a light that sweeps over now and then

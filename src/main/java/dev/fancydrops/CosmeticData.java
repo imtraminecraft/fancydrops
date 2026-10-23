@@ -15,7 +15,7 @@ final class CosmeticData {
     record SetDef(String id, String name, String how, int color, String suffix, String fx, String aura, int rarity) {}
     static final List<SetDef> SETS = List.of(
         new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura", 2),
-        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFF55FF9A, "glitchsfx", "glitch", "glitchaura", 2),
+        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, "glitchsfx", "glitch", "glitchaura", 2),
         new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "contrib", "contribfx", "stardust", 2),
         new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, "patron", "royal", "patronaura", 2),
         new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "crown", "shimmer", null, 1),
@@ -42,9 +42,9 @@ final class CosmeticData {
         new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFB48CFF, "sparkle"),
         new Def("sparklefx", "Starlight", Line.SPECIAL, Kind.NAME, "Special Set", 0xFFFFE9A8, "sparkle"),
         new Def("sparkleaura", "Twinkle", Line.SPECIAL, Kind.AURA, "Special Set", 0xFFFFE680, "sparkle"),
-        new Def("glitchsfx", "Spark", Line.SPECIAL, Kind.SUFFIX, "Bug Finder Set", 0xFF55FFE0, "bugfinder"),
-        new Def("glitch", "Glitch", Line.SPECIAL, Kind.NAME, "Bug Finder Set", 0xFF55FF9A, "bugfinder"),
-        new Def("glitchaura", "Static", Line.SPECIAL, Kind.AURA, "Bug Finder Set", 0xFFFF55DD, "bugfinder"),
+        new Def("glitchsfx", "Hazard", Line.SPECIAL, Kind.SUFFIX, "Bug Finder Set", 0xFFFFB02E, "bugfinder"),
+        new Def("glitch", "Critical", Line.SPECIAL, Kind.NAME, "Bug Finder Set", 0xFFFF5A36, "bugfinder"),
+        new Def("glitchaura", "Alarm", Line.SPECIAL, Kind.AURA, "Bug Finder Set", 0xFFFF7A2E, "bugfinder"),
         new Def("contrib", "Contrib", Line.SPECIAL, Kind.SUFFIX, "Contributors Set", 0xFF5AFFC8, "contributors"),
         new Def("contribfx", "Aqua Flow", Line.SPECIAL, Kind.NAME, "Contributors Set", 0xFF55D8FF, "contributors"),
         new Def("stardust", "Stardust", Line.SPECIAL, Kind.AURA, "Contributors Set", 0xFF8FD0FF, "contributors"),
@@ -87,7 +87,17 @@ final class CosmeticData {
         return false;
     }
 
+    private static final Map<String, Boolean> UCACHE = new HashMap<>(); private static long ucacheAt;
+    /** The menu asks this hundreds of times a frame; the answer is remembered for a fifth of a second. */
     static boolean unlocked(Def d) {
+        if (d == null) return false;
+        long n = System.currentTimeMillis();
+        if (n - ucacheAt > 200) { UCACHE.clear(); ucacheAt = n; }
+        Boolean c = UCACHE.get(d.id()); if (c != null) return c;
+        boolean v = unlockedNow(d); UCACHE.put(d.id(), v); return v;
+    }
+    static void forget() { UCACHE.clear(); }
+    private static boolean unlockedNow(Def d) {
         if (d == null) return false;
         Boolean f = force.get(d.id()); if (f != null) return f;
         FancyConfig c = FancyConfig.get();
@@ -143,7 +153,7 @@ final class CosmeticData {
     }
     static boolean wearingSet(SetDef s) { FancyConfig c = FancyConfig.get(); return s.suffix().equals(c.suffix) && s.fx().equals(c.nameFx) && (s.aura() == null || s.aura().equals(c.aura)); }
     /** Something you wear changed: chat lines already on screen are redone with the new look. */
-    static void changed() { Cosmetics.historyDirty = true; }
+    static void changed() { Cosmetics.historyDirty = true; UCACHE.clear(); }
     static String kindLabel(Kind k) { return k == Kind.SUFFIX ? "Suffix" : k == Kind.NAME ? "Name effect" : "Aura"; }
     static int unlockedCount(Line l) { int n = 0; for (Def d : line(l)) if (unlocked(d)) n++; return n; }
 }

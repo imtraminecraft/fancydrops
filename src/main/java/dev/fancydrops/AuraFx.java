@@ -71,30 +71,20 @@ final class AuraFx {
                 }
                 break;
             }
-            case "glitchaura": {                                                     // torn pixel pairs (cyan / magenta split) jumping round you, short glitch blocks at your sides, and a few bits that fall like code
-                long step = t / 120L;
-                for (int i = 0; i < 12; i++) {
-                    long st = step / (1 + i % 3);
-                    float ang = hash(i, st) % 628 / 100f, r = 0.42f + (hash(i + 20, st) % 30) / 100f, y = 0.05f + (hash(i + 40, st) % 190) / 100f;
-                    float x = (float) Math.cos(ang) * r, z = (float) Math.sin(ang) * r;
-                    float sz = 0.04f + (hash(i + 3, st) % 4) / 100f; float al = 0.6f + (hash(i + 9, st) % 40) / 100f;
-                    o.add(new P(x - 0.035f, y, z, sz, argb(al, 0x3DFFF0), 0));          // the split: cyan one side, magenta the other
-                    o.add(new P(x + 0.035f, y, z, sz, argb(al, 0xFF3DDC), 0));
-                    if (hash(i + 77, st) % 5 == 0) o.add(new P(x, y, z, sz * 0.8f, argb(1f, 0xFFFFFF), 0));
+            case "glitchaura": {                                                     // Alarm: red and amber sparks circle you, a thin ring of amber light climbs from your feet to your head and makes the sparks flare white as it passes
+                float ringY = ((t % 2800L) / 2800f) * 2.3f - 0.1f;
+                for (int i = 0; i < 10; i++) {
+                    float ang = (float) (i * Math.PI * 2 / 10 + t / 1500.0), y = 0.25f + 0.17f * i + 0.1f * (float) Math.sin(t / 600.0 + i);
+                    boolean hit = Math.abs(y - ringY) < 0.14f;
+                    o.add(new P((float) Math.cos(ang) * 0.58f, y, (float) Math.sin(ang) * 0.58f, hit ? 0.075f : 0.045f, hit ? argb(1f, 0xFFFFFF) : argb(0.9f, i % 2 == 0 ? 0xFF4A2E : 0xFFB02E), hit ? 1 : 0, 0.35f));
                 }
-                for (int i = 0; i < 4; i++) {                                         // short flickering blocks beside the body
-                    long st = (t + i * 190L) / 240L;
-                    if (hash(i + 100, st) % 3 == 0) continue;
-                    float side = i % 2 == 0 ? 1f : -1f;
-                    o.add(new P(side * (0.45f + (hash(i + 5, st) % 20) / 100f), (hash(i + 6, st) % 190) / 100f, (hash(i + 7, st) % 60 - 30) / 100f, 0.07f, argb(0.8f, hash(i + 8, st) % 2 == 0 ? 0x3DFFB0 : 0xFF3DDC), 2));
+                if (ringY > 0f && ringY < 2.1f) for (int i = 0; i < 16; i++) {
+                    float ang = (float) (i * Math.PI * 2 / 16);
+                    o.add(new P((float) Math.cos(ang) * 0.6f, ringY, (float) Math.sin(ang) * 0.6f, 0.03f, argb(0.75f * (1f - ringY / 2.3f), 0xFFC03D), 0));
                 }
-                {                                                                       // a scan line of pixels sweeping up the body now and then
-                    float ph = (float) ((t % 2600L) / 2600.0), y = ph * 2.1f;
-                    for (int i = 0; i < 9; i++) o.add(new P(-0.4f + i * 0.1f, y, 0.3f, 0.04f, argb(0.85f * (1f - ph), 0x6BFFB0), 0));
-                }
-                for (int i = 0; i < 5; i++) {                                         // bits falling like code
-                    float ph = (float) (((t / 1800.0) + i / 5.0) % 1.0), ang = i * 1.3f;
-                    o.add(new P((float) Math.cos(ang) * 0.6f, 2f - ph * 2f, (float) Math.sin(ang) * 0.6f, 0.035f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0x6BFF9C), 0, ph * 0.6f));
+                for (int i = 0; i < 6; i++) {                                         // slow red embers lifting off you
+                    float ph = (float) (((t / 3400.0) + i / 6.0) % 1.0), ang = i * 1.7f;
+                    o.add(new P((float) Math.cos(ang) * 0.5f, ph * 2f, (float) Math.sin(ang) * 0.5f, 0.032f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0xFF5A36), 0, ph * 0.8f));
                 }
                 break;
             }

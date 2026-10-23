@@ -223,7 +223,7 @@ public class FancyScreen extends Screen {
         EditBox field; String fieldBtn; int btnX0, btnX1;
         boolean dropCols;              // section header that labels the Play / Animate / Announce columns
         int cell;                      // > 0: every control sits centred in its own column of this width
-        String[] pLabels, pIcons, pSubs; int pTh = 27, pColsForce, pTop = 22; int[] pColors; boolean[] pWip; int pCols; IntSupplier pSel; IntConsumer pSet; java.util.function.IntPredicate pOn; boolean[] pLock; String[] pTips, pFx, pIds; int[] pRar, pBg; Runnable[] pAct;      // PICKER rows: the tiles (pOn: which are switched on, pLock: which are locked)
+        String[] pLabels, pIcons, pSubs; int pTh = 27, pColsForce, pTop = 22; int[] pColors; boolean[] pWip; int pCols; IntSupplier pSel; IntConsumer pSet; java.util.function.IntPredicate pOn; boolean[] pLock; String[] pTips, pFx, pIds, pSetId; int[] pRar, pBg; Runnable[] pAct;      // PICKER rows: the tiles (pOn: which are switched on, pLock: which are locked)
         boolean locked;               // greyed out, not clickable (coming soon)
         boolean wrapSub;              // the second line is a paragraph, wrapped over several lines
         boolean wip;                  // gets the slanted WORK IN PROGRESS tape across it
@@ -686,6 +686,40 @@ public class FancyScreen extends Screen {
         if (r.pColsForce > 0 && row == nr - 1 && last < cols) ox = (cols - last) * (tw + gap) / 2;          // a lone tile on the last row sits in the middle, in line with the two above
         return new int[]{r.x + 8 + ox + (i % cols) * (tw + gap), r.y + r.pTop + row * (th + gap), tw, th};
     }
+    /** The little animation behind a tile: each Special set has its own, Beta has a passing light. A few rectangles each. */
+    private static void tileFx(GuiGraphicsExtractor g, int[] b, int i, int col, String set, long now, boolean hv) {
+        int x = b[0], y = b[1], w = b[2], h = b[3]; long t = now % 600000L;
+        switch (set == null ? "" : set) {
+            case "sparkle" -> {                                                                         // stars that twinkle in and out
+                for (int k = 0; k < 7; k++) {
+                    long st = (t + k * 431L + i * 97L) / 1500L; float ph = ((t + k * 431L + i * 97L) % 1500L) / 1500f, a = (float) Math.sin(Math.PI * ph);
+                    int sx = x + 6 + Math.abs((int) (st * 7919 + k * 104729) % Math.max(1, w - 12)), sy = y + 4 + Math.abs((int) (st * 31 + k * 977) % Math.max(1, h - 8));
+                    int c = Gfx.argb(Math.round(150 * a), k % 2 == 0 ? 0xFFF2B0 : 0xFFFFFF);
+                    g.fill(sx, sy - 1, sx + 1, sy + 2, c); g.fill(sx - 1, sy, sx + 2, sy + 1, c);
+                }
+            }
+            case "bugfinder" -> {                                                                       // warning stripes drifting by
+                int off = (int) ((t / 60L + i * 5) % 14);
+                for (int sx = x - 14 + off; sx < x + w; sx += 14) for (int j = 0; j < h - 2; j += 2) g.fill(sx + (h - j) / 2, y + 1 + j, sx + (h - j) / 2 + 4, y + 3 + j, Gfx.argb(hv ? 34 : 22, 0xFFB02E));
+            }
+            case "contributors" -> {                                                                    // a slow aqua wave
+                for (int sx = 0; sx < w; sx += 4) {
+                    int wy = y + h / 2 + Math.round(3.2f * (float) Math.sin(t / 500.0 + sx * 0.16 + i)); g.fill(x + sx, wy, x + sx + 3, wy + 1, Gfx.argb(hv ? 90 : 60, 0x7FE8FF));
+                    int wy2 = y + h / 2 + 4 + Math.round(2.4f * (float) Math.sin(t / 700.0 + sx * 0.21 + 2)); g.fill(x + sx, wy2, x + sx + 3, wy2 + 1, Gfx.argb(40, 0x4DB8FF));
+                }
+            }
+            case "patreon" -> {                                                                         // gold embers floating up
+                for (int k = 0; k < 6; k++) {
+                    float ph = ((t + k * 520L + i * 131L) % 3000L) / 3000f; int sx = x + 6 + (k * 53 + i * 17) % Math.max(1, w - 12), sy = y + h - 2 - Math.round(ph * (h - 2));
+                    g.fill(sx, sy, sx + 2, sy + 2, Gfx.argb(Math.round(150 * (float) Math.sin(Math.PI * ph)), k % 2 == 0 ? 0xFFC832 : 0xFF8A2E));
+                }
+            }
+            default -> {                                                                                // beta: a slanted light passes over the tile now and then
+                int px = x - 20 + (int) ((t / 14L + i * 60L) % (w + 160));
+                if (px < x + w) for (int j = 0; j < h - 2; j++) g.fill(px + (h - j) / 3, y + 1 + j, px + (h - j) / 3 + 7, y + 2 + j, Gfx.argb(hv ? 44 : 26, 0xFFFFFF));
+            }
+        }
+    }
     private void drawPicker(GuiGraphicsExtractor g, Row r, int mx, int my) {
         long now = System.currentTimeMillis();
         pill(g, r.x, r.y, r.w, r.h, Ui.ROW);
@@ -709,11 +743,10 @@ public class FancyScreen extends Screen {
             int sch = r.pBg != null ? r.pBg[i] : rar == 1 ? 0xFF3FD16A : rar == 0 ? 0xFF9AA3B5 : col;     // the colour scheme of the tile: every tile of a set shares it
             int bgBase = rar < 0 ? Ui.PANEL2 : Canvas.mix(Ui.PANEL2, sch, rar == 2 ? 0.10f : rar == 1 ? 0.13f : 0.07f);
             pill(g, b[0], b[1], b[2], b[3], Canvas.mix(bgBase, Canvas.mix(Ui.ROW_HOVER, sch, 0.22f), k));
-            if (rar == 2) {                                                                              // special: a still gradient in the set's colour, with one light slowly passing over
+            if (rar >= 1) {                                                                              // special and beta tiles have a background of their own (common has none)
                 g.enableScissor(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1);
-                int seg = 8, sw2 = b[2] / seg + 1;
-                for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF));
-                int shx = b[0] + (int) ((now / 18 + i * 37L) % (b[2] + 40)) - 20; g.fill(shx, b[1] + 1, shx + 5, b[1] + b[3] - 1, Gfx.argb(hv ? 34 : 18, 0xFFFFFF));
+                if (rar == 2) { int seg = 8, sw2 = b[2] / seg + 1; for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF)); }
+                tileFx(g, b, i, sch, rar == 2 && r.pSetId != null ? r.pSetId[i] : "beta", now, hv);
                 g.disableScissor();
             }
             if (on) {
@@ -832,7 +865,7 @@ public class FancyScreen extends Screen {
             case "glow" -> "A warm glow that slowly brightens. ";
             case "fresh" -> "A mint name with a light green that drifts along it. ";
             case "sparklefx" -> "Gold with a white comet and twinkling letters. ";
-            case "glitch" -> "A scan line, and now and then the name tears. ";
+            case "glitch" -> "Hot red-orange, a warning stripe sweeps over it, and a letter flashes white. ";
             case "contribfx" -> "Flowing water with foam and a sweeping light. ";
             case "royal" -> "Liquid gold with a running glint. ";
             default -> "";
@@ -845,18 +878,18 @@ public class FancyScreen extends Screen {
     /** One grid of tiles: sets (SetDef) or single cosmetics (Def). */
     private Row grid(List<Object> items, int cols) {
         int n = items.size();
-        String[] lb = new String[n], sb = new String[n], ic = new String[n], tp = new String[n], fxs = new String[n], ids = new String[n]; int[] cl = new int[n], rar = new int[n], bg = new int[n]; boolean[] lk = new boolean[n], eq = new boolean[n]; boolean sets = false;
+        String[] lb = new String[n], sb = new String[n], ic = new String[n], tp = new String[n], fxs = new String[n], ids = new String[n], sids = new String[n]; int[] cl = new int[n], rar = new int[n], bg = new int[n]; boolean[] lk = new boolean[n], eq = new boolean[n]; boolean sets = false;
         for (int k = 0; k < n; k++) {
             Object it = items.get(k);
             if (it instanceof CosmeticData.SetDef sd) {
                 sets = true;
                 List<CosmeticData.Def> ms = CosmeticData.members(sd);
                 boolean owned = CosmeticData.unlocked(ms.get(0)), wearing = CosmeticData.wearingSet(sd);
-                lb[k] = sd.name(); sb[k] = !owned ? "Locked" : wearing ? "Wearing" : "Wear set"; ic[k] = "fd:suf_" + sd.suffix(); cl[k] = sd.color(); bg[k] = sd.color(); rar[k] = sd.rarity(); lk[k] = !owned; eq[k] = owned && wearing; fxs[k] = sd.fx();
+                lb[k] = sd.name(); sb[k] = !owned ? "Locked" : wearing ? "Wearing" : "Wear set"; ic[k] = "fd:suf_" + sd.suffix(); cl[k] = sd.color(); bg[k] = sd.color(); rar[k] = sd.rarity(); lk[k] = !owned; eq[k] = owned && wearing; fxs[k] = sd.fx(); sids[k] = sd.id();
                 tp[k] = tipLines(sd.name(), "Set", sd.rarity(), owned, "Items " + CosmeticData.owned(sd) + " / " + ms.size(), sd.how());
             } else {
                 CosmeticData.Def d = (CosmeticData.Def) it; boolean open2 = CosmeticData.unlocked(d);
-                lb[k] = !open2 && d.id().equals("secret") ? "???" : d.name(); cl[k] = d.color(); bg[k] = schemeOf(d); rar[k] = CosmeticData.rarityOf(d); lk[k] = !open2; eq[k] = open2 && CosmeticData.isEquipped(d); ids[k] = d.id();
+                lb[k] = !open2 && d.id().equals("secret") ? "???" : d.name(); sids[k] = d.set(); cl[k] = d.color(); bg[k] = schemeOf(d); rar[k] = CosmeticData.rarityOf(d); lk[k] = !open2; eq[k] = open2 && CosmeticData.isEquipped(d); ids[k] = d.id();
                 ic[k] = d.kind() == CosmeticData.Kind.NAME ? null : d.kind() == CosmeticData.Kind.SUFFIX ? "fd:suf_" + d.id() : "fd:cx_" + d.id();
                 fxs[k] = d.kind() == CosmeticData.Kind.NAME ? d.id() : null;
                 CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
@@ -871,7 +904,7 @@ public class FancyScreen extends Screen {
             if (!owned) { lockShake.put(lb[i], System.currentTimeMillis()); toast("LOCKED!\n" + sd.how(), 0xFFFF5A5A); toastShake = true; } else CosmeticData.toggleSet(sd);
         }) : picker("", "", lb, ic, cl, null, () -> -1, i -> clickDef((CosmeticData.Def) items.get(i), lb[i]));
         pk.pCols = cols; pk.pColsForce = 0; pk.pTop = 6; fit(pk);
-        pk.pOn = i -> eq[i]; pk.pLock = lk; pk.pTips = tp; pk.pFx = fxs; pk.pIds = ids; pk.pRar = rar; pk.pBg = bg;
+        pk.pOn = i -> eq[i]; pk.pLock = lk; pk.pTips = tp; pk.pFx = fxs; pk.pIds = ids; pk.pRar = rar; pk.pBg = bg; pk.pSetId = sids;
         return pk;
     }
 
@@ -2812,9 +2845,12 @@ public class FancyScreen extends Screen {
         lt = py + 46; lb = py + ph - 10;
 
         int viewH = lb - lt;
+        long pf0 = System.nanoTime();
         build();
+        int scroll0 = scroll;
         scroll = Math.max(0, Math.min(scroll, Math.max(0, totalH - viewH)));
-        build();
+        if (scroll != scroll0) build();                                          // only again when the scroll position had to move
+        perf[0] += System.nanoTime() - pf0; perfFrom = pf0;
 
         g.fill(0, 0, width, height, Gfx.argb(Math.round((0x28 + 0x78 * TR) * intro), 0x000000));
         float zoom = 0.94f + 0.06f * intro;                                    // the whole menu grows into place (and shrinks away on Esc)
@@ -3091,13 +3127,23 @@ public class FancyScreen extends Screen {
         Gfx.pop(g);
         drawDock(g, mx, my, intro, now);
         drawShowBar(g, mx, my);
+        long pf1 = System.nanoTime(); perf[1] += pf1 - perfFrom;                // everything since the build: the window and its rows
         drawCosPanels(g, mx, my, intro);
+        perf[2] += System.nanoTime() - pf1;
         drawStrip(g, mx, my);
         drawToast(g, now);
         drawTileTip(g, mx, my);
         if (editor == 0) drawX(g, mainClose(), in(mx0, my0, mainClose()), "mx");
         drawEditor(g, mx0, my0);
+        if (tab == Tab.COSMETICS) {                                              // how long each part takes, written to the log every 3 seconds (for finding what is slow)
+            perfN++;
+            if (now - perfAt >= 3000) {
+                if (perfN > 0 && perfAt > 0) System.err.println(String.format("[FancyDrops] perf (cosmetics, ms per frame): build %.2f, window+rows %.2f, side panels %.2f, frames %d", perf[0] / 1e6 / perfN, perf[1] / 1e6 / perfN, perf[2] / 1e6 / perfN, perfN));
+                perfAt = now; perfN = 0; perf[0] = perf[1] = perf[2] = 0;
+            }
+        }
     }
+    private final long[] perf = new long[3]; private long perfFrom, perfAt; private int perfN;
 
     // the open drop-down list, drawn over everything else
     private Row popup;
