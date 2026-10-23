@@ -203,7 +203,7 @@ public class FancyScreen extends Screen {
         }
     }
 
-    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12;
+    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13;
     private class Row {
         String fkey;                                                      // set on folding rows: lets the Show > All tile open or close them all
 
@@ -223,7 +223,7 @@ public class FancyScreen extends Screen {
         EditBox field; String fieldBtn; int btnX0, btnX1;
         boolean dropCols;              // section header that labels the Play / Animate / Announce columns
         int cell;                      // > 0: every control sits centred in its own column of this width
-        String[] pLabels, pIcons, pSubs; int pTh = 27, pColsForce, pTop = 22; int[] pColors; boolean[] pWip; int pCols; IntSupplier pSel; IntConsumer pSet;      // PICKER rows: the tiles
+        String[] pLabels, pIcons, pSubs; int pTh = 27, pColsForce, pTop = 22; int[] pColors; boolean[] pWip; int pCols; IntSupplier pSel; IntConsumer pSet; java.util.function.IntPredicate pOn; boolean[] pLock;      // PICKER rows: the tiles (pOn: which are switched on, pLock: which are locked)
         boolean locked;               // greyed out, not clickable (coming soon)
         boolean wrapSub;              // the second line is a paragraph, wrapped over several lines
         boolean wip;                  // gets the slanted WORK IN PROGRESS tape across it
@@ -696,8 +696,11 @@ public class FancyScreen extends Screen {
         }
         int sel = Math.min(r.pLabels.length - 1, r.pSel.getAsInt());
         for (int i = 0; i < r.pLabels.length; i++) {
-            int[] b = pickBox(r, i); boolean on = i == sel, hv = mx >= b[0] && mx < b[0] + b[2] && my >= b[1] && my < b[1] + b[3], wip = r.pWip != null && r.pWip[i];
+            int[] b = pickBox(r, i); boolean on = r.pOn != null ? r.pOn.test(i) : i == sel, hv = mx >= b[0] && mx < b[0] + b[2] && my >= b[1] && my < b[1] + b[3], wip = r.pWip != null && r.pWip[i];
             int col = r.pColors[i];
+            boolean lk = r.pLock != null && r.pLock[i];
+            Long shk = lk ? lockShake.get(r.pLabels[i]) : null;
+            if (shk != null) { long ag = now - shk; if (ag < 420) b[0] += Math.round((float) Math.sin(ag / 24.0) * 4f * (1f - ag / 420f)); }          // a locked tile shakes when you press it
             float k = anim("pick|" + r.title + i, on ? 1f : hv ? 0.4f : 0f, 40f);
             pill(g, b[0], b[1], b[2], b[3], Canvas.mix(Ui.PANEL2, Canvas.mix(Ui.ROW_HOVER, col, 0.22f), k));
             if (on) { g.outline(b[0], b[1], b[2], b[3], Gfx.argb(230, col & 0xFFFFFF)); g.fill(b[0] + 3, b[1] + b[3] - 3, b[0] + b[2] - 3, b[1] + b[3] - 2, col); }
@@ -710,7 +713,126 @@ public class FancyScreen extends Screen {
                 Gfx.text(g, font, font.plainSubstrByWidth(r.pSubs[i], b[2] - (tx - b[0]) - 6), tx, b[1] + 18, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM);
             } else Gfx.text(g, font, nm, tx, b[1] + (b[3] - 8) / 2 - 1, on ? Ui.TEXT : wip ? Ui.DIM : Ui.SUB);
             if (wip) { pill(g, b[0] + b[2] - 22, b[1] + 5, 18, 10, 0xFF3A3220); Gfx.text(g, font, "WIP", b[0] + b[2] - 20, b[1] + 6, 0xFFFFC857); }
+            if (lk) {                                                                                  // locked: dimmed, with a padlock
+                g.fill(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1, 0x99080A10);
+                int lx = b[0] + b[2] - 16, ly = b[1] + 5, lc = shk != null && now - shk < 420 ? 0xFFFF6B6B : 0xFFB9C0D6;
+                g.fill(lx + 2, ly, lx + 3, ly + 4, lc); g.fill(lx + 7, ly, lx + 8, ly + 4, lc); g.fill(lx + 2, ly, lx + 8, ly + 1, lc);
+                g.fill(lx, ly + 4, lx + 10, ly + 10, lc); g.fill(lx + 4, ly + 6, lx + 6, ly + 8, 0xFF1A1C26);
+            }
         }
+    }
+    private static final Map<String, Long> lockShake = new HashMap<>();
+
+    /** A category banner: a gradient with a light sweeping over it, the name in shimmering letters, a line under it and a counter on the right. */
+    private void drawCat(GuiGraphicsExtractor g, Row r) {
+        long now = System.currentTimeMillis(); int col = r.accent;
+        pill(g, r.x, r.y, r.w, r.h, Canvas.mix(Ui.ROW, col, 0.12f));
+        g.enableScissor(r.x, r.y, r.x + r.w, r.y + r.h);
+        for (int i = 0; i < r.w; i += 2) {                                                              // colour fading out to the right
+            float u = i / (float) r.w; g.fill(r.x + i, r.y, r.x + i + 2, r.y + r.h, Gfx.argb(Math.round(70 * (1f - u) * (1f - u)), col & 0xFFFFFF));
+        }
+        int sw = Math.round(((now % 3200L) / 3200f) * (r.w + 60)) - 30;                                  // a slanted light sweeping across
+        for (int j = 0; j < r.h; j++) g.fill(r.x + sw - j / 2, r.y + j, r.x + sw - j / 2 + 10, r.y + j + 1, 0x14FFFFFF);
+        g.disableScissor();
+        g.fill(r.x, r.y + 2, r.x + 3, r.y + r.h - 2, col);
+        int cx = r.x + 12;
+        for (int i = 0; i < r.title.length(); i++) {
+            String ch = String.valueOf(r.title.charAt(i));
+            float sh = 0.5f + 0.5f * (float) Math.sin(now / 420.0 - i * 0.45);
+            Gfx.text(g, font, ch, cx, r.y + 6 - Math.round(sh), Canvas.mix(col, 0xFFFFFFFF, 0.25f + 0.65f * sh));
+            cx += font.width(ch) + 1;
+        }
+        for (int k = 0; k < 3; k++) {                                                                    // little stars twinkling beside the name
+            float tw2 = 0.5f + 0.5f * (float) Math.sin(now / 300.0 + k * 2.1); int sx = cx + 6 + k * 9, sy = r.y + 7 + (k % 2) * 3;
+            g.fill(sx, sy, sx + 2, sy + 2, Gfx.argb(Math.round(90 + 150 * tw2), 0xFFFFFF));
+        }
+        Gfx.text(g, font, r.sub, r.x + 12, r.y + 20, Ui.SUB);
+        String badge = r.pSubs != null && r.pSubs.length > 0 ? r.pSubs[0] : "";
+        if (!badge.isEmpty()) { int bw = font.width(badge) + 10; pill(g, r.x + r.w - bw - 8, r.y + 8, bw, 16, Canvas.mix(Ui.PANEL2, col, 0.25f)); g.outline(r.x + r.w - bw - 8, r.y + 8, bw, 16, Gfx.argb(160, col & 0xFFFFFF)); Gfx.text(g, font, badge, r.x + r.w - bw - 3, r.y + 12, Canvas.mix(col, 0xFFFFFFFF, 0.6f)); }
+    }
+    private Row catHeader(String title, String sub, String badge, int col) {
+        Row r = new Row(); r.kind = CAT; r.noSearch = true; r.title = title; r.sub = sub; r.accent = col; r.h = 34; r.pSubs = new String[]{badge}; return r;
+    }
+
+
+    // ------------------------------------------------------------------ the new Cosmetics page (Beta / Special / Everyone)
+    private static boolean newCosmetics = true;                     // switched by the small test menu under the main menu
+    private void cosmeticsPageNew() {
+        FancyConfig c = FancyConfig.get();
+        Row cp = new Row(); cp.kind = COSPREV; cp.noSearch = true; cp.h = 150; rows.add(cp);
+        String[] sub = {"Beta Cosmetics", "Special Cosmetics", "Everyone's Cosmetics"};
+        CosmeticData.Line[] lines = CosmeticData.Line.values();
+        for (int li = 0; li < lines.length; li++) {
+            CosmeticData.Line ln = lines[li];
+            List<CosmeticData.Def> defs = CosmeticData.line(ln);
+            int have = CosmeticData.unlockedCount(ln);
+            String badge = have + " / " + defs.size() + " unlocked";
+            if (ln == CosmeticData.Line.BETA) rows.add(catHeader("BETA COSMETICS", CosmeticData.betaEligible() ? "Early access. Yours to keep, because you downloaded before v1.0." : "The beta is over. These can no longer be earned.", badge, 0xFFFFB347));
+            else if (ln == CosmeticData.Line.SPECIAL) rows.add(catHeader("SPECIAL COSMETICS", "Given by hand: supporters, bug hunters and contributors.", badge, 0xFFC77DFF));
+            else rows.add(catHeader("EVERYONE'S COSMETICS", "Earn these just by playing. All of them stand still.", badge, 0xFF62E6A8));
+            String[] lb = new String[defs.size()], ts = new String[defs.size()], ic = new String[defs.size()]; int[] cl = new int[defs.size()]; boolean[] lk = new boolean[defs.size()];
+            for (int k = 0; k < defs.size(); k++) {
+                CosmeticData.Def d = defs.get(k); boolean open2 = CosmeticData.unlocked(d);
+                lk[k] = !open2; cl[k] = d.color();
+                lb[k] = !open2 && d.id().equals("secret") ? "???" : d.name();
+                ts[k] = open2 ? CosmeticData.kindLabel(d.kind()) : d.how();
+                ic[k] = d.kind() == CosmeticData.Kind.SUFFIX ? "fd:suf_" + d.id() : "fd:cx_" + d.id();
+            }
+            Row pk = picker("", "", lb, ts, ic, cl, null, 3, () -> -1, i -> {
+                CosmeticData.Def d = defs.get(i);
+                if (!CosmeticData.unlocked(d)) { lockShake.put(lb[i], System.currentTimeMillis()); lockedToast(d); }
+                else CosmeticData.toggle(d);
+            });
+            pk.pOn = i -> CosmeticData.unlocked(defs.get(i)) && CosmeticData.isEquipped(defs.get(i)); pk.pLock = lk;
+            rows.add(pk);
+        }
+        rows.add(note("Click a cosmetic to wear it, click it again to take it off. One suffix, one name effect and one aura at a time. Other players see what you were given as a Special cosmetic.", Ui.DIM));
+    }
+    private void lockedToast(CosmeticData.Def d) {
+        toast("LOCKED!\n" + (d.line() == CosmeticData.Line.BETA ? "The beta is over: " : "") + d.how() + ".", 0xFFFF5A5A);
+        toastShake = true;
+    }
+    private static boolean toastShake;
+
+    // ------------------------------------------------------------------ the small test menu under the main menu (remove once the new page is tested)
+    private static final boolean TEST_STRIP = true;
+    private int[] stripBox(int i) {
+        String[] lbl = stripLabels(); int x = px + 30, w;
+        for (int k = 0; k < i; k++) x += font.width(lbl[k]) + 14;
+        w = font.width(lbl[i]) + 10;
+        return new int[]{x, py + ph + 4, x + w, py + ph + 18};
+    }
+    private String[] stripLabels() {
+        return new String[]{"New Cosmetics page: " + (newCosmetics ? "ON" : "OFF"), "Simulate a new player: " + (CosmeticData.testNewPlayer ? "ON" : "OFF"), "Unlock everything: " + (CosmeticData.testUnlockAll ? "ON" : "OFF"), "Reset secret + drops"};
+    }
+    private void drawStrip(GuiGraphicsExtractor g, int mx, int my) {
+        if (!TEST_STRIP) return;
+        String[] lbl = stripLabels(); boolean[] on = {newCosmetics, CosmeticData.testNewPlayer, CosmeticData.testUnlockAll, false};
+        Gfx.text(g, font, "TEST", px + 2, py + ph + 8, 0xFF6B7390);
+        for (int i = 0; i < lbl.length; i++) {
+            int[] b = stripBox(i);
+            boolean hv = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
+            pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], on[i] ? 0xFF2A5A44 : hv ? 0xFF2A2F44 : 0xFF1A1E2E);
+            g.outline(b[0], b[1], b[2] - b[0], b[3] - b[1], on[i] ? 0xFF62E6A8 : 0x55FFFFFF);
+            Gfx.text(g, font, lbl[i], b[0] + 5, b[1] + 3, on[i] ? 0xFFB8FFD9 : Ui.SUB);
+        }
+    }
+    private boolean stripClick(double mx, double my) {
+        if (!TEST_STRIP) return false;
+        for (int i = 0; i < 4; i++) {
+            int[] b = stripBox(i);
+            if (mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) {
+                FancyConfig c = FancyConfig.get();
+                switch (i) {
+                    case 0 -> newCosmetics = !newCosmetics;
+                    case 1 -> CosmeticData.testNewPlayer = !CosmeticData.testNewPlayer;
+                    case 2 -> CosmeticData.testUnlockAll = !CosmeticData.testUnlockAll;
+                    default -> { c.secretFound = false; c.discordJoined = false; c.dropsSeen = 0; FancyConfig.save(); toast("Secret, Discord and drop counter reset.", 0xFFFFB86B); }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     // ---- Chat > the typing preview
@@ -2028,7 +2150,7 @@ public class FancyScreen extends Screen {
     private static String toastText = ""; private static int toastCol; private static long toastAt, toastDur;
     static void toast(String text, int col) {
         if (!FancyConfig.get().popups) { try { var pl = net.minecraft.client.Minecraft.getInstance().player; if (pl != null) pl.sendSystemMessage(Chat.msg(text.replace("\n", " "))); } catch (Throwable ignored) { } return; }
-        toastText = text; toastCol = col; toastAt = System.currentTimeMillis(); toastDur = 3400;
+        toastText = text; toastCol = col; toastAt = System.currentTimeMillis(); toastDur = 3400; toastShake = false;
     }
     private void drawToast(GuiGraphicsExtractor g, long now) {
         if (toastText.isEmpty()) return;
@@ -2036,7 +2158,8 @@ public class FancyScreen extends Screen {
         float in = ease(age / 240f), out = age > toastDur - 450 ? (toastDur - age) / 450f : 1f;
         String[] ln = toastText.split("\n"); int tw = 0; for (String s : ln) tw = Math.max(tw, font.width(s));
         int w = tw + 46, h = 10 + ln.length * 11 + 6, x = px + (pw - w) / 2;
-        int y = py + ph + 8 + (dockK > 0.97f && FancyConfig.get().previewAt != 0 && dockWanted() ? DOCK_H + DOCK_GAP : 0) + Math.round((1f - in) * 10f);
+        if (toastShake && age < 600) x += Math.round((float) Math.sin(age / 22.0) * 6f * (1f - age / 600f));          // LOCKED! rattles
+        int y = py + ph + 8 + (TEST_STRIP ? 22 : 0) + (dockK > 0.97f && FancyConfig.get().previewAt != 0 && dockWanted() ? DOCK_H + DOCK_GAP : 0) + Math.round((1f - in) * 10f);
         if (y + h > height - 2) y = Math.max(2, height - h - 2);
         int al = Math.round(255 * in * out);
         if (al < 6) return;
@@ -2113,6 +2236,7 @@ public class FancyScreen extends Screen {
         "Cosmetics: pick a suffix and see it in chat and the tab list."};
 
     private void cosmeticsPage() {
+        if (newCosmetics) { cosmeticsPageNew(); return; }
         if (!Cosmetics.allowed()) {
             Row wp = row(0, "fd:sparkle", "Cosmetics are disabled", "Cosmetics are only open to ImTra. Everything else in FancyDrops works as usual, and you still see his suffix in chat and the tab list. Your ID code: " + Cosmetics.code(Cosmetics.me()), Ui.DIM);
             wp.ctls.add(new Btn("Refresh", 0xFF2F8F5A, Cosmetics::forceRefresh));
@@ -2145,17 +2269,18 @@ public class FancyScreen extends Screen {
     private void drawCosPreview(GuiGraphicsExtractor g, Row r) {
         long now = System.currentTimeMillis(); float sec = (now % 3600000L) / 1000f;
         Cosmetics.Suffix cs = Cosmetics.chosen();
+        FancyConfig pc = FancyConfig.get(); String fx = CosmeticData.unlockedId(pc.nameFx) ? pc.nameFx : null;
         String user = net.minecraft.client.Minecraft.getInstance().getUser().getName();
         net.minecraft.network.chat.Style plain = net.minecraft.network.chat.Style.EMPTY;
         pill(g, r.x, r.y, r.w, r.h, Ui.ROW);
         int x0 = r.x + 8, w0 = r.w - 16;
         // --- in chat
         Gfx.text(g, font, "In chat", x0, r.y + 6, Ui.SUB);
-        if (cs == null) Gfx.text(g, font, "No suffix picked", x0 + w0 - font.width("No suffix picked"), r.y + 6, Ui.DIM);
+        if (cs == null && fx == null) Gfx.text(g, font, "Nothing picked", x0 + w0 - font.width("Nothing picked"), r.y + 6, Ui.DIM);
         int cy = r.y + 17;
         g.fill(x0, cy, x0 + w0, cy + 29, 0xB0000000); g.outline(x0, cy, w0, 29, 0x33FFFFFF);
         net.minecraft.network.chat.MutableComponent l1 = Component.empty();
-        l1.append(Component.literal("[MVP+] ").withStyle(plain.withColor(0x55FFFF))).append(Component.literal(user).withStyle(plain.withColor(0x55FFFF)));
+        l1.append(Component.literal("[MVP+] ").withStyle(plain.withColor(0x55FFFF))).append(Cosmetics.nameComp(user, 0x55FFFF, fx, false, now));
         if (cs != null) { l1.append(Component.literal(" ")); l1.append(Cosmetics.glyph(Cosmetics.frameNow(cs, now))); }
         l1.append(Component.literal(": that drop was insane!").withStyle(plain.withColor(0xFFFFFF)));
         g.text(font, Component.literal("RARE DROP! ").withStyle(plain.withColor(0xFFAA00).withBold(true)).append(Component.literal("Necron Dye").withStyle(plain.withColor(0xFF55FF).withBold(false))), x0 + 6, cy + 5, 0xFFFFFFFF, true);
@@ -2184,7 +2309,7 @@ public class FancyScreen extends Screen {
             }
             head(g, ex, ey2, me ? 0xFFD9A57A : skin[k % 6], me ? 0xFF2F6BFF : hair[k % 6]);
             net.minecraft.network.chat.MutableComponent nm = Component.literal(me ? "[MVP+] " : rank[k]).withStyle(plain.withColor(me ? 0x55FFFF : rc[k]));
-            nm.append(Component.literal(me ? user : names[k]).withStyle(plain.withColor(me ? 0x55FFFF : rc[k])));
+            nm.append(me ? Cosmetics.nameComp(user, 0x55FFFF, fx, true, now) : Component.literal(names[k]).withStyle(plain.withColor(rc[k])));
             if (me && cs != null) { nm.append(Component.literal(" ")); nm.append(Cosmetics.glyph(Cosmetics.frameNow(cs, now))); }
             g.text(font, nm, ex + 11, ey2, 0xFFFFFFFF, true);
             float wob = (float) Math.sin(sec * 1.3f + k * 1.9f) + 0.6f * (float) Math.sin(sec * 3.1f + k * 0.7f);            // ping: the bars rise and fall like a real connection
@@ -2736,6 +2861,7 @@ public class FancyScreen extends Screen {
             if (r.kind == PREVIEW) { drawPositionPreview(g, r); continue; }
             if (r.kind == TIP) { drawTip(g, r, mx, my); continue; }
             if (r.kind == PICKER) { drawPicker(g, r, mx, my); continue; }
+            if (r.kind == CAT) { drawCat(g, r); continue; }
             if (r.kind == CHATPREV) { drawChatPrev(g, r); continue; }
             if (r.kind == COSPREV) { drawCosPreview(g, r); continue; }
             if (r.kind == PANEL || r.kind == HERO) {                                // a centred banner (HERO: just icon, title, words) or a "coming soon" page: icon, title, words and a hazard strip, all centred
@@ -2838,6 +2964,7 @@ public class FancyScreen extends Screen {
         Gfx.pop(g);
         drawDock(g, mx, my, intro, now);
         drawShowBar(g, mx, my);
+        drawStrip(g, mx, my);
         drawToast(g, now);
         if (editor == 0) drawX(g, mainClose(), in(mx0, my0, mainClose()), "mx");
         drawEditor(g, mx0, my0);
@@ -2971,6 +3098,12 @@ public class FancyScreen extends Screen {
         }
         if (super.mouseClicked(event, doubleClick)) return true;
         double mx = event.x(), my = event.y(); int button = event.button();
+        if (button == 0 && stripClick(mx, my)) return true;
+        if (button == 0 && mx >= px && mx < px + 14 && my >= py && my < py + 12) {                  // the hidden button, in the very corner of the menu
+            FancyConfig sc = FancyConfig.get();
+            if (!sc.secretFound) { sc.secretFound = true; FancyConfig.save(); toast("You found it!\nThe Secret cosmetic is yours.", 0xFFC08BFF); }
+            return true;
+        }
         if (button == 0 && farmDrag(mx, my, true)) { dragFarm = true; return true; }
         if (button == 0 && in(mx, my, mainClose())) { if (FancyConfig.get().menuAnimated) { if (closeAt == 0L) closeAt = System.currentTimeMillis(); } else onClose(); return true; }
         if (button == 0 && showBarClick(mx, my)) return true;
@@ -3021,7 +3154,8 @@ public class FancyScreen extends Screen {
         if (button == 0 && FancyConfig.get().showCommunity) for (int i = 0; i < 3; i++) {
             int[] b = commBox(i);
             if (mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) {             // no links yet: the chat says so
-                if (i == 0) { try { net.minecraft.client.gui.screens.ConfirmLinkScreen.confirmLinkNow(this, java.net.URI.create(FancyDropsMod.DISCORD)); } catch (Throwable ignored) {} return true; }      // Discord has a link; the others say so in chat
+                if (i == 0) { FancyConfig dc0 = FancyConfig.get(); if (!dc0.discordJoined) { dc0.discordJoined = true; FancyConfig.save(); }      // pressing it unlocks the Discord cosmetic
+                    try { net.minecraft.client.gui.screens.ConfirmLinkScreen.confirmLinkNow(this, java.net.URI.create(FancyDropsMod.DISCORD)); } catch (Throwable ignored) {} return true; }      // Discord has a link; the others say so in chat
                 if (FancyConfig.get().popups) { toast(COMM_NAME[i] + " link coming soon", i == 1 ? 0xFFFF7A59 : 0xFF8FA8FF); return true; }
                 var mcl = net.minecraft.client.Minecraft.getInstance(); if (mcl.player != null) mcl.player.connection.sendCommand("fd " + COMM[i]);
                 return true;

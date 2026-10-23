@@ -2,6 +2,13 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.18
+- New Cosmetics page with three lines. Beta Cosmetics (the old suffixes plus four gentle name effects) stay with everyone who downloaded before v1.0; anyone who joins later sees them locked. Special Cosmetics are given by hand, one by one: Sparkle, Royal Gold (Patreon), Glitch (bug reports) and Stardust, a particle aura (contributors). Everyone's Cosmetics are earned by playing and stand still: Newcomer, Discord, First Drop, Collector, and a hidden one.
+- Name effects (IGN) keep your server colour and add light and movement; they animate in the tab list and are frozen looks in chat.
+- Pressing a locked cosmetic shows a LOCKED! pop-up.
+- cosmetics.json now lists each Special cosmetic separately (special: sparkle / patreon / bughunter / contributor), so giving one person one cosmetic does not give the others.
+- A small test menu under the main menu switches the new page on and off, simulates a new player and unlocks everything. It goes once the page is tested.
+
 ## 0.8.17
 - A Refresh button on the Cosmetics page (and on the disabled panel for other accounts) that fetches cosmetics.json again right away.
 

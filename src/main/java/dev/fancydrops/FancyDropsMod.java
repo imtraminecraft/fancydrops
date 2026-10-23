@@ -57,6 +57,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             if (reopenMenu && !AnimationManager.isPlaying()) { reopenMenu = false; mc.setScreenAndShow(new FancyScreen()); }
             DropListener.tick(mc);
             if (++tabTick >= 1) { tabTick = 0; Cosmetics.tickTab(mc); }
+            Cosmetics.tickAura(mc);
         });
 
         ClientReceiveMessageEvents.MODIFY_GAME.register((message, overlay) -> overlay ? message : Cosmetics.apply(message));
