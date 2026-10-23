@@ -28,52 +28,70 @@ final class AuraFx {
 
     static List<P> particles(String aura, long t) {
         List<P> o = new ArrayList<>();
+        t %= 1_000_000L;                                                         // keeps the angles small: a float can not hold the full clock without losing the turn
         switch (aura == null ? "" : aura) {
-            case "stardust": {                                                       // two strands of cyan light wind up the body like a helix, with a glint where they cross
-                for (int strand = 0; strand < 2; strand++) for (int i = 0; i < 12; i++) {
-                    float ph = (float) (((t / 3200.0) + i / 12.0) % 1.0), ang = (float) (ph * Math.PI * 4 + strand * Math.PI + t / 1500.0), r = 0.52f;
+            case "stardust": {                                                       // two strands of light wind up the body, a thin halo ring circles above the head, and stars rise off the strands
+                for (int strand = 0; strand < 2; strand++) for (int i = 0; i < 14; i++) {
+                    float ph = (float) (((t / 3600.0) + i / 14.0) % 1.0), ang = (float) (ph * Math.PI * 3 + strand * Math.PI + t / 1700.0), r = 0.5f + 0.06f * (float) Math.sin(ph * 9);
                     float al = (float) Math.sin(Math.PI * ph);
-                    o.add(new P((float) Math.cos(ang) * r, ph * 2.0f, (float) Math.sin(ang) * r, 0.045f, argb(0.25f + 0.75f * al, mix(0x4DD6FF, 0xE8FFFF, ph)), 0));
+                    o.add(new P((float) Math.cos(ang) * r, 0.05f + ph * 1.95f, (float) Math.sin(ang) * r, 0.04f + 0.012f * al, argb(0.3f + 0.7f * al, mix(strand == 0 ? 0x4DD6FF : 0x8FA8FF, 0xE8FFFF, ph)), 0));
                 }
-                for (int i = 0; i < 4; i++) {
-                    long off = i * 700L, step = (t + off) / 2800L; float ph = ((t + off) % 2800L) / 2800f;
+                for (int i = 0; i < 10; i++) {                                         // the halo
+                    float ang = (float) (i * Math.PI * 2 / 10 - t / 1300.0), tw = 0.5f + 0.5f * (float) Math.sin(t / 260.0 + i * 1.3);
+                    o.add(new P((float) Math.cos(ang) * 0.32f, 2.08f, (float) Math.sin(ang) * 0.32f, 0.03f, argb(0.35f + 0.6f * tw, 0xBFF0FF), 0));
+                }
+                for (int i = 0; i < 5; i++) {                                          // stars that rise and fade
+                    long off = i * 560L, step = (t + off) / 2800L; float ph = ((t + off) % 2800L) / 2800f;
                     float ang = hash(i, step) % 628 / 100f;
-                    o.add(new P((float) Math.cos(ang) * 0.6f, 0.2f + ph * 1.6f, (float) Math.sin(ang) * 0.6f, 0.085f * (float) Math.sin(Math.PI * ph), argb(0.95f, 0xE8FFFF), 1));
+                    o.add(new P((float) Math.cos(ang) * 0.62f, 0.2f + ph * 1.6f, (float) Math.sin(ang) * 0.62f, 0.08f * (float) Math.sin(Math.PI * ph), argb(0.95f, 0xE8FFFF), 1));
                 }
                 break;
             }
-            case "sparkleaura": {                                                    // gold and white stars twinkle round you, with a slow ring of light dots at your feet
-                for (int i = 0; i < 10; i++) {
-                    long off = i * 157L, step = (t + off) / 1600L; float ph = ((t + off) % 1600L) / 1600f;
-                    float ang = hash(i, step) % 628 / 100f, r = 0.4f + (hash(i + 50, step) % 40) / 100f, y = 0.15f + (hash(i + 99, step) % 175) / 100f;
-                    int col = new int[]{0xFFE680, 0xFFFFFF, 0xFFB3E6, 0xFFD27A}[hash(i, step + 3) % 4];
-                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.09f * (float) Math.sin(Math.PI * ph), argb(0.95f, col), 1));
+            case "sparkleaura": {                                                    // two slow rings of stars (one gold, one pink) turn around you; bright bursts pop up now and then; light dust rises
+                for (int ring = 0; ring < 2; ring++) for (int i = 0; i < 6; i++) {
+                    float ang = (float) (i * Math.PI * 2 / 6 + (ring == 0 ? 1 : -1) * t / 2300.0 + ring * 0.5), y = ring == 0 ? 0.55f + 0.1f * (float) Math.sin(t / 700.0 + i) : 1.35f + 0.1f * (float) Math.sin(t / 800.0 + i * 2);
+                    float tw = 0.5f + 0.5f * (float) Math.sin(t / 240.0 + i * 1.9 + ring * 2);
+                    o.add(new P((float) Math.cos(ang) * 0.6f, y, (float) Math.sin(ang) * 0.6f, 0.035f + 0.04f * tw, argb(0.45f + 0.5f * tw, ring == 0 ? 0xFFE680 : 0xFFB3E6), 1));
                 }
-                for (int i = 0; i < 12; i++) {
-                    float ang = (float) (i * Math.PI * 2 / 12 + t / 2200.0);
-                    float tw = 0.5f + 0.5f * (float) Math.sin(t / 300.0 + i * 1.7);
+                for (int i = 0; i < 5; i++) {                                          // bursts: a star that swells and dies
+                    long off = i * 330L, step = (t + off) / 1500L; float ph = ((t + off) % 1500L) / 1500f;
+                    float ang = hash(i, step) % 628 / 100f, r = 0.35f + (hash(i + 50, step) % 45) / 100f, y = 0.1f + (hash(i + 99, step) % 180) / 100f;
+                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.13f * (float) Math.sin(Math.PI * ph), argb(1f, 0xFFFFFF), 1));
+                }
+                for (int i = 0; i < 12; i++) {                                         // a ring of light at your feet
+                    float ang = (float) (i * Math.PI * 2 / 12 + t / 2200.0), tw = 0.5f + 0.5f * (float) Math.sin(t / 300.0 + i * 1.7);
                     o.add(new P((float) Math.cos(ang) * 0.62f, 0.04f, (float) Math.sin(ang) * 0.62f, 0.035f, argb(0.25f + 0.6f * tw, 0xFFE9A8), 0));
                 }
-                for (int i = 0; i < 6; i++) {
-                    float ph = (float) (((t / 3000.0) + i / 6.0) % 1.0), ang = i * 1.9f;
+                for (int i = 0; i < 8; i++) {
+                    float ph = (float) (((t / 3000.0) + i / 8.0) % 1.0), ang = i * 1.9f;
                     o.add(new P((float) Math.cos(ang) * 0.5f, ph * 2f, (float) Math.sin(ang) * 0.5f, 0.03f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0xFFF2C0), 0));
                 }
                 break;
             }
-            case "glitchaura": {                                                     // a scan line climbs the body, and torn pixels jump around with a red/cyan split
-                float sp = (float) ((t % 1700L) / 1700.0);
-                o.add(new P(0f, sp * 2.0f, 0.45f, 0.9f, argb(0.85f * (1f - sp * 0.4f), 0x3DFFB0), 2));
-                o.add(new P(0f, Math.max(0f, sp * 2.0f - 0.12f), 0.44f, 0.9f, argb(0.4f, 0xFF3DDC), 2));
-                o.add(new P(0f, sp * 2.0f, -0.45f, 0.9f, argb(0.6f * (1f - sp * 0.4f), 0x3DFFB0), 2));
+            case "glitchaura": {                                                     // torn pixel pairs (cyan / magenta split) jumping round you, short glitch blocks at your sides, and a few bits that fall like code
                 long step = t / 120L;
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 12; i++) {
                     long st = step / (1 + i % 3);
-                    float ang = hash(i, st) % 628 / 100f, r = 0.42f + (hash(i + 20, st) % 30) / 100f, y = (hash(i + 40, st) % 200) / 100f;
+                    float ang = hash(i, st) % 628 / 100f, r = 0.42f + (hash(i + 20, st) % 30) / 100f, y = 0.05f + (hash(i + 40, st) % 190) / 100f;
                     float x = (float) Math.cos(ang) * r, z = (float) Math.sin(ang) * r;
-                    float sz = 0.04f + (hash(i + 3, st) % 4) / 100f; float al = 0.55f + (hash(i + 9, st) % 45) / 100f;
-                    o.add(new P(x - 0.03f, y, z, sz, argb(al, 0x3DFFF0), 0));          // the split: cyan one side, magenta the other
-                    o.add(new P(x + 0.03f, y, z, sz, argb(al, 0xFF3DDC), 0));
+                    float sz = 0.04f + (hash(i + 3, st) % 4) / 100f; float al = 0.6f + (hash(i + 9, st) % 40) / 100f;
+                    o.add(new P(x - 0.035f, y, z, sz, argb(al, 0x3DFFF0), 0));          // the split: cyan one side, magenta the other
+                    o.add(new P(x + 0.035f, y, z, sz, argb(al, 0xFF3DDC), 0));
                     if (hash(i + 77, st) % 5 == 0) o.add(new P(x, y, z, sz * 0.8f, argb(1f, 0xFFFFFF), 0));
+                }
+                for (int i = 0; i < 4; i++) {                                         // short flickering blocks beside the body
+                    long st = (t + i * 190L) / 240L;
+                    if (hash(i + 100, st) % 3 == 0) continue;
+                    float side = i % 2 == 0 ? 1f : -1f;
+                    o.add(new P(side * (0.45f + (hash(i + 5, st) % 20) / 100f), (hash(i + 6, st) % 190) / 100f, (hash(i + 7, st) % 60 - 30) / 100f, 0.07f, argb(0.8f, hash(i + 8, st) % 2 == 0 ? 0x3DFFB0 : 0xFF3DDC), 2));
+                }
+                {                                                                       // a scan line of pixels sweeping up the body now and then
+                    float ph = (float) ((t % 2600L) / 2600.0), y = ph * 2.1f;
+                    for (int i = 0; i < 9; i++) o.add(new P(-0.4f + i * 0.1f, y, 0.3f, 0.04f, argb(0.85f * (1f - ph), 0x6BFFB0), 0));
+                }
+                for (int i = 0; i < 5; i++) {                                         // bits falling like code
+                    float ph = (float) (((t / 1800.0) + i / 5.0) % 1.0), ang = i * 1.3f;
+                    o.add(new P((float) Math.cos(ang) * 0.6f, 2f - ph * 2f, (float) Math.sin(ang) * 0.6f, 0.035f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0x6BFF9C), 0));
                 }
                 break;
             }
@@ -191,7 +209,7 @@ final class AuraFx {
                 break;
             }
             case 2: {                                                                  // a flat slice of light
-                int w = Math.max(4, Math.min(60, Math.round(px * 6f)));
+                int w = Math.max(4, Math.min(18, Math.round(px * 3f)));
                 g.fill(x - w / 2, y, x + w / 2, y + 1, a);
                 g.fill(x - w / 2, y - 1, x + w / 2, y, ((al / 4) << 24) | rgb); g.fill(x - w / 2, y + 1, x + w / 2, y + 2, ((al / 4) << 24) | rgb);
                 break;

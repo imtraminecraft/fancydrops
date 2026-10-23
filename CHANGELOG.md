@@ -2,6 +2,15 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.22
+- One Cosmetics page: Sets, Suffix, Name Effect and Aura, each rarest first. The Special Sets header and the info line at the top are gone.
+- Grey is now Common. New Common set (Newcomer + Fresh) and Beta set (Crown + Shimmer): a suffix and a name effect, no aura.
+- Hover a tile to see its rarity (with a small pin), Unlocked or Locked, and how to get it. Set tiles also show how many items you have (like 3 / 3). The "Click to wear it" line is gone.
+- Every tile of a set shares the set's colours, so the page looks consistent.
+- Faster Cosmetics page: the 3D skin is drawn once per angle in the background and then only shown, and the tiles no longer animate heavily. The preview turns when you hold the left mouse button and drag; moving it is gone.
+- Fixed the random vertical line in Static and Stardust (the clock was too large for the maths). Nicer Special (two turning rings of stars, bursts), Bug Finder (a scan line) and Contributors (a halo and rising stars) auras. Patreon is unchanged.
+- The settings gear is centred.
+
 ## 0.8.21
 - The Cosmetics page is compact now: Special Sets on top (one row per set: the set tile, then its suffix, name effect and aura), then one Collection grid, rarest first. Beta cosmetics sit in the same grid as the earned ones. Boxes are coloured by rarity: gradient for Special, green for Beta, grey for Earned. Every tile says what it is (Suffix, Name effect, Aura). The Wear set button is now the set tile and only works if you own the set. Icons no longer bounce.
 - The main menu stays in the middle of the screen on the Cosmetics page. The chat and tab preview sits above it and the aura preview to its left; the window only gets a little smaller to make room.
