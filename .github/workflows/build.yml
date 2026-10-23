@@ -54,17 +54,17 @@ jobs:
           echo "Prepared release/FancyDrops.jar"
           ls -lh release/FancyDrops.jar
 
-
       - name: Read mod version
         id: mod_version
         shell: bash
         run: |
-          VERSION=$(grep -E '^mod_version=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r')
+          VERSION=$(grep -E '^version=' gradle.properties | head -n 1 | cut -d '=' -f 2- | tr -d '\r')
           if [ -z "$VERSION" ]; then
-            echo "::error::mod_version not found in gradle.properties"
+            echo "::error::version not found in gradle.properties"
             exit 1
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
 
       - name: Publish direct JAR download
         uses: softprops/action-gh-release@v3
