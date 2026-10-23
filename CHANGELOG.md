@@ -2,11 +2,13 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
-## 0.8.11
+## 0.8.12
 - Rare drops this mod doesn't list (like "VERY RARE DROP! (Duplex I)") are now tracked too; the name in brackets was being read as a stat and the whole line was dropped.
 - Any boss kill plays exactly one animation: a drop we don't list no longer cancels the "nothing dropped" scene, and it doesn't play that scene over a real drop.
 - Animations play about 30% slower.
-- The animated chat suffix now twinkles slowly instead of flickering every frame.
+- The chat suffix now uses the same glyph as the tab list (standing still); the odd flickering one is gone, and the built-in resource pack is removed, so there is nothing to install or switch on.
+- A cocooned boss plays its scene faster, because the next boss is already coming. One kill is counted once even when "cocooned" and "quest complete" arrive seconds apart.
+- While searching, the sidebar lists only the sub pages that match.
 - The kill line is now written to the drop log (config/fancydrops/drop-log.txt) to help trace a missing animation.
 
 ## 0.8.10

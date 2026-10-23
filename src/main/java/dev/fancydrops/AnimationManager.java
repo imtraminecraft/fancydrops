@@ -723,6 +723,7 @@ public final class AnimationManager {
             a.p = params(a, a.item, a.tier);
             float[] tm = timing(a.p, a.farm, typeKey(a), c);
             a.speed = tm[0]; a.textScene = tm[1];
+            if (DropListener.takeCocoon()) a.speed *= 1.8f;          // a cocooned boss: the next boss is already coming, so the scene plays faster
             a.start = System.currentTimeMillis();
         }
         Anim a = cur;

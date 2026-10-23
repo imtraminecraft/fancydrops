@@ -839,7 +839,7 @@ public class FancyScreen extends Screen {
 
     /** Every sidebar icon moves a little: a twinkling star, a rocket with sparks, a note floating off the note block, typing dots, a spinning gear, rising bars. */
     /** Every sidebar icon is its own little animation (see Icons). */
-    /** While searching the sidebar lists only the pages that have a match, each with all of its sub pages; a click opens that page and clears the search. */
+    /** While searching the sidebar lists only the pages that have a match, each with the sub pages that match (all of them when the page's name matches); a click opens that page and clears the search. */
     private void drawSearchSide(GuiGraphicsExtractor g, int mx, int my, long now) {
         sideScroll = Math.max(0, Math.min(sideMax(), sideScroll));
         searchSide.clear();
@@ -862,6 +862,7 @@ public class FancyScreen extends Screen {
             y += 24;
             String[] sn = SUBS[ti];
             for (int k = 0; k < sn.length; k++) {
+                if (!hit && !sn[k].toLowerCase(Locale.ROOT).contains(q)) continue;      // only the sub pages that match (all of them when the page's own name matches)
                 int[] sb = {px + 16, y, px + sw - 6, y + rowH};
                 boolean sh = inSide(mx, my) && mx >= sb[0] && mx < sb[2] && my >= sb[1] && my < sb[3], sHit = sn[k].toLowerCase(Locale.ROOT).contains(q);
                 float shv = anim("ssub|" + ti + "|" + k, sh ? 1f : 0f, 48f);
@@ -2127,7 +2128,7 @@ public class FancyScreen extends Screen {
             () -> { Cosmetics.Suffix cs = Cosmetics.chosen(); if (cs == null) return 0; for (int k = 0; k < Cosmetics.SUFFIXES.length; k++) if (Cosmetics.SUFFIXES[k] == cs) return k + 1; return 0; },
             i -> { c.suffix = i == 0 ? "" : Cosmetics.SUFFIXES[i - 1].id(); FancyConfig.save(); }));
         rows.add(note(Cosmetics.status(), Ui.DIM));
-        rows.add(note(Cosmetics.packActive() ? "Animated chat suffix pack: ON" : "The FancyDrops Animated Suffix pack is off, so the chat suffix stands still. Turn it on in Options > Resource Packs.", Ui.DIM));
+        rows.add(note("The tab list animates your suffix. In chat it stands still.", Ui.DIM));
     }
 
     /** A little fake player head: skin, hair and two eyes. */

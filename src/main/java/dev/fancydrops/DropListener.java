@@ -21,6 +21,10 @@ public final class DropListener {
 
     private static final ArrayDeque<String> OUT = new ArrayDeque<>();
     private static int cooldown = 0;
+    private static long cocoonAt = 0;
+    private static final java.util.regex.Pattern COCOON = java.util.regex.Pattern.compile("cocooned your slayer boss", java.util.regex.Pattern.CASE_INSENSITIVE);
+    /** True once after the boss was cocooned: that scene plays faster. */
+    static boolean takeCocoon() { boolean b = System.currentTimeMillis() - cocoonAt < 90_000; cocoonAt = 0; return b; }
     private static SlayerData.Slayer lastSlayer;
     private static final KillTracker<ChatParser.Drop> TRACKER = new KillTracker<>(DropListener::onSession);
 
@@ -36,6 +40,7 @@ public final class DropListener {
         for (String line : raw.split("\\R")) {
             ProfitTracker.noteLine(line);
             noteBoss(line);
+            if (COCOON.matcher(line).find()) { cocoonAt = now; dlog("boss cocooned"); }
             if (expLine(line, now)) continue;
             if (ChatParser.isKill(line) || ChatParser.isQuestComplete(line)) {
                 dlog("kill line: " + line.trim());

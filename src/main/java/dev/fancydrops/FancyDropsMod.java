@@ -9,8 +9,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
-import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -50,12 +48,6 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     @Override
     public void onInitializeClient() {
         FancyConfig.load();
-        // Built-in resource pack: ships in the jar, turned on by default (player can switch it off).
-        try {
-            FabricLoader.getInstance().getModContainer("fancydrops").ifPresent(c ->
-                ResourceLoader.registerBuiltinPack(Identifier.fromNamespaceAndPath("fancydrops", "animated_suffix"), c,
-                    Component.literal("FancyDrops Animated Suffix"), PackActivationType.DEFAULT_ENABLED));
-        } catch (Throwable t) { System.err.println("[FancyDrops] built-in pack failed: " + t); }
         DataFiles.reloadAll();   // slayer drop tables
         ProfitTracker.load();    // overall profit, kept between sessions
 

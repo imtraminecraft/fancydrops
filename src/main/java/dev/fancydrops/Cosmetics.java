@@ -99,7 +99,7 @@ final class Cosmetics {
         return message;
     }
 
-    private static Style chatStyle(Suffix s) { Style st = Style.EMPTY.withFont(chatFont(s)).withColor(0xFFFFFF); return packActive() ? st.withObfuscated(true) : st; }
+    private static Style chatStyle(Suffix s) { return Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF); }      // the same glyph the tab list uses (chat can't be re-drawn every frame, so it stands still)
 
     private static boolean ours(String curStr) { for (Suffix s : SUFFIXES) for (String f : s.frames()) if (curStr.contains(f)) return true; return false; }
 
