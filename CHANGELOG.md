@@ -1,3 +1,6 @@
+## 0.9.0
+- Release: everything from 0.8.52 to 0.8.60 (cosmetics settings, animated suffixes and auras, building site, admin save, SkySoft tab fix, Active lever)
+
 ## 0.8.60
 - Fixed: the animated name effect in SkySoft's Better Tab. It keeps its own cached copy of the tab list, so FancyDrops now tells it to re-read while a name is moving
 
