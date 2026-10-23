@@ -1,3 +1,11 @@
+## 0.8.53
+- Removed the stray line beside the sword icon
+- Pest Drop sounds page has its own names (Suck, Pop, Shoot) and icons
+- New icons for the announce buttons: Party, Co-op, Public, Off
+- The Sounds page now uses the animated megaphone icon
+- New Discord, Patreon and GitHub icons, centred in their buttons
+- Admin: suffixes, name effects and auras use their set's colour; Save writes cosmetics.json to GitHub from the mod (paste a GitHub token once in the Admin Panel)
+
 ## 0.8.52
 - Settings > Menu: "Cosmetics" now has switches for your own suffix, name effect and aura, and for other players'
 - Chat: removed the Rules section and the minimum price; chat sends whatever you switched on

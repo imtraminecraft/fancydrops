@@ -51,6 +51,8 @@ public class FancyScreen extends Screen {
     private static final String[] EXP_SLOT_NAMES = {"Page flip", "Glow", "Reveal", "Linger", "End"};
     private static final String[] EXP_SLOT_SUBS = {"Every page the book turns", "The book bursts into light", "The drop appears", "The glow after it", "The scene fades out"};
     private static final String[] FARM_SLOT_SUBS = {"Every swing of the scythe", "The last crop opens", "The drop appears", "The glow after it", "The scene fades out"};
+    private static final String[] PEST_SLOT_NAMES = {"Suck", "Pop", "Shoot", "Linger", "End"};
+    private static final String[] PEST_SLOT_SUBS = {"The vacuum sucks up the pest", "The pest pops", "The drop shoots out", "The glow after it", "The scene fades out"};
     private static final String[] SLOT_NAMES = {"Chop", "Split", "Reveal", "Linger", "End"};
     private static final String[] MYTH_SLOT_NAMES = {"Lightning", "Eruption", "Reveal", "Linger", "End"};
     private static final String[] MYTH_SLOT_SUBS = {"Every lightning strike on the rune circle", "The circle erupts in light", "The drop appears", "The glow after it", "The scene fades out"};
@@ -253,7 +255,7 @@ public class FancyScreen extends Screen {
     private EditBox searchField;
     private static final Identifier ICON = Identifier.fromNamespaceAndPath("fancydrops", "textures/gui/icon.png");
     private final List<Row> rows = new ArrayList<>();
-    private EditBox formatField, addField, numField, hexField, adminField, thrField;
+    private EditBox formatField, addField, numField, hexField, adminField, thrField, tokenField;
     private static int sliderSeq; private int typingId = -1;
     private Slider typing; private boolean numShow; private double lastMx;
     private String formatError;                                  // why the typed message was refused, or null
@@ -306,6 +308,10 @@ public class FancyScreen extends Screen {
         adminField = new EditBox(font, 0, 0, 100, 16, Component.literal("player"));
         adminField.setMaxLength(80); adminField.setHint(Component.literal("Cosmetic ID, UUID or online name"));
         addRenderableWidget(adminField); adminField.setVisible(false);
+        tokenField = new EditBox(font, 0, 0, 100, 16, Component.literal("token"));
+        tokenField.setMaxLength(120); tokenField.setHint(Component.literal(FancyConfig.get().adminToken.isBlank() ? "GitHub token (contents: write)" : "Token saved. Paste a new one to replace it"));
+        tokenField.setResponder(v -> { String t2 = v.trim(); if (!t2.isEmpty()) FancyConfig.get().adminToken = t2; });
+        addRenderableWidget(tokenField); tokenField.setVisible(false);
         thrField = new EditBox(font, 0, 0, 100, 16, Component.literal("coins"));
         thrField.setMaxLength(10); thrField.setHint(Component.literal("1000000 to 1000000000"));
         thrField.setValue(Long.toString(FancyConfig.get().epicThreshold));
@@ -335,7 +341,7 @@ public class FancyScreen extends Screen {
         addRenderableWidget(hexField);
         hexField.setVisible(false);
         prevBoxes.clear();
-        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false);
+        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false);
         if (pendingCos) { pendingCos = false; openCos(); }                       // /fd cosmetics
     }
 
@@ -482,7 +488,7 @@ public class FancyScreen extends Screen {
     }
     private static int menuHeight(int screenH) { return Math.min(350, screenH - 16 - (screenH >= 390 && FancyConfig.get().previewAt != 2 ? DOCK_H + DOCK_GAP : 0)); }
 
-    private static String slotName(int sc, int k) { return sc == 7 ? EXP_SLOT_NAMES[k] : (sc == 6 || sc == 9) ? MYTH_SLOT_NAMES[k] : (sc == 5 || sc == 8) ? FARM_SLOT_NAMES[k] : sc == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k]; }
+    private static String slotName(int sc, int k) { return sc == 10 ? PEST_SLOT_NAMES[k] : sc == 7 ? EXP_SLOT_NAMES[k] : (sc == 6 || sc == 9) ? MYTH_SLOT_NAMES[k] : (sc == 5 || sc == 8) ? FARM_SLOT_NAMES[k] : sc == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k]; }
 
     /** The live preview: the real scene on the left, and on the right either every setting of the animation (Animations) or animated sound waves (Sounds). Sits above or below the menu. */
     private void drawDock(GuiGraphicsExtractor g, int mx, int my, float intro, long now) {
@@ -1023,11 +1029,13 @@ public class FancyScreen extends Screen {
         List<CosmeticData.Def> m = CosmeticData.members(sd); boolean all = true; for (CosmeticData.Def d : m) if (!adminPicks.contains(d.id())) all = false;
         for (CosmeticData.Def d : m) { if (all) adminPicks.remove(d.id()); else adminPicks.add(d.id()); }
     }
+    private boolean adminSaving;
     private void adminFinish() {
-        String js = CosmeticData.buildJson(adminTarget, adminPicks);
-        try { net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(js); toast("cosmetics.json copied.\nPaste it into GitHub.", 0xFF62E6A8); }
-        catch (Throwable t) { toast("Could not copy.", 0xFFFF8A5C); }
-        adminOpen = false;
+        if (adminSaving) return;
+        FancyConfig fc = FancyConfig.get();
+        if (fc.adminToken == null || fc.adminToken.isBlank()) { toast("Paste a GitHub token first.\n(Admin Panel > Save token)", 0xFFFF8A5C); adminOpen = false; return; }
+        String js = CosmeticData.buildJson(adminTarget, adminPicks); adminSaving = true;
+        Cosmetics.saveRemote(js, fc.adminToken, msg -> { adminSaving = false; boolean ok = msg.startsWith("Saved"); toast(msg, ok ? 0xFF62E6A8 : 0xFFFF7777); if (ok) adminOpen = false; });
     }
     /** The admin windows are a centred card on a dimmed screen: {x, y, w, h}. */
     private int[] adminCard(GuiGraphicsExtractor g, int maxW, String title, String sub, int accent) {
@@ -1070,6 +1078,10 @@ public class FancyScreen extends Screen {
         int px2 = x0 + fw + 6; boolean ph = mx >= px2 && mx < px2 + 44 && my >= y && my < y + 16 && my < bot && my >= top;
         pill(g, px2, y, 44, 16, ph ? Canvas.mix(GREEN, 0xFFFFFFFF, 0.18f) : GREEN); Gfx.textCentered(g, font, "Pick", px2 + 22, y + 4, Ui.TEXT);
         adminHits.add(new Object[]{px2, Math.max(top, y), px2 + 44, Math.min(bot, y + 16), (Runnable) this::openAdmin});
+        y += 24;
+        Gfx.text(g, font, "GitHub token for Save (needs contents: write on the repo). Stored only on this PC.", x0, y, Ui.DIM); y += 12;
+        tokenField.setVisible(true); tokenField.setX(x0); tokenField.setY(y); tokenField.setWidth(fw);
+        if (y >= top - 4 && y < bot - 16) tokenField.extractRenderState(g, mx, my, 0f);
         y += 30;
         g.fill(x0, y - 8, x0 + iw, y - 7, 0x22FFFFFF);
         Gfx.text(g, font, "PLAYERS PER COSMETIC", x0, y, 0xFFFFC857);
@@ -1104,7 +1116,7 @@ public class FancyScreen extends Screen {
         String who = adminName.isEmpty() ? adminTarget.substring(0, Math.min(10, adminTarget.length())) + "…" : adminName;
         int[] c = adminCard(g, 720, "Give cosmetics to " + who, adminTarget.substring(0, Math.min(12, adminTarget.length())) + "…  ·  " + adminPicks.size() + " of " + CosmeticData.ALL.size() + " picked", 0xFF62E6A8);
         int cx = c[0], cy = c[1], cw = c[2], ch = c[3];
-        int rt = adminButton(g, cx + cw - 10, cy + 9, "Copy JSON", 0xFF2F8F5A, mx, my, this::adminFinish);
+        int rt = adminButton(g, cx + cw - 10, cy + 9, adminSaving ? "Saving..." : "Save", 0xFF2F8F5A, mx, my, this::adminFinish);
         adminButton(g, rt, cy + 9, "Cancel", 0xFF555B6E, mx, my, () -> adminOpen = false);
         int top = cy + 38, bot = cy + ch - 4; g.enableScissor(cx + 1, top, cx + cw - 1, bot);
         int x0 = cx + 14, iw = cw - 28, gap = 6, cols = Math.max(2, iw / 150), tw = (iw - (cols - 1) * gap) / cols, y = top + 8 - adminScroll;
@@ -1131,7 +1143,8 @@ public class FancyScreen extends Screen {
             for (CosmeticData.Def d : ord) {
                 boolean on = adminPicks.contains(d.id());
                 int x = x0 + (i % cols) * (tw + gap), yy = y + (i / cols) * 24; boolean hv = mx >= x && mx < x + tw && my >= yy && my < yy + 20 && my >= top && my < bot;
-                adminTile(g, x, yy, tw, 20, d.name(), null, on, RAR_COL[CosmeticData.rarityOf(d)] & 0xFFFFFF, hv);
+                CosmeticData.SetDef own = d.set() == null ? null : CosmeticData.setById(d.set());
+                adminTile(g, x, yy, tw, 20, d.name(), null, on, (own != null ? own.color() : RAR_COL[CosmeticData.rarityOf(d)]) & 0xFFFFFF, hv);
                 adminHits.add(new Object[]{x, Math.max(top, yy), x + tw, Math.min(bot, yy + 20), (Runnable) () -> { if (!adminPicks.remove(d.id())) adminPicks.add(d.id()); }}); i++;
             }
             y += ((i + cols - 1) / cols) * 24 + 10;
@@ -1311,7 +1324,7 @@ public class FancyScreen extends Screen {
         int col = sceneIdx == 3 ? Ui.DIM : sceneIdx == 0 ? Ui.SUB : sceneIdx == 1 ? Ui.R_CRAZY : (sceneIdx == 5 || sceneIdx == 8) ? 0xFF7BE05A : (sceneIdx == 6 || sceneIdx == 9) ? 0xFFFFC857 : sceneIdx == 7 ? 0xFFB56BFF : Ui.ACCENT;
         for (int k = 0; k < SoundFx.SLOTS.length; k++) {
             final String slot = SoundFx.SLOTS[k];
-            Row sr = row(1, "fd:slot_" + slot + (k <= 1 ? (sceneIdx == 4 ? "_dye" : (sceneIdx == 5 || sceneIdx == 8) ? "_farm" : (sceneIdx == 6 || sceneIdx == 9) ? "_myth" : sceneIdx == 7 ? "_exp" : "") : ""), sceneIdx == 7 ? EXP_SLOT_NAMES[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_NAMES[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_NAMES[k] : sceneIdx == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k], sceneIdx == 7 ? EXP_SLOT_SUBS[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_SUBS[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_SUBS[k] : sceneIdx == 4 ? DYE_SLOT_SUBS[k] : SLOT_SUBS[k], col);
+            Row sr = row(1, "fd:slot_" + slot + (k <= 1 ? (sceneIdx == 10 ? "_pest" : sceneIdx == 4 ? "_dye" : (sceneIdx == 5 || sceneIdx == 8) ? "_farm" : (sceneIdx == 6 || sceneIdx == 9) ? "_myth" : sceneIdx == 7 ? "_exp" : "") : ""), sceneIdx == 10 ? PEST_SLOT_NAMES[k] : sceneIdx == 7 ? EXP_SLOT_NAMES[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_NAMES[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_NAMES[k] : sceneIdx == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k], sceneIdx == 10 ? PEST_SLOT_SUBS[k] : sceneIdx == 7 ? EXP_SLOT_SUBS[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_SUBS[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_SUBS[k] : sceneIdx == 4 ? DYE_SLOT_SUBS[k] : SLOT_SUBS[k], col);
             final int slotIdx = k;
             sr.ctls.add(new Btn("▶", GREEN, () -> { pulseAt[slotIdx] = System.currentTimeMillis(); SoundFx.Fx fx = SoundFx.byName(SoundFx.chosen(scene, slot)); if (fx != null) SoundFx.preview(fx); }));
             final String ddKey = "dd_" + scene + "_" + slot;
@@ -1993,7 +2006,7 @@ public class FancyScreen extends Screen {
             }
             case CHAT -> {
                 rows.add(section("Announce"));
-                rows.add(picker("Announce rare drops in", "Hypixel only  ·  /pc, /cc or /ac", new String[]{"Party", "Co-op", "Public", "Off"}, new String[]{"fd:megaphone", "fd:farm", "fd:chat", "fd:nothing"},
+                rows.add(picker("Announce rare drops in", "Hypixel only  ·  /pc, /cc or /ac", new String[]{"Party", "Co-op", "Public", "Off"}, new String[]{"fd:chan_party", "fd:chan_coop", "fd:chan_public", "fd:chan_off"},
                     new int[]{0xFF6C86FF, 0xFF7BE05A, 0xFFFFC857, 0xFF8A8F9E}, null, () -> idx(CHANNELS, c.channel), i -> c.channel = CHANNELS[i]));
                 if (c.channel.equals("OFF") && !searching) break;                    // announcements off: nothing else to set up
                 int nev = CHAT_EVENTS.length; String[] evL = new String[nev], evI = new String[nev]; int[] evC = new int[nev]; boolean[] evWip = new boolean[nev];
@@ -3232,7 +3245,7 @@ public class FancyScreen extends Screen {
     @Override public void extractRenderState(GuiGraphicsExtractor g, int mx0, int my0, float delta) {
         Gfx.uiFont = Fonts.fix(FancyConfig.get().uiFont);
         final int mx = editor != 0 ? -9999 : mx0, my = editor != 0 ? -9999 : my0;       // an open editor sits on top: nothing behind it lights up
-        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false);
+        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false);
         searchField.setVisible(false); numShow = false; lastMx = mx;
         if (dragCtl instanceof Slider ls && ls.live) {   // dragging a size slider: show the scene resizing live
             g.fill(0, 0, width, height, 0x55000000);

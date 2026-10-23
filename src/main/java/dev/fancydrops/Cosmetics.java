@@ -63,6 +63,46 @@ final class Cosmetics {
     /** The Refresh button: fetch cosmetics.json again right now. */
     static void forceRefresh() { remoteAt = 0; refreshRemote(); }
     static String refreshNote() { return remoteOkAt == 0 ? "Not loaded yet (offline or the file is unreachable)." : "Last updated " + Math.max(0, (System.currentTimeMillis() - remoteOkAt) / 1000) + "s ago. It also refreshes every 10 minutes by itself."; }
+    /** Admin Save: commits cosmetics.json to the GitHub repo, then applies it here straight away. */
+    static void saveRemote(String json, String token, java.util.function.Consumer<String> done) {
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            String msg;
+            try {
+                var http = java.net.http.HttpClient.newHttpClient();
+                String api = "https://api.github.com/repos/imtraminecraft/fancydrops/contents/cosmetics.json";
+                var get = http.send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(api + "?ref=main")).header("User-Agent", "FancyDrops").header("Accept", "application/vnd.github+json").header("Authorization", "Bearer " + token).GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+                String sha = null;
+                if (get.statusCode() == 200) sha = com.google.gson.JsonParser.parseString(get.body()).getAsJsonObject().get("sha").getAsString();
+                else if (get.statusCode() != 404) throw new RuntimeException(get.statusCode() == 401 || get.statusCode() == 403 ? "GitHub refused the token." : "GitHub error " + get.statusCode());
+                com.google.gson.JsonObject body = new com.google.gson.JsonObject();
+                body.addProperty("message", "cosmetics: update"); body.addProperty("branch", "main");
+                body.addProperty("content", java.util.Base64.getEncoder().encodeToString(json.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                if (sha != null) body.addProperty("sha", sha);
+                var put = http.send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(api)).header("User-Agent", "FancyDrops").header("Accept", "application/vnd.github+json").header("Authorization", "Bearer " + token).PUT(java.net.http.HttpRequest.BodyPublishers.ofString(body.toString())).build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+                if (put.statusCode() == 200 || put.statusCode() == 201) { applyRaw(json); msg = "Saved cosmetics.json to GitHub."; }
+                else msg = put.statusCode() == 401 || put.statusCode() == 403 || put.statusCode() == 404 ? "Save refused: check the token's access to the repo." : "Save failed (" + put.statusCode() + ").";
+            } catch (Throwable t) { msg = t.getMessage() != null && t.getMessage().startsWith("GitHub") ? t.getMessage() : "Could not reach GitHub."; }
+            final String m = msg; Minecraft.getInstance().execute(() -> done.accept(m));
+        });
+    }
+    /** Reads a cosmetics.json text into who-has-what. */
+    static void applyRaw(String body) {
+        Map<String, Set<String>> m = new HashMap<>();
+        for (var e : BUILTIN.entrySet()) m.put(e.getKey(), new HashSet<>(e.getValue()));
+        var root = com.google.gson.JsonParser.parseString(body).getAsJsonObject();
+        var special = root.getAsJsonObject("special");
+        if (special != null) for (var e : special.entrySet()) {
+            String id = CosmeticData.GRANT_KEY.get(e.getKey());
+            if (id == null || !e.getValue().isJsonArray()) continue;
+            for (var code : e.getValue().getAsJsonArray()) m.computeIfAbsent(code.getAsString().toLowerCase(Locale.ROOT), k -> new HashSet<>()).add(id);
+        }
+        var extra = root.getAsJsonObject("extra");
+        if (extra != null) for (var e : extra.entrySet()) {
+            if (!e.getValue().isJsonArray()) continue;
+            for (var cid : e.getValue().getAsJsonArray()) m.computeIfAbsent(e.getKey().toLowerCase(Locale.ROOT), k -> new HashSet<>()).add("c:" + cid.getAsString());
+        }
+        remoteRaw = body; CosmeticData.grants = m; remoteOkAt = System.currentTimeMillis(); remoteAt = remoteOkAt;
+    }
     private static void refreshRemote() {
         long now = System.currentTimeMillis();
         if (now - remoteAt < 600_000L) return;
