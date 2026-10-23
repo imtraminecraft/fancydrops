@@ -86,7 +86,7 @@ final class AuraFx {
     static void render(GuiGraphicsExtractor g) {
         try {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.level == null || mc.player == null || mc.options.hideGui) return;
+            if (mc.level == null || mc.player == null) return;
             Map<UUID, Cosmetics.Look> looks = Cosmetics.looks();
             if (looks.isEmpty()) return;
             double cx, cy, cz; float yaw, pitch;
