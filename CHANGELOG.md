@@ -2,6 +2,10 @@
 
 Release notes are written here. The release workflow copies the section for the version you pick into the GitHub release, so what you read here is what players see.
 
+## 0.8.23
+- Cosmetic tiles: the icon and the name now sit together in the middle of the tile (no empty space on one side).
+- The Suffix, Name Effect and Aura sections are now truly in rarity order: Special, then Beta, then Common. Newcomer no longer sits between the Beta items.
+
 ## 0.8.22
 - One Cosmetics page: Sets, Suffix, Name Effect and Aura, each rarest first. The Special Sets header and the info line at the top are gone.
 - Grey is now Common. New Common set (Newcomer + Fresh) and Beta set (Crown + Shimmer): a suffix and a name effect, no aura.
