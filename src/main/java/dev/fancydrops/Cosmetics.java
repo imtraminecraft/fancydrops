@@ -41,7 +41,10 @@ final class Cosmetics {
     /** What the owners picked, read from cosmetics.json in the GitHub repo so everybody with the mod sees the same thing. */
     private static final String REMOTE_URL = "https://raw.githubusercontent.com/imtraminecraft/fancydrops/main/cosmetics.json";
     private static volatile Map<String, String> remote = Map.of(OWNER, "sparkle");       // owner code -> suffix id
-    private static long remoteAt;
+    private static long remoteAt, remoteOkAt;
+    /** The Refresh button: fetch cosmetics.json again right now. */
+    static void forceRefresh() { remoteAt = 0; refreshRemote(); }
+    static String refreshNote() { return remoteOkAt == 0 ? "Not loaded yet (offline or the file is unreachable)." : "Last updated " + Math.max(0, (System.currentTimeMillis() - remoteOkAt) / 1000) + "s ago. It also refreshes every 10 minutes by itself."; }
     private static void refreshRemote() {
         long now = System.currentTimeMillis();
         if (now - remoteAt < 600_000L) return;
@@ -52,7 +55,7 @@ final class Cosmetics {
                 if (res.statusCode() != 200) return;
                 Map<String, String> m = new HashMap<>(); m.put(OWNER, "sparkle");
                 for (var e : com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject().getAsJsonObject("owners").entrySet()) m.put(e.getKey().toLowerCase(Locale.ROOT), e.getValue().getAsString());
-                remote = m;
+                remote = m; remoteOkAt = System.currentTimeMillis();
             } catch (Throwable ignored) { }
         });
     }

@@ -2115,6 +2115,7 @@ public class FancyScreen extends Screen {
     private void cosmeticsPage() {
         if (!Cosmetics.allowed()) {
             Row wp = row(0, "fd:sparkle", "Cosmetics are disabled", "Cosmetics are only open to ImTra. Everything else in FancyDrops works as usual, and you still see his suffix in chat and the tab list. Your ID code: " + Cosmetics.code(Cosmetics.me()), Ui.DIM);
+            wp.ctls.add(new Btn("Refresh", 0xFF2F8F5A, Cosmetics::forceRefresh));
             wp.ctls.add(new Btn("Copy ID", 0xFF3A4FA0, () -> { try { net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(Cosmetics.code(Cosmetics.me())); } catch (Throwable ignored) { } }));
             wp.kind = PANEL; wp.h = 130; wp.noSearch = true; rows.add(wp); return;
         }
@@ -2129,6 +2130,9 @@ public class FancyScreen extends Screen {
             () -> { Cosmetics.Suffix cs = Cosmetics.chosen(); if (cs == null) return 0; for (int k = 0; k < Cosmetics.SUFFIXES.length; k++) if (Cosmetics.SUFFIXES[k] == cs) return k + 1; return 0; },
             i -> { c.suffix = i == 0 ? "" : Cosmetics.SUFFIXES[i - 1].id(); FancyConfig.save(); }));
         rows.add(note(Cosmetics.status(), Ui.DIM));
+        Row rf = row(0, "fd:sparkle", "Refresh cosmetics", Cosmetics.refreshNote(), Ui.ACCENT); rf.noSearch = true;
+        rf.ctls.add(new Btn("Refresh", 0xFF2F8F5A, () -> { Cosmetics.forceRefresh(); build(); }));
+        rows.add(rf);
         rows.add(note("Your suffix animates in chat and in the tab list.", Ui.DIM));
     }
 
