@@ -221,13 +221,13 @@ final class AuraFx {
                 if (ox == 0 && oy == 0 && oz == 0) { ox = p.getX(); oy = p.getY(); oz = p.getZ(); }
                 double ex = ox + (p.getX() - ox) * pt, ey = oy + (p.getY() - oy) * pt, ez = oz + (p.getZ() - oz) * pt;
                 if (p != mc.player) {                                                                    // other players move in network steps: ease the point the aura follows so it doesn't shake
-                    double[] sm = SMOOTH.computeIfAbsent(p.getUUID(), k -> new double[]{ex, ey, ez, now});
+                    double[] sm = SMOOTH.get(p.getUUID()); if (sm == null) { sm = new double[]{ex, ey, ez, now}; SMOOTH.put(p.getUUID(), sm); }
                     double dts = Math.max(1, Math.min(100, now - (long) sm[3])); sm[3] = now;
                     if (Math.abs(ex - sm[0]) + Math.abs(ey - sm[1]) + Math.abs(ez - sm[2]) > 6) { sm[0] = ex; sm[1] = ey; sm[2] = ez; }
                     else { double k = 1 - Math.exp(-dts / 90.0); sm[0] += (ex - sm[0]) * k; sm[1] += (ey - sm[1]) * k; sm[2] += (ez - sm[2]) * k; }
                     ex = sm[0]; ey = sm[1]; ez = sm[2];
                 }
-                double[] st = STATE.computeIfAbsent(p.getUUID(), k -> new double[]{0, now, ex, ey, ez, now, 1, 0, 0});     // phase ms, last frame, last position, last time it moved, speed
+                double[] st = STATE.get(p.getUUID()); if (st == null) { st = new double[]{0, now, ex, ey, ez, now, 1, 0, 0}; STATE.put(p.getUUID(), st); }     // phase ms, last frame, last position, last time it moved, speed
                 double moved = Math.abs(ex - st[2]) + Math.abs(ey - st[3]) + Math.abs(ez - st[4]);
                 if (moved > 0.004) st[5] = now;
                 double dtf = Math.max(1, Math.min(100, now - (long) st[1]));
