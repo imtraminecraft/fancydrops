@@ -273,7 +273,7 @@ final class AuraFx {
                     draw(g, sx, sy, px, q);
                 }
             }
-            if (!NameTagHook.hooked) for (var p : mc.level.players()) {                                // fallback (the name-tag mixin did not apply): the name cosmetic and suffix over other players' heads
+            if (!Cosmetics.nameTagHooked) for (var p : mc.level.players()) {                                // fallback (the name-tag mixin did not apply): the name cosmetic and suffix over other players' heads
                 if (p == mc.player) continue;
                 Cosmetics.Look l = looks.get(p.getUUID());
                 if (l == null || (l.fx() == null && l.suffix() == null) || mc.player.distanceTo(p) > 24) continue;

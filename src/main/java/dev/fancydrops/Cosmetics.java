@@ -400,6 +400,7 @@ final class Cosmetics {
     }
 
     /** The name over a player's head with their effect and suffix, or null when they wear none. */
+    static volatile boolean nameTagHooked;                                  // true once the name-tag mixin has run
     static Component nameTag(Component base, Entity e) {
         if (base == null || !(e instanceof net.minecraft.world.entity.player.Player)) return null;
         Look lk = looksMap.get(e.getUUID());
