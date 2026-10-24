@@ -1254,7 +1254,7 @@ public class FancyScreen extends Screen {
     private Row chatPrevRow(String[] chans, String sample, int ev) {
         Row cp = new Row(); cp.kind = CHATPREV; cp.noSearch = true; cp.title = String.join(",", chans) + "|" + ev; cp.sub = sample;
         int h = 14;
-        for (String ch : chans) h += new PrevMsg(ch, ch.equals("ALL") ? DropListener.adv(sample) : sample, cw - 40).lines.size() * 11 + 6;
+        for (String ch : chans) h += new PrevMsg(ch, ch.equals("ALL") ? DropListener.adv(sample) : sample, cw - 76).lines.size() * 11 + 6;
         cp.h = h; return cp;
     }
 
@@ -1267,7 +1267,7 @@ public class FancyScreen extends Screen {
         for (int yy = 0; yy < r.h; yy++) { float f = yy / (float) Math.max(1, r.h - 1); int gc = Chat.GRADIENT[Math.min(Chat.GRADIENT.length - 1, (int) (f * (Chat.GRADIENT.length - 1)))]; g.fill(r.x, r.y + yy, r.x + 3, r.y + yy + 1, 0xFF000000 | gc); }
         g.fill(r.x + 3, r.y + 1, r.x + r.w - 1, r.y + 2, 0x22FFFFFF);
         rout(g, r.x, r.y, r.w, r.h, 0x33FFFFFF);
-        int y = r.y + 7, maxW = r.w - 40; double cps = 30, off = 0;
+        int y = r.y + 7, maxW = r.w - 76; double cps = 30, off = 0;
         for (int mi = 0; mi < chans.length; mi++) {
             String ch = chans[mi]; String msg = ch.equals("ALL") ? DropListener.adv(r.sub) : r.sub;
             PrevMsg m = new PrevMsg(ch, msg, maxW);
@@ -1279,7 +1279,7 @@ public class FancyScreen extends Screen {
             int tw = Gfx.w(font, tag);
             Gfx.text(g, font, tag, r.x + r.w - tw - 8, y, 0x66FFFFFF);
             for (int[] ln : m.lines) {
-                g.fill(r.x + 7, y - 1, r.x + r.w - 8 - (ln == m.lines.get(0) ? tw + 6 : 0), y + 9, 0x30000000);
+                g.fill(r.x + 7, y - 1, r.x + r.w - 8, y + 9, 0x30000000);
                 int x = r.x + 10, i = ln[0];
                 while (i < ln[1] && i < shown) {
                     int j = i; int col = m.cols.get(i);
@@ -1938,7 +1938,7 @@ public class FancyScreen extends Screen {
                 Row ur = new Row(); ur.kind = UPDATE; ur.h = 36; ur.noSearch = true; rows.add(ur);
                 Row rs = row(0, "fd:res_heart", "Resources", "Credits and data sources", Ui.ACCENT); rs.noSearch = true;
                 rs.click = () -> { tab = Tab.RESOURCES; subSel[Tab.RESOURCES.ordinal()] = -1; scroll = 0; tabChanged = System.currentTimeMillis(); };
-                rows.add(section("More")); rows.add(rs);
+                rows.add(rs);
             }
             case DROPS -> {
                 buildAll = true; srcList.clear();
@@ -2052,7 +2052,7 @@ public class FancyScreen extends Screen {
             case ANIMATIONS -> {
                 boolean all = searching; int sub = curSub();
                 if (!searching) {
-                    Row back = row(0, "fd:animations", "\u2039  Animations", "Back to all the scenes", Ui.ACCENT);
+                    Row back = row(0, "fd:animations", "Animations", "Back to all the scenes", Ui.ACCENT);
                     back.noSearch = true; back.click = () -> { subSel[Tab.ANIMATIONS.ordinal()] = -1; scroll = 0; tabChanged = System.currentTimeMillis(); };
                     rows.add(back);
                 }
@@ -2070,7 +2070,7 @@ public class FancyScreen extends Screen {
             case SOUNDS -> {
                 if (searching) { soundMaster(rows, c); soundCat = 0; soundsPage(rows, c); }
                 else {
-                    Row back = row(0, "fd:sounds", "\u2039  Sounds", "Back to the volume and all the animation sounds", Ui.ACCENT);
+                    Row back = row(0, "fd:sounds", "Sounds", "Back to the volume and all the animation sounds", Ui.ACCENT);
                     back.noSearch = true; back.click = () -> { subSel[Tab.SOUNDS.ordinal()] = -1; waveKey = null; SoundFx.stopPreviews(); scroll = 0; tabChanged = System.currentTimeMillis(); };
                     rows.add(back);
                     if (curSub() >= 5) {
@@ -2167,12 +2167,27 @@ public class FancyScreen extends Screen {
                 rows.add(toggle("fd:tipcard", "Tip card", "The rotating tip at the top of Home", () -> c.showTips, v -> c.showTips = v));
                 rows.add(toggle("fd:bell", "Pop-up notices", "Small notices under the menu (saved, discarded, links) instead of chat messages", () -> c.popups, v -> c.popups = v));
                 rows.add(section("Cosmetics"));
+                rows.add(section("You"));
                 rows.add(toggle("fd:cos_suffix", "Your suffix", "The little icon after your name", () -> c.selfSuffix, v -> { c.selfSuffix = v; CosmeticData.changed(); }));
                 rows.add(toggle("fd:cos_name", "Your name effect", "Moving colours on your name", () -> c.selfName, v -> { c.selfName = v; CosmeticData.changed(); }));
                 rows.add(toggle("fd:cos_aura", "Your aura", "Particles around you", () -> c.selfAura, v -> { c.selfAura = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:cos_aura", "Calm mode", "Names stay still and auras slow down", () -> c.cosCalm, v -> { c.cosCalm = v; CosmeticData.changed(); }));
+                rows.add(toggle("fd:cos_aura", "Hide my aura in first person", "It still shows in F5 and to others", () -> c.cosHideFirst, v -> c.cosHideFirst = v));
+                rows.add(section("Other players"));
                 rows.add(toggle("fd:cos_suffix", "Their suffixes", "The little icon after other players' names", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }));
                 rows.add(toggle("fd:cos_name", "Their name effects", "Moving colours on other players' names", () -> c.othersName, v -> { c.othersName = v; CosmeticData.changed(); }));
                 rows.add(toggle("fd:cos_aura", "Their auras", "Particles around other players", () -> c.othersAura, v -> { c.othersAura = v; CosmeticData.changed(); }));
+                Row cr = row(0, "fd:cos_aura", "Show within", "Players further away look normal", Ui.ACCENT);
+                cr.ctls.add(new Slider(8, 48, 4, () -> c.cosRange, v -> c.cosRange = (int) v, () -> c.cosRange + " blocks").typed(1)); rows.add(cr);
+                rows.add(picker("Most players with an aura", "Fewer is lighter on your FPS", new String[]{"4", "8", "16", "All"}, new String[]{"", "", "", ""}, new String[]{"fd:cos_aura", "fd:cos_aura", "fd:cos_aura", "fd:cos_aura"},
+                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFFC857, 0xFFFF72C6}, null, 4, () -> c.cosMax == 4 ? 0 : c.cosMax == 8 ? 1 : c.cosMax == 16 ? 2 : 3, i -> c.cosMax = new int[]{4, 8, 16, 0}[i]));
+                rows.add(section("Look and speed"));
+                Row sp = row(0, "fd:cos_name", "Name effect speed", "How fast the colours move", Ui.ACCENT);
+                sp.ctls.add(new Slider(25, 200, 5, () -> c.cosSpeed, v -> c.cosSpeed = (int) v, () -> c.cosSpeed + "%").typed(1)); rows.add(sp);
+                Row am = row(0, "fd:cos_aura", "Aura amount", "Fewer particles also helps FPS", Ui.ACCENT);
+                am.ctls.add(new Slider(25, 150, 5, () -> c.cosAmount, v -> c.cosAmount = (int) v, () -> c.cosAmount + "%").typed(1)); rows.add(am);
+                Row sz = row(0, "fd:cos_aura", "Aura size", "Size of each particle", Ui.ACCENT);
+                sz.ctls.add(new Slider(50, 150, 5, () -> c.cosSize, v -> c.cosSize = (int) v, () -> c.cosSize + "%").typed(1)); rows.add(sz);
                 rows.add(section("Prices"));
                 Row ps = fold("__price", "fd:coin", "Price source", "Bazaar for Bazaar items, Auction House for the rest", Ui.ACCENT);
                 rows.add(ps);
@@ -2294,6 +2309,26 @@ public class FancyScreen extends Screen {
         {{"Experiment Drop", "exp", "7", "fd:experiments", "The table's book opens, the view zooms in, the pages flip and the drop bursts out.", "Normal"},
          {"RNG Drop", "exprng", "7", "fd:rng", "For RNG items: the book flips more and faster, then god rays and a laurel crown the drop.", "RNG"}}};
 
+    /** What an animation type does with the style picked on its page (the second look of Dye, Farming, Mythological and Experiments has its own words). */
+    private static String[] styled(String[] t, FancyConfig c) {
+        int cat = switch (t[1]) { case "dye" -> 1; case "farm", "pest", "helios" -> 2; case "myth", "mythrng", "mythnothing" -> 3; case "exp", "exprng" -> 4; default -> 0; };
+        if (cat == 0 || c.styleOf(cat) != 1) return t;
+        String[] o = t.clone();
+        switch (t[1]) {
+            case "dye" -> { o[0] = "Dye Drop (Brush)"; o[4] = "A wide brush paints four coats of the dye across the screen, then the dye rises out."; }
+            case "farm" -> { o[0] = "Farming Drop (Rain)"; o[4] = "A rain cloud waters the field, the crops burst into sparkles and the last one opens."; }
+            case "pest" -> { o[0] = "Pest Drop (Rain)"; o[4] = "A downpour floods the pest away and the drop rises out of the puddle."; }
+            case "helios" -> { o[0] = "Ray of Helios (Rain)"; o[4] = "A sunrise over a sun shower, only for the Ray of Helios."; }
+            case "mythnothing" -> { o[4] = "When a ritual drops nothing: the comets fade and the circle goes dark."; }
+            case "myth" -> { o[0] = "Mythological Drop (Comets)"; o[4] = "Golden comets fall from a starry sky onto the rune circle, which lifts the drop out in laurel."; }
+            case "mythrng" -> { o[0] = "RNG Drop (Comets)"; o[4] = "For RNG drops: faster comets, a whitened sky, god rays, rune halos and griffin feathers."; }
+            case "exp" -> { o[0] = "Experiment Drop (Orb)"; o[4] = "A rune orb charges over the table, each flip lights a ring, then the drop bursts out."; }
+            case "exprng" -> { o[0] = "RNG Drop (Orb)"; o[4] = "For RNG items: the orb pulses gold with every flip, then god rays and a laurel crown the drop."; }
+            default -> { }
+        }
+        return o;
+    }
+
     private static float secsOf(FancyConfig c, String key) {
         Float v = c.animSecs.get(key);
         return Math.max(5f, Math.min(10f, v != null ? Math.max(v, c.textDelay(key) + 3.5f) : AnimationManager.naturalSecs(key, c)));
@@ -2310,9 +2345,9 @@ public class FancyScreen extends Screen {
         } else if (cat >= 1 && cat <= 4) {
             String[][] sn = {null, {"Splat", "Brush"}, {"Slash", "Rain"}, {"Lightning", "Comets"}, {"Book", "Orb"}};
             String[][] sd = {null, {"A blob bursts open", "Brush strokes paint it"}, {"Crops are cut", "Rain wakes the crops"}, {"Bolts strike the circle", "Comets fall on it"}, {"The book flips", "A rune orb charges"}};
-            String ic = types[0][3];
+            String[][] si = {null, {"fd:st_splat", "fd:st_brush"}, {"fd:st_slash", "fd:st_rain"}, {"fd:st_bolt", "fd:st_comet"}, {"fd:st_book", "fd:st_orb"}};
             final int cc = cat;
-            rows.add(picker("Animation style", "Pick how this scene plays", sn[cat], sd[cat], new String[]{ic, ic}, new int[]{0xFF8FA8FF, 0xFFC77DFF}, null, 2, () -> c.styleOf(cc), i -> { switch (cc) { case 1 -> c.dyeStyle = i; case 2 -> c.farmStyle = i; case 3 -> c.mythStyle = i; default -> c.expStyle = i; } }));
+            rows.add(picker("Animation style", "Pick how this scene plays", sn[cat], sd[cat], si[cat], new int[]{0xFF8FA8FF, 0xFFC77DFF}, null, 2, () -> c.styleOf(cc), i -> { switch (cc) { case 1 -> c.dyeStyle = i; case 2 -> c.farmStyle = i; case 3 -> c.mythStyle = i; default -> c.expStyle = i; } }));
         }
         int sel = Math.max(0, Math.min(types.length - 1, animType[cat]));
         if (types.length > 1 && !all) {
@@ -2351,7 +2386,8 @@ public class FancyScreen extends Screen {
     private void animType(List<Row> rows, FancyConfig c, String[] t) {
         final String key = t[1]; final int sc = Integer.parseInt(t[2]);
         int col = switch (key) { case "nothing" -> Ui.DIM; case "default" -> Ui.SUB; case "rare" -> Ui.R_CRAZY; case "dye" -> 0xFFFF72C6; case "farm", "pest" -> 0xFF7BE05A; case "myth", "mythrng", "mythnothing" -> 0xFFFFC857; case "exp", "exprng" -> 0xFFB56BFF; default -> Ui.ACCENT; };
-        Row head = row(0, t[3], t[0], t[4], col);
+        String[] st = styled(t, c);
+        Row head = row(0, t[3], st[0], st[4], col);
         Runnable go = playerOf(key);
         head.ctls.add(new Btn("▶ Play", GREEN, () -> play(go)));
         rows.add(head);
@@ -2415,7 +2451,8 @@ public class FancyScreen extends Screen {
             rows.add(picker("Animation type", "Pick the one to edit", names, tic, () -> sel, i -> { animType[cat] = i; waveKey = null; }));
         }
         String[] t = types[sel];
-        Row head = row(0, t[3], t[0], t[4], Ui.ACCENT);
+        String[] st = styled(t, c);
+        Row head = row(0, t[3], st[0], st[4], Ui.ACCENT);
         head.ctls.add(new Btn("▶ Play", GREEN, () -> { waveKey = null; wavePaused = false; }));        // only the sounds, in the live sound preview
         head.ctls.add(new Btn(wavePaused ? "Resume" : "Pause", 0xFF3A3F52, () -> { wavePaused = !wavePaused; if (wavePaused) SoundFx.stopPreviews(); }));
         rows.add(head);
@@ -2527,20 +2564,15 @@ public class FancyScreen extends Screen {
     private void drawX(GuiGraphicsExtractor g, int[] b, boolean hv, String key) {
         float k = anim(key, hv ? 1f : 0f, 40f);
         int cx = b[0] + 8, cy = b[1] + 8;
-        if (k > 0.02f) { g.fill(b[0] - 2, b[1] - 2, b[0] + 19, b[1] + 19, Gfx.argb(Math.round(40 * k), 0xFF4A4A)); g.fill(b[0] - 1, b[1] - 1, b[0] + 18, b[1] + 18, Gfx.argb(Math.round(60 * k), 0xFF4A4A)); }
-        pill(g, b[0], b[1], 17, 17, Canvas.mix(0xFF272C3C, 0xFFC93636, k));
-        g.fill(b[0] + 3, b[1] + 1, b[0] + 14, b[1] + 2, Gfx.argb(Math.round(40 + 50 * k), 0xFFFFFF));          // a thin shine along the top
-        rout(g, b[0], b[1], 17, 17, Canvas.mix(0xFF444B63, 0xFFFFA0A0, k));
-        int core = Canvas.mix(0xFFC4CBDC, 0xFFFFFFFF, k), soft = Gfx.argb(Math.round(70 + 60 * k), Canvas.mix(0xFFC4CBDC, 0xFFFFFFFF, k) & 0xFFFFFF);
-        int n = 4 + Math.round(k);
-        for (int d = -n; d <= n; d++) {                                         // two diagonals through the middle pixel, each with a soft shoulder, so every reflection matches
-            for (int sg = -1; sg <= 1; sg += 2) {
-                int x = cx + d, y = cy + sg * d;
-                g.fill(x - 1, y, x, y + 1, soft); g.fill(x + 1, y, x + 2, y + 1, soft);
-                g.fill(x, y - 1, x + 1, y, soft); g.fill(x, y + 1, x + 1, y + 2, soft);
-            }
+        if (k > 0.02f) { g.fill(b[0] - 2, b[1] - 2, b[0] + 19, b[1] + 19, Gfx.argb(Math.round(36 * k), 0xFF4A4A)); g.fill(b[0] - 1, b[1] - 1, b[0] + 18, b[1] + 18, Gfx.argb(Math.round(56 * k), 0xFF4A4A)); }
+        pill(g, b[0], b[1], 17, 17, Canvas.mix(0xFF1C2030, 0xFF3A1C22, k));                    // a dark round badge
+        rout(g, b[0], b[1], 17, 17, Canvas.mix(0xFF3A4260, 0xFFFF8A8A, k));
+        int core = Canvas.mix(0xFFE04B4B, 0xFFFF7B7B, k), edge = Canvas.mix(0xFF8A2A2A, 0xFFC03A3A, k);
+        for (int d = -3; d <= 3; d++) for (int sg = -1; sg <= 1; sg += 2) {                    // a red cross, two pixels thick, ends rounded off
+            int x = cx + d, y = cy + sg * d;
+            g.fill(x, y, x + 2, y + 1, core); g.fill(x, y + 1, x + 2, y + 2, core);
+            g.fill(x - 1, y, x, y + 1, edge); g.fill(x + 2, y + 1, x + 3, y + 2, edge);
         }
-        for (int d = -n; d <= n; d++) { g.fill(cx + d, cy + d, cx + d + 1, cy + d + 1, core); g.fill(cx + d, cy - d, cx + d + 1, cy - d + 1, core); }
     }
     private void openEditor(int which) {
         FancyConfig c = FancyConfig.get();
@@ -3019,7 +3051,7 @@ public class FancyScreen extends Screen {
     }
 
     private void resourcesPage() {
-        Row bk = row(0, "fd:back", "\u2039  Home", "Back to the home page", Ui.ACCENT); bk.noSearch = true;
+        Row bk = row(0, "fd:back", "Home", "Back to the home page", Ui.ACCENT); bk.noSearch = true;
         bk.click = () -> { tab = Tab.HOME; scroll = 0; tabChanged = System.currentTimeMillis(); }; rows.add(bk);
         Row hero = row(0, "fd:res_heart", "Resources used", "FancyDrops stands on the work of these projects and communities. Thank you!", Ui.ACCENT);
         hero.kind = HERO; hero.h = 84; hero.noSearch = true; rows.add(hero);
@@ -3112,6 +3144,7 @@ public class FancyScreen extends Screen {
 
     private void statsDropList(List<Row> rows, ProfitTracker.Stat os, ProfitTracker.Stat ss, int cat) {
         List<ProfitTracker.Item> items = catItems(os, cat);
+        ProfitTracker.warmPrices(items);
         for (ProfitTracker.Item it : items) {
             ProfitTracker.Item si = ss.items.get(it.name);
             Row x = row(0, it.icon, it.name, it.amount + " in total  ·  " + (si == null ? 0 : si.amount) + " this session", it.color);
@@ -3302,7 +3335,7 @@ public class FancyScreen extends Screen {
         {"Slayers", "Mythological", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Animations
         {"Slayers", "Mythological", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Sounds: the main page holds the volume, then one sound page per animation
         {},                                                        // Chat (one page)
-        {"Menu", "Prices", "Drop Data"},     // Settings
+        {"Menu", "Cosmetics", "Prices", "Drop Data"},     // Settings
         {"Overview", "Slayers", "Mythological", "Dye", "Farming", "History"},
         {},                                                        // Cosmetics (one page)
         {}};                                                        // Resources                                      // Stats

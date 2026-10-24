@@ -50,9 +50,37 @@ public final class ProfitTracker {
         try {
             if (Files.exists(file())) {
                 Map<String, Stat> m = GSON.fromJson(Files.readString(file()), new TypeToken<Map<String, Stat>>() {}.getType());
-                if (m != null) { OVERALL.clear(); OVERALL.putAll(m); }
+                if (m != null) { OVERALL.clear(); OVERALL.putAll(m); if (cleanEchoes()) save(); }
             }
         } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    /** Older versions also counted the mod's own chat message ("Item (17.4k coins) from Table") as a drop. Those junk entries are the same drops counted twice: removed. */
+    private static final java.util.regex.Pattern ECHO = java.util.regex.Pattern.compile("(?i).*\\((?:[\\d.,]+\\s*[kmb]?\\s*coins|untradeable|price unknown)\\).*");
+    private static boolean cleanEchoes() {
+        boolean any = false;
+        for (Stat st : OVERALL.values()) {
+            st.fix();
+            for (java.util.Iterator<Map.Entry<String, Item>> it = st.items.entrySet().iterator(); it.hasNext();) {
+                Item i = it.next().getValue();
+                if (ECHO.matcher(i.name).matches()) { st.drops = Math.max(0, st.drops - i.amount); it.remove(); any = true; }
+            }
+        }
+        return any;
+    }
+
+    /** Looks up the price of every tradeable drop whose price is not known yet, in the background (once a minute per item), so a list shows a value instead of "?". */
+    private static final Map<String, Long> ASKED = new java.util.concurrent.ConcurrentHashMap<>();
+    public static void warmPrices(Iterable<Item> items) {
+        long now = System.currentTimeMillis();
+        for (Item it : items) {
+            if (it.untradeable || it.id == null || it.id.isEmpty() || PriceService.lookup(it.id, it.name, false) > 0) continue;
+            Long at = ASKED.get(it.name);
+            if (at != null && now - at < 60_000L) continue;
+            ASKED.put(it.name, now);
+            final String id = it.id, nm = it.name;
+            java.util.concurrent.CompletableFuture.runAsync(() -> { try { PriceService.lookup(id, nm, true); } catch (Throwable ignored) { } });
+        }
     }
 
     public static void save() {

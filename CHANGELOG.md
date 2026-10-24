@@ -1,3 +1,17 @@
+## 0.9.4
+- New: Settings > Cosmetics page. Your six cosmetic toggles moved there, with new options: calm mode, hide your aura in first person, show-within distance, most players with an aura, name effect speed, aura amount and aura size
+- New: a new icon for each animation style (Splat, Brush, Slash, Rain, Lightning, Comets, Book, Orb)
+- New: Mining and Fishing now show a "coming soon" card with a looping concept scene, progress and what is planned
+- New: Diana "You dug out" drops (like Griffin Feather) are read correctly
+- Fixed: the Co-op / Public tag no longer sits on top of the chat preview text
+- Fixed: Farming > Pest with the Rain style now plays
+- Fixed: Animation type text follows the style you pick (Experiments > Orb, Dye > Brush and so on)
+- Fixed: Stats drop list no longer counts the mod's own echo as a drop, and old junk entries are removed. Prices are looked up in the background
+- Fixed: the mod now reads chat before other mods, so SBO's Diana Message Hider cannot hide a drop from it
+- Fixed: a scene that fails to draw is skipped and written to the drop log instead of stalling
+- Changed: a new close button (a red cross on a dark round badge)
+- Changed: the "‹" is gone from back rows, and the "More" header above Resources is gone
+
 ## 0.9.3
 - New: a second animation style for Dye (Brush), Farming (Rain), Mythological (Comets) and Experiments (Orb). Pick it on each Animations page, and the preview follows
 - New: a name cosmetic shows once over other players' heads, in place of their normal name

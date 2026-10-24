@@ -424,6 +424,7 @@ final class Cosmetics {
     /** A name in the menu preview: the colour you have on the server, with the effect on top. */
     static MutableComponent nameComp(String name, int base, String fx, boolean live, long now) {
         if (fx == null || fx.isEmpty()) return Component.literal(name).withStyle(Style.EMPTY.withColor(base));
+        FancyConfig cf = FancyConfig.get(); now = cf.cosCalm ? now / 6 : now * cf.cosSpeed / 100;           // name effect speed; calm mode nearly stills it
         MutableComponent o = Component.empty();
         for (int i = 0; i < name.length(); i++) o.append(Component.literal(String.valueOf(name.charAt(i))).withStyle(NameFx.style(fx, i, name.length(), Style.EMPTY.withColor(base), live, now)));
         return o;

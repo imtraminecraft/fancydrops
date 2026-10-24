@@ -142,6 +142,8 @@ public class FancyConfig {
     public boolean showTips = true;           // the rotating tip card on the Home page
     public String adminToken = "";                  // Admin Panel: a GitHub token that lets Save write cosmetics.json
     public boolean selfSuffix = true, selfName = true, selfAura = true;           // show your own cosmetics
+    public int cosRange = 32, cosMax = 8, cosSpeed = 100, cosAmount = 100, cosSize = 100;   // aura: show within (blocks), most players with one (0 = all), name effect speed %, particle amount %, particle size %
+    public boolean cosHideFirst = false, cosCalm = false;                         // hide your own aura in first person; calm mode (still names, slow auras)
     public String profitHudSlayer = "all";    // which slayer the Stats page shows ("all" = combined)
     public boolean useBazaar = true, useAuctions = true;
     public String bazaarPrice = "BUY";  // BUY = instant buy, SELL = instant sell

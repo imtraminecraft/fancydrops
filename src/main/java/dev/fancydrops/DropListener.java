@@ -577,6 +577,7 @@ public final class DropListener {
         it.amount = Math.max(1, d.amount());
         it.announce = announce && animate;
         record(it, announce && !animate, tracked);
+        dlog("mythological: " + dr.name + " from " + src.id + "  animate=" + animate + " announce=" + announce + " tracked=" + tracked);
         if (animate) { Anim a = new Anim(dye ? SlayerData.OTHER : src, it, -1, null); a.myth = !dye; AnimationManager.play(a); }       // costly drops (the RNG Drop price) get the bigger version
         return animate;
     }

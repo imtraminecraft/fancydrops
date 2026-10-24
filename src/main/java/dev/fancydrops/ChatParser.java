@@ -70,6 +70,7 @@ public final class ChatParser {
             rest = rest.substring(0, open).trim();
         }
         String name = rest.replaceAll("[\\s!.:;,✯☘☠♣-]+$", "").trim();
+        name = name.replaceFirst("(?i)^You (?:dug out|found|unearthed)\\s+(?:an?\\s+|some\\s+)?", "").trim();          // a Diana burrow: "You dug out a Griffin Feather"
         name = name.replaceFirst("^[^\\p{L}\\p{N}\\[(\"'+]+", "").trim();          // a leading symbol is not part of the name
         if (name.startsWith("(") && name.endsWith(")") && name.indexOf('(', 1) < 0) name = name.substring(1, name.length() - 1).trim();   // "(Duplex I)"
         if (name.isEmpty()) return null;

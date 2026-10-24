@@ -222,10 +222,20 @@ final class AuraFx {
             double fov = Math.toRadians(mc.options.fov().get()), th = Math.tan(fov / 2), asp = W / (double) H;
             long now = System.currentTimeMillis();
             float pt = 1f; try { pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false); } catch (Throwable ignored) { }
+            FancyConfig cf = FancyConfig.get();
+            java.util.Set<UUID> allowed = null;                                                      // "most players with an aura": only the nearest few get drawn
+            if (cf.cosMax > 0) {
+                List<net.minecraft.world.entity.player.Player> near = new java.util.ArrayList<>();
+                for (var p : mc.level.players()) if (p != mc.player) { Cosmetics.Look l0 = looks.get(p.getUUID()); if (l0 != null && l0.aura() != null) near.add(p); }
+                near.sort(java.util.Comparator.comparingDouble(q -> mc.player.distanceToSqr(q)));
+                allowed = new java.util.HashSet<>(); for (int i = 0; i < Math.min(cf.cosMax, near.size()); i++) allowed.add(near.get(i).getUUID());
+            }
+            boolean firstP = true; try { Object ct0 = call(mc.options, "getCameraType"); firstP = ct0 == null || Boolean.TRUE.equals(call(ct0, "isFirstPerson")); } catch (Throwable ignored) { }
             for (var p : mc.level.players()) {
                 Cosmetics.Look l = looks.get(p.getUUID());
                 if (l == null || l.aura() == null) continue;
-                if (p != mc.player && mc.player.distanceTo(p) > 40) continue;
+                if (p == mc.player && cf.cosHideFirst && firstP) continue;
+                if (p != mc.player && (mc.player.distanceTo(p) > cf.cosRange || (allowed != null && !allowed.contains(p.getUUID())))) continue;
                 if (p != mc.player) {                                                                    // someone else: a quick look-through check every half second, not every frame (it flickered when moving)
                     long[] ck = LOS.computeIfAbsent(p.getUUID(), k -> new long[]{0, 1});
                     if (now - ck[0] > 500) { ck[0] = now; ck[1] = mc.player.hasLineOfSight(p) ? 1 : 0; }
@@ -253,7 +263,8 @@ final class AuraFx {
                 while (hist.size() > 2 && now - (long) hist.peekFirst()[0] > 1600) hist.removeFirst();
                 float moveK = (float) Math.max(0.0, Math.min(1.0, (st[7] - 0.35) / 3.6)); moveK = moveK * moveK * (3f - 2f * moveK);
                 boolean idle = now - (long) st[5] > 5000, going = now - (long) st[5] < 250;
-                double want = going ? 2.0 : idle ? 0.55 : 1.0;                                            // moving: the aura swirls faster round you; resting: it slows down
+                double want = going ? 2.0 : idle ? 0.55 : 1.0;
+                if (cf.cosCalm) want *= 0.4;                                            // moving: the aura swirls faster round you; resting: it slows down
                 double dtm = Math.min(100, now - st[1]); st[1] = now;
                 st[6] += (want - st[6]) * Math.min(1.0, dtm / 250.0);
                 st[0] += dtm * st[6];
@@ -262,21 +273,23 @@ final class AuraFx {
                 List<P> ps = fade(particles(l.aura(), (long) st[0]), 1f - moveK);                           // the resting aura melts away as you pick up speed, and comes back as you slow
                 if (idleK > 0f) ps.addAll(idleParticles(l.aura(), now, idleK * (1f - moveK)));
                 if (moveK > 0.01f) ps.addAll(trail(l.aura(), hist, now, ex, ey, ez, st[8], moveK));
+                int keep = Math.min(100, cf.cosAmount); int pi = 0;
                 for (P q : ps) {
+                    if (keep < 100 && (pi + 1) * keep / 100 == pi++ * keep / 100) continue;                  // aura amount below 100%: drop an even share of the particles
                     double bx = ex, by = ey, bz = ez;                                                       // always on you: the aura moves round the body, it never trails behind
                     double dx = bx + q.x() - cx, dy = by + q.y() - cy, dz = bz + q.z() - cz;
                     double zc = dx * fx + dy * fy + dz * fz;
                     if (zc < 0.25) continue;
                     double xc = dx * rx + dy * ry + dz * rz, yc = dx * ux + dy * uy + dz * uz;
                     float sx = (float) (W / 2.0 * (1 + xc / (zc * th * asp))), sy = (float) (H / 2.0 * (1 - yc / (zc * th)));
-                    float px = (float) (q.size() * (H / 2.0) / (zc * th));
+                    float px = (float) (q.size() * cf.cosSize / 100.0 * (H / 2.0) / (zc * th));
                     draw(g, sx, sy, px, q);
                 }
             }
             if (!Cosmetics.nameTagHooked) for (var p : mc.level.players()) {                                // fallback (the name-tag mixin did not apply): the name cosmetic and suffix over other players' heads
                 if (p == mc.player) continue;
                 Cosmetics.Look l = looks.get(p.getUUID());
-                if (l == null || (l.fx() == null && l.suffix() == null) || mc.player.distanceTo(p) > 24) continue;
+                if (l == null || (l.fx() == null && l.suffix() == null) || mc.player.distanceTo(p) > Math.min(24, cf.cosRange)) continue;
                 double[] sm = SMOOTH.get(p.getUUID());
                 double ex = sm != null ? sm[0] : p.getX(), ey = (sm != null ? sm[1] : p.getY()) + p.getBbHeight() + 0.95, ez = sm != null ? sm[2] : p.getZ();
                 double dx = ex - cx, dy = ey - cy, dz = ez - cz, zc = dx * fx + dy * fy + dz * fz;

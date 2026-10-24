@@ -521,6 +521,31 @@ final class Scene {
         }
     }
 
+    /** Pest, style 2: rain pours on the field, a puddle spreads round the pest, it is washed away and the drop rises out of the water. */
+    private static void pestRain(Canvas out, Params p, float t, float ts, float hit, int gy, int cx, float a0) {
+        rainStorm(out, p, t, ts, gy, cx, 1, 6);
+        float pu = cl((t - 0.3f) / Math.max(0.1f, ts - 0.3f));
+        ell(out, cx, gy + 1, (int) (4 + 20 * pu), (int) (1 + 3 * pu), Canvas.rgb((int) (230 * cl(pu * 4f)), 0xFF3E78B8));
+        ell(out, cx, gy, (int) (3 + 15 * pu), (int) (1 + 2 * pu), Canvas.rgb((int) (230 * cl(pu * 4f)), 0xFF8CC4F0));
+        if (t < hit) {
+            float u = cl(t / hit), bx = cx - 30 + 30 * u * u, by = gy - 2 - Math.abs((float) Math.sin(t * 12)) * 3f * u;
+            bug(out, bx, by, 1f - 0.4f * u * u, t, 1, u > 0.4f);
+        }
+        float g = t - hit;
+        if (g >= 0f && g < 0.5f) {
+            for (int i = 0; i < 8; i++) { double an = Math.PI * (0.1 + 0.8 * h(i, 11)); float sp = 14 + 26 * h(i, 12); out.glint(Math.round(cx + (float) Math.cos(an) * sp * g * 2f), Math.round(gy - 4 - (float) Math.sin(an) * sp * g * 2f), 1, 0xBFE6FF, 1f - g / 0.5f); }
+        }
+        if (t >= ts - 0.2f && t < ts) { float f = (t - (ts - 0.2f)) / 0.2f; out.glow(cx, gy - 2, 6 + 22 * f, 0xFFFFFF, 0.6f * f); }
+        if (t >= ts) {
+            float fl = cl(1f - a0 / 0.3f); out.glow(cx, gy - 4, 40, 0xFFFFFF, 0.7f * fl);
+            for (int r = 0; r < 2; r++) {
+                float ra = a0 - r * 0.07f, dur = 0.42f; if (ra < 0f || ra > dur) continue;
+                float rad = 5 + 40 * easeOut(ra / dur);
+                for (int i = 0; i < 100; i++) { double an = i * Math.PI * 2 / 100; out.set((int) (cx + Math.cos(an) * rad), (int) (gy + 1 + Math.sin(an) * rad * 0.3), Canvas.rgb((int) (200 * (1f - ra / dur)), r == 0 ? 0xFFBFE6FF : 0xFFFFFFFF)); }
+            }
+        }
+    }
+
     /** Mythological, style 2: golden comets plunge out of a starry sky onto the rune circle instead of lightning. */
     private static void comet(Canvas out, float t, float land, float tx, int gy, int k) {
         float u = (t - (land - 0.3f)) / 0.3f;
@@ -1927,6 +1952,11 @@ final class Scene {
             out.rect(x - 1 + sw, gy - 9, x + 2 + sw, gy - 6, 0xFF7CCB52);
         }
 
+        if (p.alt) {                                                                                       // style 2: a downpour instead of the vacuum
+            pestRain(out, p, t, ts, hit, gy, cx, a0);
+            if (split && p.hasItem && p.item != null) { twinPass(out, p, t, ts, us, false, false, 0, false); drawItem(out, p, t, ts, us); twinPass(out, p, t, ts, us, false, false, gy - 18, true); }
+            return;
+        }
         // the vacuum: a hose from the top corner and a flared nozzle that drops in over the middle
         float drop = easeOut(t / 0.35f), ny = -22 + (nzY + 22) * drop;
         int nx = cx + Math.round(shake * 0.5f);

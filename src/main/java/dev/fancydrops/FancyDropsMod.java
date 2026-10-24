@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
+import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -64,7 +65,9 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
         ClientReceiveMessageEvents.MODIFY_GAME.register((message, overlay) -> overlay ? message : Cosmetics.apply(message));
 
-        ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
+        Identifier early = Identifier.fromNamespaceAndPath("fancydrops", "early");            // our listener goes first: another mod that hides a chat line (SBO's Diana Message Hider) can no longer stop us from seeing it
+        ClientReceiveMessageEvents.ALLOW_GAME.addPhaseOrdering(early, Event.DEFAULT_PHASE);
+        ClientReceiveMessageEvents.ALLOW_GAME.register(early, (message, overlay) -> {
             if (overlay) return true;
             return !DropListener.onChat(message);   // the RARE DROP line is replaced by the animation
         });

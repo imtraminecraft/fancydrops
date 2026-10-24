@@ -794,7 +794,16 @@ public final class AnimationManager {
     /** The words stay this many real seconds after the scene is over. */
     private static final float TEXT_EXTRA = 2f;
 
+    private static long errAt;
     public static void render(GuiGraphicsExtractor g) {
+        try { renderScene(g); }
+        catch (Throwable t) {                                               // a scene that fails is dropped and written to the drop log, so one bad scene never stops the next
+            cur = null;
+            if (System.currentTimeMillis() - errAt > 2000) { errAt = System.currentTimeMillis(); java.io.StringWriter sw = new java.io.StringWriter(); t.printStackTrace(new java.io.PrintWriter(sw)); DropListener.dlog("scene failed: " + sw.toString().replace("\r", "").replace("\n", " | ")); }
+        }
+    }
+
+    private static void renderScene(GuiGraphicsExtractor g) {
         FancyConfig c = FancyConfig.get();
         if (cur == null) {
             Anim next = QUEUE.peek();
