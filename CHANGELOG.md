@@ -1,3 +1,8 @@
+## 0.9.5
+- Changed: every animation is short and sweet like Farming. Only an RNG drop keeps the long scene with the black bars
+- New: Drop Library has an RNG button on every item: Auto (by price), RNG (always the big scene) or Off (never)
+- New: Drop Library > Mythological > Treasure, with the drops of each spade (Ancestral, Archaic, Deific), the Erudite reforge and the chance of each per burrow
+
 ## 0.9.4
 - New: Settings > Cosmetics page. Your six cosmetic toggles moved there, with new options: calm mode, hide your aura in first person, show-within distance, most players with an aura, name effect speed, aura amount and aura size
 - New: a new icon for each animation style (Splat, Brush, Slash, Rain, Lightning, Comets, Book, Orb)

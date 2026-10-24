@@ -123,6 +123,8 @@ public class FancyConfig {
     public java.util.Map<String, Float> textSecs = new java.util.HashMap<>();   // seconds after the animation starts until the title and info appear (3..10); missing = 4
     public float textDelay(String key) { return "farm".equals(key) || "helios".equals(key) || "pest".equals(key) ? 0f : Math.max(3f, Math.min(10f, textDelayAll)); }       // Farming's words follow the reveal by themselves
     public void setBarPx(int px) { barPx = Math.max(5, Math.min(15, px)); barHeight = Math.round(barPx * 100f / 96f); }
+    public int mythSpade = 2;                     // Mythological treasure: the spade the chances are shown for (0 Ancestral, 1 Archaic, 2 Deific)
+    public boolean mythErudite = false;           // ... with the Erudite reforge (2 more burrows in a chain)
     public int mythPet = 5;                       // Mythological: the Griffin pet rarity drop chances are shown for (0 Common .. 5 Mythic)
     public int mythPosBars = -1, mythPos9 = -1;   // Mythological scene positions (-1 = same as Slayers)
     public int expPosBars = -1, expPos9 = -1;     // Experimentation Table scene positions (-1 = same as Slayers)
@@ -149,6 +151,9 @@ public class FancyConfig {
     public String bazaarPrice = "BUY";  // BUY = instant buy, SELL = instant sell
     public String priceSource = "HYPIXEL_AUCTIONS"; // auction source: HYPIXEL_AUCTIONS or LOWEST_BIN_FEED
     public Map<String, SlayerCfg> slayers = new LinkedHashMap<>();
+    public Map<String, Integer> rngPick = new LinkedHashMap<>();                    // Drop Library: item name (lower case) -> 1 always plays the RNG scene, 2 never does; missing = by price
+    public int rngOf(String name) { if (rngPick == null || name == null) return 0; Integer v = rngPick.get(name.toLowerCase(java.util.Locale.ROOT)); return v == null ? 0 : v; }
+    public void setRng(String name, int v) { if (rngPick == null) rngPick = new LinkedHashMap<>(); String k = name.toLowerCase(java.util.Locale.ROOT); if (v == 0) rngPick.remove(k); else rngPick.put(k, v); }
     public List<CustomDrop> custom = new ArrayList<>();
 
     private static FancyConfig instance;
@@ -184,6 +189,7 @@ public class FancyConfig {
         instance.farmPos = Math.max(0, Math.min(9, instance.farmPos));
         instance.farmX = Math.max(0f, Math.min(1f, instance.farmX)); instance.farmY = Math.max(0f, Math.min(1f, instance.farmY));
         instance.mythPet = Math.max(0, Math.min(5, instance.mythPet));
+        instance.mythSpade = Math.max(0, Math.min(2, instance.mythSpade));
         instance.mythStrikes = Math.max(1, Math.min(10, instance.mythStrikes)); instance.mythStrikesRng = Math.max(1, Math.min(10, instance.mythStrikesRng));
         if (instance.textSecs == null) instance.textSecs = new java.util.HashMap<>();
         instance.textSecs.replaceAll((k, v) -> v == null ? 4f : Math.max(3f, Math.min(10f, v)));

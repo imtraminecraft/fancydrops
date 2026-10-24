@@ -103,12 +103,16 @@ public final class AnimationManager {
     public static int tierOf(Item it) {
         FancyConfig c = FancyConfig.get();
         if (it == null) return 0;
-        if (c.epicEffects && isDye(it)) return 2;   // every dye gets the big scene
-        if (c.epicEffects && !it.untradeable && it.price * Math.max(1, it.amount) >= c.epicThreshold) return 2;
-        if (it.slayer != null && "vampire".equals(it.slayer.id)) {                          // Riftstalker: blue chances play Rare Drop, purple chances play RNG Drop
+        int pick = c.rngOf(it.name);                                                          // Drop Library > RNG button: 1 = always RNG for me, 2 = never
+        if (pick == 1) return 2;
+        boolean never = pick == 2;
+        if (!never && c.epicEffects && isDye(it)) return 2;   // every dye gets the big scene
+        if (!never && c.epicEffects && !it.untradeable && it.price * Math.max(1, it.amount) >= c.epicThreshold) return 2;
+        if (!never && it.slayer != null && "vampire".equals(it.slayer.id)) {                          // Riftstalker: blue chances play Rare Drop, purple chances play RNG Drop
             if ("Extraordinary".equals(it.odds)) return c.epicEffects ? 2 : 1;
             if ("Rare".equals(it.odds)) return 1;
         }
+        if (never && (isDye(it) || it.rank >= 3)) return 1;
         if (it.rank >= 2 || Ui.significant(it.odds)) return 1;
         return 0;
     }
@@ -128,13 +132,15 @@ public final class AnimationManager {
      * Without bars it sits on a 3 x 3 grid, never gets cut off by the screen, and the text goes on the side with room:
      * below a scene at the top, above a scene at the bottom, and by choice (Text position) when it is in the middle.
      */
+    /** The black bars only frame an RNG drop; every other scene is short and bar-less. Set just before layout() by whoever draws. */
+    static boolean rngBars = true;
     public static Layout layout(int W, int H, FancyConfig c, int rows) { return layout(W, H, c, rows, 0); }
 
     /** farm = the small Farming scene: never framed by bars, has its own position and size, slightly smaller text. */
     public static Layout layout(int W, int H, FancyConfig c, int rows, int cat) {
         boolean farm = cat == 2;
         int m = Math.min(W, H);
-        boolean bars = c.cine(cat) && !farm;
+        boolean bars = c.cine(cat) && !farm && rngBars;
         float tsc = c.textK() * uk(W, H) * (farm ? 0.9f : 1f);
         int lineH = Math.max(6, Math.round(11 * tsc)), textH = lineH * (rows + 1);
         float want = (farm ? Math.max(0.5f, Math.min(1.1f, c.farmScale)) * 0.24f : (bars ? c.sizeOf(cat) : Math.max(1f, c.sizeOf(cat))) * 0.8f * 0.4f) * m / Scene.W;
@@ -208,10 +214,11 @@ public final class AnimationManager {
     }
     /** The whole animation in scene seconds, text included. */
     static final float SLOW = 1.3f;
-    static float naturalScene(Scene.Params p, boolean farm) { return farm ? Scene.splitTime(p) + 2.0f : Scene.length(p) + 1.8f; }
+    static float naturalScene(Scene.Params p, boolean farm) { return farm || p.tier != 2 ? Scene.splitTime(p) + 2.0f : Scene.length(p) + 1.8f; }          // short and sweet like Farming; only an RNG drop gets the long scene with bars
     /** {scene seconds per real second, when the words start in scene seconds, total real seconds}. The animation plays first; title and info follow after the text delay. */
-    static float[] timing(Scene.Params p, boolean farm, String key, FancyConfig c) {
-        float natural = naturalScene(p, farm), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
+    static float[] timing(Scene.Params p, boolean farm0, String key, FancyConfig c) {
+        boolean farm = farm0 || p.tier != 2;
+        float natural = naturalScene(p, farm0), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
         Float want = c.animSecs.get(key);
         float total = farm ? Math.max(1.8f, (want != null ? Math.min(10f, want) * 0.6f : natural) - 1f) : Math.max(4f, Math.max(5f, Math.max(want != null ? Math.max(5f, Math.min(10f, want)) : natural, delay + 3.5f)) * SLOW - 1f);        // one second shorter than before        // Farming is quick: it plays at its own pace, not slowed   // SLOW: everything plays a notch slower
         float speed = natural / total;
@@ -677,7 +684,8 @@ public final class AnimationManager {
         if (cat == 3) p.mob = (int) ((System.currentTimeMillis() / 1000L / 9L) % 12L);      // the preview calls a different creature each loop
         String kk = key == null ? "" : key;
         if (previewCat != cat || !kk.equals(previewKeyLast)) { previewCat = cat; previewKeyLast = kk; previewFrame = -1; }
-        boolean farm = cat == 2, cine = c.cine(cat) && !farm;
+        boolean farm = cat == 2, cine = c.cine(cat) && !farm && p.tier == 2;
+        rngBars = p.tier == 2;
         Font font = Minecraft.getInstance().font;
         float sec = syncSec >= 0f ? syncSec * speed : ((System.currentTimeMillis() - previewT0) % 600_000L) / 1000f * speed;
         float ts = Scene.splitTime(p), len = tm == null ? Scene.length(p) + 0.4f : naturalScene(p, p.farm);
@@ -829,9 +837,10 @@ public final class AnimationManager {
         if (a.p.twin && a.p.item2 == null && a.item2 != null) a.p.item2 = ItemIcons.model(a.item2.id, a.slayer.color());
 
         float ga = Math.min(clamp(t / 0.2f), clamp((sLen - t) / 0.5f)), gt = Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f));      // scene fade, words fade
-        boolean cine = c.cine(catOf(a)) && !a.farm;                              // bars are for Slayer and Dye scenes only
+        boolean cine = c.cine(catOf(a)) && !a.farm && a.tier == 2;                          // the black bars are for RNG drops only                              // bars are for Slayer and Dye scenes only
         float cin = cine ? easeIO(Math.min(clamp(t / 0.6f), clamp((sLen - t) / 0.6f))) : 0f;
         Font font = Minecraft.getInstance().font;
+        rngBars = a.tier == 2;
         Layout L = layout(g.guiWidth(), g.guiHeight(), c, catOf(a) == 2 ? farmRows(a.item, c) : rows(a, c), catOf(a));
         float ts = Scene.splitTime(a.p), reveal = a.textScene >= 0f ? a.textScene : ts + 0.27f;
         boolean epic = a.tier == 2;

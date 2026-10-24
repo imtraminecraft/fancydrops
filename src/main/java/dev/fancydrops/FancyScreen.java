@@ -73,6 +73,20 @@ public class FancyScreen extends Screen {
         boolean drag(double mx) { return false; }
     }
 
+    /** Drop Library: Auto (by price) / RNG (always the big scene) / Off (never) for one item, saved by its name. */
+    private class RngBtn extends Ctl {
+        final String item;
+        RngBtn(String item) { this.item = item; }
+        int width() { return 34; }
+        void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {
+            int v = FancyConfig.get().rngOf(item), ty = y + (h - 14) / 2;
+            int col = v == 1 ? 0xFF8A3FD0 : v == 2 ? 0xFF4A4F60 : 0xFF2A3350;
+            pill(g, x0, ty, x1 - x0, 14, hover ? Canvas.mix(col, 0xFFFFFFFF, 0.18f) : col);
+            Gfx.textCentered(g, font, v == 1 ? "RNG" : v == 2 ? "Off" : "Auto", (x0 + x1) / 2, ty + 3, v == 0 ? Ui.SUB : 0xFFFFFFFF);
+        }
+        boolean click(double mx, int button) { FancyConfig c = FancyConfig.get(); int v = c.rngOf(item); c.setRng(item, button == 1 ? (v + 2) % 3 : (v + 1) % 3); FancyConfig.save(); return true; }
+    }
+
     private class Switch extends Ctl {
         final BooleanSupplier get; final Consumer<Boolean> set;
         Switch(BooleanSupplier g, Consumer<Boolean> s) { get = g; set = s; }
@@ -1724,6 +1738,7 @@ public class FancyScreen extends Screen {
         })));
         dr.ctls.add(tog(() -> dc.animate, v -> dc.animate = v, 0xFF4A6CF0));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
+        dr.ctls.add(0, new RngBtn(d.name()));
         dr.dcfg = dc;
         return dr;
     }
@@ -1738,6 +1753,7 @@ public class FancyScreen extends Screen {
         dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (FarmData.ALL.contains(s)) DropListener.playFarmDrop(s, d); else if (MythData.ALL.contains(s)) DropListener.playMythDrop(s, d); else DropListener.playDrop(s, d, "+250%"); })));
         dr.ctls.add(tog(() -> dc.animate, v -> dc.animate = v, 0xFF4A6CF0));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
+        dr.ctls.add(0, new RngBtn(d.name));
         dr.dcfg = dc;
         return dr;
     }
@@ -1850,6 +1866,29 @@ public class FancyScreen extends Screen {
     private Row toggle(String icon, String title, String sub, BooleanSupplier g, Consumer<Boolean> s) {
         Row r = row(0, icon, title, sub, Ui.ACCENT); r.ctls.add(sw(g, s)); r.click = () -> s.accept(!g.getAsBoolean()); return r;
     }
+    /** Mythological Ritual > Treasure: what a burrow can hold, for the spade you dig with. */
+    private void treasureRows(List<Row> rows, FancyConfig c) {
+        int sp = Math.max(0, Math.min(2, c.mythSpade)), col = TreasureData.COLS[sp];
+        String[][] list = TreasureData.DROPS[sp];
+        Row f = fold("myth_treasure", "fd:griffin#" + String.format("%06X", col & 0xFFFFFF), "Treasure", list.length + " drops  ·  " + TreasureData.SPADES[sp], col);
+        f.indent = 1; rows.add(f);
+        if (!f.open) return;
+        Row pick = row(2, "fd:griffin#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  ·  25% of burrows are treasure", col);
+        Dd dd = new Dd(() -> TreasureData.SPADES[Math.max(0, Math.min(2, c.mythSpade))], "dd_spade", 100); dd.col = () -> col;
+        pick.ctls.add(dd); rows.add(pick);
+        if (open.contains("dd_spade") && !searching) { Row pl = miniList(pick, dd, java.util.Arrays.asList(TreasureData.SPADES), sp, i -> { c.mythSpade = i; open.remove("dd_spade"); }); pl.pickCols = TreasureData.COLS; rows.add(pl); }
+        Row er = row(2, "fd:cos_aura", "Erudite reforge", "From Daedalus' Notes. Two more burrows in a chain", Ui.ACCENT);
+        er.ctls.add(sw(() -> c.mythErudite, v -> c.mythErudite = v)); er.click = () -> c.mythErudite = !c.mythErudite; rows.add(er);
+        for (String[] e : list) {
+            Row r = row(2, e[2], e[0], e[3] + " of treasures", col);
+            if (!e[1].isEmpty()) r.iconId = e[1];
+            r.subColor = Ui.SUB; r.dcfg = new FancyConfig.DropCfg();
+            r.ctls.add(new Val(() -> "1 in " + (c.mythErudite ? e[5] : e[4]), 92));
+            rows.add(r);
+        }
+        rows.add(note("The chance is per burrow you dig. Creature burrows are the other 75%.", Ui.DIM));
+    }
+
     private Row stepper(String icon, String title, String sub, Supplier<String> value, IntConsumer step, int w) {
         Row r = row(0, icon, title, sub, Ui.ACCENT); r.ctls.add(new Step(value, step, w)); return r;
     }
@@ -2045,6 +2084,7 @@ public class FancyScreen extends Screen {
                         rows.add(masterRow(sc, s, c));
                         for (SlayerData.Drop d : s.drops) rows.add(dropRow(s, d, c));
                     }
+                    treasureRows(rows, c);
                 }
                 dropFinish(rows, cat);
                 buildAll = false;
@@ -3814,7 +3854,7 @@ public class FancyScreen extends Screen {
         if (r.dropCols) {
             // labels over the Preview / Animation / Chat Alert columns of the drop rows below: same right-to-left columns, each CELL wide
             int edge = cx + cw - 8;
-            String[] labels = {"Chat Alert", "Animation", "Preview"};
+            String[] labels = {"Chat Alert", "Animation", "Preview", "RNG"};
             for (String label : labels) {
                 Gfx.textCentered(g, font, label, edge - CELL / 2, r.y + 3, Ui.DIM);
                 edge -= CELL;
