@@ -149,7 +149,21 @@ final class AuraFx {
         for (String n : names) { try { var m = o.getClass().getMethod(n); m.setAccessible(true); return m.invoke(o); } catch (Throwable ignored) { } }
         return null;
     }
-    private static double fieldD(Object o, String f) { try { var fl = o.getClass().getField(f); return fl.getDouble(o); } catch (Throwable t) { Object r = call(o, f); return r instanceof Number nn ? nn.doubleValue() : 0; } }
+    private static final Map<String, java.lang.reflect.Field> FD = new java.util.HashMap<>();
+    private static final Map<String, java.lang.reflect.Method> FM = new java.util.HashMap<>();
+    /** A number from a field or, failing that, a method of the same name. Both lookups are found once per class, not every frame. */
+    private static double fieldD(Object o, String f) {
+        String key = o.getClass().getName() + "#" + f;
+        try {
+            java.lang.reflect.Field fl;
+            if (FD.containsKey(key)) fl = FD.get(key); else { try { fl = o.getClass().getField(f); } catch (Throwable t) { fl = null; } FD.put(key, fl); }
+            if (fl != null) return fl.getDouble(o);
+            java.lang.reflect.Method m;
+            if (FM.containsKey(key)) m = FM.get(key); else { try { m = o.getClass().getMethod(f); m.setAccessible(true); } catch (Throwable t) { m = null; } FM.put(key, m); }
+            if (m != null && m.invoke(o) instanceof Number nn) return nn.doubleValue();
+        } catch (Throwable ignored) { }
+        return 0;
+    }
 
     private static java.lang.reflect.Field camPos, camX, camY; private static Object camObj; private static boolean camTried;
     /** The camera the world is drawn from: x, y, z, yaw, pitch. Found by field shape; if that fails, worked out from the player and the F5 view. */
@@ -224,7 +238,7 @@ final class AuraFx {
                     double[] sm = SMOOTH.get(p.getUUID()); if (sm == null) { sm = new double[]{ex, ey, ez, now}; SMOOTH.put(p.getUUID(), sm); }
                     double dts = Math.max(1, Math.min(100, now - (long) sm[3])); sm[3] = now;
                     if (Math.abs(ex - sm[0]) + Math.abs(ey - sm[1]) + Math.abs(ez - sm[2]) > 6) { sm[0] = ex; sm[1] = ey; sm[2] = ez; }
-                    else { double k = 1 - Math.exp(-dts / 90.0); sm[0] += (ex - sm[0]) * k; sm[1] += (ey - sm[1]) * k; sm[2] += (ez - sm[2]) * k; }
+                    else { double k = 1 - Math.exp(-dts / 130.0); sm[0] += (ex - sm[0]) * k; sm[1] += (ey - sm[1]) * k; sm[2] += (ez - sm[2]) * k; }
                     ex = sm[0]; ey = sm[1]; ez = sm[2];
                 }
                 double[] st = STATE.get(p.getUUID()); if (st == null) { st = new double[]{0, now, ex, ey, ez, now, 1, 0, 0}; STATE.put(p.getUUID(), st); }     // phase ms, last frame, last position, last time it moved, speed
@@ -259,7 +273,7 @@ final class AuraFx {
                     draw(g, sx, sy, px, q);
                 }
             }
-            for (var p : mc.level.players()) {                                                        // the name cosmetic and suffix, over other players' heads
+            if (!NameTagHook.hooked) for (var p : mc.level.players()) {                                // fallback (the name-tag mixin did not apply): the name cosmetic and suffix over other players' heads
                 if (p == mc.player) continue;
                 Cosmetics.Look l = looks.get(p.getUUID());
                 if (l == null || (l.fx() == null && l.suffix() == null) || mc.player.distanceTo(p) > 24) continue;

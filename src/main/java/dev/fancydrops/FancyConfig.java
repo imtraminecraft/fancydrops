@@ -55,6 +55,9 @@ public class FancyConfig {
     public float size = -1f;                  // animation size, 100% = 1.0 (older configs stored it as 80% = 1.0; converted on load)
     public boolean animBlur = true;           // blur the game behind a scene
     public int barHeight = 16;                // each black cinematic bar, as a percentage of the screen height
+    public int dyeStyle = 0, farmStyle = 0, mythStyle = 0, expStyle = 0;      // 0 = the first look, 1 = the second look of that page
+    /** The look a page of animations is using: 0 or 1 (cat: 0 slayers, 1 dye, 2 farming, 3 mythological, 4 experiments). */
+    public int styleOf(int cat) { return switch (cat) { case 1 -> dyeStyle; case 2 -> farmStyle; case 3 -> mythStyle; case 4 -> expStyle; default -> slayerStyle; }; }
     public int slayerStyle = 0;               // 0 Sword (sword slices), 1 Spirit (soul slashes)
     public int barPx = 15;                    // bar height in pixels of the 96-pixel-tall scene (5..15); barHeight (a percentage) follows it
     public int barOpacity = 90;                 // Bar Changes: how solid the bars are (%)
@@ -193,6 +196,8 @@ public class FancyConfig {
         instance.dyePosBars = Math.max(-1, Math.min(2, instance.dyePosBars)); instance.dyePos9 = Math.max(-1, Math.min(8, instance.dyePos9));
         instance.farmScale = Math.max(0.5f, Math.min(1.1f, instance.farmScale <= 0 ? 1f : instance.farmScale));
         instance.slayerStyle = Math.max(0, Math.min(1, instance.slayerStyle));
+        instance.dyeStyle = Math.max(0, Math.min(1, instance.dyeStyle)); instance.farmStyle = Math.max(0, Math.min(1, instance.farmStyle));
+        instance.mythStyle = Math.max(0, Math.min(1, instance.mythStyle)); instance.expStyle = Math.max(0, Math.min(1, instance.expStyle));
         instance.menuTranslucency = Math.max(0, Math.min(70, instance.menuTranslucency));
         instance.previewAt = Math.max(0, Math.min(2, instance.previewAt));
         instance.posBars = Math.max(0, Math.min(2, instance.posBars)); instance.pos9 = Math.max(0, Math.min(8, instance.pos9)); instance.textPos = Math.max(0, Math.min(1, instance.textPos));

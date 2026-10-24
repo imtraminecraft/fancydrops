@@ -22,6 +22,9 @@
     "java": ">=25",
     "fabric-api": "*"
   },
+  "mixins": [
+    "fancydrops.mixins.json"
+  ],
   "icon": "assets/fancydrops/icon.png",
   "custom": {
     "fancydrops:channel": "${channel}"

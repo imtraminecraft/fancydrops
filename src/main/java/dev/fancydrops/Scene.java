@@ -16,7 +16,7 @@ import java.util.List;
  */
 final class Scene {
     static final int W = 112, H = 96;
-    static final double TWIN_DX = 27;                                                              // a twin drop's two items sit this far left / right of the middle
+    static final double TWIN_DX = 34;                                                              // a twin drop's two items sit this far left / right of the middle
     static final double CX = 56, CY = 74, TILT = 0.52, GY = 0.62;
     private static final double CT = Math.cos(TILT), ST = Math.sin(TILT);
     static final int N = 12;                                   // texture size of the mob's faces
@@ -39,6 +39,7 @@ final class Scene {
         int mob;                                            // Mythological scene: which creature is summoned (0 Hunter, 1 Lynxes, 2 Gaia, 3 Minotaur, 4 Champion, 5 Inquisitor)
         boolean exp;                                        // Experimentation Table drops: the table's book opens, zooms in, flips its pages and shows the drop
         boolean myth;                                       // Mythological Ritual drops: three golden lightning strikes light a rune circle between two pillars
+        boolean alt;                                // the second animation style of the Dye / Farming / Mythological / Experiment scenes
         int style;                                  // slayer animation style: 0 Sword (sword), 1 Spirit (soul slashes)
         int seed = 7, cutSeed = 7, theme = 6;       // theme: 0 zombie 1 spider 2 wolf 3 enderman 4 blaze 5 vampire 6 none
         float shakeX, shakeY;
@@ -251,7 +252,7 @@ final class Scene {
         p.shakeX = shx; p.shakeY = shy;
 
         // ---- behind everything
-        if (split && p.reveal) background(out, p, t, ts, us, cool, epic);
+        if (split && p.reveal) twinPass(out, p, t, ts, us, cool, epic, 0, false);
         if (p.style == 1) { spiritBackdrop(out, p, t, ts); } else ambient(out, p, t);
 
         // ---- the dais
@@ -308,7 +309,7 @@ final class Scene {
             }
         }
         if (p.style != 1) impactExtras(out, p, t, ct);
-        if (split && p.reveal) foreground(out, p, t, ts, us, cool, epic, ct);
+        if (split && p.reveal) twinPass(out, p, t, ts, us, cool, epic, ct, true);
     }
 
     // ------------------------------------------------------------------------------------------------ the dye scene
@@ -361,7 +362,7 @@ final class Scene {
         int icy = itemScreenY(t, ts);
 
         if (split && p.hasItem && p.item != null) {
-            background(out, p, t, ts, us, true, false);
+            twinPass(out, p, t, ts, us, true, false, 0, false);
             float in = cl(us / 0.15f);
             for (int i = 0; i < 16; i++) {                                // rays in the dye's own shades, slowly turning
                 double ang = us * 0.7 + i * (Math.PI * 2 / 16); float L = 66 * (i % 2 == 0 ? 1f : 0.6f); int rc = i % 3 == 0 ? lite : i % 3 == 1 ? col : 0xFFFFFFFF;
@@ -374,7 +375,8 @@ final class Scene {
         }
 
         // the blob falls in from the top
-        if (t < land) {
+        if (p.alt) brushStrokes(out, p, t, ts, col, dark, lite);
+        if (!p.alt && t < land) {
             float f = cl((t - 0.15f) / (land - 0.15f)), y = -8 + (cy + 8) * f * f, r = 3 + 3 * f;
             for (int i = 1; i <= 10; i++) out.disc(cx, (int) (y - i * 2.2f), Math.max(1, (int) (r * (1 - i / 12f))), Canvas.rgb(Math.round(150 * (1 - i / 11f) * f), col));
             out.disc(cx, (int) y, (int) r + 1, dark); out.disc(cx, (int) y, (int) r, col);
@@ -382,7 +384,7 @@ final class Scene {
         }
 
         // the splat: a round body with long, uneven tendrils, filling the whole frame
-        if (a >= 0) {
+        if (!p.alt && a >= 0) {
             float g = easeOut(a / 0.3f) * (1f + 0.07f * (float) Math.sin(a * 16) * (float) Math.exp(-a * 4.5f)), creep = 1f + 0.03f * easeOut(a / 2f);
             float fade = split ? 1f - 0.4f * easeOut((t - ts) / 0.6f) : 1f;
             final int L = 11; float[] ang = new float[L], wid = new float[L], len = new float[L];
@@ -445,6 +447,130 @@ final class Scene {
         }
     }
 
+
+    /** Dye, style 2: a wide brush sweeps four coats of the dye across the screen, one after the other, flinging flecks as it goes. */
+    private static void brushStrokes(Canvas out, Params p, float t, float ts, int col, int dark, int lite) {
+        float fade = t >= ts ? 1f - 0.45f * easeOut((t - ts) / 0.6f) : 1f;
+        final int ST = 4, band = 26;
+        for (int s = 0; s < ST; s++) {
+            float t0 = 0.08f + s * 0.17f, f = cl((t - t0) / 0.3f);
+            if (f <= 0f) continue;
+            boolean ltr = s % 2 == 0;
+            int y0 = 2 + s * 22;
+            float edge = ltr ? -8 + (W + 16) * easeOut(f) : W + 8 - (W + 16) * easeOut(f);
+            for (int y = Math.max(0, y0); y < Math.min(H, y0 + band); y++) {
+                float yy = (y - y0) / (float) band, wob = (float) Math.sin(y * 0.8 + s * 2.3) * 1.6f;
+                float rag = Math.min(yy, 1f - yy) * band;
+                int streak = h(y, 55 + s) > 0.78f ? 1 : 0;
+                for (int x = 0; x < W; x++) {
+                    boolean in = ltr ? x <= edge + wob : x >= edge + wob;
+                    if (!in) continue;
+                    if (rag < 3.2f * h(x / 3 + s * 9, 400 + s)) continue;
+                    float shade = 0.80f + 0.30f * h(y, 77 + s) + (yy > 0.18f && yy < 0.34f ? 0.16f : 0f) + streak * 0.18f;
+                    int c = Canvas.shade(col, shade);
+                    if (Math.abs(x - (edge + wob)) < 2.2f) c = Canvas.mix(c, lite, 0.55f);            // the wet leading edge
+                    else if (rag < 5f) c = Canvas.mix(c, dark, 0.35f);
+                    out.set(x, y, Canvas.rgb((int) (255 * fade), c));
+                }
+            }
+            if (f < 1f) {                                                                             // the brush itself, and flecks off its tip
+                int hx = Math.round(edge), hy = y0 + band / 2, dir = ltr ? 1 : -1;
+                out.rect(hx - 5, hy - 9, hx + 5, hy + 9, Canvas.shade(col, 1.15f));
+                out.rect(hx - 5, hy - 9, hx + 5, hy - 7, lite);
+                int fx = hx - dir * 9;
+                out.rect(Math.min(fx, fx - dir * 4), hy - 10, Math.max(fx, fx - dir * 4), hy + 10, 0xFFB8C0D0);
+                out.rect(fx - dir * 4, hy - 3, fx - dir * 20, hy + 3, 0xFF8A5A2C);
+                for (int i = 0; i < 7; i++) {
+                    float ph = cl(f * 1.2f - h(i, 120 + s) * 0.3f); if (ph <= 0f) continue;
+                    int px = hx + dir * (int) (4 + 20 * ph), py = hy + (int) ((h(i, 121 + s) - 0.5f) * 36 + 16 * ph * ph);
+                    out.disc(px, py, 1 + (i % 2), Canvas.rgb((int) (230 * (1f - ph)), i % 3 == 0 ? dark : col));
+                }
+            }
+        }
+        float shine = cl((t - 0.9f) / 0.7f);                                                         // a wet gleam runs over the finished coat
+        if (shine > 0f && shine < 1f) out.glow(-10 + (W + 20) * shine, 48, 40, 0xFFFFFF, 0.28f * (1f - Math.abs(shine - 0.5f) * 1.6f));
+    }
+
+    /** Farming, style 2: a rain cloud waters the field and every third of it bursts into sparkles as the rain reaches it. */
+    private static void rainStorm(Canvas out, Params p, float t, float ts, int gy, int cx, int n, int NC) {
+        float in = cl(t / 0.25f) * (t >= ts ? cl(1f - (t - ts) / 0.4f) : 1f);
+        if (in > 0.02f) {
+            for (int i = 0; i < 6; i++) {
+                int x = cx - 40 + i * 16 + (int) (Math.sin(t * 1.2 + i) * 2), y = 8 + (i % 2) * 4;
+                ell(out, x, y, 13, 6, Canvas.rgb((int) (230 * in), i % 2 == 0 ? 0x4A5878 : 0x5E6E92));
+                ell(out, x - 2, y - 2, 8, 3, Canvas.rgb((int) (150 * in), 0x8FA3C8));
+            }
+            for (int i = 0; i < 64 && t < ts; i++) {
+                float ph = frac(t * 2.6 + h(i, 140)), x0 = cx - 46 + h(i, 141) * 92;
+                int y = (int) (14 + ph * (gy - 12));
+                int al = (int) (170 * in * Math.min(1f, (1f - ph) * 4f));
+                out.rect((int) x0, y, (int) x0 + 1, y + 3, Canvas.rgb(al, 0xA8D8FF));
+            }
+        }
+        for (int k = 0; k < n; k++) {
+            float a = t - impact(p, k); if (a < 0f || a > 0.7f) continue;
+            float zx = cx - 35 + ((k * NC / n) + (NC / n - 1) / 2f + 0.5f) * 14 - 7;
+            float r = 3 + 20 * easeOut(a / 0.5f);
+            for (int i = 0; i < 40; i++) { double an = i * Math.PI * 2 / 40; out.set((int) (zx + Math.cos(an) * r), (int) (gy + 2 + Math.sin(an) * r * 0.3), Canvas.rgb((int) (210 * (1f - a / 0.7f)), 0xBFE6FF)); }
+            if (a < 0.2f) out.glow(zx, gy - 8, 24, 0xDFFFE0, 0.55f * (1f - a / 0.2f));
+            for (int i = 0; i < 12; i++) {
+                double an = -Math.PI * (0.1 + 0.8 * h(i, 150 + k)); float sp = 18 + 26 * h(i, 160 + k);
+                int px = (int) (zx + Math.cos(an) * sp * a), py = (int) (gy - 6 + Math.sin(an) * sp * a + 140 * a * a);
+                out.rect(px, py, px + 2, py + 1, Canvas.rgb((int) (255 * (1f - a / 0.7f)), i % 3 == 0 ? 0xFFFFFFFF : i % 3 == 1 ? 0xFF7BE05A : 0xFFFFE680));
+            }
+        }
+    }
+
+    /** Mythological, style 2: golden comets plunge out of a starry sky onto the rune circle instead of lightning. */
+    private static void comet(Canvas out, float t, float land, float tx, int gy, int k) {
+        float u = (t - (land - 0.3f)) / 0.3f;
+        if (u <= 0f || u > 1.12f) return;
+        float uu = Math.min(1f, u);
+        float dx = (k % 2 == 0 ? -1 : 1) * 36f;
+        for (int j = 0; j < 22; j++) {
+            float uj = uu - j * 0.022f; if (uj < 0f) break;
+            float x = tx - dx * (1f - uj), y = -6 + (gy + 4) * uj;
+            int al = (int) (240 * (1f - j / 22f) * (u > 1f ? cl(1f - (u - 1f) / 0.12f) : 1f));
+            int c = j < 3 ? 0xFFFFFFFF : j < 9 ? 0xFFFFE9A0 : 0xFFE8A030;
+            int sz = j < 4 ? 2 : 1;
+            out.rect((int) x, (int) y, (int) x + sz, (int) y + sz, Canvas.rgb(al, c));
+        }
+        if (uu < 1f) out.glow(tx - dx * (1f - uu), -6 + (gy + 4) * uu, 12, 0xFFE9A0, 0.6f);
+    }
+
+    /** Experiment, style 2: instead of a book, a rune orb hangs over the table; each flip lights a ring round it and sends a shockwave out. */
+    private static void expOrb(Canvas out, Params p, float t, float ts, int bx, int by, float z, int landed, int K, boolean rng, boolean split, float open) {
+        float pulse = 0.5f + 0.5f * (float) Math.sin(t * 5);
+        int R0 = Math.max(6, Math.round((10 + 2 * open) * z));
+        int core = rng ? 0xFFE9A0 : 0xFFB56BFF, ring = rng ? 0xFFFFC857 : 0xFF7AD8FF;
+        float lit = landed / (float) K;
+        if (!split) {
+            for (int r = 0; r < 3; r++) {                                                              // orbit rings, one more lit with every flip
+                int rx = Math.round((R0 + 7 + r * 6) * 1f), ry = Math.max(2, rx / 3);
+                boolean on = r < Math.ceil(lit * 3);
+                for (int i = 0; i < 96; i++) {
+                    double an = i * Math.PI * 2 / 96 + t * (r % 2 == 0 ? 1.1 : -0.8) + r;
+                    int x = (int) (bx + Math.cos(an) * rx), y = (int) (by + Math.sin(an) * ry * (r == 1 ? -1 : 1) + (r - 1) * 2);
+                    out.set(x, y, Canvas.rgb(on ? 220 : 70, on ? ring : 0xFF5A4A8A));
+                }
+            }
+        }
+        for (int d = 0; d < R0; d++) {                                                                  // the orb: a lit sphere
+            float f = d / (float) R0;
+            out.disc(bx, by, R0 - d, Canvas.mix(Canvas.shade(core, 0.35f + 0.25f * pulse), Canvas.mix(core, 0xFFFFFFFF, 0.55f), f));
+        }
+        out.disc(bx - R0 / 3, by - R0 / 3, Math.max(1, R0 / 4), 0xCCFFFFFF);
+        for (int i = 0; i < 6; i++) {                                                                   // runes drifting inside the orb
+            double an = t * 1.6 + i * Math.PI / 3; int x = (int) (bx + Math.cos(an) * R0 * 0.55), y = (int) (by + Math.sin(an) * R0 * 0.35);
+            out.rect(x, y, x + 2, y + 2, Canvas.rgb(200, i % 2 == 0 ? 0xFFFFFFFF : ring));
+        }
+        out.glow(bx, by, R0 * 3f, core, 0.28f + 0.2f * pulse * (0.4f + lit));
+        for (int k = 0; k < K; k++) {                                                                   // a shockwave for every flip
+            float a = t - impact(p, k); if (a < 0f || a > 0.5f) continue;
+            float r = R0 + 4 + 40 * easeOut(a / 0.5f);
+            for (int i = 0; i < 120; i++) { double an = i * Math.PI * 2 / 120; out.set((int) (bx + Math.cos(an) * r), (int) (by + Math.sin(an) * r * 0.6), Canvas.rgb((int) (210 * (1f - a / 0.5f)), k % 2 == 0 ? ring : 0xFFFFFFFF)); }
+        }
+    }
 
     private static void ribbons(Canvas out, float us, int cy, int[] pal, boolean front) {
         float in = cl(us / 0.3f);
@@ -948,12 +1074,25 @@ final class Scene {
         return (int) Math.round(CY - itemY(uu) * Math.cos(TILT));
     }
 
+    // a two-drop scene gets one light circle per item, not one in the middle
+    private static double bcx = CX; private static int brar; private static float bsc = 1f;
+    private static void twinPass(Canvas c, Params p, float t, float ts, float us, boolean cool, boolean epic, int ct, boolean fore) {
+        if (p.twin && p.item2 != null) {
+            for (int s = -1; s <= 1; s += 2) {
+                bcx = CX + s * TWIN_DX; brar = s < 0 ? p.rarity : p.rarity2; bsc = 0.6f;
+                float u2 = s > 0 ? Math.max(0f, us - 0.3f) : us;
+                if (fore) foreground(c, p, t, ts, u2, cool, epic, ct); else background(c, p, t, ts, u2, cool, epic);
+            }
+            bcx = CX; brar = 0; bsc = 1f;
+        } else if (fore) foreground(c, p, t, ts, us, cool, epic, ct); else background(c, p, t, ts, us, cool, epic);
+    }
+
     private static void background(Canvas c, Params p, float t, float ts, float us, boolean cool, boolean epic) {
         if (!p.hasItem) return;
-        int cy = itemScreenY(t, ts), rar = p.rarity, light = Canvas.mix(rar, 0xFFFFFFFF, 0.5f);
+        int cy = itemScreenY(t, ts), rar = brar != 0 ? brar : p.rarity, light = Canvas.mix(rar, 0xFFFFFFFF, 0.5f);
         float in = cl(us / 0.12f);
         if (!cool) {                                                       // the plain scene still gets a soft glow so the item reads clearly
-            for (int i = 0; i < 3; i++) c.disc((int) CX, cy, 18 - i * 5, Canvas.rgb((int) (in * (22 + i * 14)), i < 2 ? rar : light));
+            for (int i = 0; i < 3; i++) c.disc((int) bcx, cy, 18 - i * 5, Canvas.rgb((int) (in * (22 + i * 14)), i < 2 ? rar : light));
             return;
         }
         // light beam rising from the board
@@ -962,33 +1101,33 @@ final class Scene {
             int half = 3 + (int) (2 * f) + (epic ? 2 : 0);
             for (int x = -half; x <= half; x++) {
                 float edge = 1f - Math.abs(x) / (float) (half + 1);
-                c.set((int) CX + x, y, Canvas.rgb((int) (in * (epic ? 120 : 90) * f * edge * (0.8f + 0.2f * Math.sin(us * 9 + y * 0.3))), x * x < 3 ? light : rar));
+                c.set((int) bcx + x, y, Canvas.rgb((int) (in * (epic ? 120 : 90) * f * edge * (0.8f + 0.2f * Math.sin(us * 9 + y * 0.3))), x * x < 3 ? light : rar));
             }
         }
         // glow
         float pulse = 1f + 0.07f * (float) Math.sin(us * 9);
-        int[] rr = {(int) (28 * pulse), (int) (20 * pulse), (int) (12 * pulse)};
-        for (int i = 0; i < 3; i++) c.disc((int) CX, cy, rr[i] + (epic ? 6 : 0), Canvas.rgb((int) (in * (28 + i * 22)), i < 2 ? rar : light));
+        int[] rr = {(int) (28 * pulse * bsc), (int) (20 * pulse * bsc), (int) (12 * pulse * bsc)};
+        for (int i = 0; i < 3; i++) c.disc((int) bcx, cy, rr[i] + (epic ? 6 : 0), Canvas.rgb((int) (in * (28 + i * 22)), i < 2 ? rar : light));
         // rotating rays
-        int rays = epic ? 14 : 10; float len = epic ? 62 : 46;
+        int rays = epic ? 14 : 10; float len = (epic ? 62 : 46) * bsc;
         for (int i = 0; i < rays; i++) {
             double ang = us * (epic ? 0.8 : 0.5) + i * (Math.PI * 2 / rays);
             float L = len * (i % 2 == 0 ? 1f : 0.62f);
             for (int s = 5; s < L; s++) {
                 float f = s / L; int a = (int) (in * (epic ? 135 : 100) * (1 - f) * (1 - f * 0.4f));
                 int w = Math.max(1, Math.round(3.2f * (1 - f)));
-                int x = (int) (CX + Math.cos(ang) * s), y = (int) (cy + Math.sin(ang) * s * 0.9);
+                int x = (int) (bcx + Math.cos(ang) * s), y = (int) (cy + Math.sin(ang) * s * 0.9);
                 c.rect(x - w / 2, y - w / 2, x - w / 2 + w, y - w / 2 + w, Canvas.rgb(a, epic && i % 3 == 0 ? 0xFFE9A0 : light));
             }
         }
     }
 
     private static void foreground(Canvas c, Params p, float t, float ts, float us, boolean cool, boolean epic, int ct) {
-        int rar = p.rarity;
+        int rar = brar != 0 ? brar : p.rarity;
         if (!p.hasItem) {                                                  // nothing dropped: a small grey puff and that's it
             for (int i = 0; i < 9; i++) {
                 float a = (t - ts) / 1.0f; if (a < 0 || a > 1) continue;
-                int x = (int) (CX + (h(i, 1) - 0.5f) * 26 + (h(i, 2) - 0.5f) * 10 * a), y = (int) (ct + 6 - 18 * a * (0.5f + h(i, 3)));
+                int x = (int) (bcx + (h(i, 1) - 0.5f) * 26 + (h(i, 2) - 0.5f) * 10 * a), y = (int) (ct + 6 - 18 * a * (0.5f + h(i, 3)));
                 c.rect(x, y, x + 2, y + 2, Canvas.rgb((int) (160 * (1 - a)), 0xB8B8C0));
             }
             return;
@@ -997,8 +1136,8 @@ final class Scene {
         // burst of cream / rarity sparks
         float life = epic ? 0.7f : cool ? 0.5f : 0.38f, pt = us / life;
         if (pt < 1) for (int i = 0; i < (epic ? 70 : cool ? 38 : 16); i++) {
-            double ang = i * 2.399963; float sp = (0.45f + 0.9f * frac(i * 0.618f)) * (epic ? 50 : 32);
-            int x = (int) (CX + Math.cos(ang) * sp * easeOut(pt)), y = (int) (cy + Math.sin(ang) * sp * easeOut(pt) + 10 * pt * pt);
+            double ang = i * 2.399963; float sp = (0.45f + 0.9f * frac(i * 0.618f)) * (epic ? 50 : 32) * bsc;
+            int x = (int) (bcx + Math.cos(ang) * sp * easeOut(pt)), y = (int) (cy + Math.sin(ang) * sp * easeOut(pt) + 10 * pt * pt);
             int col = i % 3 == 0 ? rar : (epic && i % 3 == 1) ? 0xFFFFC840 : 0xFFFFF2C0;
             int sz = (epic && i % 7 == 0) ? 2 : 1;
             c.rect(x, y, x + sz, y + sz, Canvas.rgb((int) (255 * (1 - pt)), col));
@@ -1006,34 +1145,34 @@ final class Scene {
         if (cool) {
             for (int k = 0; k < (epic ? 2 : 1); k++) {                      // shockwave rings
                 float rp = cl((us - 0.07f * k) / 0.5f); if (rp <= 0 || rp >= 1) continue;
-                float r = 4 + (epic ? 56 : 42) * easeOut(rp);
+                float r = 4 + (epic ? 56 : 42) * bsc * easeOut(rp);
                 int n = Math.max(48, (int) (r * 5));
                 for (int i = 0; i < n; i++) {
                     double a = i * Math.PI * 2 / n;
-                    c.set((int) (CX + Math.cos(a) * r), (int) (cy + Math.sin(a) * r * 0.9), Canvas.rgb((int) (210 * (1 - rp)), k == 0 ? 0xFFFFFF : rar));
+                    c.set((int) (bcx + Math.cos(a) * r), (int) (cy + Math.sin(a) * r * 0.9), Canvas.rgb((int) (210 * (1 - rp)), k == 0 ? 0xFFFFFF : rar));
                 }
             }
             for (int i = 0; i < (epic ? 22 : 14); i++) {                    // floating runes
                 float ph = frac(us * 0.55 + i * 0.137);
-                int x = (int) (CX + (h(i, 3) - 0.5f) * 64), y = (int) (CY - 6 - ph * 68);
+                int x = (int) (bcx + (h(i, 3) - 0.5f) * 64 * bsc), y = (int) (CY - 6 - ph * 68);
                 int a = (int) (240 * Math.sin(ph * Math.PI) * cl(us / 0.2f));
                 int col = i % 2 == 0 ? Canvas.mix(rar, 0xFFFFFFFF, 0.35f) : 0xFFC77DFF;
                 int[] g = GLYPH[i % GLYPH.length];
                 for (int gy = 0; gy < 5; gy++) for (int gx = 0; gx < 3; gx++) if ((g[gy] >> (2 - gx) & 1) != 0) c.set(x + gx, y + gy, Canvas.rgb(a, col));
             }
         }
-        if (cool) special(c, p, us, cy, epic);
+        if (cool && bsc >= 1f) special(c, p, us, cy, epic);
         if (epic) {
             for (int i = 0; i < 30; i++) {                                  // embers
                 float ph = frac(us * 0.8 + i * 0.381);
-                int x = (int) (CX + (frac(i * 0.7548) - 0.5f) * 70 + Math.sin(ph * 7 + i) * 3), y = (int) (CY - ph * 72);
+                int x = (int) (bcx + (frac(i * 0.7548) - 0.5f) * 70 * bsc + Math.sin(ph * 7 + i) * 3), y = (int) (CY - ph * 72);
                 c.set(x, y, Canvas.rgb((int) (230 * Math.sin(ph * Math.PI)), i % 2 == 0 ? 0xFFD35A : rar));
             }
             float fl = cl(1f - (t - ts) / 0.26f);
-            if (fl > 0) for (int i = 0; i < 5; i++) c.disc((int) CX, cy, 14 + i * 11, Canvas.rgb((int) (95 * fl), 0xFFFFFF));
+            if (fl > 0) for (int i = 0; i < 5; i++) c.disc((int) bcx, cy, (int) ((14 + i * 11) * bsc), Canvas.rgb((int) (95 * fl), 0xFFFFFF));
         } else if (cool) {
             float fl = cl(1f - (t - ts) / 0.18f);
-            if (fl > 0) for (int i = 0; i < 3; i++) c.disc((int) CX, cy, 10 + i * 9, Canvas.rgb((int) (60 * fl), 0xFFFFFF));
+            if (fl > 0) for (int i = 0; i < 3; i++) c.disc((int) bcx, cy, (int) ((10 + i * 9) * bsc), Canvas.rgb((int) (60 * fl), 0xFFFFFF));
         }
     }
 
@@ -1230,20 +1369,21 @@ final class Scene {
     }
 
     /** A wreath of laurel leaves circling the drop, split into the half behind it and the half in front. */
-    private static void laurel(Canvas out, float us, int cy, boolean front) {
+    private static void laurel(Canvas out, float us, int cy, boolean front) { laurel(out, us, cy, front, CX, 1f); }
+    private static void laurel(Canvas out, float us, int cy, boolean front, double lcx, float k) {
         float in = cl(us / 0.3f);
         if (in <= 0) return;
         for (int r = 0; r < 2; r++) for (int i = 0; i < 18; i++) {
             double an = us * (r == 0 ? 1.7 : -1.3) + i * Math.PI * 2 / 18 + r;
             if ((Math.sin(an) > 0) != front) continue;
-            int x = (int) (CX + Math.cos(an) * (26 + r * 5)), y = (int) (cy + 3 + Math.sin(an) * (8 + r * 3));
+            int x = (int) (lcx + Math.cos(an) * (26 + r * 5) * k), y = (int) (cy + 3 + Math.sin(an) * (8 + r * 3) * k);
             int col = (i + r) % 3 == 0 ? 0xFFE9C25A : (i % 2 == 0 ? 0xFF7AD05A : 0xFF4FA84A);
             out.rect(x, y, x + 3, y + 2, Canvas.rgb((int) (235 * in), col)); out.set(x + 1, y - 1, Canvas.rgb((int) (200 * in), col));
         }
         for (int i = 0; i < 5; i++) {                                                    // golden motes
             double an = us * 2.1 + i * Math.PI * 2 / 5;
             if ((Math.sin(an) > 0) != front) continue;
-            out.glint((int) (CX + Math.cos(an) * 30), (int) (cy + Math.sin(an) * 10), 2, 0xFFE08A, in);
+            out.glint((int) (lcx + Math.cos(an) * 30 * k), (int) (cy + Math.sin(an) * 10), 2, 0xFFE08A, in);
         }
     }
 
@@ -1366,11 +1506,17 @@ final class Scene {
         p.shakeX = shx; p.shakeY = shy;
 
         int icy = itemScreenY(t, ts);
-        if (split && p.hasItem && p.item != null) background(out, p, t, ts, us, true, false);
+        if (split && p.hasItem && p.item != null) twinPass(out, p, t, ts, us, true, false, 0, false);
 
         // storm clouds roll in over the top, then part
         float cloud = cl(t / 0.35f) * (split ? cl(1f - (t - ts) / 0.6f) : 1f);
-        if (cloud > 0.02f) for (int i = 0; i < 8; i++) {
+        if (p.alt && cloud > 0.02f) for (int i = 0; i < 40; i++) {
+            float tw = 0.5f + 0.5f * (float) Math.sin(t * 3 + i * 1.9);
+            int x = (int) (h(i, 200) * 112), y = (int) (h(i, 201) * 40);
+            out.set(x, y, Canvas.rgb((int) (200 * cloud * tw), i % 4 == 0 ? 0xFFFFE9A0 : 0xFFFFFFFF));
+            if (i % 9 == 0) star(out, x, y, 1, Canvas.rgb((int) (160 * cloud * tw), 0xFFFFE9A0));
+        }
+        if (!p.alt && cloud > 0.02f) for (int i = 0; i < 8; i++) {
             int x = 6 + i * 14 + (int) (Math.sin(t * 0.9 + i) * 3), y = 6 + (i % 2) * 5 + (int) (Math.cos(t * 0.7 + i * 2) * 1.5);
             ell(out, x, y, 14, 6, Canvas.rgb((int) (200 * cloud), i % 2 == 0 ? 0x2A2F4E : 0x3A4166));
             ell(out, x - 2, y - 2, 9, 3, Canvas.rgb((int) (120 * cloud), 0x59618C));
@@ -1444,10 +1590,11 @@ final class Scene {
             float land = impact(p, k), a = t - land;
             float tx = cx + (k - H) * 12;
             float pre = land - t;
-            if (pre > 0 && pre < 0.14f) bolt(out, tx + (k - H) * 4, 0, tx, gy, k * 11 + 3, 0.28f);                // a faint leader flickers first
-            if (a >= 0 && a < 0.22f) bolt(out, tx + (k - H) * 4, 0, tx, gy, k * 11 + 5 + (int) (a * 40), 1f - a / 0.3f);
+            if (p.alt) comet(out, t, land, tx, gy, k);
+            if (!p.alt && pre > 0 && pre < 0.14f) bolt(out, tx + (k - H) * 4, 0, tx, gy, k * 11 + 3, 0.28f);                // a faint leader flickers first
+            if (!p.alt && a >= 0 && a < 0.22f) bolt(out, tx + (k - H) * 4, 0, tx, gy, k * 11 + 5 + (int) (a * 40), 1f - a / 0.3f);
             if (rng && k == K - 1 && a >= 0 && a < 0.3f) {                                                       // the last strike is a thick double bolt that whitens the whole stage
-                bolt(out, tx - 5, 0, tx - 2, gy, 91 + (int) (a * 40), 1f - a / 0.3f); bolt(out, tx + 6, 0, tx + 2, gy, 77 + (int) (a * 40), 1f - a / 0.3f);
+                if (!p.alt) { bolt(out, tx - 5, 0, tx - 2, gy, 91 + (int) (a * 40), 1f - a / 0.3f); bolt(out, tx + 6, 0, tx + 2, gy, 77 + (int) (a * 40), 1f - a / 0.3f); }
                 out.glow(cx, gy - 20, 110, 0xFFFFFF, 0.5f * (1 - a / 0.3f));
             }
             if (a >= 0 && a < 0.55f) {
@@ -1613,6 +1760,8 @@ final class Scene {
             for (int b = 0; b < 9; b++) if ((bits >> b & 1) != 0 && (b % 3 + b / 3) != 4) out.set(Math.round(gx) + b % 3, Math.round(gy) + b / 3, Canvas.rgb(al, gcol));
         }
 
+        if (p.alt) expOrb(out, p, t, ts, bx, by, z, landed, K, rng, split, open);
+        else {
         // the book: leather cover, then the open pages
         final float hw = (3f + (PW - 3f) * open) * z, hh = PH * z;
         int L = Math.round(bx - hw), R = Math.round(bx + hw), T = Math.round(by - hh), B = Math.round(by + hh);
@@ -1679,6 +1828,8 @@ final class Scene {
             for (int i = 0; i < 10; i++) { double an = t * 1.8 + i * Math.PI / 5; out.set(Math.round(bx + (float) Math.cos(an) * (hw + 6)), Math.round(by + (float) Math.sin(an) * (hh + 5)), Canvas.rgb((int) (110 + 120 * cl(landed / (float) K)), 0xFF000000 | GOLD)); }
         }
 
+        }
+
         // the reveal: a column of light out of the book, runes bursting, rings
         if (split) {
             float a = t - ts, fade = cl(1f - a / 3.2f) * 0.5f + 0.18f;
@@ -1697,17 +1848,20 @@ final class Scene {
                 int bits = (int) (h(i, 72) * 511f);
                 for (int b = 0; b < 9; b++) if ((bits >> b & 1) != 0 && (b % 3 + b / 3) != 4) out.set(Math.round(x) + b % 3, Math.round(y) + b / 3, Canvas.rgb(al, i % 3 == 0 ? 0xFFFFFFFF : i % 3 == 1 ? 0xFF000000 | AQUA : 0xFF000000 | (rng ? GOLD : VIO)));
             }
+            boolean tw = p.twin && p.item2 != null;
+            int[] ctr = tw ? new int[]{bx - (int) TWIN_DX, bx + (int) TWIN_DX} : new int[]{bx};
+            float kk = tw ? 0.6f : 1f;
             if (rng) {
                 float gr = cl(a / 0.5f) * cl((length(p) - t) / 0.8f);
-                for (int i = 0; i < 12; i++) {                                              // god rays turning slowly behind the drop
-                    double an = i * Math.PI / 6 + a * 0.35; float len = 70 * gr;
-                    for (int s2 = 0; s2 < 3; s2++) { double a2 = an + (s2 - 1) * 0.045; lin(out, bx, icy, (float) (bx + Math.cos(a2) * len), (float) (icy + Math.sin(a2) * len * 0.8f), Canvas.rgb((int) ((s2 == 1 ? 70 : 30) * gr), i % 2 == 0 ? 0xFFFFE9A8 : 0xFFE6D2FF)); }
+                for (int c0 : ctr) for (int i = 0; i < 12; i++) {                          // god rays turning slowly behind each drop
+                    double an = i * Math.PI / 6 + a * 0.35; float len = 70 * gr * kk;
+                    for (int s2 = 0; s2 < 3; s2++) { double a2 = an + (s2 - 1) * 0.045; lin(out, c0, icy, (float) (c0 + Math.cos(a2) * len), (float) (icy + Math.sin(a2) * len * 0.8f), Canvas.rgb((int) ((s2 == 1 ? 70 : 30) * gr), i % 2 == 0 ? 0xFFFFE9A8 : 0xFFE6D2FF)); }
                 }
             }
             if (p.hasItem && p.item != null) {
-                if (rng) laurel(out, us, icy, false);
+                if (rng) for (int c0 : ctr) laurel(out, us, icy, false, c0, kk);
                 drawItem(out, p, t, ts, us);
-                if (rng) laurel(out, us, icy, true);
+                if (rng) for (int c0 : ctr) laurel(out, us, icy, true, c0, kk);
             }
         }
     }
@@ -1838,7 +1992,7 @@ final class Scene {
                 out.rect(x, y, x + 1, y + 1, Canvas.rgb((int) (230 * (1 - life / 1.1f)), i % 3 == 0 ? 0xFFFFFF : 0xFFE8A030));
             }
         }
-        if (split && p.hasItem && p.item != null) { background(out, p, t, ts, us, false, false); drawItem(out, p, t, ts, us); foreground(out, p, t, ts, us, false, false, gy - 18); }
+        if (split && p.hasItem && p.item != null) { twinPass(out, p, t, ts, us, false, false, 0, false); drawItem(out, p, t, ts, us); twinPass(out, p, t, ts, us, false, false, gy - 18, true); }
     }
 
     /**
@@ -1902,7 +2056,8 @@ final class Scene {
         }
 
         // the slashes: a bright crescent sweeps over each third of the field, alternating direction
-        for (int k = 0; k < n; k++) {
+        if (p.alt) rainStorm(out, p, t, ts, gy, cx, n, NC);
+        for (int k = 0; k < n && !p.alt; k++) {
             float a = t - impact(p, k) + 0.07f;
             if (a < 0f || a > 0.26f) continue;
             float e = easeOut(a / 0.12f), fade = cl(1f - (a - 0.1f) / 0.16f);
@@ -1946,7 +2101,7 @@ final class Scene {
                 lin(out, cx + (float) Math.cos(an) * 14, gy - 22 + (float) Math.sin(an) * 14, cx + (float) Math.cos(an) * rl, gy - 22 + (float) Math.sin(an) * rl, Canvas.rgb((int) (190 * fa), 0xFFD25A));
             }
         }
-        if (split && p.hasItem && p.item != null) { background(out, p, t, ts, us, false, false); drawItem(out, p, t, ts, us); foreground(out, p, t, ts, us, false, false, gy - 18); }
+        if (split && p.hasItem && p.item != null) { twinPass(out, p, t, ts, us, false, false, 0, false); drawItem(out, p, t, ts, us); twinPass(out, p, t, ts, us, false, false, gy - 18, true); }
     }
     private Scene() {}
 }

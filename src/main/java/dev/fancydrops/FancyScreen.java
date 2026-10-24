@@ -549,6 +549,7 @@ public class FancyScreen extends Screen {
                 case "nothing" -> d.add(new String[]{"Style", STYLE_NAMES[Math.floorMod(c.slayerStyle, STYLE_NAMES.length)]});
                 default -> { }
             }
+            if (cat >= 1 && cat <= 4) d.add(new String[]{"Style", new String[][]{null, {"Splat", "Brush"}, {"Slash", "Rain"}, {"Lightning", "Comets"}, {"Book", "Orb"}}[cat][Math.max(0, Math.min(1, c.styleOf(cat)))]});
             d.add(new String[]{"Position", AnimationManager.previewPosition(cat, c)});
             if (AnimationManager.textChoice(c, cat)) d.add(new String[]{"Text", AnimationManager.TEXT_POS_NAMES[Math.floorMod(c.textPos, 2)]});
             if (cat != 2) {
@@ -1228,59 +1229,67 @@ public class FancyScreen extends Screen {
 
     // ---- Chat > the typing preview
     private static final java.util.Map<String, Long> PREV_AT = new java.util.HashMap<>();
-    private Row chatPrevRow(String chan, String sample, int ev) {
-        Row cp = new Row(); cp.kind = CHATPREV; cp.noSearch = true; cp.title = chan + "|" + ev;
-        cp.sub = chan.equals("ALL") ? DropListener.adv(sample) : sample;
-        String uname = net.minecraft.client.Minecraft.getInstance().getUser().getName();
-        int pre = Gfx.w(font, (chan.equals("PARTY") ? "Party > " : chan.equals("COOP") ? "Co-op > " : "") + "[MVP+] " + uname + ": ");
-        int nl = 1, wl = pre; for (String wd : cp.sub.split(" ")) { int ww = Gfx.w(font, wd + " "); if (wl + ww > cw - 16 && wl > pre - 1 && wl > 0) { nl++; wl = ww; } else wl += ww; }
-        cp.h = 12 + 11 * nl; return cp;
+    /** One chat line of the preview: who said it, the text, and where it wraps. */
+    private final class PrevMsg {
+        String full; List<Integer> cols = new ArrayList<>(); int preLen; List<int[]> lines = new ArrayList<>(); String chan;
+        PrevMsg(String chan, String msg, int maxW) {
+            this.chan = chan;
+            String user = net.minecraft.client.Minecraft.getInstance().getUser().getName();
+            Object[][] parts = {{chan.equals("PARTY") ? "Party > " : chan.equals("COOP") ? "Co-op > " : "", chan.equals("PARTY") ? 0xFF5555FF : 0xFF55FFFF}, {"[MVP", 0xFF55FFFF}, {"+", 0xFFFF5555}, {"] " + user, 0xFF55FFFF}, {": ", 0xFFFFFFFF}};
+            StringBuilder sb = new StringBuilder();
+            for (Object[] o : parts) { String t = (String) o[0]; for (int i = 0; i < t.length(); i++) { sb.append(t.charAt(i)); cols.add((Integer) o[1]); } }
+            preLen = sb.length();
+            sb.append(msg); for (int i = 0; i < msg.length(); i++) cols.add(0xFFFFFFFF);
+            full = sb.toString();
+            int ls = 0, lastSp = -1;
+            for (int i = 0; i < full.length(); i++) {
+                if (full.charAt(i) == ' ') lastSp = i;
+                if (Gfx.w(font, full.substring(ls, i + 1)) > maxW) { int cut = lastSp > ls ? lastSp + 1 : i; lines.add(new int[]{ls, cut}); ls = cut; lastSp = -1; }
+            }
+            lines.add(new int[]{ls, full.length()});
+        }
+    }
+
+    /** One box for everything the mod will say: the chosen chat first, public chat (if it is on) underneath. */
+    private Row chatPrevRow(String[] chans, String sample, int ev) {
+        Row cp = new Row(); cp.kind = CHATPREV; cp.noSearch = true; cp.title = String.join(",", chans) + "|" + ev; cp.sub = sample;
+        int h = 14;
+        for (String ch : chans) h += new PrevMsg(ch, ch.equals("ALL") ? DropListener.adv(sample) : sample, cw - 40).lines.size() * 11 + 6;
+        cp.h = h; return cp;
     }
 
     private void drawChatPrev(GuiGraphicsExtractor g, Row r) {
-        FancyConfig c = FancyConfig.get();
-        String user = net.minecraft.client.Minecraft.getInstance().getUser().getName();
-        String msg = r.sub, key = r.title + "|" + msg;
         long now = System.currentTimeMillis();
-        long prevAt = PREV_AT.computeIfAbsent(key, k -> now);
-        g.fill(r.x, r.y, r.x + r.w, r.y + r.h, 0xB0000000);
+        String[] chans = r.title.substring(0, r.title.indexOf('|')).split(",");
+        long prevAt = PREV_AT.computeIfAbsent(r.title + "|" + r.sub, k -> now);
+        // the box: dark glass, a gradient edge on the left, a thin light along the top
+        pill(g, r.x, r.y, r.w, r.h, 0xE00A0C14);
+        for (int yy = 0; yy < r.h; yy++) { float f = yy / (float) Math.max(1, r.h - 1); int gc = Chat.GRADIENT[Math.min(Chat.GRADIENT.length - 1, (int) (f * (Chat.GRADIENT.length - 1)))]; g.fill(r.x, r.y + yy, r.x + 3, r.y + yy + 1, 0xFF000000 | gc); }
+        g.fill(r.x + 3, r.y + 1, r.x + r.w - 1, r.y + 2, 0x22FFFFFF);
         rout(g, r.x, r.y, r.w, r.h, 0x33FFFFFF);
-        // the prefix, one colour per piece: Hypixel's own look
-        String chan = r.title.contains("|") ? r.title.substring(0, r.title.indexOf('|')) : c.channel;
-        java.util.List<Object[]> parts = new ArrayList<>();
-        if (chan.equals("PARTY")) { parts.add(new Object[]{"Party > ", 0xFF5555FF}); }
-        else if (chan.equals("COOP")) { parts.add(new Object[]{"Co-op > ", 0xFF55FFFF}); }
-        parts.add(new Object[]{"[MVP", 0xFF55FFFF}); parts.add(new Object[]{"+", 0xFFFF5555}); parts.add(new Object[]{"] " + user, 0xFF55FFFF}); parts.add(new Object[]{": ", 0xFFFFFFFF});
-        StringBuilder sb = new StringBuilder(); java.util.List<Integer> cols = new ArrayList<>();
-        for (Object[] o : parts) { String t = (String) o[0]; for (int i = 0; i < t.length(); i++) { sb.append(t.charAt(i)); cols.add((Integer) o[1]); } }
-        int preLen = sb.length();
-        sb.append(msg); for (int i = 0; i < msg.length(); i++) cols.add(0xFFFFFFFF);
-        String full = sb.toString();
-        double cps = 26, typeSecs = msg.length() / cps;                          // typed out once; it types again only when the message changes
-        double t = Math.min(typeSecs + 5.0, (now - prevAt) / 1000.0);
-        int shown = preLen + (int) Math.min(msg.length(), t * cps);
-        boolean typing = t < typeSecs;
-        // wrap on spaces
-        List<int[]> lines = new ArrayList<>(); int ls = 0, lastSp = -1, maxW = r.w - 16;
-        for (int i = 0; i < full.length(); i++) {
-            if (full.charAt(i) == ' ') lastSp = i;
-            if (Gfx.w(font, full.substring(ls, i + 1)) > maxW) {
-                int cut = lastSp > ls ? lastSp + 1 : i; lines.add(new int[]{ls, cut}); ls = cut; lastSp = -1;
+        int y = r.y + 7, maxW = r.w - 40; double cps = 30, off = 0;
+        for (int mi = 0; mi < chans.length; mi++) {
+            String ch = chans[mi]; String msg = ch.equals("ALL") ? DropListener.adv(r.sub) : r.sub;
+            PrevMsg m = new PrevMsg(ch, msg, maxW);
+            double typeSecs = msg.length() / cps, t = Math.max(0, Math.min(off + typeSecs + 5.0, (now - prevAt) / 1000.0) - off);
+            int shown = m.preLen + (int) Math.min(msg.length(), t * cps);
+            boolean typing = t < typeSecs && t > 0;
+            if (mi > 0) g.fill(r.x + 10, y - 4, r.x + r.w - 10, y - 3, 0x18FFFFFF);
+            String tag = ch.equals("ALL") ? "Public" : ch.equals("COOP") ? "Co-op" : "Party";
+            int tw = Gfx.w(font, tag);
+            Gfx.text(g, font, tag, r.x + r.w - tw - 8, y, 0x66FFFFFF);
+            for (int[] ln : m.lines) {
+                g.fill(r.x + 7, y - 1, r.x + r.w - 8 - (ln == m.lines.get(0) ? tw + 6 : 0), y + 9, 0x30000000);
+                int x = r.x + 10, i = ln[0];
+                while (i < ln[1] && i < shown) {
+                    int j = i; int col = m.cols.get(i);
+                    while (j < ln[1] && j < shown && m.cols.get(j) == col) j++;
+                    String seg = m.full.substring(i, j); Gfx.text(g, font, seg, x, y, col); x += Gfx.w(font, seg); i = j;
+                }
+                if (typing && shown >= ln[0] && shown <= ln[1] && (now / 450) % 2 == 0) g.fill(x + 1, y, x + 2, y + 8, 0xFFFFFFFF);
+                y += 11;
             }
-        }
-        lines.add(new int[]{ls, full.length()});
-        int y = r.y + 6;
-        for (int[] ln : lines) {
-            int x = r.x + 8, i = ln[0];
-            while (i < ln[1] && i < shown) {
-                int j = i; int col = cols.get(i);
-                while (j < ln[1] && j < shown && cols.get(j) == col) j++;
-                String seg = full.substring(i, j); Gfx.text(g, font, seg, x, y, col); x += Gfx.w(font, seg); i = j;
-            }
-            if (shown >= ln[0] && shown <= ln[1] && (shown < full.length() || ln == lines.get(lines.size() - 1)) && (now / 450) % 2 == 0 && (typing || t < typeSecs + 1.2)) {
-                if (shown < ln[1] || ln == lines.get(lines.size() - 1)) g.fill(x + 1, y, x + 2, y + 8, 0xFFFFFFFF);
-            }
-            y += 11;
+            y += 6; off += typeSecs + 0.15;
         }
     }
     private static final String[] COMM = {"discord", "patreon", "github"}, COMM_NAME = {"Discord", "Patreon", "GitHub"};
@@ -2080,7 +2089,7 @@ public class FancyScreen extends Screen {
                     new int[]{0xFF6C86FF, 0xFF7BE05A, 0xFFFFC857, 0xFF8A8F9E}, null, () -> idx(CHANNELS, c.channel), i -> c.channel = CHANNELS[i]));
                 if (c.channel.equals("OFF") && !searching) break;                    // announcements off: nothing else to set up
                 if (!c.channel.equals("ALL")) {
-                    Row aa = row(0, "fd:chan_public", "Also tell public chat", "RNG drops only, starting with [FancyDrops] |", 0xFFFFC857);
+                    Row aa = row(0, "fd:chan_public", "Also tell public chat", "RNG drops only", 0xFFFFC857);
                     aa.ctls.add(tog(() -> c.alsoAll, v -> c.alsoAll = v, 0xFFD98A1F));
                     rows.add(aa);
                 }
@@ -2099,8 +2108,7 @@ public class FancyScreen extends Screen {
                 else {
                     rows.add(section("Preview"));
                     String samp = DropListener.sample(c.formatFor(chatEv), chatEv);
-                    rows.add(chatPrevRow(c.channel, samp, chatEv));
-                    if (xtra) rows.add(chatPrevRow("ALL", samp, chatEv));
+                    rows.add(chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, samp, chatEv));
                 }
                 Row fm = row(0, "fd:format", "Message format", "Type your own message. Add placeholders from the list below", Ui.ACCENT);
                 fm.h = 44; fm.field = formatField; rows.add(fm);
@@ -2299,6 +2307,12 @@ public class FancyScreen extends Screen {
         if (cat == 0) {
             rows.add(picker("Animation style", "How the boss is cut", STYLE_NAMES, new String[]{"Slices the boss", "Cuts it with light"}, new String[]{"fd:slayers", "fd:spirit"}, new int[]{0xFF8FA8FF, 0xFFC77DFF}, null, 2, () -> Math.floorMod(c.slayerStyle, STYLE_NAMES.length), i -> c.slayerStyle = i));
             rows.add(toggle("fd:nothing", "Animate empty kills", "Play the empty scene when nothing drops", () -> c.animateNothing, v -> c.animateNothing = v));
+        } else if (cat >= 1 && cat <= 4) {
+            String[][] sn = {null, {"Splat", "Brush"}, {"Slash", "Rain"}, {"Lightning", "Comets"}, {"Book", "Orb"}};
+            String[][] sd = {null, {"A blob bursts open", "Brush strokes paint it"}, {"Crops are cut", "Rain wakes the crops"}, {"Bolts strike the circle", "Comets fall on it"}, {"The book flips", "A rune orb charges"}};
+            String ic = types[0][3];
+            final int cc = cat;
+            rows.add(picker("Animation style", "Pick how this scene plays", sn[cat], sd[cat], new String[]{ic, ic}, new int[]{0xFF8FA8FF, 0xFFC77DFF}, null, 2, () -> c.styleOf(cc), i -> { switch (cc) { case 1 -> c.dyeStyle = i; case 2 -> c.farmStyle = i; case 3 -> c.mythStyle = i; default -> c.expStyle = i; } }));
         }
         int sel = Math.max(0, Math.min(types.length - 1, animType[cat]));
         if (types.length > 1 && !all) {

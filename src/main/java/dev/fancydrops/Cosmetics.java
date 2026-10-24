@@ -1,5 +1,6 @@
 package dev.fancydrops;
 
+import net.minecraft.world.entity.Entity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FontDescription;
@@ -396,6 +397,20 @@ final class Cosmetics {
             }
             if (any) refreshM.invoke(chatObj);
         } catch (Throwable t) { log("redo failed: " + t); }
+    }
+
+    /** The name over a player's head with their effect and suffix, or null when they wear none. */
+    static Component nameTag(Component base, Entity e) {
+        if (base == null || !(e instanceof net.minecraft.world.entity.player.Player)) return null;
+        Look lk = looksMap.get(e.getUUID());
+        if (lk == null || (lk.fx() == null && lk.suffix() == null)) return null;
+        String name = e.getName().getString(), bs = base.getString();
+        int at = find(bs, name);
+        if (at < 0) return null;
+        Component out = base;
+        if (lk.fx() != null) out = restyle(out, at, at + name.length(), lk.fx(), true, System.currentTimeMillis(), null, null);
+        if (lk.suffix() != null) out = insert(out, at + name.length(), chatGlyph(lk.suffix()));
+        return out;
     }
 
     private static volatile Map<UUID, Look> looksMap = Map.of();

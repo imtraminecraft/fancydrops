@@ -56,8 +56,9 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             if (openMenu) { openMenu = false; mc.setScreenAndShow(new FancyScreen()); }   // 26.2: setScreenAndShow
             if (reopenMenu && !AnimationManager.isPlaying()) { reopenMenu = false; mc.setScreenAndShow(new FancyScreen()); }
             DropListener.tick(mc);
-            if (++tabTick >= 1) { tabTick = 0; Cosmetics.tickTab(mc); }
-            Cosmetics.tickAura(mc);
+            tabTick++;                                                                        // who wears what changes rarely: look every quarter second, every tick only while a name is moving
+            if (Cosmetics.tabMoving || tabTick % 5 == 0) Cosmetics.tickTab(mc);
+            if (tabTick % 5 == 0) Cosmetics.tickAura(mc);
             Cosmetics.tickChat(mc);
         });
 
@@ -113,25 +114,34 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         } catch (Throwable ignored) { }
     }
 
-    private static float slideStatus, slideHotbar;        // 0 = in place, 1 = slid away
-    private static long slideAt;
-    /** How far (in GUI pixels) the hotbar, or the hearts and everything else, are pushed down this frame. The hotbar always moves first, and the rest follows a beat later, both when they leave and when they come back. */
+    private static float slideStatus, slideHotbar, velHotbar, velStatus;        // 0 = in place, 1 = slid away
+    private static long slideAt = 0, slideFlip = 0; private static boolean slideAway;
+    /** How far (in GUI pixels) the hotbar, or the hearts and everything else, are pushed down this frame. Both chase their target with a critically damped spring (no hard start or stop at any frame rate); the hotbar always moves first, the rest follows a beat later. */
     private static float slideOffset(boolean hotbar) {
-        long now = System.nanoTime() / 1_000_000L;
+        long now = System.nanoTime();
         if (now != slideAt) {
-            float dt = slideAt == 0 ? 0f : Math.min(0.05f, (now - slideAt) / 1000f); slideAt = now;
+            float dt = slideAt == 0 ? 0f : Math.min(0.05f, (now - slideAt) / 1_000_000_000f); slideAt = now;
             boolean away = AnimationManager.hidesHud();
-            float step = dt / 0.55f;
-            if (away) {
-                slideHotbar = Math.min(1f, slideHotbar + step);
-                if (slideHotbar > 0.3f) slideStatus = Math.min(1f, slideStatus + step);                 // the hearts wait until the hotbar is on its way
-            } else {
-                slideHotbar = Math.max(0f, slideHotbar - step);
-                if (slideHotbar < 0.7f) slideStatus = Math.max(0f, slideStatus - step);                 // and on the way back, until the hotbar is nearly up
-            }
+            if (away != slideAway) { slideAway = away; slideFlip = now; }
+            float tgt = away ? 1f : 0f, beat = (now - slideFlip) / 1_000_000_000f;
+            float[] h = damp(slideHotbar, velHotbar, tgt, 0.30f, dt);
+            slideHotbar = h[0]; velHotbar = h[1];
+            float[] r = damp(slideStatus, velStatus, beat > 0.16f ? tgt : slideStatus, 0.30f, dt);          // the rest waits a beat after the hotbar sets off
+            slideStatus = r[0]; velStatus = r[1];
+            if (!away && slideHotbar < 0.001f) { slideHotbar = 0f; velHotbar = 0f; }
+            if (!away && slideStatus < 0.001f) { slideStatus = 0f; velStatus = 0f; }
+            if (away && slideHotbar > 0.999f) slideHotbar = 1f;
+            if (away && slideStatus > 0.999f) slideStatus = 1f;
         }
-        float k = hotbar ? slideHotbar : slideStatus;
-        return (k * k * k * (k * (k * 6f - 15f) + 10f)) * 64f;                                      // a very soft start and stop
+        return (hotbar ? slideHotbar : slideStatus) * 64f;
+    }
+
+    private static float[] damp(float cur, float vel, float target, float smooth, float dt) {
+        if (dt <= 0f) return new float[]{cur, vel};
+        float om = 2f / smooth, x = om * dt, e = 1f / (1f + x + 0.48f * x * x + 0.235f * x * x * x);
+        float change = cur - target, temp = (vel + om * change) * dt;
+        vel = (vel - om * temp) * e;
+        return new float[]{target + (change + temp) * e, vel};
     }
 
     // ------------------------------------------------------------------ commands

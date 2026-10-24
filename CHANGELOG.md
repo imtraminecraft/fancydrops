@@ -1,3 +1,14 @@
+## 0.9.3
+- New: a second animation style for Dye (Brush), Farming (Rain), Mythological (Comets) and Experiments (Orb). Pick it on each Animations page, and the preview follows
+- New: a name cosmetic shows once over other players' heads, in place of their normal name
+- Changed: one Chat preview box shows every message the mod will send, with a cooler look
+- Changed: "Also tell public chat" has a shorter description
+- Changed: two-drop animations put the items further apart, with a light circle for each item
+- Changed: the hotbar and hearts slide with a smoother spring
+- Changed: new Party (balloons) and Dye (palette) icons
+- Changed: other players' auras are smoother
+- Changed: lighter on FPS: cosmetics are checked 4 times a second and reflection lookups are cached
+
 ## 0.9.2
 - New: a grander RNG animation. The item spins like a 3D block, and slayer, mythological and experiment RNG each have their own stage
 - New: Item spin and Item pop size moved to Animations > Changes > Item Changes > RNG

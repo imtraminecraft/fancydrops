@@ -244,16 +244,16 @@ public final class AnimationManager {
         SlayerData.Cube cube = a.slayer.cube;
         p.base = SlayerData.hex(cube.base, p.base); p.dark = SlayerData.hex(cube.dark, p.dark); p.eye = SlayerData.hex(cube.eye, p.eye);
         p.style = c.slayerStyle;
-        if (a.farm) { p.farm = true; p.chops = a.pest ? 1 : 3; p.helios = a.helios; p.pest = a.pest; }
-        if (a.isExp()) { p.exp = true; p.chops = tier == 2 ? c.expFlipsRng : c.expFlips; }
-        else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); }
+        if (a.farm) { p.farm = true; p.chops = a.pest ? 1 : 3; p.helios = a.helios; p.pest = a.pest; p.alt = c.farmStyle == 1; }
+        if (a.isExp()) { p.exp = true; p.chops = tier == 2 ? c.expFlipsRng : c.expFlips; p.alt = c.expStyle == 1; }
+        else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); p.alt = c.mythStyle == 1; }
         p.seed = Math.abs(a.slayer.id.hashCode() % 97);                                   // the mob's look stays the same
         p.cutSeed = java.util.concurrent.ThreadLocalRandom.current().nextInt(1, 100000);   // but the slashes are different every time
         p.theme = java.util.List.of("zombie", "spider", "wolf", "enderman", "blaze", "vampire").indexOf(a.slayer.id);
         if (p.theme < 0) p.theme = 6;
         if (it != null) { p.rarity = it.color(); p.item = ItemIcons.model(it.id, a.slayer.color()); }
         if (a.item2 != null && tier >= 0) { p.twin = true; p.item2 = ItemIcons.model(a.item2.id, a.slayer.color()); p.rarity2 = a.item2.color(); p.chops = Math.min(20, p.chops + 2); }
-        if (isDye(it) && tier == 2) { p.dye = true; p.chops = 1; p.dyeCol = dyeColor(it.name, p.rarity); p.rarity = p.dyeCol | 0xFF000000; }
+        if (isDye(it) && tier == 2) { p.dye = true; p.chops = 1; p.dyeCol = dyeColor(it.name, p.rarity); p.rarity = p.dyeCol | 0xFF000000; p.alt = c.dyeStyle == 1; }
         return p;
     }
 
@@ -570,6 +570,7 @@ public final class AnimationManager {
         if (cat == 1) { p.dye = true; p.chops = 1; p.dyeCol = 0xFFE0409A; }
         if (cat == 3) p.chops = Math.max(1, c.mythStrikes);
         if (cat == 4) p.chops = Math.max(1, c.expFlips);
+        p.alt = cat >= 1 && c.styleOf(cat) == 1;
         return p;
     }
 
@@ -602,6 +603,7 @@ public final class AnimationManager {
             KEY_P.put(key, p);
         }
         c.fixChops();
+        p.alt = c.styleOf(cat) == 1 && cat >= 1;
         switch (key) {
             case "dye" -> p.chops = 1;
             case "farm", "helios" -> p.chops = 3;
@@ -657,8 +659,9 @@ public final class AnimationManager {
     public static void drawPreview(GuiGraphicsExtractor g, int W, int H, int cat, String key) {
         FancyConfig c = FancyConfig.get();
         cat = Math.max(0, Math.min(4, cat));
-        if (c.slayerStyle != previewStyle) {                                                   // Sword <-> Spirit: build the scenes again and play the new one from the start
-            previewStyle = c.slayerStyle; KEY_P.clear(); java.util.Arrays.fill(PREVIEW_P, null); previewFrame = -1; previewT0 = System.currentTimeMillis();
+        int styleSig = c.slayerStyle + 2 * c.dyeStyle + 4 * c.farmStyle + 8 * c.mythStyle + 16 * c.expStyle;
+        if (styleSig != previewStyle) {                                                        // a style was switched: build the scenes again and play the new one from the start
+            previewStyle = styleSig; KEY_P.clear(); java.util.Arrays.fill(PREVIEW_P, null); previewFrame = -1; previewT0 = System.currentTimeMillis();
         }
         Scene.Params p = key == null ? (itemOnly && itemKey != null ? previewForKey(itemKey, c) : previewFor(cat, c)) : previewForKey(key, c);
         if (itemOnly) {                                                                         // just the item, big, in the middle
