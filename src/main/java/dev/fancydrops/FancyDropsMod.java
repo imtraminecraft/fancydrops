@@ -82,15 +82,16 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         } catch (Throwable t) { System.err.println("[FancyDrops] smooth tab effects unavailable: " + t); }
 
         // While a scene plays, the bottom of the screen slides away: the hearts and bars with the hotbar. When it ends the hearts slide back first, then the hotbar.
-        for (String el : new String[]{"hotbar", "health_bar", "armor_bar", "food_bar", "air_bar", "mount_health", "info_bar", "experience_level"}) {
+        for (String el : new String[]{"hotbar", "health_bar", "armor_bar", "food_bar", "air_bar", "mount_health", "info_bar", "experience_level", "selected_item_name", "overlay_message", "jump_meter"}) {
             final boolean hotbar = el.equals("hotbar");
+            final float mult = el.equals("overlay_message") || el.equals("selected_item_name") ? 1.7f : 1f;       // the words above the hearts have further to go
             try {
                 HudElementRegistry.replaceElement(Identifier.withDefaultNamespace(el), original -> (graphics, deltaTracker) -> {
-                    float off = slideOffset(hotbar);
-                    if (off >= 60f) return;                                                    // fully away: nothing to draw
-                    if (off > 0.5f) { Gfx.push(graphics); Gfx.translate(graphics, 0, Math.round(off)); }
+                    float off = slideOffset(hotbar) * mult;
+                    if (off >= 63f * mult) return;                                                    // fully away: nothing to draw
+                    if (off > 0.05f) { Gfx.push(graphics); Gfx.translate(graphics, 0, off); }
                     callHud(original, graphics, deltaTracker);
-                    if (off > 0.5f) Gfx.pop(graphics);
+                    if (off > 0.05f) Gfx.pop(graphics);
                 });
             } catch (Throwable t) { System.err.println("[FancyDrops] could not wrap " + el + ": " + t); }
         }
@@ -114,19 +115,23 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
     private static float slideStatus, slideHotbar;        // 0 = in place, 1 = slid away
     private static long slideAt;
-    /** How far (in GUI pixels) the hearts and bars, or the hotbar, are pushed down this frame. The hearts come back first, the hotbar after them. */
+    /** How far (in GUI pixels) the hotbar, or the hearts and everything else, are pushed down this frame. The hotbar always moves first, and the rest follows a beat later, both when they leave and when they come back. */
     private static float slideOffset(boolean hotbar) {
-        long now = System.currentTimeMillis();
+        long now = System.nanoTime() / 1_000_000L;
         if (now != slideAt) {
-            float dt = slideAt == 0 ? 0f : Math.min(0.1f, (now - slideAt) / 1000f); slideAt = now;
+            float dt = slideAt == 0 ? 0f : Math.min(0.05f, (now - slideAt) / 1000f); slideAt = now;
             boolean away = AnimationManager.hidesHud();
-            float step = dt / 0.35f;
-            slideStatus = away ? Math.min(1f, slideStatus + step) : Math.max(0f, slideStatus - step);
-            boolean hotbarGoes = away || slideStatus > 0.35f;                               // on the way back the hotbar waits until the hearts are most of the way up
-            slideHotbar = hotbarGoes ? Math.min(1f, slideHotbar + step) : Math.max(0f, slideHotbar - step);
+            float step = dt / 0.55f;
+            if (away) {
+                slideHotbar = Math.min(1f, slideHotbar + step);
+                if (slideHotbar > 0.3f) slideStatus = Math.min(1f, slideStatus + step);                 // the hearts wait until the hotbar is on its way
+            } else {
+                slideHotbar = Math.max(0f, slideHotbar - step);
+                if (slideHotbar < 0.7f) slideStatus = Math.max(0f, slideStatus - step);                 // and on the way back, until the hotbar is nearly up
+            }
         }
         float k = hotbar ? slideHotbar : slideStatus;
-        return (k * k * (3f - 2f * k)) * 60f;
+        return (k * k * k * (k * (k * 6f - 15f) + 10f)) * 64f;                                      // a very soft start and stop
     }
 
     // ------------------------------------------------------------------ commands
@@ -146,10 +151,14 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             })
             .then(ClientCommands.literal("help").executes(ctx -> help(ctx.getSource())))
             .then(ClientCommands.literal("stats").executes(ctx -> stats(ctx.getSource())))
+            .then(ClientCommands.literal("editor")
+                .executes(ctx -> { FancyScreen.pendingTab = "animations"; openMenu = true; return Command.SINGLE_SUCCESS; })
+                .then(ClientCommands.literal("animations").executes(ctx -> { FancyScreen.pendingTab = "animations"; openMenu = true; return Command.SINGLE_SUCCESS; }))
+                .then(ClientCommands.literal("sounds").executes(ctx -> { FancyScreen.pendingTab = "sounds"; openMenu = true; return Command.SINGLE_SUCCESS; })))
             .then(ClientCommands.literal("cosmetics").executes(ctx -> { FancyScreen.pendingCos = true; openMenu = true; return Command.SINGLE_SUCCESS; }))
             .then(ClientCommands.literal("discord").executes(ctx -> { ctx.getSource().sendFeedback(Chat.msg("Join the Discord: ").copy().append(net.minecraft.network.chat.Component.literal(DISCORD).withStyle(st -> st.withColor(0x7A8BFF).withUnderlined(true).withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenUrl(java.net.URI.create(DISCORD)))))); return Command.SINGLE_SUCCESS; }))
             .then(ClientCommands.literal("patreon").executes(ctx -> { say(ctx.getSource(), "Patreon link coming soon"); return Command.SINGLE_SUCCESS; }))
-            .then(ClientCommands.literal("github").executes(ctx -> { say(ctx.getSource(), "GitHub link coming soon"); return Command.SINGLE_SUCCESS; }))
+            .then(ClientCommands.literal("github").executes(ctx -> { ctx.getSource().sendFeedback(Chat.msg("Source and releases: ").copy().append(net.minecraft.network.chat.Component.literal(GITHUB).withStyle(st -> st.withColor(0x7A8BFF).withUnderlined(true).withClickEvent(new net.minecraft.network.chat.ClickEvent.OpenUrl(java.net.URI.create(GITHUB)))))); return Command.SINGLE_SUCCESS; }))
             // /fancydrops mute  - quick on/off for every sound
             .then(ClientCommands.literal("mute").executes(ctx -> {
                 FancyConfig c = FancyConfig.get(); c.sound = !c.sound; FancyConfig.save();
@@ -209,6 +218,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         helpLine(s, "/fd simulate Farming <Crop|Pest> <Drop 1> [ob]", "One farming drop, with Overbloom");
         helpLine(s, "/fd simulate Experiments <Drop 1> [Drop 2]", "Experimentation Table rewards");
         helpHead(s, "Handy");
+        helpLine(s, "/fd editor [animations|sounds]", "Open the Animations or Sounds editor");
         helpLine(s, "/fd magicfind <magic find> [drop]", "What your Magic Find does to a drop chance");
         helpLine(s, "/fd mute", "Turn sounds on or off");
         helpLine(s, "/fd toggle", "Turn the whole mod on or off");

@@ -190,6 +190,8 @@ final class AuraFx {
     }
 
     /** Called every frame by the HUD: draws the aura particles round every player who wears one. */
+    private static final Map<UUID, double[]> SMOOTH = new java.util.HashMap<>();
+    private static final Map<UUID, long[]> LOS = new java.util.HashMap<>();
     static void render(GuiGraphicsExtractor g) {
         try {
             Minecraft mc = Minecraft.getInstance();
@@ -209,10 +211,22 @@ final class AuraFx {
             for (var p : mc.level.players()) {
                 Cosmetics.Look l = looks.get(p.getUUID());
                 if (l == null || l.aura() == null) continue;
-                if (p != mc.player && (mc.player.distanceTo(p) > 40 || !mc.player.hasLineOfSight(p))) continue;
+                if (p != mc.player && mc.player.distanceTo(p) > 40) continue;
+                if (p != mc.player) {                                                                    // someone else: a quick look-through check every half second, not every frame (it flickered when moving)
+                    long[] ck = LOS.computeIfAbsent(p.getUUID(), k -> new long[]{0, 1});
+                    if (now - ck[0] > 500) { ck[0] = now; ck[1] = mc.player.hasLineOfSight(p) ? 1 : 0; }
+                    if (ck[1] == 0) continue;
+                }
                 double ox = fieldD(p, "xOld"), oy = fieldD(p, "yOld"), oz = fieldD(p, "zOld");           // where the player is drawn this frame: between the last tick and this one
                 if (ox == 0 && oy == 0 && oz == 0) { ox = p.getX(); oy = p.getY(); oz = p.getZ(); }
                 double ex = ox + (p.getX() - ox) * pt, ey = oy + (p.getY() - oy) * pt, ez = oz + (p.getZ() - oz) * pt;
+                if (p != mc.player) {                                                                    // other players move in network steps: ease the point the aura follows so it doesn't shake
+                    double[] sm = SMOOTH.computeIfAbsent(p.getUUID(), k -> new double[]{ex, ey, ez, now});
+                    double dts = Math.max(1, Math.min(100, now - (long) sm[3])); sm[3] = now;
+                    if (Math.abs(ex - sm[0]) + Math.abs(ey - sm[1]) + Math.abs(ez - sm[2]) > 6) { sm[0] = ex; sm[1] = ey; sm[2] = ez; }
+                    else { double k = 1 - Math.exp(-dts / 90.0); sm[0] += (ex - sm[0]) * k; sm[1] += (ey - sm[1]) * k; sm[2] += (ez - sm[2]) * k; }
+                    ex = sm[0]; ey = sm[1]; ez = sm[2];
+                }
                 double[] st = STATE.computeIfAbsent(p.getUUID(), k -> new double[]{0, now, ex, ey, ez, now, 1, 0, 0});     // phase ms, last frame, last position, last time it moved, speed
                 double moved = Math.abs(ex - st[2]) + Math.abs(ey - st[3]) + Math.abs(ez - st[4]);
                 if (moved > 0.004) st[5] = now;
@@ -245,7 +259,24 @@ final class AuraFx {
                     draw(g, sx, sy, px, q);
                 }
             }
-            if (STATE.size() > 64) { STATE.clear(); HIST.clear(); }
+            for (var p : mc.level.players()) {                                                        // the name cosmetic and suffix, over other players' heads
+                if (p == mc.player) continue;
+                Cosmetics.Look l = looks.get(p.getUUID());
+                if (l == null || (l.fx() == null && l.suffix() == null) || mc.player.distanceTo(p) > 24) continue;
+                double[] sm = SMOOTH.get(p.getUUID());
+                double ex = sm != null ? sm[0] : p.getX(), ey = (sm != null ? sm[1] : p.getY()) + p.getBbHeight() + 0.95, ez = sm != null ? sm[2] : p.getZ();
+                double dx = ex - cx, dy = ey - cy, dz = ez - cz, zc = dx * fx + dy * fy + dz * fz;
+                if (zc < 0.5) continue;
+                double xc = dx * rx + dy * ry + dz * rz, yc = dx * ux + dy * uy + dz * uz;
+                float sx = (float) (W / 2.0 * (1 + xc / (zc * th * asp))), sy = (float) (H / 2.0 * (1 - yc / (zc * th)));
+                var font = mc.font; String nm = p.getName().getString();
+                net.minecraft.network.chat.MutableComponent c = Cosmetics.nameComp(nm, 0xFFFFFF, l.fx(), true, now);
+                if (l.suffix() != null) c.append(" ").append(Cosmetics.chatGlyph(l.suffix()));
+                int tw = font.width(c);
+                g.fill(Math.round(sx - tw / 2f - 2), Math.round(sy - 1), Math.round(sx + tw / 2f + 2), Math.round(sy + 9), 0x40000000);
+                g.text(font, c, Math.round(sx - tw / 2f), Math.round(sy), 0xFFFFFFFF, true);
+            }
+            if (STATE.size() > 64) { STATE.clear(); HIST.clear(); SMOOTH.clear(); LOS.clear(); }
         } catch (Throwable ignored) { }
     }
 

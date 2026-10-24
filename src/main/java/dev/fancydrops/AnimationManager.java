@@ -213,7 +213,7 @@ public final class AnimationManager {
     static float[] timing(Scene.Params p, boolean farm, String key, FancyConfig c) {
         float natural = naturalScene(p, farm), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
         Float want = c.animSecs.get(key);
-        float total = farm ? Math.max(2.6f, want != null ? Math.min(10f, want) * 0.6f : natural) : Math.max(5f, Math.max(want != null ? Math.max(5f, Math.min(10f, want)) : natural, delay + 3.5f)) * SLOW;        // Farming is quick: it plays at its own pace, not slowed   // SLOW: everything plays a notch slower
+        float total = farm ? Math.max(1.8f, (want != null ? Math.min(10f, want) * 0.6f : natural) - 1f) : Math.max(4f, Math.max(5f, Math.max(want != null ? Math.max(5f, Math.min(10f, want)) : natural, delay + 3.5f)) * SLOW - 1f);        // one second shorter than before        // Farming is quick: it plays at its own pace, not slowed   // SLOW: everything plays a notch slower
         float speed = natural / total;
         float textReal = farm ? (ts + 0.5f) / speed : Math.max(delay, (ts + 0.12f) / speed + 0.3f);
         return new float[]{speed, textReal * speed, total};
@@ -270,6 +270,7 @@ public final class AnimationManager {
     /** Menu previews: freezeT >= 0 holds the scene that many seconds after the words appear; loopTxt replays the words; textOnly leaves the scene out; fxOnly >= 0 shows just that text effect. */
     public static float freezeT = -1f; public static boolean loopTxt, textOnly; public static int fxOnly = -1;
     private static long textT0 = System.currentTimeMillis(); private static float textBoost = 1f;
+    public static String itemKey;                                     // the Item Changes preview: show this animation's drop (the RNG page)
     public static boolean itemOnly;                                   // the Item Changes preview: just the drop, nothing else
     /** The looping words start again from the first letter (an effect was hovered or pressed). */
     public static void restartText() { textT0 = System.currentTimeMillis(); }
@@ -456,7 +457,7 @@ public final class AnimationManager {
         }
         if (a.item2 != null) {
             float tb = big * 0.82f;
-            int lx = twinCell > 0f ? Math.round(W / 2f - (float) Scene.TWIN_DX * twinCell) : Math.round(W * 0.27f), rx = twinCell > 0f ? Math.round(W / 2f + (float) Scene.TWIN_DX * twinCell) : Math.round(W * 0.73f);
+            int lx = twinCell > 0f ? Math.round(W * 0.22f) : Math.round(W * 0.22f), rx = twinCell > 0f ? Math.round(W * 0.78f) : Math.round(W * 0.78f);
             line(g, font, lx, ty, tb, alpha, lit(a.item.title()).withStyle(ChatFormatting.BOLD), a.item.color());
             detailAt(g, font, lx, dy, small * 0.95f, a.item, c, alpha);
             line(g, font, rx, ty, tb, alpha, lit(a.item2.title()).withStyle(ChatFormatting.BOLD), a.item2.color());
@@ -659,7 +660,7 @@ public final class AnimationManager {
         if (c.slayerStyle != previewStyle) {                                                   // Sword <-> Spirit: build the scenes again and play the new one from the start
             previewStyle = c.slayerStyle; KEY_P.clear(); java.util.Arrays.fill(PREVIEW_P, null); previewFrame = -1; previewT0 = System.currentTimeMillis();
         }
-        Scene.Params p = key == null ? previewFor(cat, c) : previewForKey(key, c);
+        Scene.Params p = key == null ? (itemOnly && itemKey != null ? previewForKey(itemKey, c) : previewFor(cat, c)) : previewForKey(key, c);
         if (itemOnly) {                                                                         // just the item, big, in the middle
             float isec = ((System.currentTimeMillis() - textT0) % 4600L) / 1000f;
             Scene.drawItemOnly(OUT, L3, p, isec); SceneTexture.upload(OUT);
@@ -753,22 +754,34 @@ public final class AnimationManager {
         g.fill(0, 0, W, bar, f); g.fill(0, H - bar, W, H, f);
         g.fill(0, bar, side, H - bar, f); g.fill(W - side, bar, W, H - bar, f);
         FancyConfig fc = FancyConfig.get();
-        if (fc.barSoft) {                                                          // the bars melt into the scene: a few fainter strips along the inner edge
-            int a0 = f >>> 24, rgb = f & 0xFFFFFF, n = Math.max(2, Math.min(6, bar / 3));
+        int r = Math.round(bar * Math.max(0, Math.min(100, fc.barCurve)) / 100f);   // rounded window: the four inner corners are carved
+        if (r > 1) r = Math.min(r, Math.min((W - 2 * side) / 2, (H - 2 * bar) / 2));
+        int cr = r > 1 ? r : 0;
+        int a0 = f >>> 24, rgb = f & 0xFFFFFF, n = fc.barSoft ? Math.max(2, Math.min(6, bar / 3)) : 0;
+        if (n > 0) {                                                               // the bars melt into the scene: a few fainter strips along the inner edge
             for (int k = 0; k < n; k++) {
                 int c2 = Gfx.argb(Math.round(a0 * (1f - (k + 1f) / (n + 1f)) * 0.8f), rgb);
-                g.fill(side, bar + k, W - side, bar + k + 1, c2); g.fill(side, H - bar - k - 1, W - side, H - bar - k, c2);
-                if (side > 0) { g.fill(side + k, bar, side + k + 1, H - bar, c2); g.fill(W - side - k - 1, bar, W - side - k, H - bar, c2); }
+                g.fill(side + cr, bar + k, W - side - cr, bar + k + 1, c2); g.fill(side + cr, H - bar - k - 1, W - side - cr, H - bar - k, c2);
+                if (side > 0) { g.fill(side + k, bar + cr, side + k + 1, H - bar - cr, c2); g.fill(W - side - k - 1, bar + cr, W - side - k, H - bar - cr, c2); }
             }
         }
-        int r = Math.round(bar * Math.max(0, Math.min(100, fc.barCurve)) / 100f);   // rounded window: carve the four inner corners
-        if (r > 1) {
-            r = Math.min(r, Math.min((W - 2 * side) / 2, (H - 2 * bar) / 2));
+        if (cr > 0) {                                                              // the curves: solid outside the circle, then the same soft fade as the straight edges, so the corners match the rest of the bar
             for (int i = 0; i < r; i++) {
-                int ins = r - (int) Math.round(Math.sqrt((double) r * r - (double) (r - i - 0.5) * (r - i - 0.5)));
-                if (ins <= 0) continue;
-                g.fill(side, bar + i, side + ins, bar + i + 1, f); g.fill(W - side - ins, bar + i, W - side, bar + i + 1, f);
-                g.fill(side, H - bar - i - 1, side + ins, H - bar - i, f); g.fill(W - side - ins, H - bar - i - 1, W - side, H - bar - i, f);
+                double dy = i + 0.5, arcX = r - Math.sqrt(Math.max(0.0, (double) r * r - (r - dy) * (r - dy)));      // where the circle crosses this row
+                int solid = (int) Math.floor(arcX);
+                for (int cn = 0; cn < 4; cn++) {
+                    boolean right = (cn & 1) == 1, bottom = cn >= 2;
+                    int yy = bottom ? H - bar - i - 1 : bar + i;
+                    if (solid > 0) { int x0 = right ? W - side - solid : side; g.fill(x0, yy, x0 + solid, yy + 1, f); }
+                    for (int j = solid; j < Math.min(r, solid + n + 3); j++) {
+                        double dist = Math.hypot(j + 0.5 - r, dy - r), over = Math.max(0.0, Math.min(1.0, dist - (r - 0.5)));
+                        double soft = n > 0 && r - dist < n ? 0.8 * (1.0 - (Math.floor(Math.max(0.0, r - dist)) + 1.0) / (n + 1.0)) : 0.0;
+                        int al = (int) Math.round(a0 * Math.max(over, soft));
+                        if (al <= 0) continue;
+                        int xx = right ? W - side - j - 1 : side + j;
+                        g.fill(xx, yy, xx + 1, yy + 1, Gfx.argb(al, rgb));
+                    }
+                }
             }
         }
     }

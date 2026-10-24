@@ -20,7 +20,9 @@ final class UpdateCheck {
     /** 0 = not asked yet, 1 = asking, 2 = done, 3 = could not ask. */
     static volatile int state = 0;
     static volatile String latest = "", latestName = "", error = "";
-    static volatile long checkedAt = 0L;
+    static volatile long checkedAt = 0L, minShowUntil = 0L;
+    /** True while a check runs, and for a moment after a button press so the wording does not flicker. */
+    static boolean busy() { return state == 1 || state == 0 || System.currentTimeMillis() < minShowUntil; }
     private static final Pattern VER = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+)");
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8)).build();
 
@@ -28,7 +30,8 @@ final class UpdateCheck {
     static void check(boolean force) {
         long now = System.currentTimeMillis();
         if (state == 1) return;
-        if (!force && state == 2 && now - checkedAt < 10 * 60_000L) return;
+        if (force) minShowUntil = now + 900L;
+        if (!force && state == 2 && now - checkedAt < 5 * 60_000L) return;
         if (!force && state == 3 && now - checkedAt < 60_000L) return;
         state = 1;
         Thread t = new Thread(() -> {

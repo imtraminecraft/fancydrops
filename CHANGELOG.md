@@ -1,3 +1,26 @@
+## 0.9.2
+- New: a grander RNG animation. The item spins like a 3D block, and slayer, mythological and experiment RNG each have their own stage
+- New: Item spin and Item pop size moved to Animations > Changes > Item Changes > RNG
+- New: a Mining and Fishing preview screen you can click through
+- New: /fd editor opens the Animations and Sounds editors
+- New: slayer boss spawn and cocoon lines are replaced by "{Boss} spawned. (time)" and "{Boss} cocooned. Get ready!"
+- New: Chat page option to also announce RNG drops in public chat, starting with [FancyDrops] |
+- New: other players' name cosmetics show over their heads
+- Changed: your own drop message in party, co-op or public chat waits until the animation is over
+- Changed: the Superpairs reward lines are hidden so the items don't show early
+- Changed: Chat preview sits above the Message format. The public message shows below the other one
+- Changed: all animations are 1 second shorter
+- Changed: two-drop animations have separate halos and the names sit at the left and right
+- Changed: Settings is pinned at the bottom left. Resources moved to Home
+- Changed: Home is cleaner. "What the mod does" and the profit line are gone
+- Changed: smoother cinematic bar curves and a smooth hotbar-then-hearts slide
+- Changed: new Update tracker icon and no more jitter. New Party, Mythological and Dye icons
+- Fixed: Duplex I and other "(Name)" books now play their animation
+- Fixed: drop lines pasted by players no longer trigger animations
+- Fixed: Drop Library Enabled hides drops that have both animation and chat alert off
+- Fixed: more slur spellings are blocked in the message format
+- Fixed: other players' auras shake less when they move
+
 ## 0.9.1
 - New: RNG items spin and pop out bigger. Each RNG animation page has "Item spin" (Still to 3x) and "Item pop size" sliders
 - New: all sounds redone (40 new ones). Every sound is timed to the animation length and rings out instead of cutting off

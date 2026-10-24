@@ -36,12 +36,17 @@ public final class DropListener {
         String raw = ChatFormatting.stripFormatting(message.getString());
         if (raw == null) return false;
         long now = System.currentTimeMillis();
+        if (echoHold(message, raw, now)) return true;                      // your own drop message waits until the scene is over
         boolean drop = false;
         for (String line : raw.split("\\R")) {
+            if (ChatParser.isPlayerChat(line)) continue;                   // a player pasting a drop line is just chat
             ProfitTracker.noteLine(line);
             noteBoss(line);
-            if (COCOON.matcher(line).find()) { cocoonAt = now; dlog("boss cocooned"); }
-            if (expLine(line, now)) continue;
+            if (line.contains("SLAYER QUEST STARTED")) { questAt = now; }
+            java.util.regex.Matcher sp = SPAWN.matcher(line);
+            if (sp.find()) { bossName = sp.group(1).trim(); say(bossName + " spawned. (" + took(now - questAt) + ")", now); drop = true; continue; }
+            if (COCOON.matcher(line).find()) { cocoonAt = now; dlog("boss cocooned"); say((bossName.isEmpty() ? "Boss" : bossName) + " cocooned. Get ready!", now); drop = true; continue; }
+            if (expLine(line, now)) { drop = true; continue; }             // the Superpairs reward lines would show the items early
             if (ChatParser.isKill(line) || ChatParser.isQuestComplete(line)) {
                 dlog("kill line: " + line.trim());
                 ProfitTracker.activity(now, ChatParser.isKill(line));
@@ -60,6 +65,51 @@ public final class DropListener {
         return drop;
     }
 
+    // ------------------------------------------------------------------ slayer boss lines
+
+    private static long questAt = 0;
+    private static String bossName = "";
+    private static final java.util.regex.Pattern SPAWN = java.util.regex.Pattern.compile("SLAYER BOSS!\\s*(?:The\\s+)?(.+?)\\s+spawned", java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    private static String took(long ms) {
+        if (questAt <= 0 || ms < 0 || ms > 3_600_000L) return "no quest time";
+        double sec = ms / 1000.0;
+        return sec < 60 ? String.format(Locale.ROOT, "%.1fs", sec) : (int) (sec / 60) + "m " + String.format(Locale.ROOT, "%02ds", (int) (sec % 60));
+    }
+
+    /** A line of ours in the player's chat, in place of one Hypixel line we hid. */
+    private static void say(String text, long now) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> { if (mc.player != null) mc.player.sendSystemMessage(Chat.msg(text)); });
+    }
+
+    // ------------------------------------------------------------------ your own drop message
+
+    private static final List<String[]> SENT = new ArrayList<>();            // {text, sentAt}
+    private static final List<Component> HELD = new ArrayList<>();
+    private static long heldAt;
+
+    /** Hypixel echoes your /pc, /cc or /ac message back to you: it would show the drop before the scene ends, so it is kept back until the scenes are done. */
+    private static boolean echoHold(Component message, String raw, long now) {
+        SENT.removeIf(x -> now - Long.parseLong(x[1]) > 20_000);
+        if (SENT.isEmpty() || ChatParser.isKill(raw)) return false;
+        for (String[] x : SENT) if (raw.contains(x[0])) {
+            SENT.remove(x);
+            if (!AnimationManager.isPlaying() && OUT.isEmpty()) return false;
+            if (HELD.isEmpty()) heldAt = now;
+            HELD.add(message);
+            return true;
+        }
+        return false;
+    }
+
+    private static void releaseHeld(Minecraft mc, long now) {
+        if (HELD.isEmpty() || mc.player == null) return;
+        if ((AnimationManager.isPlaying() || !OUT.isEmpty()) && now - heldAt < 30_000) return;
+        List<Component> l = new ArrayList<>(HELD); HELD.clear();
+        for (Component c : l) mc.player.sendSystemMessage(c);
+    }
+
     // ------------------------------------------------------------------ Experimentation Table (Superpairs) rewards
 
     private static final List<String> EXP_NAMES = new ArrayList<>();
@@ -70,12 +120,13 @@ public final class DropListener {
         String t = line.trim();
         if (t.startsWith("You claimed the") && t.endsWith("rewards!")) { EXP_NAMES.clear(); expUntil = now + 3000; expFlushAt = Long.MAX_VALUE; return true; }
         if (now > expUntil || t.isEmpty()) return false;
+        if (t.startsWith("+") || t.length() < 40 && !t.contains(">")) expUntil = Math.max(expUntil, now + 1200);          // every reward line, listed or not, stays out of chat
         String n = t.replaceFirst("^\\+\\s*", "").replaceFirst("^\\d+\\s*[x×]\\s*", "").replaceFirst("\\s*[x×]\\s*\\d+$", "").trim();
         for (String[] e : ExperimentData.ALL) if (e[0].equalsIgnoreCase(n)) {
             EXP_NAMES.add(e[0]); expUntil = now + 1500; expFlushAt = now + 700;
             return true;
         }
-        return false;
+        return t.startsWith("+") || t.matches("[A-Za-z' ]+( [IVX]+)?( x\\d+)?");      // "+400k Enchanting Exp", "Power VII": hidden too
     }
 
     /** Once the reward lines stop coming, plays them: two drops share one book scene, more play one scene after another. */
@@ -132,6 +183,10 @@ public final class DropListener {
         String n = norm(chatName);
         if (n.isEmpty()) return null;
         for (SlayerData.Slayer s : order) for (SlayerData.Drop dr : s.drops) if (norm(dr.name).equals(n)) return new Object[]{s, dr};
+        for (SlayerData.Slayer s : order) for (SlayerData.Drop dr : s.drops) {          // "(Duplex I)" in chat is "Enchanted Book (Duplex I)" in the list
+            int o = dr.name.lastIndexOf('('), e = dr.name.lastIndexOf(')');
+            if (o > 0 && e > o && norm(dr.name.substring(o + 1, e)).equals(n)) return new Object[]{s, dr};
+        }
         Object[] best = null; int bestLen = 0;
         for (SlayerData.Slayer s : order) for (SlayerData.Drop dr : s.drops) {
             String dn = norm(dr.name);
@@ -275,8 +330,14 @@ public final class DropListener {
     private static void queueAnnounce(Item it, double price) {
         FancyConfig c = FancyConfig.get();
         if (c.channel.equals("OFF") || !onHypixel()) return;               // never talks outside Hypixel
-        OUT.add(chan(c) + message(it, price, it.mf != null ? it.mf : "0%"));
+        String m = message(it, price, it.mf != null ? it.mf : "0%");
+        OUT.add(chan(c) + (c.channel.equals("ALL") ? adv(m) : m));
+        if (c.alsoAll && !c.channel.equals("ALL") && AnimationManager.tierOf(it) == 2) OUT.add("ac " + adv(m));      // RNG drops also go to public chat, below the other one
     }
+
+    static final String ADV = "[FancyDrops] | ";
+    /** Public chat carries the mod's name in front, cut to Hypixel's 256 characters. */
+    static String adv(String m) { String t = ADV + m; return t.length() > 250 ? t.substring(0, 250) : t; }
 
     /** Which message a drop uses: 0 Slayers, 1 Dye, 2 Farming. */
     static int event(Item it) {
@@ -763,7 +824,7 @@ public final class DropListener {
                 if (!onHypixel()) { reply.accept("FancyDrops » " + NOT_ON_HYPIXEL); return; }
                 if (c.channel.equals("OFF")) { reply.accept("FancyDrops » Chat preview (chat disabled): " + message); return; }
                 String cmd = chan(c);
-                OUT.add(cmd + message);
+                OUT.add(cmd + (cmd.equals("ac ") ? adv(message) : message));
                 reply.accept("FancyDrops » Chat preview queued for /" + cmd.trim() + ": " + message);
             }));
     }
@@ -774,9 +835,13 @@ public final class DropListener {
     public static void tick(Minecraft mc) {
         TRACKER.tick(System.currentTimeMillis());
         flushExp(System.currentTimeMillis());
+        releaseHeld(mc, System.currentTimeMillis());
         if (cooldown > 0) { cooldown--; return; }
         if (mc.player == null || OUT.isEmpty()) return;
-        mc.player.connection.sendCommand(OUT.poll());
+        String out = OUT.poll();
+        int sp = out.indexOf(' ');
+        if (sp > 0) SENT.add(new String[]{out.substring(sp + 1).trim(), String.valueOf(System.currentTimeMillis())});
+        mc.player.connection.sendCommand(out);
         cooldown = 30;
     }
 

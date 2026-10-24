@@ -574,14 +574,16 @@ final class Scene {
                 * FancyConfig.get().itemK() * (skull ? 0.72 : 1.0);
         double dx = side * TWIN_DX * easeOut(uu);
         double yy = itemY(uu) + (ic.itemBob ? 1.6 * ic.itemBobAmp : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) + (side != 0 ? 14 * Math.sin(Math.min(1f, Math.max(0f, uu)) * Math.PI) : 0);     // twin: each item flies out in an arc
-        double spin = 2.8 * us * ic.itemSpin * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side) * (epic ? spinK : 1f) + (epic ? 5.0 * (1 - Math.exp(-2.5 * us)) * Math.min(1f, spinK) : 0);
+        double spin = epic ? rngAngle(us, spinK, ic.itemSpin) * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side) : 2.8 * us * ic.itemSpin * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side);
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
         float pulseG = 0.75f + 0.25f * (float) Math.sin(us * 3.2);
-        out.glow(sx, sy, (float) size * (epic ? 1.7f : 1.4f), rar & 0xFFFFFF, Math.min(1f, uu) * (epic ? 0.62f : 0.5f) * pulseG * ic.itemGlow);     // the icons' soft halo
-        out.glow(sx, sy, (float) size * 0.8f, 0xFFFFFF, Math.min(1f, uu) * 0.22f * pulseG * ic.itemGlow);
+        out.glow(sx, sy, (float) size * (side != 0 ? 1.25f : epic ? 1.7f : 1.4f), rar & 0xFFFFFF, Math.min(1f, uu) * (epic ? 0.62f : 0.5f) * pulseG * ic.itemGlow);     // the icons' soft halo
+        if (side == 0) out.glow(sx, sy, (float) size * 0.8f, 0xFFFFFF, Math.min(1f, uu) * 0.22f * pulseG * ic.itemGlow);
+        int rst = p.exp ? 2 : p.myth ? 1 : 0;
+        if (epic && side == 0) rngAura(out, rst, sx, sy, (float) size, us, uu, rar, false);                                             // the RNG stage: floor light, orbits, speed lines
         if (m.sprite != null) {
-            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f) * (epic ? popK : 1f), epic ? spinK : 0f);
+            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f) * (epic ? popK : 1f), epic, (float) spin, rst);
         } else if (m.puffy != null) {
             m.puffy.draw(IT, sx, sy, (float) (size / 16.0), spin, 0.35);
         } else {
@@ -592,20 +594,22 @@ final class Scene {
         }
         if (ic.itemOutline) IT.softOutline(0.42f);
         out.draw(IT);
+        if (epic && side == 0) rngAura(out, rst, sx, sy, (float) size, us, uu, rar, true);
     }
 
     /** Non-skull items: coin-flip entrance, glowing halo, travelling shine and orbiting sparkles. */
-    private static void flatItem(Canvas out, Params p, Model m, int rar, float sx, float sy, float size, float us, float uu, float sm, float turn) {
+    private static void flatItem(Canvas out, Params p, Model m, int rar, float sx, float sy, float size, float us, float uu, float sm, boolean slab, float ang, int style) {
         int[] spr = m.sprite;
         int col = rar & 0xFFFFFF;
         float pulse = 0.5f + 0.5f * (float) Math.sin(us * 3.2);
-        for (int r = 4; r >= 1; r--) out.disc(Math.round(sx), Math.round(sy), Math.round(size * (0.42f + r * 0.1f)), Canvas.rgb((int) ((10 + 14 * pulse) * (5 - r) / 2f * Math.min(1f, uu) * FancyConfig.get().itemGlow), col));
-        float flip = us < 0.8f ? (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * us))) : 1f;
-        if (turn > 0f) flip = (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * Math.min(us, 0.8f))) + Math.max(0f, us - 0.8f) * 2.6f * turn);     // RNG drops keep turning like a block, front then back      // two quick coin flips that settle
-        float xs = Math.max(0.06f, Math.abs(flip));
+        if (!p.twin) for (int r = 4; r >= 1; r--) out.disc(Math.round(sx), Math.round(sy), Math.round(size * (0.42f + r * 0.1f)), Canvas.rgb((int) ((10 + 14 * pulse) * (5 - r) / 2f * Math.min(1f, uu) * FancyConfig.get().itemGlow), col));
         float k = Math.round(2f * sm * 2f) / 2f, half = 8f * k;                                   // whole-number scale so every sprite pixel stays square
         int al = (int) (255 * cl(uu * 2f));
         float shine = (us * 0.7f) % 1.6f - 0.3f;                                                      // a bright band sweeps across now and then
+        if (slab) slabItem(spr, sx, sy, k, ang, al, shine, style, us, col);
+        else {
+        float flip = us < 0.8f ? (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * us))) : 1f;      // two quick coin flips that settle
+        float xs = Math.max(0.06f, Math.abs(flip));
         for (int y = 0; y < H; y++) {
             float v = (y - sy) / k + 8f;
             if (v < 0 || v >= 16) continue;
@@ -620,11 +624,114 @@ final class Scene {
                 IT.set(x, y, (Canvas.shade(c | 0xFF000000, f) & 0xFFFFFF) | (al << 24));
             }
         }
+        }
         for (int i = 0; i < 6 && FancyConfig.get().itemGlints; i++) {                                  // orbiting glints
             double a = us * 1.6 + i * Math.PI / 3, rr = size * 0.72;
             int x = Math.round(sx + (float) Math.cos(a) * (float) rr), y = Math.round(sy + (float) Math.sin(a) * (float) rr * 0.55f);
             float tw = Math.min(1f, uu) * (0.45f + 0.55f * (float) Math.sin(us * 6 + i * 2) * (float) Math.sin(us * 6 + i * 2));
             out.glint(x, y, i % 2 == 0 ? 3 : 2, i % 2 == 0 ? 0xFFFFFF : col, tw);
+        }
+    }
+
+    /** How far an RNG drop has turned: a fast spin that settles into a steady turn, like a block on a stand. */
+    private static float rngAngle(float us, float spinK, float itemSpin) {
+        if (spinK <= 0.01f) return 0f;
+        return 7.5f * (1f - (float) Math.exp(-2.6 * us)) * Math.min(1f, spinK) + 3.3f * us * spinK * Math.max(0.2f, itemSpin);
+    }
+
+    /** A thick, turning item: the sprite is stacked in a few layers, so the side shows as it turns (the block in the lobby). */
+    private static void slabItem(int[] spr, float sx, float sy, float k, float ang, int al, float shine, int style, float us, int col) {
+        float cs = (float) Math.cos(ang), sn = (float) Math.sin(ang);
+        if (Math.abs(cs) < 0.06f) cs = cs < 0 ? -0.06f : 0.06f;
+        final int L = 5; final float thick = 2.4f;
+        float half = 8f * k;
+        for (int li = 0; li < L; li++) {
+            int j = cs >= 0 ? li : L - 1 - li;                                   // far layers first
+            float z = (j / (float) (L - 1) - 0.5f) * thick;
+            boolean face = j == L - 1 || j == 0, near = cs >= 0 ? j == L - 1 : j == 0;
+            float ox = z * sn * k;
+            int tint = style == 2 ? hsv(us * 0.35f + j * 0.16f, 0.55f, 1f) & 0xFFFFFF : style == 1 ? 0xFFD36B : col;
+            for (int y = 0; y < H; y++) {
+                float v = (y - sy) / k + 8f;
+                if (v < 0 || v >= 16) continue;
+                for (int x = (int) (sx + ox - half - 2); x <= sx + ox + half + 2; x++) {
+                    float u = (x + 0.5f - sx - ox) / (k * cs) + 8f;
+                    if (u < 0 || u >= 16) continue;
+                    int c = spr[(int) v * 16 + (int) u];
+                    if ((c >>> 24) < 40) continue;
+                    int px = c | 0xFF000000;
+                    float f;
+                    if (near) {
+                        f = 0.8f + 0.2f * Math.abs(cs);
+                        float d = (u + v) / 32f - shine;
+                        if (Math.abs(d) < 0.06f) f += 0.55f * (1 - Math.abs(d) / 0.06f);
+                    } else if (face) f = 0.5f;
+                    else f = 0.62f + 0.12f * j;
+                    px = Canvas.shade(px, f);
+                    if (!near) px = Canvas.mix(px, 0xFF000000 | tint, face ? 0.18f : 0.38f);                 // the edge of the slab carries the drop's colour
+                    IT.set(x, y, (px & 0xFFFFFF) | (al << 24));
+                }
+            }
+        }
+    }
+
+    /** What makes the RNG drop grand, and different for each kind: floor light, orbits, speed lines. front = the part drawn over the item. */
+    private static void rngAura(Canvas c, int style, float sx, float sy, float size, float us, float uu, int rar, boolean front) {
+        float k = cl(uu) * cl(us / 0.25f + 0.2f);
+        if (k <= 0.02f) return;
+        int rc = rar & 0xFFFFFF, gold = 0xFFD36B, ix = Math.round(sx), fy = (int) CY - 3;
+        if (style == 0) {                                                                              // slayer: a golden pool of light, rings sent out along the floor, speed lines, a lens star
+            if (!front) {
+                for (int i = 0; i < 3; i++) ell(c, ix, fy, 26 - i * 7, 8 - i * 2, Canvas.rgb((int) (34 * k), i == 2 ? 0xFFFFFF : gold));
+                for (int r = 0; r < 2; r++) {
+                    float rp = frac(us * 0.8f - r * 0.5f); int rx = (int) (8 + 36 * rp), n = Math.max(40, rx * 5);
+                    for (int i = 0; i < n; i++) { double a = i * Math.PI * 2 / n; c.set((int) (ix + Math.cos(a) * rx), (int) (fy + Math.sin(a) * rx * 0.3), Canvas.rgb((int) (170 * k * (1 - rp)), r == 0 ? gold : 0xFFFFFF)); }
+                }
+            } else {
+                if (us < 1.1f) for (int i = 0; i < 7; i++) {                                         // speed lines while it spins up
+                    float yy = sy + (h(i, 41) - 0.5f) * size * 1.4f, len = size * (0.5f + h(i, 42)), off = ((us * 3f + h(i, 43)) % 1f) * size * 2.4f - size * 1.2f;
+                    int a = (int) (150 * (1f - us / 1.1f));
+                    for (int q = 0; q < len; q++) c.set((int) (sx + off + q - len / 2), (int) yy, Canvas.rgb((int) (a * (1f - q / len)), 0xFFFFFF));
+                }
+                float L = size * (0.9f + 0.25f * (float) Math.sin(us * 4)), ab = 0.5f * k;
+                for (int q = -(int) L; q <= (int) L; q++) { float e = 1f - Math.abs(q) / (L + 1); c.set(ix + q, Math.round(sy), Canvas.rgb((int) (190 * e * ab), 0xFFFFFF)); c.set(ix, Math.round(sy) + q, Canvas.rgb((int) (190 * e * ab), 0xFFFFFF)); }
+            }
+        } else if (style == 1) {                                                                       // mythological: a rune circle on the floor and a golden spiral winding up around it
+            if (!front) {
+                for (int rr = 0; rr < 2; rr++) {
+                    int rx = rr == 0 ? 26 : 17, n = rx * 6;
+                    for (int i = 0; i < n; i++) { double a = i * Math.PI * 2 / n + us * (rr == 0 ? 0.6 : -0.9); boolean tick = i % 9 < 2; c.set((int) (ix + Math.cos(a) * rx), (int) (fy + Math.sin(a) * rx * 0.3), Canvas.rgb((int) ((tick ? 230 : 110) * k), tick ? 0xFFF3B8 : gold)); }
+                }
+                c.glow(ix, fy, 22, gold, 0.28f * k);
+            }
+            int n = 22;
+            for (int i = 0; i < n; i++) {
+                float t0 = frac(us * 0.42f + i / (float) n), a = us * 2.4f + i * 0.62f;
+                boolean fr = Math.sin(a) > 0;
+                if (fr != front) continue;
+                float rad = 15f + size * 0.25f * (float) Math.sin(t0 * Math.PI);
+                int x = (int) (sx + Math.cos(a) * rad), y = (int) (fy - t0 * (fy - sy + size * 0.8f) + Math.sin(a) * rad * 0.28f);
+                c.glint(x, y, i % 4 == 0 ? 2 : 1, i % 3 == 0 ? 0xFFFFFF : gold, k * (float) Math.sin(t0 * Math.PI));
+            }
+        } else {                                                                                       // experiment: rainbow atom orbits around the drop and bubbles rising off the table
+            if (!front) {
+                for (int i = 0; i < 9; i++) {
+                    float ph = frac(us * 0.45f + i * 0.123f), bx = sx + (h(i, 51) - 0.5f) * 44 + (float) Math.sin(ph * 8 + i) * 3, by = fy - ph * 62;
+                    int cc = hsv(i * 0.11f + us * 0.2f, 0.5f, 1f) & 0xFFFFFF, br = 2 + i % 3, a = (int) (190 * k * Math.sin(ph * Math.PI));
+                    for (int q = 0; q < 14; q++) { double an = q * Math.PI * 2 / 14; c.set((int) (bx + Math.cos(an) * br), (int) (by + Math.sin(an) * br), Canvas.rgb(a, cc)); }
+                }
+                c.glow(ix, fy, 20, 0xB56BFF, 0.22f * k);
+            }
+            for (int o = 0; o < 3; o++) {
+                double tilt = o * Math.PI / 3 + us * 0.35; float R = size * 0.95f;
+                for (int j = 0; j < 5; j++) {
+                    double a = us * 3.2 + j * 1.2566 + o * 2.1;
+                    boolean fr = Math.sin(a) > 0; if (fr != front) continue;
+                    double lx = Math.cos(a) * R, ly = Math.sin(a) * R * 0.34;
+                    int x = (int) (sx + lx * Math.cos(tilt) - ly * Math.sin(tilt)), y = (int) (sy + lx * Math.sin(tilt) * 0.55 + ly * Math.cos(tilt));
+                    c.glint(x, y, fr ? (j == 0 ? 3 : 2) : 1, hsv(o * 0.33f + j * 0.07f + us * 0.2f, 0.5f, 1f) & 0xFFFFFF, k * (fr ? 1f : 0.5f));
+                }
+            }
         }
     }
 

@@ -16,9 +16,10 @@ public final class ChatFilter {
             "fuck", "fuk", "fck", "fucker", "shit", "bullshit", "bitch", "asshole", "ass", "arse", "dick", "cock", "pussy", "cunt", "twat",
             "slut", "whore", "bastard", "wank", "wanker", "piss", "porn", "sex", "sexy", "nude", "nudes", "rape", "rapist", "cum", "jizz",
             "boob", "tit", "dildo", "penis", "vagina", "anal", "orgasm", "nazi", "hitler", "kys", "retard", "retarded", "fag", "faggot",
-            "dyke", "tranny", "coon", "paki", "nigger", "nigga", "chink", "spic", "kike", "gook", "wetback", "beaner", "molest", "pedo", "pedophile"));
+            "dyke", "tranny", "coon", "paki", "nigger", "nigga", "chink", "spic", "kike", "gook", "wetback", "beaner", "molest", "pedo", "pedophile",
+            "niga", "nigah", "nigaz", "nigguh", "niggah", "niggaz", "niggas", "nikka", "nikker", "nibba", "nibber", "niqqa", "niqqer", "niqer", "niqa", "fagot", "fagg", "faggit", "fgt", "retarted", "chinc", "kyke", "spick", "negro"));
     // long, unambiguous ones are also caught when spaced out or glued into other text ("n i g g e r", "xxfaggotxx")
-    private static final List<String> SQUASHED = List.of("nigger", "nigga", "faggot", "fuck", "shit", "bitch", "whore", "retard", "rapist", "pedophile", "wetback", "tranny");
+    private static final List<String> SQUASHED = List.of("nigger", "nigga", "faggot", "fuck", "shit", "bitch", "whore", "retard", "rapist", "pedophile", "wetback", "tranny", "nigg", "nikka", "nikker", "nibba", "nibber", "nigah", "nigaz", "fagg", "chink");
     private static final Pattern LINK = Pattern.compile("(?i)(https?:|www\\.|discord\\.|\\b[a-z0-9-]+\\.(com|net|org|io|gg|ru|xyz|tv|me|co)\\b)");
     private static final Pattern TOKEN = Pattern.compile("[^a-z0-9@$]+");
     private static final Pattern BRACES = Pattern.compile("\\{[^}]*}");
@@ -62,7 +63,7 @@ public final class ChatFilter {
 
     private static String unleet(String t) {
         StringBuilder b = new StringBuilder();
-        for (char c : t.toCharArray()) b.append(switch (c) { case '0' -> 'o'; case '1' -> 'i'; case '3' -> 'e'; case '4', '@' -> 'a'; case '5', '$' -> 's'; case '7' -> 't'; default -> c; });
+        for (char c : t.toCharArray()) b.append(switch (c) { case '0' -> 'o'; case '1' -> 'i'; case '3' -> 'e'; case '4', '@' -> 'a'; case 'q' -> 'g'; case '5', '$' -> 's'; case '7' -> 't'; default -> c; });
         return b.toString();
     }
 

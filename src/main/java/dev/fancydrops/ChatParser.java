@@ -26,6 +26,15 @@ public final class ChatParser {
     private static final Pattern AMOUNT_SUFFIX = Pattern.compile("^(.+?)\\s*[x×]\\s*(\\d+)$", Pattern.CASE_INSENSITIVE);
     private static final Pattern AMOUNT_PARENS = Pattern.compile("^(.+?)\\s*\\((\\d+)x\\)$", Pattern.CASE_INSENSITIVE);
 
+    /** A player's chat line ("[MVP+] Name: text", "Party > Name: text"): never a drop, whatever it says. Hypixel's own lines have no "Name: " in front of the keyword. */
+    public static boolean isPlayerChat(String line) {
+        if (line == null) return false;
+        int i = line.indexOf(": ");
+        if (i < 0) return false;
+        String before = line.substring(0, i).toUpperCase(Locale.ROOT);
+        return !before.contains("DROP!") && !before.contains("CROP!");
+    }
+
     public static boolean isKill(String line) { return line != null && KILL.matcher(line).find(); }
     public static boolean isQuestComplete(String line) { return line != null && QUEST_DONE.matcher(line).matches(); }
 
