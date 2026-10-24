@@ -112,6 +112,10 @@ public class FancyConfig {
     public int pos9 = 7;                // without bars: 3 x 3 grid, row by row (7 = bottom centre)
     public int mythStrikes = 3, mythStrikesRng = 5;   // lightning strikes before the Mythological drop shows (1..10)
     public java.util.Map<String, Float> animSecs = new java.util.HashMap<>();   // how long each animation lasts, in seconds (5..10); missing = its natural length
+    public java.util.Map<String, Float> rngOpts = new java.util.HashMap<>();    // RNG Drop items, per animation ("rng", "mythrng", "exprng"): "<key>.spin" turns per speed (0 = off, 0..3), "<key>.pop" size (1..2)
+    public float rngOpt(String key, String what, float def) { Float v = rngOpts == null ? null : rngOpts.get(key + "." + what); return v == null ? def : v; }
+    public static float rngSpinDef() { return 1f; }
+    public static float rngPopDef() { return 1.35f; }
     public java.util.Map<String, Float> textSecs = new java.util.HashMap<>();   // seconds after the animation starts until the title and info appear (3..10); missing = 4
     public float textDelay(String key) { return "farm".equals(key) || "helios".equals(key) || "pest".equals(key) ? 0f : Math.max(3f, Math.min(10f, textDelayAll)); }       // Farming's words follow the reveal by themselves
     public void setBarPx(int px) { barPx = Math.max(5, Math.min(15, px)); barHeight = Math.round(barPx * 100f / 96f); }
@@ -178,6 +182,8 @@ public class FancyConfig {
         if (instance.textSecs == null) instance.textSecs = new java.util.HashMap<>();
         instance.textSecs.replaceAll((k, v) -> v == null ? 4f : Math.max(3f, Math.min(10f, v)));
         if (instance.animSecs == null) instance.animSecs = new java.util.HashMap<>();
+        if (instance.rngOpts == null) instance.rngOpts = new java.util.HashMap<>();
+        instance.rngOpts.replaceAll((k, v) -> v == null ? 1f : k.endsWith(".pop") ? Math.max(1f, Math.min(2f, v)) : Math.max(0f, Math.min(3f, v)));
         instance.itemSpin = Math.max(0f, Math.min(2f, instance.itemSpin)); instance.itemGlow = Math.max(0f, Math.min(1.5f, instance.itemGlow));
         instance.animSecs.replaceAll((k, v) -> v == null ? null : Math.max(5f, Math.min(10f, v)));
         instance.mythPosBars = Math.max(-1, Math.min(2, instance.mythPosBars)); instance.mythPos9 = Math.max(-1, Math.min(8, instance.mythPos9));

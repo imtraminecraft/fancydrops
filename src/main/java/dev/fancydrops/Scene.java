@@ -567,19 +567,21 @@ final class Scene {
         boolean epic = p.tier == 2, cool = p.tier >= 1;
         float e = back(uu);
         boolean skull = m.parts != null || (m.puffy != null && m.sprite == null);       // heads are bulky: draw them smaller
-        double size = (side != 0 ? (epic ? 26 : cool ? 23 : 21) : (epic ? 31 : cool ? 26 : 22)) * Math.max(0.01, e)
-                * FancyConfig.get().itemK() * (skull ? 0.72 : 1.0);
         FancyConfig ic = FancyConfig.get();
+        String rk = p.exp ? "exprng" : p.myth ? "mythrng" : "rng";
+        float spinK = epic ? ic.rngOpt(rk, "spin", FancyConfig.rngSpinDef()) : 1f, popK = epic ? ic.rngOpt(rk, "pop", FancyConfig.rngPopDef()) : 1f;     // RNG drops: the item spins like a block and pops out bigger (both set in the animation's page)
+        double size = (side != 0 ? (epic ? 26 : cool ? 23 : 21) : (epic ? 31 : cool ? 26 : 22)) * Math.max(0.01, e) * popK
+                * FancyConfig.get().itemK() * (skull ? 0.72 : 1.0);
         double dx = side * TWIN_DX * easeOut(uu);
         double yy = itemY(uu) + (ic.itemBob ? 1.6 * ic.itemBobAmp : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) + (side != 0 ? 14 * Math.sin(Math.min(1f, Math.max(0f, uu)) * Math.PI) : 0);     // twin: each item flies out in an arc
-        double spin = 2.8 * us * ic.itemSpin * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side) + (epic ? 5.0 * (1 - Math.exp(-2.5 * us)) : 0);
+        double spin = 2.8 * us * ic.itemSpin * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side) * (epic ? spinK : 1f) + (epic ? 5.0 * (1 - Math.exp(-2.5 * us)) * Math.min(1f, spinK) : 0);
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
         float pulseG = 0.75f + 0.25f * (float) Math.sin(us * 3.2);
         out.glow(sx, sy, (float) size * (epic ? 1.7f : 1.4f), rar & 0xFFFFFF, Math.min(1f, uu) * (epic ? 0.62f : 0.5f) * pulseG * ic.itemGlow);     // the icons' soft halo
         out.glow(sx, sy, (float) size * 0.8f, 0xFFFFFF, Math.min(1f, uu) * 0.22f * pulseG * ic.itemGlow);
         if (m.sprite != null) {
-            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f));
+            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f) * (epic ? popK : 1f), epic ? spinK : 0f);
         } else if (m.puffy != null) {
             m.puffy.draw(IT, sx, sy, (float) (size / 16.0), spin, 0.35);
         } else {
@@ -593,14 +595,15 @@ final class Scene {
     }
 
     /** Non-skull items: coin-flip entrance, glowing halo, travelling shine and orbiting sparkles. */
-    private static void flatItem(Canvas out, Params p, Model m, int rar, float sx, float sy, float size, float us, float uu, float sm) {
+    private static void flatItem(Canvas out, Params p, Model m, int rar, float sx, float sy, float size, float us, float uu, float sm, float turn) {
         int[] spr = m.sprite;
         int col = rar & 0xFFFFFF;
         float pulse = 0.5f + 0.5f * (float) Math.sin(us * 3.2);
         for (int r = 4; r >= 1; r--) out.disc(Math.round(sx), Math.round(sy), Math.round(size * (0.42f + r * 0.1f)), Canvas.rgb((int) ((10 + 14 * pulse) * (5 - r) / 2f * Math.min(1f, uu) * FancyConfig.get().itemGlow), col));
-        float flip = us < 0.8f ? (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * us))) : 1f;      // two quick coin flips that settle
+        float flip = us < 0.8f ? (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * us))) : 1f;
+        if (turn > 0f) flip = (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * Math.min(us, 0.8f))) + Math.max(0f, us - 0.8f) * 2.6f * turn);     // RNG drops keep turning like a block, front then back      // two quick coin flips that settle
         float xs = Math.max(0.06f, Math.abs(flip));
-        float k = 2f * sm, half = 16f * sm;                                   // whole-number scale so every sprite pixel stays square
+        float k = Math.round(2f * sm * 2f) / 2f, half = 8f * k;                                   // whole-number scale so every sprite pixel stays square
         int al = (int) (255 * cl(uu * 2f));
         float shine = (us * 0.7f) % 1.6f - 0.3f;                                                      // a bright band sweeps across now and then
         for (int y = 0; y < H; y++) {

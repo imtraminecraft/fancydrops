@@ -182,6 +182,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     }
 
     static final String DISCORD = "https://discord.gg/bum8VPbRPR";
+    static final String GITHUB = "https://github.com/imtraminecraft/fancydrops";
 
     private static void say(FabricClientCommandSource source, String msg) { source.sendFeedback(Chat.msg(msg)); }
 

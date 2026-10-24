@@ -493,7 +493,7 @@ public class FancyScreen extends Screen {
 
     /** The live preview: the real scene on the left, and on the right either every setting of the animation (Animations) or animated sound waves (Sounds). Sits above or below the menu. */
     private void drawDock(GuiGraphicsExtractor g, int mx, int my, float intro, long now) {
-        dockBtn[0] = dockBtn[1] = dockBtn[2] = dockBtn[3] = -1;
+        dockBtn[0] = dockBtn[1] = dockBtn[2] = dockBtn[3] = -1; java.util.Arrays.fill(chipBox, null);
         if (dockK < 0.97f) return;
         FancyConfig c = FancyConfig.get();
         boolean top = c.previewAt == 0, sounds = tab == Tab.SOUNDS;
@@ -604,13 +604,12 @@ public class FancyScreen extends Screen {
             nm[i] = SoundFx.chosen(SoundFx.SCENES[sc], SoundFx.SLOTS[slot[i]]);
             du[i] = SoundFx.NONE.equals(nm[i]) ? 0f : SoundFx.duration(nm[i]);
         }
-        long loopMs = Math.round((span + 0.6f) * 1000f);
+        long loopMs = Math.round((span + 0.5f) * 1000f);
         boolean fresh = waveKey == null || !waveKey.equals(key) || now - waveNow > 250;
         if (fresh) { waveEl = 0; waveT = -1f; SoundFx.stopPreviews(); }                           // another animation (or the tab just opened): start again, and let the old sound go quiet
         else if (!wavePaused) waveEl += now - waveNow;
         float t = (waveEl % loopMs) / 1000f, sec = now / 1000f;
         if (t < waveT) waveCut = false;
-        if (t >= span && !waveCut && !fresh) { waveCut = true; SoundFx.stopPreviews(); }                    // sounds end with the animation, like in the game
         if (!fresh && !wavePaused) {                                                              // the playhead just passed a sound: play it
             if (waveWasPaused) {                                                                  // resumed: sounds that were mid-play start again, so they carry on
                 for (int i = 0; i < ne; i++) if (du[i] > 0f && te[i] <= t && t < te[i] + du[i] && t < span) {
@@ -635,25 +634,32 @@ public class FancyScreen extends Screen {
         g.fill(x + 4, y + h - 31, x + w - 4, y + h - 30, 0x14FFFFFF);
         g.enableScissor(x + 1, y + 13, x + w - 1, y + h - 31);
         g.fill(x + 2, cy, x + w - 2, cy + 1, 0x22FFFFFF);                                          // the centre line
-        for (int xx = x + 4; xx < x + w - 4; xx += 3) {
-            float tx = (xx - x - 4) / (float) (w - 8) * span;
-            float e = 0.03f; int dom = -1; float best = 0.05f;
+        int cols = w - 8; float[] lev = new float[cols + 4], rr = new float[cols + 4], gg = new float[cols + 4], bb = new float[cols + 4];
+        for (int ci = 0; ci < cols; ci++) {                                                         // the real loudness of every sound, one pixel column at a time
+            float tx = ci / (float) cols * span, e = 0.02f, wr = 0, wg = 0, wb = 0, wsum = 0;
             for (int i = 0; i < ne; i++) {
                 if (du[i] <= 0f) continue;
                 float u = tx - te[i];
                 if (u < 0f || u > du[i]) continue;
                 long since = now - pulseAt[slot[i]];
-                float v = power[slot[i]] * SoundFx.level(nm[i], u);                                    // the real loudness of that sound
+                float v = power[slot[i]] * SoundFx.level(nm[i], u);
                 if (since >= 0 && since < 900) v += 0.3f * v * (float) Math.exp(-since / 260.0);       // played by hand
                 e += v;
-                if (v > best) { best = v; dom = slot[i]; }
+                int cc = SLOT_COL[slot[i]]; wr += v * ((cc >> 16) & 255); wg += v * ((cc >> 8) & 255); wb += v * (cc & 255); wsum += v;
             }
-            e = Math.min(1f, e);
-            int hh = Math.max(1, Math.round(amp * e));
+            lev[ci + 2] = Math.min(1f, e);
+            if (wsum > 0.001f) { rr[ci + 2] = wr / wsum; gg[ci + 2] = wg / wsum; bb[ci + 2] = wb / wsum; } else { rr[ci + 2] = 0x5A; gg[ci + 2] = 0x6C; bb[ci + 2] = 0x9A; }
+        }
+        for (int ci = 0; ci < cols; ci++) {
+            float sm = (lev[ci] + 2f * lev[ci + 1] + 3f * lev[ci + 2] + 2f * lev[ci + 3] + lev[ci + 4]) / 9f;          // a little smoothing, so the shape flows
+            float tx = ci / (float) cols * span, wob = 0.88f + 0.12f * (float) Math.sin(ci * 0.9 + sec * 0 + Math.sin(ci * 0.23) * 2.0);    // a fine ripple, like a real waveform
+            int hh = Math.max(0, Math.round(amp * sm * wob)), xx = x + 4 + ci;
             boolean played = tx <= t;
-            int rgb = dom >= 0 ? SLOT_COL[dom] & 0xFFFFFF : 0x5A6C9A;
-            if (e > 0.1f && played) g.fill(xx - 1, cy - hh - 1, xx + 3, cy + hh + 2, Gfx.argb(Math.round(10 + 45 * e), rgb));      // glow
-            g.fill(xx, cy - hh, xx + 2, cy + hh + 1, Gfx.argb(dom < 0 ? 120 : played ? 235 : 120, rgb));                          // bar: dimmer until the playhead has passed
+            int rgb = ((int) rr[ci + 2] << 16) | ((int) gg[ci + 2] << 8) | (int) bb[ci + 2];
+            if (hh <= 0) { g.fill(xx, cy, xx + 1, cy + 1, Gfx.argb(played ? 150 : 90, 0x5A6C9A)); continue; }
+            if (played && sm > 0.12f) g.fill(xx - 1, cy - hh - 2, xx + 2, cy + hh + 3, Gfx.argb(Math.round(8 + 30 * sm), rgb));           // soft glow
+            g.fill(xx, cy - hh, xx + 1, cy + hh + 1, Gfx.argb(played ? 230 : 105, rgb));
+            g.fill(xx, cy - hh / 3, xx + 1, cy + hh / 3 + 1, Gfx.argb(played ? 90 : 30, 0xFFFFFF));                                         // a lighter core
         }
         int phx = x + 4 + Math.min(w - 8, Math.round(Math.min(t, span) / span * (w - 8)));
         g.fill(phx, wy - 2, phx + 1, wy + wh + 2, 0xAAFFFFFF);                                       // the playhead
@@ -670,9 +676,11 @@ public class FancyScreen extends Screen {
             ring(g, x + 4 + te[first] / span * (w - 8), cy, u * wh * 0.75f, 1.6f, Math.round((1f - u) * 220), SLOT_COL[k]);
         }
         g.disableScissor();
-        int chipW = w / 5, cy2 = y + h - 25;                                                        // what each slot plays: its moment, then its sound
+        int chipW = w / 5, cy2 = y + h - 25;                                                        // what each slot plays: its moment, then its sound. Click one to hear it.
         for (int k = 0; k < 5; k++) {
             int cx0 = x + k * chipW + 5;
+            chipBox[k] = new int[]{x + k * chipW, y + h - 29, chipW, 28}; chipScene = sc;
+            if (mouseX >= chipBox[k][0] && mouseX < chipBox[k][0] + chipW && mouseY >= chipBox[k][1] && mouseY < chipBox[k][1] + 28) pill(g, chipBox[k][0] + 1, chipBox[k][1], chipW - 2, 28, Gfx.argb(40, SLOT_COL[k] & 0xFFFFFF));
             boolean fired = false; for (int i = 0; i < ne; i++) if (slot[i] == k && t >= te[i] && t - te[i] < 0.35f) fired = true;
             if (now - pulseAt[k] < 400) fired = true;
             g.fill(cx0, cy2 + 1, cx0 + 5, cy2 + 6, fired ? 0xFFFFFFFF : SLOT_COL[k]);
@@ -681,6 +689,7 @@ public class FancyScreen extends Screen {
         }
     }
 
+    private final int[][] chipBox = new int[5][]; private int chipScene; private int mouseX, mouseY;
     private static float waveT; private static long waveNow, waveEl; private static boolean wavePaused, waveCut, waveWasPaused; private static String waveKey;
 
     private static void ring(GuiGraphicsExtractor g, float cxf, float cyf, float r, float aspect, int alpha, int col) {
@@ -706,14 +715,15 @@ public class FancyScreen extends Screen {
         for (int i = 0; i < 16; i++) g.fill(sweep + i, r.y, sweep + i + 1, r.y + r.h, Gfx.argb(Math.round(30 * (1f - Math.abs(i - 8) / 8f)), 0xFFFFFF));
         g.disableScissor();
         rout(g, r.x, r.y, r.w, r.h, Gfx.argb(hv ? 220 : 140, 0xC9A8FF));
-        int bx = r.x + 10, by = r.y + r.h / 2 - 8 + Math.round((float) Math.sin(sec * 2.4f) * 1.5f);
+        int bx = r.x + 8, by = r.y + r.h / 2 - 8 + Math.round((float) Math.sin(sec * 2.4f) * 1.5f);
         if (Icons.has(r.icon)) Icons.draw(g, r.icon, bx, by, now);
-        int tx = r.x + 34, tw = r.w - 34 - 10;
-        Gfx.text(g, font, "TIP", tx, r.y + 6, 0xFFFFE08A);
-        List<String> ln = wrap(r.title, tw);
-        for (int i = 0; i < ln.size() && i < 2; i++) Gfx.text(g, font, ln.get(i), tx, r.y + 17 + i * 10, 0xFFFFFFFF);
-        int cur = tipNow(), dx0 = r.x + r.w - (TIPS.length * 6) - 8, dy0 = r.y + 6;
-        for (int i = 0; i < TIPS.length; i++) g.fill(dx0 + i * 6, dy0, dx0 + i * 6 + (i == cur ? 4 : 2), dy0 + 2, i == cur ? 0xFFFFE08A : 0x66FFFFFF);
+        int tx = r.x + 30, tw = r.w - 30 - 8;
+        List<String> ln = wrap(r.title, tw - 22);
+        int n = Math.min(2, ln.size()), ty = r.y + (r.h - (n * 10 - 1)) / 2 - 1;
+        Gfx.text(g, font, "TIP", tx, ty, 0xFFFFE08A);
+        for (int i = 0; i < n; i++) Gfx.text(g, font, ln.get(i), tx + 22, ty + i * 10, 0xFFFFFFFF);
+        float left = 1f - ((now - tipAt) % 10000L) / 10000f;                                           // time until the next tip
+        g.fill(r.x + 3, r.y + r.h - 3, r.x + 3 + Math.round((r.w - 6) * left), r.y + r.h - 2, 0x88FFE08A);
     }
 
     private static final int[] PICK_PALETTE = {0xFF6C86FF, 0xFFFF72C6, 0xFF7BE05A, 0xFFFFC857, 0xFFB56BFF, 0xFF56D8FF};
@@ -1236,8 +1246,8 @@ public class FancyScreen extends Screen {
         int preLen = sb.length();
         sb.append(msg); for (int i = 0; i < msg.length(); i++) cols.add(0xFFFFFFFF);
         String full = sb.toString();
-        double cps = 26, typeSecs = msg.length() / cps, cycle = typeSecs + 2.8;
-        double t = ((now - prevAt) / 1000.0) % cycle;
+        double cps = 26, typeSecs = msg.length() / cps;                          // typed out once; it types again only when the message changes
+        double t = Math.min(typeSecs + 5.0, (now - prevAt) / 1000.0);
         int shown = preLen + (int) Math.min(msg.length(), t * cps);
         boolean typing = t < typeSecs;
         // wrap on spaces
@@ -1556,6 +1566,12 @@ public class FancyScreen extends Screen {
     }
 
     /** The main switch tile under the title: {x0, y0, x1, y1}. */
+    /** True while the search is about cosmetics: the Cosmetics button then glows and points at itself. */
+    private boolean cosHint() {
+        String q = query.trim().toLowerCase(Locale.ROOT); if (q.length() < 2) return false;
+        return "cosmetics".startsWith(q) || q.contains("cosmetic") || "suffix".startsWith(q) || "aura".startsWith(q) || q.contains("name effect") || "name effects".startsWith(q);
+    }
+    private boolean masterLast; private long masterAt;
     private int[] masterBox() { int top = FancyConfig.get().previewAt == 0 ? Math.round((DOCK_H + DOCK_GAP) * dockK) : 0; int w = 100, y = Math.max(2, py - top - 25); return new int[]{px, y, px + w, y + 22}; }
 
     /** The header line: the tab, and the page inside it ("Animations  >  Slayers"). */
@@ -1794,7 +1810,8 @@ public class FancyScreen extends Screen {
             List<Row> pages = new ArrayList<>(), res = new ArrayList<>();
             java.util.Set<String> shown = new java.util.HashSet<>();
             int pageCount = 0;
-            for (Tab t : Tab.values()) {                                    // a page whose name matches opens whole: "cosmetics", "mythological", "stats"...
+            for (Tab t : Tab.values()) {                                    // a page whose name matches opens whole: "mythological", "stats"... (Cosmetics has its own button)
+                if (t == Tab.COSMETICS) continue;
                 int ti = t.ordinal(); String[] sn = SUBS[ti];
                 boolean tabHit = t.label.toLowerCase(Locale.ROOT).contains(q);
                 List<Integer> want = new ArrayList<>();
@@ -1813,6 +1830,7 @@ public class FancyScreen extends Screen {
             tab = keepTab; System.arraycopy(keepSub, 0, subSel, 0, keepSub.length);
             searching = true;
             for (Tab t : Tab.values()) {                                    // then single settings and drops anywhere that match
+                if (t == Tab.COSMETICS) continue;
                 rows.clear(); buildTab(t);
                 for (Row r : rows) {
                     if (r.kind != NORMAL || r.field != null || r.noSearch || r.locked) continue;
@@ -1825,11 +1843,12 @@ public class FancyScreen extends Screen {
                 }
             }
             rows.clear();
+            if (cosHint()) { Row cn = note("Cosmetics has its own button, bottom left of the menu. Click the glowing one.", 0xFFC9A0FF); cn.noSearch = true; rows.add(cn); }
             rows.add(section((pageCount + res.size()) + " result" + (pageCount + res.size() == 1 ? "" : "s") + " for \"" + query.trim() + "\""));
             rows.addAll(pages);
             if (!pages.isEmpty() && !res.isEmpty()) rows.add(section("Also matching"));
             rows.addAll(res);
-            if (pages.isEmpty() && res.isEmpty()) rows.add(note("Nothing matches. Try a drop name, a slayer, or a setting like \"volume\".", 0xFF9AA6FF));
+            if (pages.isEmpty() && res.isEmpty() && !cosHint()) rows.add(note("Nothing matches. Try a drop name, a slayer, or a setting like \"volume\".", 0xFF9AA6FF));
             searching = false;
         }
         for (Row r : rows) {                                           // a description too long for its row wraps onto more lines instead of scrolling
@@ -1852,23 +1871,20 @@ public class FancyScreen extends Screen {
         FancyConfig c = FancyConfig.get();
         switch (which) {
             case HOME -> {
-                if (c.showTips) { Row tip = new Row(); tip.kind = TIP; tip.h = 46; tip.noSearch = true; tip.icon = "fd:tipcard"; tip.title = TIPS[tipNow()]; tip.sub = "";
+                if (c.showTips) { Row tip = new Row(); tip.kind = TIP; tip.h = 30; tip.noSearch = true; tip.icon = "fd:tipcard"; tip.title = TIPS[tipNow()]; tip.sub = "";
                 tip.click = () -> { tipIdx = tipNow() + 1; tipAt = System.currentTimeMillis(); };
                 rows.add(tip); }
                 Row hero = row(0, "fd:fancydrops", "FancyDrops", "Every rare drop becomes a show. Pick what animates, what gets announced, and watch your profit grow.", Ui.ACCENT);
                 hero.kind = HERO; hero.h = 84; hero.noSearch = true; rows.add(hero);
-                rows.add(section("Jump to"));
-                Object[][] pts = {
-                    {"fd:dropped", "Drop Library", "Choose which drops animate and announce", Tab.DROPS},
-                    {"fd:animations", "Animations", "Scenes, sounds and looks", Tab.ANIMATIONS},
-                    {"fd:megaphone", "Chat", "Tell everyone about your drop, in the channel you set", Tab.CHAT},
-                    {"fd:profit", "Stats", "Profit, kills and drops", Tab.STATS}};
-                for (Object[] p : pts) {
-                    Row pr = row(0, (String) p[0], (String) p[1], (String) p[2], Ui.ACCENT); pr.noSearch = true;
-                    final Tab target = (Tab) p[3];
-                    pr.ctls.add(new Btn("Open", 0xFF3A4FA0, () -> { tab = target; subSel[target.ordinal()] = -1; scroll = 0; tabChanged = System.currentTimeMillis(); open.removeIf(o -> o.startsWith("dd_")); }));
-                    rows.add(pr);
-                }
+                UpdateCheck.check(false);
+                boolean upd = UpdateCheck.updateAvailable(), busy = UpdateCheck.state == 1 || UpdateCheck.state == 0, bad = UpdateCheck.state == 3;
+                String ut = busy ? "Checking GitHub..." : bad ? "Could not check  \u00B7  " + Gfx.fit(font, UpdateCheck.error, 150) : upd ? "New version available: v" + UpdateCheck.latestName : "Up to date  \u00B7  v" + FancyDropsMod.VERSION;
+                rows.add(section("Updates"));
+                Row ur = row(0, upd ? "fd:dropped" : "fd:profit", "Update tracker", ut, upd ? 0xFFFFC857 : bad ? 0xFFE5484D : 0xFF62E6A8);
+                ur.noSearch = true;
+                ur.ctls.add(new Btn(busy ? "..." : "Check", 0xFF3A4FA0, () -> UpdateCheck.check(true)));
+                if (upd) ur.ctls.add(new Btn("Download", GREEN, () -> { try { net.minecraft.client.gui.screens.ConfirmLinkScreen.confirmLinkNow(this, java.net.URI.create(UpdateCheck.PAGE)); } catch (Throwable ignored) { } }));
+                rows.add(ur);
             }
             case DROPS -> {
                 buildAll = true; srcList.clear();
@@ -2300,6 +2316,16 @@ public class FancyScreen extends Screen {
             Dd sd = new Dd(() -> flips.get(Math.max(1, Math.min(12, r ? c.expFlipsRng : c.expFlips)) - 1), dk, 82);
             cr.ctls.add(sd); rows.add(cr);
             if (open.contains(dk) && !searching) rows.add(miniList(cr, sd, flips, Math.max(1, Math.min(12, r ? c.expFlipsRng : c.expFlips)) - 1, i -> { if (r) c.expFlipsRng = i + 1; else c.expFlips = i + 1; open.remove(dk); }));
+        }
+        if (key.equals("rng") || key.equals("mythrng") || key.equals("exprng")) {                          // RNG drops: the item turns like a block and pops out bigger
+            Row sp = row(0, "fd:rng", "Item spin", "How fast the drop turns like a block  \u00B7  0 = still", col);
+            sp.ctls.add(new Btn("Default", Ui.ROW_HOVER, () -> c.rngOpts.remove(key + ".spin")));
+            sp.ctls.add(new Slider(0, 3, 0.1, () -> c.rngOpt(key, "spin", FancyConfig.rngSpinDef()), v -> c.rngOpts.put(key + ".spin", (float) (Math.round(v * 10) / 10.0)), () -> c.rngOpt(key, "spin", FancyConfig.rngSpinDef()) <= 0.01f ? "Still" : String.format(java.util.Locale.ROOT, "%.1fx", c.rngOpt(key, "spin", FancyConfig.rngSpinDef()))).typed(1));
+            rows.add(sp);
+            Row pp = row(0, "fd:itemsize", "Item pop size", "How big the drop pops out  \u00B7  1x = normal", col);
+            pp.ctls.add(new Btn("Default", Ui.ROW_HOVER, () -> c.rngOpts.remove(key + ".pop")));
+            pp.ctls.add(new Slider(1, 2, 0.05, () -> c.rngOpt(key, "pop", FancyConfig.rngPopDef()), v -> c.rngOpts.put(key + ".pop", (float) (Math.round(v * 20) / 20.0)), () -> String.format(java.util.Locale.ROOT, "%.2fx", c.rngOpt(key, "pop", FancyConfig.rngPopDef()))).typed(2));
+            rows.add(pp);
         }
         Row dl = row(0, "fd:clock", "Animation length", "Total time, 5 to 10 s  ·  click the number to type", col);
         dl.ctls.add(new Btn("Default", Ui.ROW_HOVER, () -> c.animSecs.remove(key)));
@@ -2836,23 +2862,22 @@ public class FancyScreen extends Screen {
 
     private static int tipIdx = 0;
     private static long tipAt = System.currentTimeMillis();
-    /** The tip shown now: moves on by itself every 3 seconds, and a click skips ahead (restarting the 3 seconds). */
-    private static int tipNow() { return Math.floorMod(tipIdx + (int) ((System.currentTimeMillis() - tipAt) / 3000L), TIPS.length); }
+    /** The tip shown now: moves on by itself every 10 seconds, and a click skips ahead (restarting the 10 seconds). */
+    private static int tipNow() { return Math.floorMod(tipIdx + (int) ((System.currentTimeMillis() - tipAt) / 10000L), TIPS.length); }
     private static final String[] TIPS = {
         "Type /fd simulate to try any animation without touching your stats.",
-        "Animations > Changes lets you edit the Bar, the Text and the Item.",
-        "Text Changes: hover an effect to see it on the preview first.",
-        "Every text needs one Entrance effect. Then add a Motion, Colors and an Exit.",
-        "Drop Library > Show hides the drops you do not care about.",
-        "Sounds: pick a sound for every moment, then Pause and Resume to listen.",
-        "Each drop has two switches: one for the animation, one for chat.",
-        "Set a minimum price in Chat to only share drops worth bragging about.",
-        "Item Changes: spin, glow and bob your drop. Extras restart the preview.",
-        "Animation length runs from 5 to 10 seconds. Tune it to your farming speed.",
-        "The live preview can sit on top, at the bottom, or be hidden.",
+        "Drop Library: every drop has two switches, one for its animation and one for chat.",
+        "Animations > Changes edits the Bar, the Text and the Item of every scene.",
+        "RNG drops can spin and pop out bigger. Set both on the animation's own page.",
+        "Sounds: click a sound's name under the waves to hear just that one.",
+        "Animation length runs from 5 to 10 seconds, and the sounds are timed to fit it.",
+        "Chat can announce rare drops to your party, your co-op or everyone.",
+        "Cosmetics: pick a suffix, a name effect and an aura. Search \"cosmetics\" to find the button.",
+        "Turn the Active lever off to pause the whole mod, cosmetics included.",
+        "The live preview can sit above the menu, below it, or be hidden.",
         "Esc twice discards what you changed in an editor.",
-        "/fd mute silences the mod whenever you need quiet.",
-        "Cosmetics: pick a suffix and see it in chat and the tab list."};
+        "Stats keeps your profit, kills and drops for this session and for good.",
+        "/fd mute silences the mod whenever you need quiet."};
 
     /** A little fake player head: skin, hair and two eyes. */
     private static void head(GuiGraphicsExtractor g, int x, int y, int skin, int hair) {
@@ -3245,7 +3270,7 @@ public class FancyScreen extends Screen {
         Gfx.uiFont = Fonts.fix(FancyConfig.get().uiFont);
         final int mx = editor != 0 ? -9999 : mx0, my = editor != 0 ? -9999 : my0;       // an open editor sits on top: nothing behind it lights up
         formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false);
-        searchField.setVisible(false); numShow = false; lastMx = mx;
+        searchField.setVisible(false); numShow = false; lastMx = mx; mouseX = mx0; mouseY = my0;
         if (dragCtl instanceof Slider ls && ls.live) {   // dragging a size slider: show the scene resizing live
             g.fill(0, 0, width, height, 0x55000000);
             AnimationManager.drawPreview(g, width, height, Math.min(previewSel, 4));
@@ -3419,14 +3444,38 @@ public class FancyScreen extends Screen {
             rout(g, b[0], b[1], w, h, Gfx.argb(Math.round(70 + 60 * hv + 70 * pulse * mv), mv > 0.5f ? 0x62E6A8 : 0xE5484D));
             Gfx.text(g, font, "Active", b[0] + 7, b[1] + 3, Canvas.mix(0xFF9A9AA8, Ui.TEXT, mv));
             Gfx.text(g, font, on ? "ON" : "OFF", b[0] + 7, b[1] + 12, Canvas.mix(0xFFE5484D, 0xFF62E6A8, mv));
-            // a lever: it sits in a slot and is thrown from the left (off) to the right (on)
-            int lx = b[2] - 30, ly = b[1] + 18;                                                   // the pivot, on the little base
-            pill(g, lx - 14, ly - 1, 28, 4, 0xFF0C0E14); rout(g, lx - 14, ly - 1, 28, 4, Canvas.mix(0xFF5A5F74, 0xFF62E6A8, mv));
-            double ang = Math.toRadians(-38 + 76 * mv);                                            // swings from leaning left to leaning right
-            int len = 13; int kx = lx + (int) Math.round(Math.sin(ang) * len), ky = ly - (int) Math.round(Math.cos(ang) * len);
-            for (int st = 0; st <= len; st++) { int sx2 = lx + (int) Math.round(Math.sin(ang) * st), sy2 = ly - (int) Math.round(Math.cos(ang) * st); g.fill(sx2, sy2, sx2 + 2, sy2 + 2, 0xFFB8BECF); g.fill(sx2, sy2, sx2 + 1, sy2 + 1, 0xFFE6EAF4); }
-            int kc = Canvas.mix(0xFFE5484D, 0xFF3FD18A, mv); g.fill(kx - 2, ky - 2, kx + 4, ky + 4, 0xFF0C0E14); g.fill(kx - 1, ky - 1, kx + 3, ky + 3, kc); g.fill(kx - 1, ky - 1, kx + 1, ky, Canvas.mix(kc, 0xFFFFFFFF, 0.55f));
-            g.fill(lx - 2, ly - 2, lx + 3, ly + 3, 0xFF8A90A6);                                    // the pivot bolt
+            // a lever in a lit slot: thrown from the left (off, red) to the right (on, green); it springs past and settles, throws sparks and the knob glows
+            if (on != masterLast) { masterLast = on; masterAt = now; }
+            float tt = Math.min(1.4f, (now - masterAt) / 1000f), target = on ? 1f : 0f;
+            float pos = (now - masterAt) > 2000L && masterAt != 0L ? target : target + ((on ? 0f : 1f) - target) * (float) (Math.exp(-6.5 * tt) * Math.cos(15 * tt));
+            if (masterAt == 0L) pos = target;
+            int sx0 = b[0] + 46, sx1 = b[2] - 7, lvY = b[1] + 16, slotW = sx1 - sx0;                      // the slot the lever runs in
+            pill(g, sx0 - 3, lvY - 4, slotW + 6, 9, 0xFF080A10); rout(g, sx0 - 3, lvY - 4, slotW + 6, 9, Canvas.mix(0xFF3A4054, on ? 0xFF62E6A8 : 0xFFE5484D, 0.35f + 0.3f * pulse * mv));
+            int segs = 7;
+            for (int sg = 0; sg < segs; sg++) {                                                           // little lights along the slot: they fill up as the lever goes over
+                float lu = sg / (float) (segs - 1); boolean lit = lu <= pos + 0.02f; int lc = Canvas.mix(0xFFE5484D, 0xFF3FD18A, lu);
+                int lxx = sx0 + 2 + Math.round(lu * (slotW - 6));
+                g.fill(lxx, lvY - 1, lxx + 3, lvY + 2, lit ? lc : 0xFF1B1F2C);
+                if (lit) g.fill(lxx, lvY - 1, lxx + 3, lvY, Canvas.mix(lc, 0xFFFFFFFF, 0.45f));
+            }
+            float kp = Math.max(-0.12f, Math.min(1.12f, pos));
+            int kx = sx0 + 2 + Math.round(kp * (slotW - 6)) + 1;
+            double lean = Math.toRadians(-26 + 52 * kp); int ky0 = lvY + 1, handle = 11;                      // the handle leans with the throw
+            int hx = kx + (int) Math.round(Math.sin(lean) * handle), hy = ky0 - (int) Math.round(Math.cos(lean) * handle);
+            for (int st = 0; st <= handle; st++) {
+                int ltx = kx + (int) Math.round(Math.sin(lean) * st), lty = ky0 - (int) Math.round(Math.cos(lean) * st);
+                g.fill(ltx, lty, ltx + 2, lty + 2, 0xFF6A7088); g.fill(ltx, lty, ltx + 1, lty + 1, 0xFFC9CFE0);
+            }
+            int kc = Canvas.mix(0xFFE5484D, 0xFF3FD18A, Math.max(0f, Math.min(1f, kp)));
+            if (mv > 0.05f) for (int gl = 3; gl >= 1; gl--) pill(g, hx - 1 - gl * 2, hy - 1 - gl * 2, 6 + gl * 4, 6 + gl * 4, Gfx.argb(Math.round((18 + 26 * pulse) * mv / gl), kc & 0xFFFFFF));      // the knob glows while it is on
+            g.fill(hx - 2, hy - 2, hx + 4, hy + 4, 0xFF0C0E14); g.fill(hx - 1, hy - 1, hx + 3, hy + 3, kc); g.fill(hx - 1, hy - 1, hx + 1, hy, Canvas.mix(kc, 0xFFFFFFFF, 0.6f));
+            g.fill(kx - 2, ky0 - 1, kx + 3, ky0 + 3, 0xFF8A90A6); g.fill(kx - 1, ky0, kx + 2, ky0 + 2, 0xFFD6DAE8);          // the pivot bolt
+            if (tt < 0.5f && masterAt != 0L) for (int spk = 0; spk < 8; spk++) {                                  // sparks fly off the knob when it is thrown
+                double an = spk * Math.PI / 4 + 0.4, rr2 = 3 + 16 * tt * (0.6 + 0.4 * ((spk * 37) % 5) / 4.0); int al = Math.round(255 * (1f - tt / 0.5f));
+                int spx = hx + 1 + (int) Math.round(Math.cos(an) * rr2), spy = hy + 1 + (int) Math.round(Math.sin(an) * rr2 * 0.8);
+                g.fill(spx, spy, spx + 1, spy + 1, Gfx.argb(al, 0xFFFFFF)); if (spk % 2 == 0) g.fill(spx - 1, spy, spx + 2, spy + 1, Gfx.argb(al / 3, kc & 0xFFFFFF));
+            }
+            if (on && !STILL) { int sw = b[0] + 2 + (int) (((now % 2600L) / 2600f) * (w - 4)); g.enableScissor(b[0] + 1, b[1] + 1, b[2] - 1, b[3] - 1); for (int i = 0; i < 6; i++) g.fill(sw + i, b[1] + 1, sw + i + 1, b[3] - 1, Gfx.argb(Math.round(26 * (1f - Math.abs(i - 3) / 3f)), 0xFFFFFF)); g.disableScissor(); }
         }
         // page header
         Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 12, Ui.TEXT);
@@ -3550,7 +3599,8 @@ public class FancyScreen extends Screen {
         if (!cosWin()) {                                                            // the Cosmetics button: outside the menu, bottom right
             int[] cb = cosBtn(); boolean ch = mx >= cb[0] && mx < cb[2] && my >= cb[1] && my < cb[3];
             float hv2 = anim("cosBtn", ch ? 1f : 0f, 40f); int ac = 0xFFC77DFF;
-            float bp = 0.5f + 0.5f * (float) Math.sin(now / 520.0);                                              // the button breathes so the eye finds it
+            boolean find = cosHint();
+            float bp = find ? 0.5f + 0.5f * (float) Math.sin(now / 170.0) : 0.5f + 0.5f * (float) Math.sin(now / 520.0);                                              // the button breathes so the eye finds it (faster while you search for cosmetics)
             for (int gl = 3; gl >= 1; gl--) pill(g, cb[0] - gl * 2, cb[1] - gl * 2, 22 + gl * 4, 22 + gl * 4, Gfx.argb(Math.round((10 + 22 * bp + 30 * hv2) / gl), ac & 0xFFFFFF));
             pill(g, cb[0], cb[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, ac, 0.32f + 0.12f * bp), ac, 0.3f * hv2));
             rout(g, cb[0], cb[1], 22, 22, Gfx.argb(Math.round(170 + 60 * bp + 25 * hv2), ac & 0xFFFFFF));
@@ -3568,7 +3618,13 @@ public class FancyScreen extends Screen {
                 Icons.draw(g, "fd:settings", ab[0] + 3, ab[1] + 3, System.currentTimeMillis());
                 if (ah) { int w = Gfx.w(font, "Admin Panel") + 8; int x0 = Math.max(2, ab[0]), ty = ab[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Admin Panel", x0 + 4, ty + 3, Ui.TEXT); }
             }
-            if (ch) { int w = Gfx.w(font, "Cosmetics") + 8; int x0 = Math.max(2, cb[0]), ty = cb[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Cosmetics", x0 + 4, ty + 3, Ui.TEXT); }
+            if (find) {                                                                                      // searching for cosmetics: rings spread from the button and an arrow points at it
+                for (int rg = 0; rg < 3; rg++) { float ph3 = ((now / 1100f) + rg / 3f) % 1f; int rr = 12 + Math.round(ph3 * 22); rout(g, cb[0] + 11 - rr, cb[1] + 11 - rr, rr * 2, rr * 2, Gfx.argb(Math.round(190 * (1f - ph3)), ac & 0xFFFFFF)); }
+                int bob = Math.round((float) Math.abs(Math.sin(now / 260.0)) * 3f), lw = Gfx.w(font, "Cosmetics") + 12, lx0 = Math.max(2, cb[0] + 11 - lw / 2), ly0 = cb[1] - 22 - bob;
+                pill(g, lx0, ly0, lw, 15, 0xFF2A1B4A); rout(g, lx0, ly0, lw, 15, 0xFFC9A0FF); Gfx.text(g, font, "Cosmetics", lx0 + 6, ly0 + 4, 0xFFFFFFFF);
+                for (int ar = 0; ar < 4; ar++) g.fill(cb[0] + 11 - 3 + ar, ly0 + 15 + ar, cb[0] + 11 + 4 - ar, ly0 + 16 + ar, 0xFFC9A0FF);        // a little arrow pointing down at the button
+            }
+            if (ch && !find) { int w = Gfx.w(font, "Cosmetics") + 8; int x0 = Math.max(2, cb[0]), ty = cb[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Cosmetics", x0 + 4, ty + 3, Ui.TEXT); }
         }
         if (intro < 1f) pill(g, px, py, pw, ph, Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
         Gfx.pop(g);
@@ -3731,6 +3787,14 @@ public class FancyScreen extends Screen {
         if (button == 0 && in(mx, my, mainClose()) && cosWin()) { closeCos(); return true; }
         if (button == 0 && in(mx, my, mainClose())) { if (FancyConfig.get().menuAnimated) { if (closeAt == 0L) closeAt = System.currentTimeMillis(); } else onClose(); return true; }
         if (button == 0 && showBarClick(mx, my)) return true;
+        if (button == 0 && tab == Tab.SOUNDS) for (int k = 0; k < 5; k++) {                                // the five sound chips under the waves: click one to hear it
+            int[] cb = chipBox[k];
+            if (cb != null && mx >= cb[0] && mx < cb[0] + cb[2] && my >= cb[1] && my < cb[1] + cb[3]) {
+                SoundFx.Fx fx = SoundFx.byName(SoundFx.chosen(SoundFx.SCENES[chipScene], SoundFx.SLOTS[k]));
+                pulseAt[k] = System.currentTimeMillis(); if (fx != null) SoundFx.preview(fx);
+                return true;
+            }
+        }
         if (button == 0 && dockBtn[0] >= 0 && mx >= dockBtn[0] && mx < dockBtn[2] && my >= dockBtn[1] && my < dockBtn[3]) {        // the dock's own "move" button
             FancyConfig dc = FancyConfig.get(); dc.previewAt = dc.previewAt == 0 ? 1 : 0; FancyConfig.save();
             return true;
@@ -3782,6 +3846,7 @@ public class FancyScreen extends Screen {
             if (mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) {             // no links yet: the chat says so
                 if (i == 0) { FancyConfig dc0 = FancyConfig.get(); if (!dc0.discordJoined) { dc0.discordJoined = true; FancyConfig.save(); }      // pressing it unlocks the Discord cosmetic
                     try { net.minecraft.client.gui.screens.ConfirmLinkScreen.confirmLinkNow(this, java.net.URI.create(FancyDropsMod.DISCORD)); } catch (Throwable ignored) {} return true; }      // Discord has a link; the others say so in chat
+                if (i == 2) { try { net.minecraft.client.gui.screens.ConfirmLinkScreen.confirmLinkNow(this, java.net.URI.create(FancyDropsMod.GITHUB)); } catch (Throwable ignored) {} return true; }      // GitHub opens the repository
                 if (FancyConfig.get().popups) { toast(COMM_NAME[i] + " link coming soon", i == 1 ? 0xFFFF7A59 : 0xFF8FA8FF); return true; }
                 var mcl = net.minecraft.client.Minecraft.getInstance(); if (mcl.player != null) mcl.player.connection.sendCommand("fd " + COMM[i]);
                 return true;

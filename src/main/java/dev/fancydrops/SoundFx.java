@@ -41,73 +41,54 @@ public final class SoundFx {
     }
     private static boolean isMc(String name) { return name != null && name.startsWith("mc_"); }
 
-    // custom (ogg)
-    public static final Fx SLICE = reg("slice", "Slice", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);
-    public static final Fx CLEAVE = reg("cleave", "Cleave", SoundEvents.PLAYER_ATTACK_STRONG, 1.0f);
-    public static final Fx CRACK = reg("crack", "Crack", SoundEvents.PLAYER_ATTACK_CRIT, 0.9f);
-    public static final Fx THUNK = reg("thunk", "Thunk", SoundEvents.ANVIL_LAND, 0.7f);
-    public static final Fx WHOOSH = reg("whoosh", "Whoosh", SoundEvents.PLAYER_ATTACK_SWEEP, 0.8f);
-    public static final Fx POP = reg("pop", "Tink", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.8f);
-    public static final Fx COIN = reg("coin", "Coin", SoundEvents.EXPERIENCE_ORB_PICKUP, 0.9f);
-    public static final Fx REVEAL = reg("reveal", "Sparkle", SoundEvents.AMETHYST_BLOCK_CHIME, 0.9f);
-    public static final Fx SHIMMER = reg("shimmer", "Shimmer", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.9f);
-    public static final Fx CHOIR = reg("choir", "Choir", SoundEvents.BEACON_ACTIVATE, 0.8f);
-    public static final Fx BOOM = reg("boom", "Boom", SoundEvents.GENERIC_EXPLODE.value(), 0.7f);
-    public static final Fx EPIC = reg("epic", "Fanfare", SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 0.9f);
-    public static final Fx SAD = reg("sad", "Trombone", SoundEvents.VILLAGER_NO, 0.9f);
-    public static final Fx FADE = reg("fade", "Fade", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.6f);
-    public static final Fx KATANA = reg("katana", "Katana", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);
-    public static final Fx ZAP = reg("zap", "Zap", SoundEvents.LIGHTNING_BOLT_IMPACT, 0.7f);
-    public static final Fx TAIKO = reg("taiko", "Taiko", SoundEvents.ANVIL_LAND, 0.9f);
-    public static final Fx GONG = reg("gong", "Gong", SoundEvents.BELL_BLOCK, 0.8f);
-    public static final Fx HARP = reg("harp", "Harp", SoundEvents.NOTE_BLOCK_HARP.value(), 0.8f);
-    public static final Fx MAGIC = reg("magic", "Magic", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f);
-    public static final Fx GLASS = reg("glass", "Glass", SoundEvents.GLASS_BREAK, 0.7f);
-    public static final Fx BELL = reg("bell", "Bell", SoundEvents.BELL_RESONATE, 0.8f);
-    // the studio set (synthesised): clean, layered and reverbed
-    public static final Fx SILK = reg("silk", "Silk", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
-    public static final Fx IMPACT = reg("impact", "Impact", SoundEvents.ANVIL_LAND, 0.9f);
-    public static final Fx CRYSTAL = reg("crystal", "Crystal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-    public static final Fx RISE = reg("rise", "Riser", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f);
-    public static final Fx GLIMMER = reg("glimmer", "Glimmer", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-    public static final Fx BLOOM = reg("bloom", "Bloom", SoundEvents.BEACON_ACTIVATE, 0.8f);
-    public static final Fx DROP808 = reg("drop808", "Sub", SoundEvents.GENERIC_EXPLODE.value(), 0.8f);
-    public static final Fx TWINKLE = reg("twinkle", "Twinkle", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
-    public static final Fx VELVET = reg("velvet", "Velvet", SoundEvents.NOTE_BLOCK_BELL.value(), 0.8f);
-    public static final Fx SWOOSH = reg("swoosh", "Swoosh", SoundEvents.PLAYER_ATTACK_SWEEP, 0.8f);
-    public static final Fx SPLAT = reg("splat", "Splat", SoundEvents.SLIME_BLOCK_PLACE, 0.85f);
-    // the sleek set: smooth, warm and glossy
+    // custom (ogg): a bank written for this mod, grouped by the moment it is meant for. Each ends in a soft tail, so nothing is cut off.
+    // chop
+    public static final Fx FLICK = reg("flick", "Tink", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.8f);
     public static final Fx SATIN = reg("satin", "Tick", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
-    public static final Fx THUMP = reg("thump", "Kick", SoundEvents.ANVIL_LAND, 0.9f);
+    public static final Fx MARIMBA = reg("marimba", "Marimba", SoundEvents.NOTE_BLOCK_XYLOPHONE.value(), 0.9f);
+    public static final Fx PLUCK = reg("pluck", "Pluck", SoundEvents.NOTE_BLOCK_HARP.value(), 0.9f);
+    public static final Fx DRIP = reg("drip", "Drip", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.85f);
+    public static final Fx BLIP = reg("blip", "Blip", SoundEvents.NOTE_BLOCK_BIT.value(), 0.6f);
+    // split
+    public static final Fx THUMP = reg("thump", "Kick", SoundEvents.ANVIL_LAND, 0.95f);
+    public static final Fx BURST = reg("burst", "Burst", SoundEvents.GENERIC_EXPLODE.value(), 0.85f);
+    public static final Fx SNAP = reg("snap", "Snap", SoundEvents.PLAYER_ATTACK_CRIT, 0.85f);
+    public static final Fx SLAM = reg("slam", "Slam", SoundEvents.ANVIL_LAND, 0.8f);
+    public static final Fx PLOP = reg("plop", "Plop", SoundEvents.SLIME_BLOCK_PLACE, 0.9f);
+    public static final Fx ARC = reg("arc", "Arc", SoundEvents.LIGHTNING_BOLT_IMPACT, 0.75f);
+    // reveal
     public static final Fx HALO = reg("halo", "Chimes", SoundEvents.BEACON_ACTIVATE, 0.8f);
+    public static final Fx NECTAR = reg("nectar", "Pluck run", SoundEvents.NOTE_BLOCK_BELL.value(), 0.9f);
     public static final Fx CASCADE = reg("cascade", "Run", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
-    public static final Fx LIFT = reg("lift", "Rise", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f);
-    public static final Fx AURORA = reg("aurora", "Pair", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
-    public static final Fx NECTAR = reg("nectar", "Pluck", SoundEvents.NOTE_BLOCK_BELL.value(), 0.85f);
+    public static final Fx LIFT = reg("lift", "Rise", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
+    public static final Fx SPARKLE = reg("sparkle", "Sparkle", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
+    public static final Fx FANFARE = reg("fanfare", "Fanfare", SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 0.75f);
+    public static final Fx BLOOM = reg("bloom", "Bloom", SoundEvents.BEACON_ACTIVATE, 0.7f);
+    public static final Fx SPROUT = reg("sprout", "Sprout", SoundEvents.AMETHYST_BLOCK_CHIME, 0.9f);
+    public static final Fx BEAM = reg("beam", "Beam", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f);
+    public static final Fx FLARE = reg("flare", "Flare", SoundEvents.BEACON_ACTIVATE, 0.8f);
+    public static final Fx GLOW = reg("glow", "Glow", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
+    public static final Fx PAGE = reg("page", "Page", SoundEvents.BOOK_PAGE_TURN, 0.9f);
+    // linger
     public static final Fx LULL = reg("lull", "Lull", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
     public static final Fx EMBER = reg("ember", "Ember", SoundEvents.BEACON_AMBIENT, 0.7f);
-    public static final Fx SIGH = reg("sigh", "Sigh", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.6f);
     public static final Fx RIPPLE = reg("ripple", "Ripple", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
-    public static final Fx MEADOW = reg("meadow", "Meadow", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-    public static final Fx STORM = reg("storm", "Storm", SoundEvents.LIGHTNING_BOLT_THUNDER, 0.5f);
+    public static final Fx STORM = reg("storm", "Storm", SoundEvents.LIGHTNING_BOLT_THUNDER, 0.55f);
     public static final Fx CHANT = reg("chant", "Chant", SoundEvents.ENCHANTMENT_TABLE_USE, 0.7f);
-    public static final Fx DUSK = reg("dusk", "Whoosh", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-    public static final Fx PLOP = reg("plop", "Plop", SoundEvents.SLIME_BLOCK_PLACE, 0.85f);
-    public static final Fx BURST = reg("burst", "Burst", SoundEvents.ANVIL_LAND, 0.85f);
-    public static final Fx ARC = reg("arc", "Arc", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-    public static final Fx SCYTHE = reg("scythe", "Scythe", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
-    public static final Fx PAGE = reg("page", "Page", SoundEvents.BOOK_PAGE_TURN, 0.9f);
-    public static final Fx GLOW = reg("glow", "Glow", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
+    public static final Fx BREEZE = reg("breeze", "Breeze", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.75f);
+    public static final Fx SHIMMER = reg("shimmer", "Shimmer", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.6f);
+    public static final Fx HUM = reg("hum", "Hum", SoundEvents.BEACON_AMBIENT, 0.7f);
+    // end
+    public static final Fx DUSK = reg("dusk", "Whoosh", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f);
+    public static final Fx SIGH = reg("sigh", "Sigh", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
+    public static final Fx SETTLE = reg("settle", "Settle", SoundEvents.AMETHYST_BLOCK_CHIME, 0.9f);
+    public static final Fx FADE = reg("fade", "Fade", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.6f);
+    // one-shot
     public static final Fx REAP = reg("reap", "Reap", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
     public static final Fx RUSTLE = reg("rustle", "Rustle", SoundEvents.CROP_BREAK, 0.85f);
-    public static final Fx SPROUT = reg("sprout", "Sprout", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-    public static final Fx BREEZE = reg("breeze", "Breeze", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.85f);
-    public static final Fx SETTLE = reg("settle", "Settle", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
     public static final Fx VACUUM = reg("vacuum", "Vacuum", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
     public static final Fx SQUEAK = reg("squeak", "Squeak", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.85f);
-    public static final Fx BEAM = reg("beam", "Beam", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.85f);
-    public static final Fx FLARE = reg("flare", "Flare", SoundEvents.BEACON_ACTIVATE, 0.8f);
-    public static final Fx FLICK = reg("flick", "Tink", SoundEvents.PLAYER_ATTACK_SWEEP, 0.8f);
+
     // Minecraft's own sounds, picked to work as a set: bright notes for the stepping slices, a solid hit, a reward, a long glow, a soft close
     static {
         mc("mc_chime", "Chime", "block.note_block.chime", 0.9f);
@@ -170,11 +151,11 @@ public final class SoundFx {
     /** What each slot plays until the player changes it. */
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
     static {
-        String[][] d = {                                         // every animation plays from the same soft set as the default scenes
+        String[][] d = {                                         // every animation plays from the same bank; the long ones are picked so they end with the scene
             {"default", "satin", "thump", "nectar", "lull", "dusk"},
-            {"cool", "satin", "thump", "cascade", "lull", "dusk"},      // "cool" = Rare Drop
-            {"epic", "flick", "thump", "halo", "ember", "dusk"},         // "epic" = RNG Drop
-            {"nothing", "flick", "thump", "lift", "sigh", "dusk"},
+            {"cool", "satin", "thump", "cascade", "ember", "dusk"},      // "cool" = Rare Drop
+            {"epic", "flick", "burst", "halo", "ember", "dusk"},         // "epic" = RNG Drop
+            {"nothing", "drip", "thump", "lift", "hum", "sigh"},
             {"dye", "plop", "burst", "cascade", "ripple", "dusk"},
             {"farm", "reap", "rustle", "sprout", "breeze", "settle"},
             {"mytho", "arc", "thump", "halo", "storm", "dusk"},
@@ -242,7 +223,7 @@ public final class SoundFx {
 
     private static final Map<String, Float> LEN = new java.util.HashMap<>();
     static {
-        String[] d = ("reap 0.24;beam 0.7;flare 0.7;rustle 0.42;sprout 0.95;breeze 0.95;settle 0.65;vacuum 0.62;squeak 0.3;mc_chime 1.0;mc_bell 1.6;mc_harp 1.0;mc_xylo 0.8;mc_flute 1.0;mc_pling 0.6;mc_bit 0.5;mc_bass 0.8;mc_kick 0.5;mc_snare 0.4;mc_crystal 1.5;mc_shimmer 3.0;mc_swish 0.5;mc_crit 0.5;mc_smack 0.5;mc_orb 0.5;mc_levelup 1.3;mc_fanfare 2.8;mc_totem 3.0;mc_thunder 4.0;mc_bolt 2.0;mc_trident 2.5;mc_beacon 2.5;mc_hum 4.5;mc_powerdown 2.0;mc_power 1.6;mc_conduit 4.0;mc_enchant 1.5;mc_page 0.6;mc_squish 0.5;mc_gift 1.2;mc_fizzle 1.6;mc_warp 0.6;mc_twinkle 1.4;mc_harvest 0.7;mc_anvil 1.0;mc_glass 0.8;mc_nope 0.8;arc 0.6;aurora 1.3;bloom 5.6;burst 0.9;cascade 1.3;chant 5.0;crystal 3.4;drop808 3.0;dusk 1.9;ember 4.7;flick 0.2;glimmer 4.8;glow 2.1;halo 1.8;impact 1.2;lift 0.9;lull 4.6;meadow 4.4;nectar 1.0;page 0.6;plop 0.6;ripple 5.0;rise 2.3;satin 0.7;scythe 0.8;sigh 3.2;silk 0.9;splat 1.1;storm 4.6;swoosh 1.2;thump 0.6;twinkle 1.8;velvet 3.8").split(";");
+        String[] d = ("mc_chime 1.0;mc_bell 1.6;mc_harp 1.0;mc_xylo 0.8;mc_flute 1.0;mc_pling 0.6;mc_bit 0.5;mc_bass 0.8;mc_kick 0.5;mc_snare 0.4;mc_crystal 1.5;mc_shimmer 3.0;mc_swish 0.5;mc_crit 0.5;mc_smack 0.5;mc_orb 0.5;mc_levelup 1.3;mc_fanfare 2.8;mc_totem 3.0;mc_thunder 4.0;mc_bolt 2.0;mc_trident 2.5;mc_beacon 2.5;mc_hum 4.5;mc_powerdown 2.0;mc_power 1.6;mc_conduit 4.0;mc_enchant 1.5;mc_page 0.6;mc_squish 0.5;mc_gift 1.2;mc_fizzle 1.6;mc_warp 0.6;mc_twinkle 1.4;mc_harvest 0.7;mc_anvil 1.0;mc_glass 0.8;mc_nope 0.8").split(";");
         for (String e : d) { String[] p = e.split(" "); LEN.put(p[0], Float.parseFloat(p[1])); }
     }
     /** How long a sound lasts, in seconds (an estimate for the ones that are Minecraft's own). */
@@ -271,8 +252,10 @@ public final class SoundFx {
         float d = duration(name); if (u > d) return 0f;
         float[] e = env(name);
         if (e == null) return (1f - (float) Math.exp(-u / 0.01f)) * (float) Math.exp(-u / Math.max(0.05f, d * 0.3f));
-        float pos = u / d * (e.length - 2); int i = Math.min(e.length - 3, (int) pos); float f = pos - i;
-        return e[i + 1] * (1 - f) + e[i + 2] * f;
+        int n = e.length - 1; float pos = u / d * (n - 1); int i = Math.max(0, Math.min(n - 2, (int) pos)); float f = pos - i;
+        float p0 = e[Math.max(1, i)], p1 = e[i + 1], p2 = e[i + 2], p3 = e[Math.min(n, i + 3)];
+        float v = p1 + 0.5f * f * (p2 - p0 + f * (2f * p0 - 5f * p1 + 4f * p2 - p3 + f * (3f * (p1 - p2) + p3 - p0)));          // a smooth curve through the measurements, not straight lines
+        return Math.max(0f, Math.min(1f, v));
     }
 
     private static final List<net.minecraft.client.resources.sounds.SoundInstance> PREVIEWS = new ArrayList<>();

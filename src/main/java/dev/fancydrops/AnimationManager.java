@@ -615,8 +615,24 @@ public final class AnimationManager {
     }
 
     /** When each sound of one animation type fires, in real seconds: {total, chop count, chop times..., split, reveal, end}. Drives the sound waves in the menu. */
-    /** When the linger sound starts: shortly after the reveal, but never later than the middle of what is left. */
-    static float lingerAt(float ts, float len) { float a = ts + 0.7f, end = len - 0.9f; return Math.min(a, ts + 0.15f + Math.max(0.2f, (end - ts - 0.15f) * 0.45f)); }
+    /** The sound scene (index into SoundFx.SCENES) of an animation type. */
+    static int sceneIndex(String key) {
+        return switch (key) { case "default" -> 0; case "rare" -> 1; case "rng" -> 2; case "nothing" -> 3; case "dye" -> 4; case "farm" -> 5; case "myth", "mythrng" -> 6; case "exp", "exprng" -> 7; case "helios" -> 8; case "mythnothing" -> 9; case "pest" -> 10; default -> 0; };
+    }
+    /**
+     * When the split, reveal, linger and end sounds start, in real seconds. The sounds are laid out backwards from the end of the scene: the end sound is
+     * placed so that it finishes with the scene (plus a short tail), and the linger sound so that it finishes just before it. Nothing is cut off, whatever length
+     * the animation has. totalR = real length of the scene, tsR = real time of the reveal.
+     */
+    static float[] slotStarts(String scene, float tsR, float totalR) {
+        float endAt = totalR + 0.35f;
+        float dEnd = slotLen(scene, "end"), dLing = slotLen(scene, "linger");
+        float endStart = Math.max(tsR + 0.6f, endAt - dEnd);
+        float lo = tsR + 0.35f, hi = Math.max(lo, endStart - 0.2f - dLing);
+        float lingerStart = Math.max(tsR + 0.2f, Math.min(lo + (hi - lo) * 0.4f, endAt - dLing));
+        return new float[]{tsR, tsR + 0.15f, lingerStart, endStart};
+    }
+    private static float slotLen(String scene, String slot) { String n = SoundFx.chosen(scene, slot); return n == null || SoundFx.NONE.equals(n) ? 0f : SoundFx.duration(n); }
 
     public static float[] soundTimes(String key, FancyConfig c) {
         Scene.Params p = previewForKey(key, c);
@@ -627,7 +643,9 @@ public final class AnimationManager {
         r[0] = secs; r[1] = n;
         for (int i = 0; i < n; i++) r[2 + i] = Scene.impact(p, i) * k;
         float ts = Scene.splitTime(p);
-        r[2 + n] = ts * k; r[3 + n] = (ts + 0.15f) * k; r[4 + n] = lingerAt(ts, natural) * k; r[5 + n] = Math.max(0f, natural - 0.9f) * k;
+        float[] st = slotStarts(SoundFx.SCENES[sceneIndex(key)], ts * k, secs);
+        r[0] = secs + 0.4f;                                                                // the time line: the scene plus the short tail of the last sound
+        r[2 + n] = st[0]; r[3 + n] = st[1]; r[4 + n] = st[2]; r[5 + n] = st[3];
         return r;
     }
 
@@ -781,7 +799,7 @@ public final class AnimationManager {
         float t = (System.currentTimeMillis() - a.start) / 1000f * a.speed;                // a.speed stretches or squeezes the whole scene to the length the user chose
         float sLen = naturalScene(a.p, a.farm);     // the scene (picture, bars, shake) ends here
         float len = sLen + TEXT_EXTRA * a.speed;    // the words stay on screen 2 real seconds longer than the scene
-        if (t >= len) { cur = null; SoundFx.stopPreviews(); return; }          // a sound longer than the animation ends with it
+        if (t >= len) { cur = null; return; }          // the sounds are laid out to finish with the scene, so they ring out by themselves
         if (a.p.item == null && a.item != null) a.p.item = ItemIcons.model(a.item.id, a.slayer.color());   // art finished loading late
         if (a.p.twin && a.p.item2 == null && a.item2 != null) a.p.item2 = ItemIcons.model(a.item2.id, a.slayer.color());
 
@@ -1008,10 +1026,12 @@ public final class AnimationManager {
             }
         }
         float big = a.tier == 2 ? 0.82f : a.tier == 1 ? 0.92f : 1f;                           // same sounds in every scene, a bit deeper when bigger
-        if (!d[20] && t >= ts) { d[20] = true; SoundFx.playSlot(sc, "split", big); }
-        if (!d[21] && t >= ts + 0.15f) { d[21] = true; SoundFx.playSlot(sc, "reveal", 1f); }
-        if (!d[23] && t >= lingerAt(ts, len)) { d[23] = true; SoundFx.playSlot(sc, "linger", 1f); }        // the long glow that fills the time between the reveal and the end
-        if (!d[22] && t >= len - 0.9f) { d[22] = true; SoundFx.playSlot(sc, "end", 1f); }
+        float sp = Math.max(0.1f, a.speed), tr = t / sp, tsR = ts / sp, totalR = len / sp;       // sounds are placed in real seconds, backwards from the end of the scene
+        float[] st = slotStarts(sc, tsR, totalR);
+        if (!d[20] && tr >= st[0]) { d[20] = true; SoundFx.playSlot(sc, "split", big); }
+        if (!d[21] && tr >= st[1]) { d[21] = true; SoundFx.playSlot(sc, "reveal", 1f); }
+        if (!d[23] && tr >= st[2]) { d[23] = true; SoundFx.playSlot(sc, "linger", 1f); }        // the long glow between the reveal and the end
+        if (!d[22] && tr >= st[3]) { d[22] = true; SoundFx.playSlot(sc, "end", 1f); }          // ends together with the scene
     }
 
     private AnimationManager() {}

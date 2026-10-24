@@ -1,3 +1,17 @@
+## 0.9.1
+- New: RNG items spin and pop out bigger. Each RNG animation page has "Item spin" (Still to 3x) and "Item pop size" sliders
+- New: all sounds redone (40 new ones). Every sound is timed to the animation length and rings out instead of cutting off
+- New: click Chop, Split, Reveal, Linger or End under the waves to hear just that sound
+- Changed: smoother sound waves
+- Changed: cooler Active lever
+- Changed: the chat preview types out once instead of repeating
+- Changed: Party, Co-op and Public icons now have their own animations instead of the shine
+- Changed: searching for cosmetics makes the Cosmetics button glow, and it is gone from the pages menu
+- Changed: smaller TIP box, new tips about the mod, a new tip every 10 seconds
+- New: Home has an Update tracker that checks GitHub for new releases. The Jump to section is gone
+- Changed: the GitHub button opens the FancyDrops repository
+- Fixed: the Animations icon had black spots on the white bar
+
 ## 0.9.0
 - Release: everything from 0.8.52 to 0.8.60 (cosmetics settings, animated suffixes and auras, building site, admin save, SkySoft tab fix, Active lever)
 
