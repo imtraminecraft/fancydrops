@@ -1,3 +1,7 @@
+## 0.9.6
+- New: Menu theme (Settings > Menu): Midnight, Aurora, Ember, Forest and Mono. Aurora is the new default
+- Changed: the menu has a soft glow of the theme colour under its top edge, rows wash in their colour when hovered, and the open page's tab is tinted
+
 ## 0.9.5
 - Changed: every animation is short and sweet like Farming. Only an RNG drop keeps the long scene with the black bars
 - New: Drop Library has an RNG button on every item: Auto (by price), RNG (always the big scene) or Off (never)

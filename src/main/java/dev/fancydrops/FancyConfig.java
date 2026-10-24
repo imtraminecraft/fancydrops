@@ -136,6 +136,7 @@ public class FancyConfig {
     public int textPos = 1;             // where the text goes when there is a choice: 0 top, 1 bottom
     public int offsetX = 0, offsetY = 0; // fine tuning for the presets
     public int previewAt = 1;                // live preview dock on the Animations and Sounds pages: 0 top, 1 bottom, 2 off
+    public int menuTheme = 1;                // 0 Midnight, 1 Aurora, 2 Ember, 3 Forest, 4 Mono (Settings > Menu)
     public int menuTranslucency = 25;        // 0 = solid menu .. 70 = see-through (General settings)
     public boolean menuIcons = true;          // sidebar and row icons move
     public boolean menuAnimated = true;       // menu slides in, pages fade, accent bar flows
@@ -207,6 +208,7 @@ public class FancyConfig {
         instance.dyeStyle = Math.max(0, Math.min(1, instance.dyeStyle)); instance.farmStyle = Math.max(0, Math.min(1, instance.farmStyle));
         instance.mythStyle = Math.max(0, Math.min(1, instance.mythStyle)); instance.expStyle = Math.max(0, Math.min(1, instance.expStyle));
         instance.menuTranslucency = Math.max(0, Math.min(70, instance.menuTranslucency));
+        instance.menuTheme = Math.max(0, Math.min(4, instance.menuTheme));
         instance.previewAt = Math.max(0, Math.min(2, instance.previewAt));
         instance.posBars = Math.max(0, Math.min(2, instance.posBars)); instance.pos9 = Math.max(0, Math.min(8, instance.pos9)); instance.textPos = Math.max(0, Math.min(1, instance.textPos));
         if (instance.profitHudSlayer == null) instance.profitHudSlayer = "all";

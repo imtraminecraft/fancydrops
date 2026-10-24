@@ -302,6 +302,7 @@ public class FancyScreen extends Screen {
     }
 
     @Override protected void init() {
+        Ui.apply(FancyConfig.get().menuTheme);
         PriceService.warm();
         pw = Math.min(560, width - 76); ph = menuHeight(height);
         px = (width - pw) / 2; py = (height - ph) / 2;
@@ -2197,6 +2198,8 @@ public class FancyScreen extends Screen {
                 String[] fi = new String[Fonts.NAMES.length]; int[] fc2 = new int[fi.length]; for (int i = 0; i < fc2.length; i++) fc2[i] = PICK_PALETTE[i % PICK_PALETTE.length];
                 Row fp = picker("Menu font", "The writing of this menu", Fonts.NAMES, fi, fc2, null, () -> c.uiFont, i -> c.uiFont = i);
                 fp.pFontTiles = true; rows.add(fp);
+                int[] thc = Ui.THEME_COLS.clone();
+                rows.add(picker("Menu theme", "The colours of this menu", Ui.THEMES, Ui.THEME_SUBS, new String[]{"fd:cos_aura", "fd:cos_aura", "fd:cos_aura", "fd:cos_aura", "fd:cos_aura"}, thc, null, 3, () -> c.menuTheme, i -> { c.menuTheme = i; Ui.apply(i); }));
                 rows.add(toggle("fd:anim_menu", "Animated menu", "Springy open, page transitions and glowing hovers", () -> c.menuAnimated, v -> c.menuAnimated = v));
                 rows.add(toggle("fd:anim_icons", "Animated icons", "Icons move on the page you have open", () -> c.menuIcons, v -> c.menuIcons = v));
                 rows.add(section("Layout"));
@@ -3473,6 +3476,7 @@ public class FancyScreen extends Screen {
         Gfx.push(g); Gfx.translate(g, px + pw / 2f, py + ph / 2f); Gfx.scale(g, zoom); Gfx.translate(g, -(px + pw / 2f), -(py + ph / 2f));
         pill(g, px, py, pw, ph, Ui.PANEL);
         if (!cosWin()) { g.fill(px + 1, py + 2, px + sw, py + ph - 1, soft(Ui.PANEL2)); g.fill(px + sw, py + 4, px + sw + 1, py + ph - 4, Ui.BORDER); }
+        if (!cosWin()) for (int gy = 0; gy < 56; gy++) { float k = 1f - gy / 56f; g.fill(px + sw + 1, py + 2 + gy, px + pw - 3, py + 3 + gy, Gfx.argb(Math.round(26 * k * k), Ui.ACCENT & 0xFFFFFF)); }          // a soft glow of the theme colour under the top edge
         int[] grad = {0xFF42D9FF, 0xFF6578FF, 0xFFB66CFF, 0xFFFF6EB5};
         float flow = animOn ? (now % 5000L) / 5000f : 0f;                    // the colours slowly flow along the top edge
         for (int x = px + 1; x < px + pw - 1; x += 3) {
@@ -3521,8 +3525,8 @@ public class FancyScreen extends Screen {
         String[] sn = subs();
         for (int pass = 0; pass < 2; pass++) {                                     // pass 0: the scrolling list. pass 1: Settings, pinned under a line at the bottom
         if (pass == 0) g.enableScissor(px + 4, py + 42, px + sw, sideBottom()); else g.enableScissor(px + 4, pinTop() - 1, px + sw, py + ph - 4);
-        pill(g, px + 8, sy, sw - 14, 22, Ui.ROW);
-        g.fill(px + 8, sy + 3, px + 10, sy + 19, tabAcc);
+        pill(g, px + 8, sy, sw - 14, 22, Canvas.mix(Ui.ROW, tabAcc, 0.16f));
+        g.fill(px + 8, sy + 3, px + 11, sy + 19, tabAcc);
         for (int i = 0; i < Tab.values().length; i++) {
             Tab t = Tab.values()[i]; if (t == Tab.COSMETICS || t == Tab.RESOURCES || (t == Tab.GENERAL) != (pass == 1)) continue; int[] b = tabBox(i);
             boolean act = t == tab, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
@@ -3705,6 +3709,7 @@ public class FancyScreen extends Screen {
             float hv = anim("row|" + tab + r.indent + r.title, hov && r.field == null && (r.click != null || !r.ctls.isEmpty()) ? 1f : 0f, 48f);
             pill(g, r.x, r.y, r.w, r.h, hv > 0.02f ? Canvas.mix(Ui.ROW, Ui.ROW_HOVER, hv) : Ui.ROW);
             g.fill(r.x + 1, r.y + 3, r.x + 3 + Math.round(hv * 2), r.y + r.h - 3, r.accent);
+            if (hv > 0.05f) for (int wx = 0; wx < 28; wx += 2) g.fill(r.x + 3 + wx, r.y + 1, r.x + 5 + wx, r.y + r.h - 1, Gfx.argb(Math.round(34 * hv * (1f - wx / 28f)), r.accent & 0xFFFFFF));          // the row's colour washes in from the left
 
             int ix = r.x + 17, iy = r.y + (r.field != null ? 14 : r.h / 2);
             if (r.spriteId != null && ItemIcons.hasPixels(r.spriteId)) ItemIcons.draw(g, r.spriteId, null, ix, iy, 1f);
