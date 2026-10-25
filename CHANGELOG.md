@@ -1,3 +1,18 @@
+## 0.4.14
+- New Mythological animations, all three types, 5 to 7 seconds. The first part is the same for No Drops, Normal and RNG; the last 2.5 seconds are each their own.
+  - Mobs: a ritual circle draws itself, three lightning strikes crack the ground, a minotaur is summoned, then the power is drawn in.
+  - Treasure: a spade digs three times, the hole glows, then the light is drawn in.
+  - No Drops: the charge fizzles, the circle and the creature crumble to ash (a bone pops out of an empty burrow), grey words.
+  - Normal: the creature shatters into light, rings lift the item out of the ground, sparkles circle it. No backdrop.
+  - RNG: white flash, shockwaves, god rays, lightning round the item, runes, a fountain of light, a chest for treasure, cinematic bars and blur.
+  - For all three the item appears first, the background fades while the words show, and at the end the item fades slowly with the words 0.5 s later.
+  - The words sit below the animation (Top and Center) or above it (Bottom), and stay clear of the bars.
+  - Sounds are cued from the same timeline (beats for every strike or dig, burst, reveal, linger, end).
+- New icon set: every `:name:` icon is shaded pixel art with depth and a few frames of animation. The 25 text-effect tiles show the letter A doing what the effect does. Community buttons use plain symbols instead of other companies' logos.
+- Treasure is its own sub page beside Mythological (its own chat switch, spade and Erudite settings on its page).
+- Commands are now only `/fd`, `/fd help`, `/fd mute`, `/fd toggle` and `/fd simulate Mythological <Mob|Treasure> <Drop> <mf>`.
+- Removed the tip bar from the top of Home.
+
 ## 0.4.13
 - Full rewrite from the ground up, step 1. The menu look and shell are kept; the pages are new: Home, Drop Library, Animations, Sounds, Chat, Stats (WIP) and Settings (bottom left).
 - Sub pages are Mythological, Slayers, Farming, Experiments, Mining, Fishing and Dyes; the creatures of each are sub-sub pages. New ones show up in Drop Library, Animations and Sounds by themselves. Everything except Mythological shows the WIP page.

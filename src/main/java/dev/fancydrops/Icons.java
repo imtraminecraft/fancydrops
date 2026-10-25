@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /**
  * Every icon in the menu is called by a plain name written between colons, like a Discord emoji: ":name:". There is one category of icons
- * (no more "suf_" or "cx_" prefixes). The old hand-pixeled set is gone; until the new animated icons are drawn, a name without a picture
+ * (no more "suf_" or "cx_" prefixes). The pictures live in IconArt (code-drawn, shaded, a few frames of animation); a name without a picture
  * shows a small tile with its first letter, so a missing icon is easy to spot. ":name:#RRGGBB" tints an icon that takes a colour.
  */
 final class Icons {
@@ -28,8 +28,36 @@ final class Icons {
         int hash = name.indexOf('#');
         if (hash >= 0) { try { tint = 0xFF000000 | Integer.parseInt(name.substring(hash + 1), 16); } catch (Exception ignored) { } name = name.substring(0, hash); }
         if (name.equals("sparkle") || Cosmetics.byId(name) != null) { Cosmetics.drawIcon(g, name, x, y, now); return; }      // the one suffix we have: shaded, six frames
+        int frame = now == 2400L ? 0 : (int) ((now / FRAME_MS) % IconArt.FRAMES);
+        int[] px = frameOf(name, tint & 0xFFFFFF, frame);
+        if (px != null) { blit(g, px, x, y); return; }
         if (credit(g, name, x, y, now)) return;
         placeholder(g, name, tint, x, y, now);
+    }
+
+    private static final long FRAME_MS = 115L;                                          // eight frames, a bit under one second a loop
+    private static final java.util.Map<String, int[]> CACHE = new java.util.HashMap<>();
+    private static final int[] NONE = new int[0];
+    /** One frame of an icon, drawn once and kept (null = the name has no picture). */
+    private static int[] frameOf(String name, int tint, int frame) {
+        String k = name + "|" + tint + "|" + frame;
+        int[] p = CACHE.get(k);
+        if (p == null) { p = IconArt.render(name, tint, frame); CACHE.put(k, p == null ? NONE : p); }
+        return p == NONE || p == null || p.length == 0 ? null : p;
+    }
+    /** One fill per run of the same colour, not per pixel. */
+    private static void blit(GuiGraphicsExtractor g, int[] pix, int x, int y) {
+        for (int yy = 0; yy < 16; yy++) {
+            int xx = 0;
+            while (xx < 16) {
+                int c = pix[yy * 16 + xx];
+                if ((c >>> 24) == 0) { xx++; continue; }
+                int x2 = xx + 1;
+                while (x2 < 16 && pix[yy * 16 + x2] == c) x2++;
+                g.fill(x + xx, y + yy, x + x2, y + yy + 1, c);
+                xx = x2;
+            }
+        }
     }
 
     /** A rounded tile in a colour taken from the name, with the first letter on it, bobbing a little while the icon is lit. */
