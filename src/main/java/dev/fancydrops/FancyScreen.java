@@ -727,7 +727,6 @@ public class FancyScreen extends Screen {
     private void drawPicker(GuiGraphicsExtractor g, Row r, int mx, int my) {
         long now = System.currentTimeMillis();
         pill(g, r.x, r.y, r.w, r.h, Ui.ROW);
-        g.fill(r.x + 1, r.y + 3, r.x + 3, r.y + r.h - 3, Ui.ACCENT);
         if (!r.title.isEmpty()) {
             Gfx.text(g, font, r.title, r.x + 10, r.y + 6, Ui.TEXT);
             String hint = Gfx.fit(font, r.sub, r.w - 20 - Gfx.w(font, r.title) - 10);
@@ -2656,7 +2655,7 @@ public class FancyScreen extends Screen {
         if (searching || "@changes".equals(dropSrc)) { animationChanges(c); return; }                  // (search also looks inside it)
         rows.add(textRow(":animations:", "Animations", "Set the looks every animation shares, then open a category."));
         int fxOn = 0; for (int i = 0; i < FX_N; i++) if (c.fx(i)) fxOn++;
-        Row ac = row(0, ":bars:", "Animation Changes", "Bars, text, item, position and size  \u00B7  " + fxOn + " text effects on", Ui.ACCENT);
+        Row ac = row(0, ":settings:", "Animation Changes", "Bars, text, item, position and size  \u00B7  " + fxOn + " text effects on", Ui.ACCENT);
         ac.click = () -> openPage(-1, "@changes", "Animation Changes"); rows.add(ac);
         rows.add(section("Categories"));
         rows.add(catTiles());
@@ -2730,7 +2729,7 @@ public class FancyScreen extends Screen {
     private void soundsLanding(FancyConfig c) {
         if (searching || "@settings".equals(dropSrc)) { soundSettings(c); return; }
         rows.add(textRow(":sounds:", "Sounds", "Edit each sound based on what you want."));
-        Row ss = row(0, ":sounds:", "Sound Settings", (c.sound ? "On" : "Off") + "  \u00B7  volume " + c.volume + "%  \u00B7  " + (c.customSounds ? "FancyDrops sounds" : "Minecraft sounds"), Ui.ACCENT);
+        Row ss = row(0, ":settings:", "Sound Settings", (c.sound ? "On" : "Off") + "  \u00B7  volume " + c.volume + "%  \u00B7  " + (c.customSounds ? "FancyDrops sounds" : "Minecraft sounds"), Ui.ACCENT);
         ss.click = () -> openPage(-1, "@settings", "Sound Settings"); rows.add(ss);
         rows.add(section("Categories"));
         rows.add(catTiles());
@@ -2799,7 +2798,7 @@ public class FancyScreen extends Screen {
             off ? "No channel is picked" : !c.masterAnnounce ? "Chat alerts are switched off" : on == 0 ? "No drop has a chat alert" : "In " + chn + " chat" + (c.alsoAll && !c.channel.equals("ALL") ? " and public chat" : ""), live ? 0xFF62E6A8 : 0xFFFF7777);
         st.noSearch = true; st.subColor = live ? 0xFF62E6A8 : 0xFFFF9A9A; rows.add(st);
         String ex = DropListener.sample(c.formatFor(chatCat), chatCat);
-        Row em = row(0, ":send:", "Your message", Gfx.fit(font, ex == null ? "" : ex, Math.max(60, cw - 150)), 0xFFFFC857);
+        Row em = row(0, ":send:", "Your message", ex == null ? "" : ex, 0xFFFFC857);
         em.noSearch = true; rows.add(em);
         rows.add(section("Test"));
         Row tr = row(0, ":send:", "Send a test message", "Posts the " + Categories.byId(chatCat).name() + " message to your " + (off ? "chat (turn a channel on first)" : chn + " chat"), Ui.ACCENT);

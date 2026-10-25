@@ -1,3 +1,8 @@
+## 0.4.32
+- Animation Changes and Sound Settings use the Settings icon.
+- Chat main page: "Your message" shows the whole message (it wraps instead of being cut off).
+- The blue line on the left of the category and tile boxes is gone.
+
 ## 0.4.31
 - Animations and Sounds main pages: the description is back and nothing scrolls. Animation Changes (with the size slider) and Sound Settings (switch, volume, sound set) each open as their own sub page, with a back button.
 - The category tiles no longer get squeezed until their words overlap.
