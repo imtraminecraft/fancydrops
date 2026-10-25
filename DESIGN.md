@@ -4,7 +4,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## Working rules
 - Short UI text. Releases are manual (the author runs the "Release FancyDrops" workflow with the version).
-- Per update: bump `version=` in `gradle.properties`, add a `## x.y.z` section at the top of `CHANGELOG.md`, commit and push to `main`.
+- Per update: bump `version=` in `gradle.properties`, add a `## x.y.z` section at the top of `CHANGELOG.md`, commit and push to `main`. The version was restarted at 0.4.1 for the full rework (author request): count up from there, 0.4.2, 0.4.3 and so on.
 - Commit as `tra` (`git -c user.name=tra -c user.email=imtraminecraft@gmail.com commit`).
 - Make a mockup first for anything visual and big, and wait for approval before building it.
 - Nothing can be compiled or run in the cloud workspace. Say so honestly. Check for duplicate methods and variable names by hand.
@@ -46,3 +46,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Redo all icons for Mythological, and make sure each one is correct.
 - Redo the Mythological scenes. Mobs keep the lightning idea. Treasure shows someone digging with a shovel until the treasure is found. As cool as possible within the rules above.
 - Categories that are not finished keep the "Coming Soon" construction-site page (hazard tape, hard hats, crane, bulldozer). The author wants it kept but tidy: fixed layout on one ground line, few props, nothing overlapping, nothing interactive. (A crane-builds-then-explodes scene was an earlier idea; the author later said to keep this page.)
+
+## Animation look (author feedback, Oct 25)
+- Scenes must be properly animated, never bland: real motion, particles, light, a distinct idea per category.
+- Normal and No Drops scenes are wide banners (not square), sitting right above the SkyBlock action bar with only a small gap. Not floating in the middle of the screen.
+- The text keeps the earlier look (name, price, magic find lines); make it cooler where possible.

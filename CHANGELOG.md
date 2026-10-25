@@ -1,3 +1,6 @@
+## 0.4.1
+- Changed: version restarted at 0.4.1 for the full rework. The older entries below keep their original numbers
+
 ## 0.9.8
 - Changed: the "Coming Soon" building site is tidier. Fixed layout on one ground line, one bulldozer, a crane, a few props, no clutter. Nothing to drag
 - Removed: the loose welding sparks
