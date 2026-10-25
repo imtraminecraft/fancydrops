@@ -78,6 +78,8 @@ public final class ItemIcons {
         MOB_SKINS.put("king_minos", "c84cd85a049fa9b3256baa34894ec07d858c4f324c30ebd80435f2c4ca9869d5");
     }
 
+    static java.util.Set<String> mobIds() { return MOB_SKINS.keySet(); }
+
     private static Path cacheFile(String id) {
         return DataFiles.dir().resolve("icon-cache").resolve(id.replaceAll("[^A-Za-z0-9_]", "_") + ".json");
     }

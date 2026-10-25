@@ -160,3 +160,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## 0.4.17
 - Item art lives in config/fancydrops/textures/ (<ID>.png flat, <ID>_head.png skin); user files override downloaded art. Creature icons `mob_<id>` draw the creature skull in 3D (ItemIcons MOB_SKINS).
+
+## 0.4.18
+- Main (landing) pages must never scroll: build() shrinks tile heights, then hides the intro text, then clips.

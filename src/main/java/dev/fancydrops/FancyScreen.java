@@ -266,8 +266,20 @@ public class FancyScreen extends Screen {
     /** Set by /fd stats and /fd <search>: the next menu opens on the Stats page, or with this text in the search box. */
     static boolean pendingStats, pendingCos; static String pendingSearch, pendingTab;
 
+    private static boolean prefetchedAll;
+    /** Loads every item picture once (they are saved to config/fancydrops/textures/ so you can replace them). */
+    private static void prefetchAll() {
+        if (prefetchedAll) return; prefetchedAll = true;
+        try {
+            for (Categories.Cat k : Categories.ALL) for (DropData.Source s0 : k.sources()) for (DropData.Drop d : s0.drops) ItemIcons.prefetch(d.id);
+            for (DropData.Drop d : TreasureData.SOURCE.drops) ItemIcons.prefetch(d.id);
+            for (String m : ItemIcons.mobIds()) ItemIcons.prefetch("MOB_" + m);
+        } catch (Throwable ignored) {}
+    }
+
     public FancyScreen() {
         super(Component.literal("FancyDrops"));
+        prefetchAll();
         if (!skipIntro) { tab = Tab.HOME; scroll = 0; query = ""; }
         if (pendingStats) { pendingStats = false; tab = Tab.STATS; subSel[Tab.STATS.ordinal()] = -1; scroll = 0; }
         if (pendingTab != null) { Tab pt = pendingTab.equals("sounds") ? Tab.SOUNDS : Tab.ANIMATIONS; pendingTab = null; tab = pt; subSel[pt.ordinal()] = -1; scroll = 0; query = ""; }          // /fd editor
@@ -2447,6 +2459,22 @@ public class FancyScreen extends Screen {
             if (avail > 70 && Gfx.w(font, r.sub) > avail) { r.wrapSub = true; r.subW = avail; r.h = Math.max(r.h, 19 + 11 * wrap(r.sub, avail).size()); }
         }
         for (Row r : rows) if (r.kind == HERO) r.h = Math.max(r.h, 76 + 11 * wrap(r.sub, cw - 60).size());      // the words always fit inside the card
+        relayout();
+        if (landing() && query.isBlank()) {                                // main pages never scroll: the tiles get a little shorter until everything fits
+            int viewH = lb - lt;
+            for (int pass = 0; pass < 14 && totalH > viewH; pass++) {
+                boolean ch = false;
+                for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 32 : 24)) { r.pTh -= 2; fit(r); ch = true; }
+                if (!ch) break;
+                relayout();
+            }
+            if (totalH > viewH) { for (Row r : rows) if (r.kind == TEXT) { r.h = 0; r.noSearch = true; } relayout(); }
+            if (totalH > viewH) totalH = viewH;                           // anything left over is clipped, never scrolled
+            scroll = 0;
+        }
+    }
+
+    private void relayout() {
         int y = lt - scroll;
         for (Row r : rows) { r.y = y; y += r.h + (r.kind == SECTION ? 1 : r.pickLabels != null ? 0 : 3); layout(r); }
         totalH = y + scroll - lt;

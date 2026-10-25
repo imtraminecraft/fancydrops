@@ -1,3 +1,7 @@
+## 0.4.18
+- Main pages (Animations, Sounds and the other landing pages) never scroll: their tiles shrink a little until everything fits.
+- Every item picture is loaded once when the menu opens, so all of them are in `config/fancydrops/textures/` (before, only the ones you had looked at).
+
 ## 0.4.17
 - Fixed the 3D head blur: the head texture is now 128 x 128 (was 64) so it stays sharp when big.
 - New folder `config/fancydrops/textures/`: every item picture is saved there as `<ITEM_ID>.png` (flat art, any size) and head items as `<ITEM_ID>_head.png` (the skin). Put your own PNG with the same name there to replace it; it loads the next time the item loads.
