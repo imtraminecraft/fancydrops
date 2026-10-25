@@ -744,7 +744,7 @@ final class Scene {
         int rst = p.exp ? 2 : p.myth ? 1 : 0;
         if (epic && side == 0) rngAura(out, rst, sx, sy, (float) size, us, uu, rar, false);                                             // the RNG stage: floor light, orbits, speed lines
         if (m.sprite != null) {
-            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f) * (epic ? popK : 1f), true, (float) spin, rst);   // items turn as thick slabs, like a dropped item: the side shows, never a coin squash
+            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f) * (epic ? popK : 1f), false, 0f, rst);   // 2D items stay flat and face the player (no turning); 3D heads and blocks are the ones that spin. was: items turn as thick slabs, like a dropped item: the side shows, never a coin squash
         } else if (m.puffy != null) {
             m.puffy.draw(IT, sx, sy, (float) (size / 16.0), spin, 0.35);
         } else {

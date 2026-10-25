@@ -7,10 +7,13 @@
 - New Mythological sounds (Bolt, Shatter, Reveal, Glow, Farewell, Dig, Chest, Fizzle, plus bigger twins for RNG). Each fades to silence by itself and the last one is timed to finish with the words.
 - Sounds follow the whole animation (words included), in the real scene, the previews and the Sounds page. The Sounds page plays the same pitches as the real scene.
 - /fd simulate, the Play buttons, the menu and the previews all start drops through the same two functions (creature and treasure). Simulated treasure now follows the drop's own Off / Normal / RNG state.
-- Item sprites turn as thick slabs (no more coin squash on thin items like the Hilt of Revelations). 3D heads get stronger light and shade.
+- 2D item sprites stay flat and face you (they no longer turn); 3D heads and blocks are the ones that spin, with stronger light and shade. Heads that fail to load are now written to icon-log.txt.
 - Home hero shows its words again. Tips, page descriptions, mod description and README now describe the current mod (Mythological live, the rest being rebuilt).
 - Cosmetics: 8 new animated suffix icons (Lucky Dice, Shovel, Skull, Moon, Comet earned by rare drops; Watcher, Rocket, Cat for the early players) and 5 new name effects (Rainbow, Aurora for the early players; Ember, Frost, Neon earned by rare drops). Each page header has a bar that fills once when the page opens.
 - Construction page: the worker tosses each brick up to the wall from a pile instead of the crane lowering it.
+- Cosmetics: a Collection bar at the top (x / total owned) fills once; the Aura preview has a spotlight, glowing floor ring, rising sparkles and a bobbing character. Fixed the Discord, Legend, Lucky Dice and Skull suffix icons, redrew Secret, and the Special rarity icon is animated. Non-special name effects keep your server colour and only add an effect on top.
+- Experiments icon: the yellow star above the book is gone. Dye icon is a still palette with a glint.
+- Pages no longer slide or bounce when you switch. The construction page has depth (haze, moon, drifting clouds, a far skyline, a scaffold tower, a lamp post and fireflies) and the bricks ride smoothly from the pile to the worker's hand.
 
 ## 0.4.11
 - Fixed: Mythological items (Normal and RNG) stay on screen as long as the words, instead of leaving first. The picture, item and bars fade out together with the text

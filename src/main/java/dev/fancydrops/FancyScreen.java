@@ -935,7 +935,12 @@ public class FancyScreen extends Screen {
         g.fill(x + 2, y, x + 5, y + 1, lt); g.fill(x + 1, y + 1, x + 6, y + 3, c); g.fill(x, y + 3, x + 7, y + 4, c);
         g.fill(x + 1, y + 4, x + 6, y + 5, dk); g.fill(x + 2, y + 5, x + 5, y + 6, dk); g.fill(x + 3, y + 6, x + 4, y + 7, dk);
         g.fill(x + 2, y + 1, x + 3, y + 2, 0xFFFFFFFF);
-        if (rar == 3) { g.fill(x + 6, y - 1, x + 7, y, 0xFFFFFFFF); g.fill(x - 1, y + 5, x, y + 6, lt); }
+        if (rar == 3) {                                                                                  // special: the gem shimmers and two stars twinkle in turn
+            long nw = System.currentTimeMillis(); float sh = 0.5f + 0.5f * (float) Math.sin(nw / 260.0), t1 = 0.5f + 0.5f * (float) Math.sin(nw / 180.0), t2 = 0.5f + 0.5f * (float) Math.sin(nw / 180.0 + 2.4);
+            g.fill(x + 2, y + 1, x + 5, y + 3, Gfx.argb(Math.round(90 * sh), 0xFFFFFF));
+            g.fill(x + 6, y - 1, x + 7, y, Gfx.argb(Math.round(255 * t1), 0xFFFFFF)); g.fill(x + 5, y - 1, x + 8, y, Gfx.argb(Math.round(90 * t1), 0xFFFFFF));
+            g.fill(x - 1, y + 5, x, y + 6, Gfx.argb(Math.round(255 * t2), 0xFFFFFF));
+        }
     }
     /** The hover card. tipText lines: name | what it is | rarity (0, 1, 2) | 1 yours / 0 locked | extra line (may be empty) | how to get it. */
     private void drawTileTip(GuiGraphicsExtractor g, int mx, int my) {
@@ -984,12 +989,23 @@ public class FancyScreen extends Screen {
         }
         Gfx.text(g, font, r.sub, r.x + 12, r.y + 20, Ui.SUB);
         String badge = r.pSubs != null && r.pSubs.length > 0 ? r.pSubs[0] : "";
-        if (!badge.isEmpty() && badge.matches("\\d+ / \\d+")) {                                                // how much is unlocked: a bar that fills once when the page opens
+        boolean wide = r.pSubs != null && r.pSubs.length > 1 && "wide".equals(r.pSubs[1]);
+        if (wide && badge.matches("\\d+ / \\d+")) {                                                          // the whole collection: a long bar that fills once, with a bright tip
+            String[] pr = badge.split(" / "); float want = Math.min(1f, Integer.parseInt(pr[0]) / (float) Math.max(1, Integer.parseInt(pr[1])));
+            float fk = ease(Math.min(1f, (now - cosAt) / 1500f)) * want; int bx0 = r.x + 12, bx1 = r.x + r.w - 12, by0 = r.y + r.h - 9, fw = Math.round((bx1 - bx0) * fk);
+            g.fill(bx0, by0, bx1, by0 + 5, 0x66000000);
+            for (int i = 0; i < fw; i++) g.fill(bx0 + i, by0, bx0 + i + 1, by0 + 5, Canvas.mix(0xFFB56BFF, 0xFF56D8FF, i / (float) Math.max(1, bx1 - bx0)));
+            if (fw > 2 && fk < want + 0.0001f) { g.fill(bx0 + fw - 2, by0 - 1, bx0 + fw, by0 + 6, 0xFFFFFFFF); }
+            int sh = Math.round(((now % 2600L) / 2600f) * (bx1 - bx0)); if (sh < fw) g.fill(bx0 + sh, by0, Math.min(bx0 + fw, bx0 + sh + 6), by0 + 2, 0x55FFFFFF);
+        } else if (!badge.isEmpty() && badge.matches("\\d+ / \\d+")) {                                                // how much is unlocked: a bar that fills once when the page opens
             String[] pr = badge.split(" / "); float want = Math.min(1f, Integer.parseInt(pr[0]) / (float) Math.max(1, Integer.parseInt(pr[1])));
             float fk = ease(Math.min(1f, (now - cosAt) / 1300f)) * want; int bw2 = Gfx.w(font, badge) + 10, bx2 = r.x + r.w - bw2 - 8;
             g.fill(bx2, r.y + 26, bx2 + bw2, r.y + 29, 0x55000000); g.fill(bx2, r.y + 26, bx2 + Math.round(bw2 * fk), r.y + 29, Canvas.mix(col, 0xFFFFFFFF, 0.2f));
         }
         if (!badge.isEmpty()) { int bw = Gfx.w(font, badge) + 10; pill(g, r.x + r.w - bw - 8, r.y + 8, bw, 16, Canvas.mix(Ui.PANEL2, col, 0.25f)); rout(g, r.x + r.w - bw - 8, r.y + 8, bw, 16, Gfx.argb(160, col & 0xFFFFFF)); Gfx.text(g, font, badge, r.x + r.w - bw - 3, r.y + 12, Canvas.mix(col, 0xFFFFFFFF, 0.6f)); }
+    }
+    private Row collectionHeader(String badge) {
+        Row r = catHeader("COLLECTION", "Every suffix, name effect and aura you own.", badge, 0xFFB56BFF); r.h = 44; r.pSubs = new String[]{badge, "wide"}; return r;
     }
     private Row catHeader(String title, String sub, String badge, int col) {
         Row r = new Row(); r.kind = CAT; r.noSearch = true; r.title = title; r.sub = sub; r.accent = col; r.h = 34; r.pSubs = new String[]{badge}; return r;
@@ -1076,6 +1092,7 @@ public class FancyScreen extends Screen {
         CosmeticData.Kind[] kinds = {CosmeticData.Kind.SUFFIX, CosmeticData.Kind.NAME, CosmeticData.Kind.AURA};
         String[] heads = {"SUFFIX", "NAME EFFECT", "AURA"}, subs = {"A little icon after your name.", "Your name in moving colours.", "Particles around your character."};
         int[] accents = {0xFFFFC857, 0xFFFF9AC8, 0xFF8FD0FF};
+        { int own = 0; for (CosmeticData.Def d : CosmeticData.ALL) if (CosmeticData.unlocked(d)) own++; rows.add(collectionHeader(own + " / " + CosmeticData.ALL.size())); }
         // --- sets: the rarest first
         int ownedSets = 0; for (CosmeticData.SetDef sd : CosmeticData.SETS) if (CosmeticData.unlocked(CosmeticData.members(sd).get(0))) ownedSets++;
         rows.add(catHeader("SETS", "A suffix and a name effect that go together, and an aura for most.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
@@ -1282,7 +1299,7 @@ public class FancyScreen extends Screen {
         if (hd != null && hd.kind() == CosmeticData.Kind.AURA) aura = hd.id(); else if (CosmeticData.unlockedId(c.aura)) aura = c.aura;
         CosmeticData.Def ad = aura == null ? null : CosmeticData.byId(aura);
         Gfx.text(g, font, ad == null ? "No aura worn" : ad.name(), x + 8, y + 17, ad == null ? Ui.DIM : Canvas.mix(Ui.SUB, ad.color(), 0.6f));
-        int fx = x + w / 2, feet = y + h - 22; float ppb = SkinMock.height() / 1.8f;
+        int fx = x + w / 2, feet0 = y + h - 22, bobY = STILL ? 0 : Math.round((float) Math.sin(System.currentTimeMillis() / 520.0) * 2f), feet = feet0 - bobY; float ppb = SkinMock.height() / 1.8f;   // the character bobs; the floor stays
         auraBox[0] = x; auraBox[1] = y + 28; auraBox[2] = x + w; auraBox[3] = y + h;
         g.enableScissor(x + 1, y + 28, x + w - 1, y + h - 1);
         int pcol = ad == null ? 0xFF8A93B0 : ad.color();                                              // a little stage in the colour of the aura
@@ -1292,8 +1309,14 @@ public class FancyScreen extends Screen {
           for (int rr = 0; rr < 3; rr++) { float ph2 = ((tt * 0.45f) + rr / 3f) % 1f; int rw = 18 + Math.round(ph2 * 26); g.fill(fx - rw, feet, fx + rw, feet + 1, Gfx.argb(Math.round((1f - ph2) * 150), pc2)); }   // rings spreading from the feet
           for (int sp = 0; sp < 10; sp++) { float a2 = tt * 0.6f + sp * 0.628f; int sx2 = fx + Math.round((float) Math.cos(a2) * 34), sy2 = feet + 2 + Math.round((float) Math.sin(a2) * 3); g.fill(sx2, sy2, sx2 + 2, sy2 + 1, Gfx.argb(200, Canvas.mix(pcol, 0xFFFFFFFF, 0.6f) & 0xFFFFFF)); }   // little lights orbiting the floor
         }
-        g.fill(fx - 22, feet + 3, fx + 22, feet + 5, Gfx.argb(110, 0x000000)); g.fill(fx - 28, feet + 1, fx + 28, feet + 3, Gfx.argb(90, pcol & 0xFFFFFF));
-        g.fill(fx - 24, feet, fx + 24, feet + 1, Gfx.argb(200, pcol & 0xFFFFFF)); g.fill(fx - 20, feet + 1, fx + 20, feet + 2, Gfx.argb(150, Canvas.mix(pcol, 0xFFFFFFFF, 0.5f) & 0xFFFFFF));
+        { int pc3 = pcol & 0xFFFFFF; float tt = now / 1000f, pulse = 0.5f + 0.5f * (float) Math.sin(tt * 2.4f); int fy = feet0;
+          for (int yy = y + 30; yy < fy; yy++) { float u = (yy - (y + 30)) / (float) Math.max(1, fy - y - 30); int half = 7 + Math.round(u * 30); g.fill(fx - half, yy, fx + half, yy + 1, Gfx.argb(Math.round((5 + 9 * u) * (0.7f + 0.3f * pulse)), 0xFFFFFF)); }     // a spotlight falling from above
+          for (int dy = -6; dy <= 6; dy++) { int half = Math.round(40f * (float) Math.sqrt(1f - (dy / 6.5f) * (dy / 6.5f))); g.fill(fx - half, fy + 2 + dy, fx + half, fy + 3 + dy, Gfx.argb(Math.round(26 + 20 * pulse), pc3)); }          // the floor glows
+          int rr0 = 24 + Math.round(pulse * 6); for (int a = 0; a < 40; a++) { double an = a * Math.PI / 20; int rx2 = fx + (int) Math.round(Math.cos(an) * rr0), ry2 = fy + 2 + (int) Math.round(Math.sin(an) * rr0 * 0.2); g.fill(rx2, ry2, rx2 + 1, ry2 + 1, Gfx.argb(Math.round(120 + 100 * pulse), pc3)); }   // a pulsing ring
+          for (int sp = 0; sp < 14; sp++) { float u = (tt * (0.22f + (sp % 4) * 0.05f) + sp * 0.137f) % 1f; int sx3 = fx + Math.round((float) Math.sin(sp * 2.4f + tt * 0.8f) * (14 + (sp * 7) % 22)), sy3 = fy - Math.round(u * (fy - y - 40)); int al = Math.round(230 * (float) Math.sin(u * Math.PI)); g.fill(sx3, sy3, sx3 + 1, sy3 + 1, Gfx.argb(al, 0xFFFFFF)); if (sp % 3 == 0) { g.fill(sx3 - 1, sy3, sx3 + 2, sy3 + 1, Gfx.argb(al / 2, pc3)); g.fill(sx3, sy3 - 1, sx3 + 1, sy3 + 2, Gfx.argb(al / 2, pc3)); } }   // sparkles drifting up
+        }
+        g.fill(fx - 22, feet0 + 3, fx + 22, feet0 + 5, Gfx.argb(110, 0x000000)); g.fill(fx - 28, feet0 + 1, fx + 28, feet0 + 3, Gfx.argb(90, pcol & 0xFFFFFF));
+        g.fill(fx - 24, feet0, fx + 24, feet0 + 1, Gfx.argb(200, pcol & 0xFFFFFF)); g.fill(fx - 20, feet0 + 1, fx + 20, feet0 + 2, Gfx.argb(150, Canvas.mix(pcol, 0xFFFFFFFF, 0.5f) & 0xFFFFFF));
         List<AuraFx.P> parts = ad == null ? List.of() : AuraFx.particles(aura, now);
         float figYaw = 0.55f + 0.28f * (float) Math.sin(now / 1900.0);                              // a gentle sway: the figure can't be turned
         float cyw = (float) Math.cos(figYaw), syw = (float) Math.sin(figYaw);
@@ -1561,8 +1584,36 @@ public class FancyScreen extends Screen {
         { int ax = r.x + rx + 12, ay = gy - 9; g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); }
         { int ax = r.x + rx - 14, ay = gy - 6; g.fill(ax, ay, ax + 20, ay + 2, 0xFFC8964E); g.fill(ax, ay + 2, ax + 20, ay + 4, 0xFFB0803E); g.fill(ax, ay + 4, ax + 20, ay + 6, 0xFFC8964E); g.fill(ax + 4, ay - 7, ax + 14, ay, 0xFFD03A30); g.fill(ax + 4, ay - 7, ax + 14, ay - 6, 0xFFFF6A5A); g.fill(ax + 8, ay - 5, ax + 10, ay - 3, 0xFFFFD84A); }
         Gfx.push(g); Gfx.translate(g, r.x + rx - 36, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g);
+        scaffold(g, r.x + r.w - 118, gy, sec);                                                      // a scaffold tower behind everything on the right
         int bx = r.x + mid + 62;                                                                    // right of centre: three builders on a bench, chatting over a cuppa
         if (r.x + rx - 46 - bx >= 52) bench(g, bx, gy, sec);
+        lamp(g, r.x + r.w - 22, gy, sec);                                                           // a lamp post at the right edge, its light cone and moths
+        for (int f = 0; f < 6; f++) {                                                               // fireflies
+            float fx = r.x + r.w * (0.52f + 0.4f * ((f * 53) % 10) / 10f) + (float) Math.sin(sec * 0.7f + f * 2.1f) * 9f, fy = gy - 34 - ((f * 29) % 7) * 5 + (float) Math.sin(sec * 1.1f + f) * 5f;
+            g.fill(Math.round(fx), Math.round(fy), Math.round(fx) + 1, Math.round(fy) + 1, Gfx.argb(Math.round(200 * (0.5f + 0.5f * (float) Math.sin(sec * 2.4f + f * 1.7f))), 0xFFE066));
+        }
+    }
+
+    /** A steel scaffold tower: poles, cross braces and two planks, with a swinging work light. Drawn dim, so it sits behind the bench. */
+    private static void scaffold(GuiGraphicsExtractor g, int x, int gy, float sec) {
+        int w = 30, h = 54, top = gy - h, dim = 0xFF3A3A42, lite = 0xFF50505C;
+        g.fill(x, top, x + 2, gy, dim); g.fill(x + w - 2, top, x + w, gy, dim);
+        for (int y = top + 4, seg = 0; y < gy - 9; y += 9, seg++) { for (int k = 0; k < w - 4; k++) { int yy = y + (seg % 2 == 0 ? k * 9 / (w - 4) : 9 - k * 9 / (w - 4)); g.fill(x + 2 + k, yy, x + 3 + k, yy + 1, 0xFF2C2C34); } g.fill(x, y + 9, x + w, y + 10, dim); }
+        g.fill(x - 3, top + 12, x + w + 3, top + 15, 0xFF8A6A3A); g.fill(x - 3, top + 12, x + w + 3, top + 13, 0xFFA88450);
+        g.fill(x - 3, top + 34, x + w + 3, top + 37, 0xFF8A6A3A); g.fill(x - 3, top + 34, x + w + 3, top + 35, 0xFFA88450);
+        g.fill(x, top - 1, x + w, top, lite);
+        float sw = (float) Math.sin(sec * 1.7f) * 3f; int lx = x + w / 2 + Math.round(sw);                 // the work light swings from the top rail
+        g.fill(x + w / 2, top, x + w / 2 + 1, top + 6, 0xFF6A6A74); g.fill(lx - 2, top + 6, lx + 3, top + 9, 0xFFFFE08A);
+        g.fill(lx - 6, top + 8, lx + 7, top + 20, 0x14FFE08A);
+    }
+
+    /** A lamp post with a warm light cone that flickers a little and a few moths around the lamp. */
+    private static void lamp(GuiGraphicsExtractor g, int x, int gy, float sec) {
+        int top = gy - 46; float fl = 0.85f + 0.15f * (float) Math.sin(sec * 9f) * (float) Math.sin(sec * 2.3f);
+        for (int y = 0; y < 38; y++) { int half = 2 + y / 2; g.fill(x + 1 - half, top + 4 + y, x + 2 + half, top + 5 + y, Gfx.argb(Math.round(24 * fl * (1f - y / 38f)), 0xFFD870)); }   // the cone widens as it falls
+        g.fill(x, top + 4, x + 3, gy, 0xFF2E2C34); g.fill(x - 1, gy - 3, x + 4, gy, 0xFF3A3842);
+        g.fill(x - 3, top, x + 6, top + 2, 0xFF2E2C34); g.fill(x - 2, top + 2, x + 5, top + 5, Gfx.argb(Math.round(255 * fl), 0xFFE9A0)); g.fill(x - 4, top - 2, x + 7, top + 6, Gfx.argb(Math.round(30 * fl), 0xFFE9A0));
+        for (int m = 0; m < 3; m++) { double an = sec * (1.6 + m * 0.5) + m * 2.0; g.fill(x + 1 + (int) (Math.cos(an) * (7 + m * 2)), top + 2 + (int) (Math.sin(an * 1.3) * (5 + m)), x + 2 + (int) (Math.cos(an) * (7 + m * 2)), top + 3 + (int) (Math.sin(an * 1.3) * (5 + m)), 0xCCF4EBC8); }
     }
 
     /** Three builders sitting on a plank, talking in turn: the speaker nods and gets a bubble of moving dots, one holds a steaming cup. */
@@ -1608,7 +1659,14 @@ public class FancyScreen extends Screen {
         boolean tremble = ph >= buildEnd + 0.9f && ph < fallT;
         for (int i = 0; i < N; i++) {
             float placed = i * PER, local = ph - placed;
-            if (local < 0 && ph < fallT) { if (local > -PER * 0.5f && ph < buildEnd) brick(g, wkX + 7, gy - 18 + Math.round(local / PER * 6f), i >= WALL ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw, bh, 0, i >= WALL); continue; }   // the next brick waits in his hand
+            if (local < 0 && ph < fallT) {
+                if (local > -PER && ph < buildEnd) {                                                   // the next brick rides from the pile up to his hand, so the throw starts exactly where it ends
+                    int hw = i >= WALL ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw; float u = 1f + local / PER, ue = u * u * (3f - 2f * u);
+                    int hx0 = farX - 16 + Math.round((wkX + 8 - hw / 2 - (farX - 16)) * ue), hy0 = gy - 8 + Math.round((gy - 17 - (gy - 8)) * ue);
+                    brick(g, hx0, hy0, hw, bh, 0, i >= WALL);
+                }
+                continue;
+            }   // the next brick waits in his hand
 
             boolean roof = i >= WALL; int row = roof ? 6 + (i - WALL) : i / COLS, col = i % COLS;
             int w = roof ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw, h = roof ? bh : bh;
@@ -1698,6 +1756,22 @@ public class FancyScreen extends Screen {
     }
     /** The skyline behind the site: dark blocks with a few lit windows and stars above, left and right of the "Coming Soon" tag. */
     private static void skyline(GuiGraphicsExtractor g, Row r, float sec, int gy) {
+        for (int b = 0; b < 12; b++) g.fill(r.x + 4, gy - 4 - b * 4, r.x + r.w - 4, gy - b * 4, Gfx.argb(Math.round(34 * (1f - b / 12f) * (1f - b / 12f)), 0xFF9A3A));      // a warm haze lying on the horizon
+        int mx0 = r.x + Math.round(r.w * 0.70f), my0 = r.y + 22;                                          // the moon, with a soft halo
+        for (int h = 3; h >= 1; h--) g.fill(mx0 - 6 - h * 3, my0 - 6 - h * 3, mx0 + 6 + h * 3, my0 + 6 + h * 3, Gfx.argb(7 * (4 - h), 0xFFF2C0));
+        g.fill(mx0 - 4, my0 - 6, mx0 + 4, my0 + 6, 0xFFF4EBC8); g.fill(mx0 - 6, my0 - 4, mx0 + 6, my0 + 4, 0xFFF4EBC8); g.fill(mx0 - 2, my0 - 3, mx0 + 1, my0 - 1, 0xFFD8CCA0); g.fill(mx0 + 2, my0 + 1, mx0 + 4, my0 + 3, 0xFFD8CCA0);
+        for (int c = 0; c < 3; c++) {                                                                      // thin clouds drift at their own speeds (the far ones are slower)
+            float sp = 2.2f + c * 1.6f; int span = r.w + 60, cxp = r.x - 30 + Math.round((c * 97 + sec * sp) % span), cyp = r.y + 16 + c * 11;
+            for (int k = 0; k < 4; k++) g.fill(cxp + k * 5, cyp + (k % 2), cxp + k * 5 + 9, cyp + 2 + (k % 2), Gfx.argb(26 + c * 6, 0xC8D0E8));
+        }
+        { int off = Math.round(sec * 1.5f) % 64, x = r.x + 6 - off, n = 40;                              // the far skyline: paler and without lights, creeping by
+            while (x < r.x + r.w - 6) {
+                int w = 18 + (n * 11) % 17, h = 30 + (n * 7) % 24; n++;
+                int x0 = Math.max(r.x + 6, x), x1 = Math.min(r.x + r.w - 6, x + w);
+                if (x1 > x0) { g.fill(x0, gy - h, x1, gy, 0xFF1C1B22); if (x + 1 >= r.x + 6) g.fill(x0, gy - h, x1, gy - h + 1, 0xFF27262F); }
+                x += w + 3;
+            }
+        }
         for (int i = 0; i < 22; i++) {                                                                  // stars
             float h1 = ((i * 2654435761L) & 0xFFFF) / 65536f, h2 = ((i * 40503L + 7) & 0xFFFF) / 65536f; int sx = r.x + 8 + Math.round(h1 * (r.w - 16)), sy = r.y + 12 + Math.round(h2 * 40);
             float tw = 0.4f + 0.6f * (float) Math.abs(Math.sin(sec * (0.8f + h1) + i));
@@ -3756,9 +3830,9 @@ public class FancyScreen extends Screen {
         popup = null;
         g.enableScissor(cx - 2, lt, cx + cw + 2, lb);
         Gfx.push(g);
-        float rowAge = !animOn ? 9f : (now - Math.max(tabChanged, born + 140L)) / 1000f;          // rows rise into place one after the other, whenever a page opens
+        float rowAge = !animOn ? 9f : (now - Math.max(tabChanged, born + 140L)) / 1000f;          // (kept for the row fade; rows no longer move)
         int[] rowOff = new int[rows.size()]; int rn = 0;
-        for (Row r : rows) { int off = rowAge >= 0.9f ? 0 : Math.round((1f - ease((rowAge - Math.min(rn, 14) * 0.032f) / 0.26f)) * 14f); rowOff[rn++] = off; r.y += off; }
+        for (Row r : rows) { rowOff[rn++] = 0; }                                                                           // pages no longer slide or bounce when you switch; the rows stay exactly where they are
         updCheck = updGet = null;
         for (Row r : rows) {
             if (r.y + r.h < lt || r.y > lb) continue;

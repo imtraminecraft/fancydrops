@@ -196,16 +196,15 @@ final class Icons {
                 }
                 disc(g, x, y, 7.5f, 7.5f, 2.4f, 0xFFFFFFFF);
             }
-            case "dye" -> {                                                                             // a paint palette, its dabs glowing in turn
-                disc(g, x, y, 8f, 8.5f, 7.2f, 0xFF8A5A2C); disc(g, x, y, 8f, 8f, 6.8f, 0xFFD9A868); disc(g, x, y, 11.6f, 11.4f, 1.7f, 0xFF7A4E26);
-                int[] cols = {0xFFE5484D, 0xFFFFC857, 0xFF56D8FF, 0xFFB56BFF};
-                float[][] at = {{4.2f, 6.6f}, {7.6f, 3.6f}, {11.4f, 5.2f}, {4.6f, 11f}};
-                for (int k = 0; k < 4; k++) {
-                    float pu = (float) (Math.sin(s * 3f - k * 1.1f) * 0.5f + 0.5f);
-                    disc(g, x, y, at[k][0], at[k][1], 2.1f, al(70 + (int) (90 * pu), cols[k] & 0xFFFFFF));
-                    disc(g, x, y, at[k][0], at[k][1], 1.5f, cols[k]);
-                    r(g, x, y, Math.round(at[k][0]) - 1, Math.round(at[k][1]) - 1, 1, 1, al(120 + (int) (135 * pu), 0xFFFFFF));
+            case "dye" -> {                                                                             // a still paint palette; only a glint hops from dab to dab
+                disc(g, x, y, 8f, 8.2f, 7.3f, 0xFF5A3A1C); disc(g, x, y, 8f, 8f, 6.5f, 0xFFD9A868); disc(g, x, y, 8f, 7.2f, 5.2f, 0xFFE4BC80);
+                disc(g, x, y, 11.6f, 11.6f, 2.1f, 0xFF5A3A1C); disc(g, x, y, 11.6f, 11.6f, 1.3f, 0xFF2A1A0C);                  // the thumb hole
+                int[] cols = {0xFFE5484D, 0xFFFFC857, 0xFF56D8FF, 0xFF62E6A8, 0xFFB56BFF};
+                float[][] at = {{4.2f, 7f}, {5.6f, 3.9f}, {9.4f, 3.2f}, {12.2f, 6.2f}, {4.4f, 11.2f}};
+                for (int k = 0; k < 5; k++) {
+                    disc(g, x, y, at[k][0], at[k][1], 1.9f, Canvas.shade(cols[k], 0.62f)); disc(g, x, y, at[k][0], at[k][1], 1.5f, cols[k]);
                 }
+                int gk = (int) (s * 2.4f) % 5; r(g, x, y, Math.round(at[gk][0]) - 1, Math.round(at[gk][1]) - 1, 1, 1, 0xFFFFFFFF);
             }
             case "slayers" -> {                                                                         // a sword in a red aura: gleam up the blade, a slash arc, twinkling sparks
                 final String[] sw = {"............oooo", "...........oolbo", "..........oolbdo", ".........oolbdoo", "........oolbdoo.", ".......oolbdoo..", "...ooooolbdoo...", "...oggolbdoo....", "...ooggGdoo.....", "....oogGoo......", ".oooohoGGo......", ".oPPhoooGo......", ".oPPGo.ooo......", ".oPGGo..........", ".ooooo..........", "................"};
@@ -534,9 +533,9 @@ final class Icons {
                 }
                 r(g, x, y, 2, 14, 12, 1, glass);
                 r(g, x, y, 5, 9, 2, 1, al(150, 0xFFFFFF));
-                for (int k = 0; k < 3; k++) {
-                    float p = (s * 0.8f + k * 0.34f) % 1f; int by = Math.round(12f - p * 9.5f), bx = 6 + k * 2 + Math.round((float) Math.sin(s * 3f + k) * 0.6f);
-                    r(g, x, y, bx, by, 1, 1, al((int) (230 * (1f - p * 0.6f)), 0xFFFFFF));
+                for (int k = 0; k < 3; k++) {                                                                // bubbles rise inside the liquid only and fade before the top
+                    float p = (s * 0.7f + k * 0.34f) % 1f; int by = Math.round(13f - p * 4f), bx = 6 + k * 2 + Math.round((float) Math.sin(s * 3f + k) * 0.6f);
+                    r(g, x, y, bx, by, 1, 1, al((int) (200 * (1f - p)), 0xFFFFFF));
                 }
             }
             case "fishing" -> {                                                                         // a rod, a bobber with ripples, rolling waves and a fish leaping out

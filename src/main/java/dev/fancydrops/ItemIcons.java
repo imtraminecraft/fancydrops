@@ -112,8 +112,8 @@ public final class ItemIcons {
                 c.heads = fetchHead(vm.group(1));
                 c.face = c.heads[4];
             }
-            } catch (Exception ignored) {
-                // the next candidate id, the Hypixel item list, or finally the wiki PNG / gem
+            } catch (Exception e) {
+                if (skullFlag(id)) log(id + ": NEU '" + cand + "' failed: " + e);        // the next candidate id, the Hypixel item list, or finally the wiki PNG / gem; the log says why a head did not load
             }
         }
         if (c.heads == null && !flatFarm) {                       // second source: Hypixel's own item list knows every skull's skin

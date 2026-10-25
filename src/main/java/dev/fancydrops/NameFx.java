@@ -32,23 +32,19 @@ final class NameFx {
         base &= 0xFFFFFF;
         float ph;
         switch (fx) {
-            case "shimmer": {                                              // an ice-blue name with a bright band of light that sweeps over it
-                base = tint(0x8FB8FF, base);
+            case "shimmer": {                                              // a bright band of light sweeps over the name, which keeps its own colour
                 float pos = (t % 2400L) / 2400f * (n + 6) - 3, k = Math.max(0f, 1f - Math.abs(i - pos) / 1.6f);
-                return mix(mix(base, 0x000000, 0.22f), 0xFFFFFF, 0.9f * k);
+                return mix(mix(base, 0x000000, 0.12f), 0xFFFFFF, 0.9f * k);
             }
-            case "pulse":                                                   // the whole name breathes, soft pink to bright
-                base = tint(0xFF7FB8, base);
+            case "pulse":                                                   // the whole name breathes, dimmer to brighter, in its own colour
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 500.0);
-                return mix(mix(base, 0x000000, 0.3f), mix(base, 0xFFFFFF, 0.5f), ph);
-            case "wave":                                                    // waves of teal light and shade run along the letters
-                base = tint(0x3FD8C4, base);
+                return mix(mix(base, 0x000000, 0.28f), mix(base, 0xFFFFFF, 0.4f), ph);
+            case "wave":                                                    // waves of light and shade run along the letters
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 300.0 - i * 0.9);
-                return mix(mix(base, 0x000000, 0.4f), mix(base, 0xFFFFFF, 0.55f), ph);
-            case "glow":                                                    // a warm gold name that slowly breathes towards white from the left
-                base = tint(0xFFC93D, base);
+                return mix(mix(base, 0x000000, 0.3f), mix(base, 0xFFFFFF, 0.45f), ph);
+            case "glow":                                                    // a soft glow that slowly brightens from the left
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 900.0);
-                return mix(mix(base, 0x000000, 0.1f), 0xFFFFFF, n <= 1 ? 0.2f * ph : (0.12f + 0.4f * ph) * i / (n - 1) + 0.12f * ph);
+                return mix(base, 0xFFFFFF, n <= 1 ? 0.2f * ph : (0.1f + 0.35f * ph) * i / (n - 1) + 0.1f * ph);
             case "royal": {                                                 // liquid gold, with a white glint that runs along the name
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 240.0 - i * 0.9);
                 int c = mix(0xFFAA00, 0xFFF3A0, ph);
@@ -86,38 +82,38 @@ final class NameFx {
                 float pos = (t % 3200L) / 3200f * (n + 12) - 6, k = Math.max(0f, 1f - Math.abs(i - pos) / 3f);
                 return mix(c, 0xE8FFFF, 0.7f * k);
             }
-            case "fresh":                                                   // a mint-green name with a lighter green that drifts slowly along it
-                base = tint(0x57D68D, base);
+            case "fresh":                                                   // a lighter shade of the name drifts slowly along it
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 900.0 - i * 0.6);
-                return mix(base, 0xD8FFE6, 0.6f * ph);
-            case "rainbow": {                                               // the whole spectrum rolls along the name
-                float h = ((t / 1800f) + i * 0.09f) % 1f;
-                return java.awt.Color.HSBtoRGB(h, 0.55f, 1f) & 0xFFFFFF;
+                return mix(base, 0xFFFFFF, 0.5f * ph);
+            case "rainbow": {                                               // a rainbow glint runs along the name; the rest stays its own colour
+                float pos = (t % 2600L) / 2600f * (n + 8) - 4, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.4f);
+                int rb = java.awt.Color.HSBtoRGB(((t / 900f) + i * 0.12f) % 1f, 0.6f, 1f) & 0xFFFFFF;
+                return mix(base, rb, 0.9f * k);
             }
-            case "aurora": {                                                // northern lights: green, teal and violet curtains drifting through the letters
+            case "aurora": {                                                // soft green and violet light curtains drift over the name
                 float a1 = 0.5f + 0.5f * (float) Math.sin(t / 900.0 - i * 0.5), a2 = 0.5f + 0.5f * (float) Math.sin(t / 1400.0 + i * 0.35);
-                int c = mix(mix(0x3DFFA0, 0x35D8E8, a1), 0xB07CFF, 0.65f * a2 * a2);
-                return mix(c, 0xFFFFFF, 0.12f * a1);
+                int cur = mix(0x3DFFA0, 0xB07CFF, a2);
+                return mix(base, cur, 0.5f * a1 * a1);
             }
-            case "ember": {                                                 // glowing coals: deep red with flickers of orange and yellow rising through it
-                int c = mix(0xC8281A, 0xFF7A1F, 0.5f + 0.5f * (float) Math.sin(t / 380.0 - i * 0.8));
-                long st = t / 160L; float fl = (hash(5, st + i) % 100) / 100f;
-                if (fl > 0.82f) c = mix(c, 0xFFE27A, (fl - 0.82f) * 5f);
+            case "ember": {                                                 // warm flickers rise through the letters, and now and then one burns bright
+                float fl = 0.5f + 0.5f * (float) Math.sin(t / 380.0 - i * 0.8);
+                int c = mix(mix(base, 0x000000, 0.12f), 0xFF8A2E, 0.35f * fl);
+                long st = t / 160L; float h = (hash(5, st + i) % 100) / 100f;
+                if (h > 0.84f) c = mix(c, 0xFFE27A, (h - 0.84f) * 6f);
                 return c;
             }
-            case "frost": {                                                 // pale ice, a cold glint runs along it and a letter frosts over white
-                base = tint(0xA8DCFF, base);
+            case "frost": {                                                 // a cold glint runs along the name and a letter frosts over white
                 float pos = (t % 2800L) / 2800f * (n + 8) - 4, k = Math.max(0f, 1f - Math.abs(i - pos) / 1.8f);
-                int c = mix(mix(base, 0xE8F6FF, 0.35f), 0x7FC4FF, 0.5f + 0.5f * (float) Math.sin(t / 1100.0 - i * 0.6));
+                int c = mix(base, 0xBFE4FF, 0.25f + 0.2f * (float) Math.sin(t / 1100.0 - i * 0.6));
                 long st = t / 900L; float en = (float) Math.sin(Math.PI * ((t % 900L) / 900f));
                 if (n > 0 && hash(13, st) % n == i) c = mix(c, 0xFFFFFF, 0.9f * en);
                 return mix(c, 0xFFFFFF, 0.85f * k);
             }
-            case "neon": {                                                  // a sign: cyan and magenta trade places, with a flicker now and then
-                boolean alt = (i + (int) (t / 700L)) % 2 == 0;
-                int c = alt ? 0x35F0FF : 0xFF4FE0;
-                long cyc = t % 4200L; if (cyc < 120L && i % 3 == 0) c = mix(c, 0x201030, 0.7f);
-                return mix(c, 0xFFFFFF, 0.25f * (0.5f + 0.5f * (float) Math.sin(t / 260.0 - i)));
+            case "neon": {                                                  // letters light up in turn like a sign, and the whole name flickers now and then
+                float lit = 0.5f + 0.5f * (float) Math.sin(t / 420.0 - i * 1.1);
+                int c = mix(mix(base, 0x000000, 0.1f), mix(i % 2 == 0 ? 0x35F0FF : 0xFF4FE0, 0xFFFFFF, 0.3f), 0.55f * lit * lit);
+                if (t % 4200L < 120L && i % 3 == 0) c = mix(c, 0x000000, 0.55f);
+                return c;
             }
             default: return base;
         }
