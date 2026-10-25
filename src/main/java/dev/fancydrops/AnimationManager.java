@@ -240,8 +240,8 @@ public final class AnimationManager {
             Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 3.0f;
             return new float[]{3.0f / total, Scene.splitTime(p) + 0.12f, total};
         }
-        if (p.myth && p.tier == 2 && p.hasItem) {                                       // the RNG ritual: 5 s by default, 2 to 7 s by choice, same story as Normal but slower and with the night sky
-            Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 5.0f;
+        if (p.myth && p.tier == 2 && p.hasItem) {                                       // the RNG ritual: 6 s by default, 2 to 7 s by choice, same story as Normal but slower and with the night sky
+            Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 6.0f;
             return new float[]{Scene.length(p) / total, Scene.splitTime(p) + 0.12f, total};
         }
         boolean farm = farm0 || p.tier != 2;
@@ -255,7 +255,7 @@ public final class AnimationManager {
     /** How long an animation lasts by default, in real seconds, for the length slider. */
     public static float naturalSecs(String key, FancyConfig c) {
         if (key.equals("myth") || key.equals("mythnothing")) return 3.0f;
-        if (key.equals("mythrng")) return 5.0f;
+        if (key.equals("mythrng")) return 6.0f;
         c.fixChops();
         int t = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
         Scene.Params p = new Scene.Params(t, !key.endsWith("nothing"));

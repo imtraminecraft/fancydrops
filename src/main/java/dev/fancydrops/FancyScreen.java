@@ -1326,7 +1326,7 @@ public class FancyScreen extends Screen {
     private Row chatPrevRow(String[] chans, String sample, int ev) {
         Row cp = new Row(); cp.kind = CHATPREV; cp.noSearch = true; cp.title = String.join(",", chans) + "|" + ev; cp.sub = sample;
         int h = 14;
-        for (String ch : chans) h += new PrevMsg(ch, ch.equals("ALL") ? DropListener.adv(sample) : sample, cw - 76).lines.size() * 11 + 6;
+        for (String ch : chans) h += new PrevMsg(ch, ch.equals("ALL") ? DropListener.adv(sample) : sample, cw - 24).lines.size() * 11 + 6;
         cp.h = h; return cp;
     }
 
@@ -1339,7 +1339,7 @@ public class FancyScreen extends Screen {
         for (int yy = 0; yy < r.h; yy++) { float f = yy / (float) Math.max(1, r.h - 1); int gc = Chat.GRADIENT[Math.min(Chat.GRADIENT.length - 1, (int) (f * (Chat.GRADIENT.length - 1)))]; g.fill(r.x, r.y + yy, r.x + 3, r.y + yy + 1, 0xFF000000 | gc); }
         g.fill(r.x + 3, r.y + 1, r.x + r.w - 1, r.y + 2, 0x22FFFFFF);
         rout(g, r.x, r.y, r.w, r.h, 0x33FFFFFF);
-        int y = r.y + 7, maxW = r.w - 76; double cps = 30, off = 0;
+        int y = r.y + 7, maxW = r.w - 24; double cps = 30, off = 0;
         for (int mi = 0; mi < chans.length; mi++) {
             String ch = chans[mi]; String msg = ch.equals("ALL") ? DropListener.adv(r.sub) : r.sub;
             PrevMsg m = new PrevMsg(ch, msg, maxW);
@@ -1349,7 +1349,8 @@ public class FancyScreen extends Screen {
             if (mi > 0) g.fill(r.x + 10, y - 4, r.x + r.w - 10, y - 3, 0x18FFFFFF);
             String tag = ch.equals("ALL") ? "Public" : ch.equals("COOP") ? "Co-op" : "Party";
             int tw = Gfx.w(font, tag);
-            Gfx.text(g, font, tag, r.x + r.w - tw - 8, y, 0x66FFFFFF);
+            boolean tagFits = Gfx.w(font, m.full.substring(m.lines.get(0)[0], m.lines.get(0)[1])) < r.w - tw - 30;           // the tag only shows when the first line leaves room for it
+            if (tagFits) Gfx.text(g, font, tag, r.x + r.w - tw - 8, y, 0x66FFFFFF);
             for (int[] ln : m.lines) {
                 g.fill(r.x + 7, y - 1, r.x + r.w - 8, y + 9, 0x30000000);
                 int x = r.x + 10, i = ln[0];
@@ -1537,20 +1538,45 @@ public class FancyScreen extends Screen {
         return false;
     }
     /** The building site: a fixed, tidy scene on the ground line. Nothing is interactive. */
-    private void site(GuiGraphicsExtractor g, Row r, float sec, int mx, int my, int pillX, int pillY, int pillW) {
-        int gy = r.y + r.h - 12, pl = pillX - r.x, pr = pl + pillW;
+    private void site(GuiGraphicsExtractor g, Row r, float sec) {
+        int gy = r.y + r.h - 12, mid = r.w / 2;
         Gfx.push(g); Gfx.translate(g, r.x + 8, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
         Gfx.push(g); Gfx.translate(g, r.x + r.w - 30, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
-        skyline(g, r, sec, gy, pl, pr);
         g.fill(r.x + 6, gy, r.x + r.w - 6, gy + 1, 0x33FFFFFF);                                    // the ground line everything stands on
         g.fill(r.x + 6, gy + 1, r.x + r.w - 6, gy + 3, 0xFF211C10);
-        int laneL = 12, laneR = pl - 18;
-        if (laneR - laneL >= 84) build(g, r, sec, gy, laneL, laneR);                               // a little wall goes up brick by brick... then it all comes down
-        int rx = r.w - 44;                                                                          // right: the crane, then a pallet with a crate, then a cone
-        if (rx > pr + 12) { int ax = r.x + rx + 12, ay = gy - 9; g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); }
-        rx -= 6;
-        if (rx - 20 > pr + 12) { rx -= 20; int ax = r.x + rx, ay = gy - 6; g.fill(ax, ay, ax + 20, ay + 2, 0xFFC8964E); g.fill(ax, ay + 2, ax + 20, ay + 4, 0xFFB0803E); g.fill(ax, ay + 4, ax + 20, ay + 6, 0xFFC8964E); g.fill(ax + 4, ay - 7, ax + 14, ay, 0xFFD03A30); g.fill(ax + 4, ay - 7, ax + 14, ay - 6, 0xFFFF6A5A); g.fill(ax + 8, ay - 5, ax + 10, ay - 3, 0xFFFFD84A); rx -= 8; }
-        if (rx - 12 > pr + 12) { Gfx.push(g); Gfx.translate(g, r.x + rx - 13, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); }
+        int laneL = 12, laneR = mid - 50;
+        if (laneR - laneL >= 84) build(g, r, sec, gy, laneL, laneR);                               // left: a little house goes up brick by brick... then it all comes down
+        int rx = r.w - 44;                                                                          // right edge: barrel, crate on a pallet, cone
+        { int ax = r.x + rx + 12, ay = gy - 9; g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); }
+        { int ax = r.x + rx - 14, ay = gy - 6; g.fill(ax, ay, ax + 20, ay + 2, 0xFFC8964E); g.fill(ax, ay + 2, ax + 20, ay + 4, 0xFFB0803E); g.fill(ax, ay + 4, ax + 20, ay + 6, 0xFFC8964E); g.fill(ax + 4, ay - 7, ax + 14, ay, 0xFFD03A30); g.fill(ax + 4, ay - 7, ax + 14, ay - 6, 0xFFFF6A5A); g.fill(ax + 8, ay - 5, ax + 10, ay - 3, 0xFFFFD84A); }
+        Gfx.push(g); Gfx.translate(g, r.x + rx - 36, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g);
+        int bx = r.x + mid + 62;                                                                    // right of centre: three builders on a bench, chatting over a cuppa
+        if (r.x + rx - 46 - bx >= 52) bench(g, bx, gy, sec);
+    }
+
+    /** Three builders sitting on a plank, talking in turn: the speaker nods and gets a bubble of moving dots, one holds a steaming cup. */
+    private static void bench(GuiGraphicsExtractor g, int x, int gy, float sec) {
+        int by = gy - 9;
+        g.fill(x - 2, by, x + 50, by + 3, 0xFFB0803E); g.fill(x - 2, by, x + 50, by + 1, 0xFFD0A060); g.fill(x + 2, by + 3, x + 4, gy, 0xFF6A4A24); g.fill(x + 43, by + 3, x + 45, gy, 0xFF6A4A24);
+        int[] hat = {0xFFFFD020, 0xFFF4F4F4, 0xFFFF9A20}, vest = {0xFFF08A1C, 0xFF9AD83A, 0xFFF08A1C}, skin = {0xFFE8B98A, 0xFFC8946A, 0xFFF0C8A0};
+        int talker = ((int) (sec / 1.7f)) % 3;
+        for (int i = 0; i < 3; i++) {
+            int px = x + 4 + i * 15, nod = (i == talker && ((int) (sec * 6f)) % 2 == 0) ? 1 : 0, lean = i == 1 ? 0 : 0, hy = by - 18 + nod;
+            g.fill(px + 1, hy, px + 7, hy + 2, hat[i]); g.fill(px, hy + 2, px + 8, hy + 3, hat[i]);                                  // hard hat
+            g.fill(px + 1, hy + 3, px + 7, hy + 7, skin[i]); g.fill(px + (i == 2 ? 1 : 5), hy + 4, px + (i == 2 ? 2 : 6), hy + 5, 0xFF2A1A10);   // face, one eye (turned toward its neighbour)
+            if (i == talker && ((int) (sec * 8f)) % 2 == 0) g.fill(px + (i == 2 ? 1 : 4), hy + 6, px + (i == 2 ? 3 : 6), hy + 7, 0xFF7A3A2A);       // mouth moves
+            g.fill(px + 1, hy + 7, px + 7, by, vest[i]); g.fill(px + 1, hy + 10, px + 7, hy + 11, 0xFFF4F4C8);                       // vest and its stripe
+            g.fill(px + 1, by - 3, px + 9, by, 0xFF2E4A8A); g.fill(px + 7, by, px + 10, by + 6, 0xFF263E78); g.fill(px + 7, by + 6, px + 11, by + 7, 0xFF3A2A1A);   // thighs out, shins down, boot
+            if (i == 1) { g.fill(px + 6, by - 9, px + 10, by - 5, 0xFFF4F4F4); g.fill(px + 10, by - 8, px + 11, by - 6, 0xFFF4F4F4); g.fill(px + 6, by - 10, px + 10, by - 9, 0xFF6A4A24);   // a cup
+                for (int st = 0; st < 2; st++) { float u = (sec * 0.8f + st * 0.5f) % 1f; g.fill(px + 7 + st * 2, by - 12 - Math.round(u * 7), px + 8 + st * 2, by - 11 - Math.round(u * 7), Gfx.argb(Math.round(150 * (1f - u)), 0xFFFFFF)); } }
+            else { int sw = (i == talker) ? (((int) (sec * 5f)) % 2) : 0; g.fill(px + 6, by - 8 - sw * 2, px + 8, by - 4, skin[i]); }                                  // a free hand, waving when it talks
+            if (i == talker) {                                                                                                       // speech bubble with dots that rise one after another
+                int bxx = px - 1, byy = hy - 12;
+                g.fill(bxx, byy, bxx + 14, byy + 8, 0xFFF4F4F4); g.fill(bxx + 5, byy + 8, bxx + 7, byy + 10, 0xFFF4F4F4);
+                int ph = ((int) (sec * 4f)) % 4;
+                for (int d = 0; d < 3; d++) g.fill(bxx + 2 + d * 4, byy + 3 - (ph == d + 1 ? 1 : 0), bxx + 4 + d * 4, byy + 5 - (ph == d + 1 ? 1 : 0), 0xFF3A3A44);
+            }
+        }
     }
 
     /** The construction loop: a worker and a crane raise a little brick house, slowly. The last load swings loose, the house cracks and falls, the worker shrugs, and it starts again. */
@@ -1587,7 +1613,7 @@ public class FancyScreen extends Screen {
             if (local < PER * 0.6f) {                                                                  // still hanging from the hook, being lowered
                 float u = local / (PER * 0.6f); u = u * u; int yy = Math.round(top + 8 + (by - top - 8) * u);
                 int sx = Math.round((hookX0 - w / 2) + (bx - (hookX0 - w / 2)) * u);
-                g.fill(hookX0, top + 3, hookX0 + 1, yy, 0xFFB0B0B8); brick(g, sx, yy, w, h, 0, roof);
+                brick(g, sx, yy, w, h, 0, roof);
             } else brick(g, bx + off, by, w, h, 0, roof);
         }
         if (ph < fallT) {                                                                              // door and window appear as the walls rise
@@ -1654,16 +1680,15 @@ public class FancyScreen extends Screen {
         else { g.fill(x, y, x + 5, y + 2, col); g.fill(x + 4, y + 2, x + 6, y + 5, col); g.fill(x + 2, y + 4, x + 5, y + 6, col); g.fill(x + 2, y + 6, x + 4, y + 7, col); g.fill(x + 2, y + 8, x + 4, y + 10, col); }
     }
     /** The skyline behind the site: dark blocks with a few lit windows and stars above, left and right of the "Coming Soon" tag. */
-    private static void skyline(GuiGraphicsExtractor g, Row r, float sec, int gy, int pl, int pr) {
+    private static void skyline(GuiGraphicsExtractor g, Row r, float sec, int gy) {
         for (int i = 0; i < 22; i++) {                                                                  // stars
             float h1 = ((i * 2654435761L) & 0xFFFF) / 65536f, h2 = ((i * 40503L + 7) & 0xFFFF) / 65536f; int sx = r.x + 8 + Math.round(h1 * (r.w - 16)), sy = r.y + 12 + Math.round(h2 * 40);
-            if (sx > pl - 6 && sx < pr + 6 && sy > r.y + 50) continue; float tw = 0.4f + 0.6f * (float) Math.abs(Math.sin(sec * (0.8f + h1) + i));
+            float tw = 0.4f + 0.6f * (float) Math.abs(Math.sin(sec * (0.8f + h1) + i));
             g.fill(sx, sy, sx + 1, sy + 1, Gfx.argb(Math.round(150 * tw), 0xFFF2C0));
         }
         int x = r.x + 6, n = 0;
         while (x < r.x + r.w - 12) {
             int w = 12 + (n * 7) % 11, h = 16 + (n * 13) % 22; n++;
-            if (x + w > pl - 4 && x < pr + 4) { x += w + 2; continue; }
             g.fill(x, gy - h, x + w, gy, 0xFF1F1B12); g.fill(x, gy - h, x + w, gy - h + 1, 0xFF2C2618);
             for (int wy = gy - h + 4; wy < gy - 4; wy += 6) for (int wx2 = x + 2; wx2 < x + w - 3; wx2 += 4) {
                 int k = (wx2 * 31 + wy * 17 + n) % 7; boolean on = k < 2 && (int) (sec * 0.3f + k + wy) % 3 != 0;
@@ -2198,7 +2223,7 @@ public class FancyScreen extends Screen {
             case ANIMATIONS -> {
                 boolean all = searching; int sub = curSub();
                 if (!searching) {
-                    Row back = row(0, "fd:animations", "Animations", "Back to all the scenes", Ui.ACCENT);
+                    Row back = row(0, "fd:back", "Animations", "Back to all the scenes", Ui.ACCENT);
                     back.noSearch = true; back.click = () -> { subSel[Tab.ANIMATIONS.ordinal()] = -1; scroll = 0; tabChanged = System.currentTimeMillis(); };
                     rows.add(back);
                 }
@@ -2216,7 +2241,7 @@ public class FancyScreen extends Screen {
                 srcList.clear();
                 if (searching) { soundMaster(rows, c); soundCat = 0; soundsPage(rows, c); }
                 else {
-                    Row back = row(0, "fd:sounds", "Sounds", "Back to the volume and all the animation sounds", Ui.ACCENT);
+                    Row back = row(0, "fd:back", "Sounds", "Back to the volume and all the animation sounds", Ui.ACCENT);
                     back.noSearch = true; back.click = () -> { subSel[Tab.SOUNDS.ordinal()] = -1; waveKey = null; SoundFx.stopPreviews(); scroll = 0; tabChanged = System.currentTimeMillis(); };
                     rows.add(back);
                     if (ORD[Math.max(0, Math.min(6, curSub()))] != 3) {
@@ -2233,7 +2258,7 @@ public class FancyScreen extends Screen {
                     new int[]{0xFF6C86FF, 0xFF7BE05A, 0xFFFFC857, 0xFF8A8F9E}, null, () -> idx(CHANNELS, c.channel), i -> c.channel = CHANNELS[i]));
                 if (c.channel.equals("OFF") && !searching) break;                    // announcements off: nothing else to set up
                 if (!c.channel.equals("ALL")) {
-                    Row aa = row(0, "fd:chan_public", "Also tell public chat", "RNG drops only", 0xFFFFC857);
+                    Row aa = row(0, "fd:chan_public", "Also post in public chat", "RNG drops with Chat Alert on", 0xFFFFC857);
                     aa.ctls.add(tog(() -> c.alsoAll, v -> c.alsoAll = v, 0xFFD98A1F));
                     rows.add(aa);
                 }
@@ -3208,7 +3233,7 @@ public class FancyScreen extends Screen {
             "fd:mytho|Mythological|Ritual sounds", "fd:slayers|Slayers|Boss sounds", "fd:dye|Dye|Paint sounds", "fd:farm|Farming|Scythe sounds", "fd:experiments|Experiments|Book sounds", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
         {},
         {"fd:settings", "Settings", "How the menu looks, where prices come from and how drop data is loaded. Position, size and text for each animation now live under Animations.",
-            "fd:glass|Menu|Look and feel", "fd:sparkle|Cosmetics|Names, auras, range", "fd:coin|Prices|Bazaar and Auction House", "fd:refresh|Drop Data|Reload data"},
+            "fd:menu|Menu|Look and feel", "fd:cosmetics|Cosmetics|Names, auras, range", "fd:coin|Prices|Bazaar and Auction House", "fd:refresh|Drop Data|Reload data"},
         {"fd:stats", "Stats", "Your profit, kills and drops: totals, profit per hour, this session and what you've found in every category.",
             "fd:stats|Overview|Totals", "fd:mytho|Mythological|Found drops", "fd:slayers|Slayers|Per boss", "fd:dye|Dye|Found dyes", "fd:farm|Farming|Found drops", "fd:experiments|Experiments|Found drops", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122", "fd:clock|History|This session"},
         {},
@@ -3737,6 +3762,7 @@ public class FancyScreen extends Screen {
                 int cyi = r.y + 32 + bob;
                 if (r.kind == HERO) { int shw = 10 - Math.abs(bob) * 2; g.fill(mid - shw, r.y + 49, mid + shw, r.y + 51, 0x30000000); }   // its shadow breathes with it
                 if (r.kind == PANEL) {
+                    skyline(g, r, sec, r.y + r.h - 12);
                     tape(g, r.x + 3, r.y + 3, r.w - 6, STILL ? 0 : (int) ((nw / 60L) % 16)); tape(g, r.x + 3, r.y + r.h - 9, r.w - 6, STILL ? 0 : 16 - (int) ((nw / 60L) % 16));
                 } else for (int i = 0; i < 5; i++) {                                    // sparkles orbiting the icon
                     double an = sec * 1.3 + i * Math.PI * 2 / 5; int sx2 = mid + (int) (Math.cos(an) * 30), sy2 = cyi + (int) (Math.sin(an) * 12);
@@ -3744,15 +3770,14 @@ public class FancyScreen extends Screen {
                 }
                 if (r.iconId != null) ItemIcons.draw(g, r.iconId, r.icon, mid, cyi, 1.8f); else if (Icons.has(r.icon)) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Icons.draw(g, r.icon, 0, 0, nw); Gfx.pop(g); }
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
-                int wy = r.y + 70; for (String ln : wrap(r.sub, r.w - 120)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; }
                 if (r.kind == HERO) continue;
-                String wt = "Coming Soon", tm = "TM"; int tmw = Math.round(Gfx.w(font, tm) * 0.6f) + 1, wtw = Gfx.w(font, wt) + tmw, pw2 = wtw + 20, hx = mid - pw2 / 2, hy = r.y + r.h - 34;
+                String wt = "Coming Soon", tm = "TM"; int tmw = Math.round(Gfx.w(font, tm) * 0.6f) + 1, wtw = Gfx.w(font, wt) + tmw, pw2 = wtw + 20, hx = mid - pw2 / 2, hy = r.y + 68;
                 int gl = 170 + (int) (80 * Math.sin(sec * 3));
                 pill(g, hx, hy, pw2, 16, 0xFF1A1710); rout(g, hx, hy, pw2, 16, Gfx.argb(gl, 0xFFC857));
                 int tc = Gfx.argb(Math.min(255, gl + 40), 0xFFC857);
                 Gfx.text(g, font, wt, hx + 10, hy + 4, tc);
                 Gfx.push(g); Gfx.translate(g, hx + 10 + Gfx.w(font, wt) + 1, hy + 3); Gfx.scale(g, 0.6f); Gfx.text(g, font, tm, 0, 0, tc); Gfx.pop(g);
-                site(g, r, sec, mx, my, hx, hy, pw2);
+                site(g, r, sec);
                 continue;
             }
             if (r.kind == TEXT) {                                                   // plain text: a heading and its paragraph, no card

@@ -1,3 +1,13 @@
+## 0.4.9
+- Changed: the construction page shows "Coming Soon" where the old text was, the crane no longer draws a line to the bricks, and three builders chat on a bench at the right
+- Changed: the RNG item stays 1 s longer (RNG default length is 6 s) and a head turns to face you before the scene ends. Flat items sway softly after their flips
+- Fixed: Mythos Fragment, Myth the Fish and the other skull drops (Brain Food, Cretan Urn, Crochet Tiger Plushie, Dwarf Turtle Shelmet, Fateful Stinger, Manti-core, Minos Relic, Washed-up Souvenir, Mythological Dye) load their real NEU head. Mythological Dye uses the NEU id DYE_MYTHOLOGICAL
+- Changed: coin drops use the Total profit coin in the list and in the animation
+- Changed: the chat preview keeps each message on one line (no wrapped leftover)
+- Changed: new animated Menu icon; Settings > Cosmetics uses the Cosmetics button icon
+- Fixed: the Back rows in Animations and Sounds use the back arrow
+- Changed: "Also post in public chat" says it only covers RNG drops with Chat Alert on
+
 ## 0.4.8
 - Added: each creature (Minos Hunter and the rest) is listed under Mythological Mobs in the sidebar and opens on its own
 - Fixed: the curved corners of the bars now match the bar opacity (the scene is cut by the same curve)

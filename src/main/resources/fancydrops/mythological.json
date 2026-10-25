@@ -1,5 +1,5 @@
 {
- "v": 6,
+ "v": 7,
  "sources": [
   {
    "id": "minos_hunter",
@@ -33,13 +33,14 @@
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 1,000,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 0
@@ -71,17 +72,19 @@
       0.2,
       0.3,
       0.4
-     ]
+     ],
+     "skull": true
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 1,000,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 0
@@ -113,17 +116,19 @@
       0.3,
       0.4,
       0.5
-     ]
+     ],
+     "skull": true
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 1,000,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 1
@@ -155,17 +160,19 @@
       0.3,
       0.4,
       0.5
-     ]
+     ],
+     "skull": true
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 1,000,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 1
@@ -201,13 +208,14 @@
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 500,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 2
@@ -239,17 +247,19 @@
       0.4,
       0.5,
       0.6
-     ]
+     ],
+     "skull": true
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 500,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 2
@@ -286,13 +296,14 @@
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 250,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 3
@@ -324,17 +335,19 @@
       0.02,
       0.03,
       0.04
-     ]
+     ],
+     "skull": true
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 250,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 3
@@ -375,17 +388,19 @@
       0,
       0.25,
       0.5
-     ]
+     ],
+     "skull": true
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 50,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 4
@@ -430,13 +445,14 @@
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 50,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 4
@@ -469,7 +485,8 @@
      "odds": "",
      "chance": "1 in 200",
      "rank": 1,
-     "untradeable": false
+     "untradeable": false,
+     "skull": true
     },
     {
      "name": "Manti-core",
@@ -478,17 +495,19 @@
      "odds": "",
      "chance": "1 in 500",
      "rank": 2,
-     "untradeable": false
+     "untradeable": false,
+     "skull": true
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 10,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 5
@@ -534,13 +553,14 @@
     },
     {
      "name": "Mythological Dye",
-     "id": "MYTHOLOGICAL_DYE",
+     "id": "DYE_MYTHOLOGICAL",
      "icon": "light_blue_dye",
      "odds": "",
      "chance": "1 in 10,000",
      "rank": 3,
      "untradeable": false,
-     "img": "Mythological_Dye"
+     "img": "Mythological_Dye",
+     "skull": true
     }
    ],
    "minPet": 5

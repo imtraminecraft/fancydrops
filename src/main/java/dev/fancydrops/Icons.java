@@ -773,6 +773,13 @@ final class Icons {
                 r(g, x, y, 2, 2, 12, 12, 0xFFF4F4F8); r(g, x, y, 2, 13, 12, 1, 0xFFB8BECC);
                 for (int pp : PIPS[v]) r(g, x, y, 4 + (pp % 3) * 3, 4 + (pp / 3) * 3, 2, 2, v == 0 ? 0xFFE5484D : 0xFF202432);
             }
+            case "menu" -> {                                                                            // Menu: a window with a title bar; a bright row slides down its list and a sparkle follows
+                float u = (s * 0.7f) % 1f; int row = Math.min(2, (int) (u * 3f));
+                r(g, x, y, 1, 1, 14, 14, 0xFF1B2036); r(g, x, y, 1, 1, 14, 1, 0xFF6C86FF); r(g, x, y, 1, 14, 14, 1, 0xFF2C3556); r(g, x, y, 1, 1, 1, 14, 0xFF3A4670); r(g, x, y, 14, 1, 1, 14, 0xFF3A4670);
+                r(g, x, y, 2, 2, 12, 3, 0xFF2E3A66); r(g, x, y, 3, 3, 1, 1, 0xFFFF6A6A); r(g, x, y, 5, 3, 1, 1, 0xFFFFC857); r(g, x, y, 7, 3, 1, 1, 0xFF62E6A8);
+                for (int k = 0; k < 3; k++) { int ry = 6 + k * 3; boolean on = k == row; r(g, x, y, 3, ry, on ? 10 : 7 - k, 2, on ? 0xFF6C86FF : 0xFF3A4670); if (on) { r(g, x, y, 3, ry, 10, 1, 0xFFA8B8FF); r(g, x, y, 11, ry, 2, 2, 0xFFFFFFFF); } }
+                if ((int) (s * 6f) % 2 == 0) spark(g, x, y, 13, 6 + row * 3, 1, 0xFFFFFFFF);
+            }
             case "coin" -> {                                                                            // a coin with a glint sweeping over it
                 disc(g, x, y, 7.5f, 7.5f, 5.6f, 0xFFFFC857); disc(g, x, y, 7.5f, 7.5f, 4f, 0xFFE0A21B); r(g, x, y, 7, 5, 2, 6, 0xFFFFE9A0);
                 int gx = Math.round(((s * 1.2f) % 1.6f) * 9f) - 2; g.enableScissor(x + 2, y + 2, x + 14, y + 14); for (int j = 0; j < 12; j++) r(g, x, y, gx - j / 2, 2 + j, 2, 1, 0x99FFFFFF); g.disableScissor();

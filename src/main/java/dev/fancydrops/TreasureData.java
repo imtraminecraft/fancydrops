@@ -84,6 +84,7 @@ final class TreasureData {
         SlayerData.Drop d = new SlayerData.Drop();
         d.name = e[0]; d.id = e[1].isEmpty() ? e[2].toUpperCase(java.util.Locale.ROOT) : e[1]; d.icon = e[2].equals("player_head") ? "player_head" : e[2]; d.chance = perBurrow(FancyConfig.get().mythErudite ? e[5] : e[4], e[3]);
         long c = coins(e[0]);
+        if (c > 0) { d.id = "@COIN"; d.icon = "fd:coin"; }                              // coins use the Total profit coin everywhere
         d.rank = c > 0 ? (c >= 500_000 ? 2 : c >= 25_000 ? 1 : 0) : e[0].startsWith("Myth the") ? 3 : e[0].startsWith("Braided") ? 2 : 1;
         return d;
     }

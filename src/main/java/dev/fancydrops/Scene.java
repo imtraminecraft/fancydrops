@@ -65,7 +65,7 @@ final class Scene {
     static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? (sceneN(p) ? (p.treasure ? 2.0f : 1.85f) : impact(p, Math.max(0, p.chops - 1)) + 0.6f) : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.pest ? 0.32f : p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
     /** 0 = plain sword (first two slices of every scene); 1 = dramatic (Rare Drop); 2 = super dramatic (RNG Drop). */
     static int drama(Params p, int k) { return k < 2 ? 0 : p.tier; }
-    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (sceneN(p) ? 1.15f : p.tier == 2 ? 5.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
+    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (sceneN(p) ? 1.15f : p.tier == 2 ? 6.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
 
     private static float cl(float v) { return Math.max(0f, Math.min(1f, v)); }
     private static float easeOut(float x) { x = cl(x); return 1 - (1 - x) * (1 - x) * (1 - x); }
@@ -735,6 +735,14 @@ final class Scene {
         double dx = side * TWIN_DX * easeOut(uu);
         double yy = itemY(uu) + (ic.itemBob ? 1.6 * ic.itemBobAmp : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) + (side != 0 ? 14 * Math.sin(Math.min(1f, Math.max(0f, uu)) * Math.PI) : 0);     // twin: each item flies out in an arc
         double spin = epic ? rngAngle(us, spinK, ic.itemSpin) * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side) : 2.8 * us * ic.itemSpin * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side);
+        if (epic && skull && side == 0 && p.hasItem) {                                                   // the head turns, then eases round to face you before the scene ends
+            float len = length(p), st = len - 1.7f;
+            if (t > st) {
+                float rate = 3.3f * Math.min(1f, spinK) * Math.max(0.2f, ic.itemSpin), sgn = ic.itemSpinRev ? -1f : 1f;
+                float a0 = rngAngle(us - (t - st), spinK, ic.itemSpin), M = (float) (Math.ceil((a0 + rate) / (2 * Math.PI)) * 2 * Math.PI), f = easeIO((t - st) / 1.1f);
+                spin = (rngAngle(us, spinK, ic.itemSpin) * (1f - f) + M * f) * sgn;
+            }
+        }
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
         float pulseG = 0.75f + 0.25f * (float) Math.sin(us * 3.2);
@@ -769,7 +777,8 @@ final class Scene {
         if (slab) slabItem(spr, sx, sy, k, ang, al, shine, style, us, col);
         else {
         float flip = us < 0.8f ? (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * us))) : 1f;      // two quick coin flips that settle
-        float xs = Math.max(0.06f, Math.abs(flip));
+        float sway = us < 0.8f ? 0f : 0.1f * (float) Math.sin((us - 0.8f) * 1.7f);
+        float xs = Math.max(0.06f, Math.abs(flip) * (1f - Math.abs(sway)));                        // after the flips it breathes gently, never a dead flat sprite
         for (int y = 0; y < H; y++) {
             float v = (y - sy) / k + 8f;
             if (v < 0 || v >= 16) continue;

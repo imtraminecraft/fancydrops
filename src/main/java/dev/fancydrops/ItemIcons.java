@@ -70,6 +70,7 @@ public final class ItemIcons {
             Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = bookSprite();
             ic.data = b; ic.ready = true; return;
         }
+        if ("@COIN".equals(id)) { Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = coinSprite(); ic.data = b; ic.ready = true; return; }
         if ("@seed".equals(FarmData.imgOf(id))) {                  // Seasoning is not a real item: a few seeds
             Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = seedSprite();
             ic.data = b; ic.ready = true; return;
@@ -168,6 +169,20 @@ public final class ItemIcons {
         return px;
     }
 
+    /** The Total profit coin as a picture: a gold disc with a darker inner ring and a light bar. */
+    static int[] coinSprite() {
+        int[] px = new int[256];
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
+            double d = Math.hypot(x - 7.5, y - 7.5);
+            int c = 0;
+            if (d <= 5.6) c = d > 4.0 ? 0xFFFFC857 : (x >= 7 && x <= 8 && y >= 5 && y <= 10) ? 0xFFFFE9A0 : 0xFFE0A21B;
+            else if (d <= 6.6) c = 0xFFA86E12;
+            if (c != 0 && d <= 5.6 && x + y <= 9 && d > 4.0) c = 0xFFFFE08A;
+            px[y * 16 + x] = c;
+        }
+        return px;
+    }
+
     static int[] bookSprite() {
         int[] p = new int[256];
         for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
@@ -186,7 +201,10 @@ public final class ItemIcons {
 
     private static boolean skullFlag(String id) {
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).endsWith("_DYE")) return true;          // every SkyBlock dye is a player head
+        if (id != null && id.toUpperCase(java.util.Locale.ROOT).startsWith("DYE_")) return true;
+        if (TreasureData.headArt(id)) return true;
         for (SlayerData.Slayer s : SlayerData.ALL) for (SlayerData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
+        for (SlayerData.Slayer s : MythData.ALL) for (SlayerData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
         return false;
     }
 
