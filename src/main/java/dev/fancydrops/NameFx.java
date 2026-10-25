@@ -90,6 +90,35 @@ final class NameFx {
                 base = tint(0x57D68D, base);
                 ph = 0.5f + 0.5f * (float) Math.sin(t / 900.0 - i * 0.6);
                 return mix(base, 0xD8FFE6, 0.6f * ph);
+            case "rainbow": {                                               // the whole spectrum rolls along the name
+                float h = ((t / 1800f) + i * 0.09f) % 1f;
+                return java.awt.Color.HSBtoRGB(h, 0.55f, 1f) & 0xFFFFFF;
+            }
+            case "aurora": {                                                // northern lights: green, teal and violet curtains drifting through the letters
+                float a1 = 0.5f + 0.5f * (float) Math.sin(t / 900.0 - i * 0.5), a2 = 0.5f + 0.5f * (float) Math.sin(t / 1400.0 + i * 0.35);
+                int c = mix(mix(0x3DFFA0, 0x35D8E8, a1), 0xB07CFF, 0.65f * a2 * a2);
+                return mix(c, 0xFFFFFF, 0.12f * a1);
+            }
+            case "ember": {                                                 // glowing coals: deep red with flickers of orange and yellow rising through it
+                int c = mix(0xC8281A, 0xFF7A1F, 0.5f + 0.5f * (float) Math.sin(t / 380.0 - i * 0.8));
+                long st = t / 160L; float fl = (hash(5, st + i) % 100) / 100f;
+                if (fl > 0.82f) c = mix(c, 0xFFE27A, (fl - 0.82f) * 5f);
+                return c;
+            }
+            case "frost": {                                                 // pale ice, a cold glint runs along it and a letter frosts over white
+                base = tint(0xA8DCFF, base);
+                float pos = (t % 2800L) / 2800f * (n + 8) - 4, k = Math.max(0f, 1f - Math.abs(i - pos) / 1.8f);
+                int c = mix(mix(base, 0xE8F6FF, 0.35f), 0x7FC4FF, 0.5f + 0.5f * (float) Math.sin(t / 1100.0 - i * 0.6));
+                long st = t / 900L; float en = (float) Math.sin(Math.PI * ((t % 900L) / 900f));
+                if (n > 0 && hash(13, st) % n == i) c = mix(c, 0xFFFFFF, 0.9f * en);
+                return mix(c, 0xFFFFFF, 0.85f * k);
+            }
+            case "neon": {                                                  // a sign: cyan and magenta trade places, with a flicker now and then
+                boolean alt = (i + (int) (t / 700L)) % 2 == 0;
+                int c = alt ? 0x35F0FF : 0xFF4FE0;
+                long cyc = t % 4200L; if (cyc < 120L && i % 3 == 0) c = mix(c, 0x201030, 0.7f);
+                return mix(c, 0xFFFFFF, 0.25f * (0.5f + 0.5f * (float) Math.sin(t / 260.0 - i)));
+            }
             default: return base;
         }
     }

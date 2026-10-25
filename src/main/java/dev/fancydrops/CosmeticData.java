@@ -34,6 +34,11 @@ final class CosmeticData {
         new Def("snow", "Snow", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF9AD8FF),
         new Def("star", "Star", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFFD36B),
         new Def("ghost", "Ghost", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFC9D2FF),
+        new Def("eye", "Watcher", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF56D8FF),
+        new Def("rocket", "Rocket", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFF6B6B),
+        new Def("cat", "Cat", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFF0A050),
+        new Def("rainbow", "Rainbow", Line.RARE, Kind.NAME, RARE_HOW, 0xFFFF9AC8),
+        new Def("aurora", "Aurora", Line.RARE, Kind.NAME, RARE_HOW, 0xFF62E6C8),
         new Def("shimmer", "Shimmer", Line.RARE, Kind.NAME, RARE_HOW, 0xFFBFD4FF),
         new Def("pulse", "Pulse", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFF9AC8, "beta"),
         new Def("wave", "Ripple", Line.RARE, Kind.NAME, RARE_HOW, 0xFF7FE0D0),
@@ -59,6 +64,14 @@ final class CosmeticData {
         new Def("collector", "Collector", Line.FREE, Kind.SUFFIX, "Got 25 rare drops", 0xFFD9A05B),
         new Def("hoarder", "Hoarder", Line.FREE, Kind.SUFFIX, "Got 100 rare drops", 0xFFB0763C),
         new Def("legend", "Legend", Line.FREE, Kind.SUFFIX, "Got 500 rare drops", 0xFFFFCD32),
+        new Def("dice", "Lucky Dice", Line.FREE, Kind.SUFFIX, "Got 5 rare drops", 0xFFF4F4FA),
+        new Def("shovel", "Shovel", Line.FREE, Kind.SUFFIX, "Got 10 rare drops", 0xFFC9D0DC),
+        new Def("skull", "Skull", Line.FREE, Kind.SUFFIX, "Got 50 rare drops", 0xFFECE9DC),
+        new Def("moon", "Moon", Line.FREE, Kind.SUFFIX, "Got 250 rare drops", 0xFFF2C45A),
+        new Def("comet", "Comet", Line.FREE, Kind.SUFFIX, "Got 1000 rare drops", 0xFFFF9A2E),
+        new Def("ember", "Ember", Line.FREE, Kind.NAME, "Got 15 rare drops", 0xFFFF8A3D),
+        new Def("frost", "Frost", Line.FREE, Kind.NAME, "Got 75 rare drops", 0xFF9AD8FF),
+        new Def("neon", "Neon", Line.FREE, Kind.NAME, "Got 300 rare drops", 0xFFFF5AE0),
         new Def("secret", "Secret", Line.FREE, Kind.SUFFIX, "Found the hidden button", 0xFFC08BFF));
 
     static Def byId(String id) { for (Def d : ALL) if (d.id().equals(id)) return d; return null; }
@@ -113,6 +126,14 @@ final class CosmeticData {
                     case "collector" -> c.dropsSeen >= 25;
                     case "hoarder" -> c.dropsSeen >= 100;
                     case "legend" -> c.dropsSeen >= 500;
+                    case "dice" -> c.dropsSeen >= 5;
+                    case "shovel" -> c.dropsSeen >= 10;
+                    case "ember" -> c.dropsSeen >= 15;
+                    case "skull" -> c.dropsSeen >= 50;
+                    case "frost" -> c.dropsSeen >= 75;
+                    case "moon" -> c.dropsSeen >= 250;
+                    case "neon" -> c.dropsSeen >= 300;
+                    case "comet" -> c.dropsSeen >= 1000;
                     default -> false;
                 };
         }
@@ -128,6 +149,14 @@ final class CosmeticData {
             case "collector" -> "Get 25 rare drops.";
             case "hoarder" -> "Get 100 rare drops.";
             case "legend" -> "Get 500 rare drops.";
+            case "dice" -> "Get 5 rare drops.";
+            case "shovel" -> "Get 10 rare drops.";
+            case "ember" -> "Get 15 rare drops.";
+            case "skull" -> "Get 50 rare drops.";
+            case "frost" -> "Get 75 rare drops.";
+            case "moon" -> "Get 250 rare drops.";
+            case "neon" -> "Get 300 rare drops.";
+            case "comet" -> "Get 1000 rare drops.";
             default -> "Find the hidden button.";
         };
     }

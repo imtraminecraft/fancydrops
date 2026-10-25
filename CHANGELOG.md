@@ -9,6 +9,7 @@
 - /fd simulate, the Play buttons, the menu and the previews all start drops through the same two functions (creature and treasure). Simulated treasure now follows the drop's own Off / Normal / RNG state.
 - Item sprites turn as thick slabs (no more coin squash on thin items like the Hilt of Revelations). 3D heads get stronger light and shade.
 - Home hero shows its words again. Tips, page descriptions, mod description and README now describe the current mod (Mythological live, the rest being rebuilt).
+- Cosmetics: 8 new animated suffix icons (Lucky Dice, Shovel, Skull, Moon, Comet earned by rare drops; Watcher, Rocket, Cat for the early players) and 5 new name effects (Rainbow, Aurora for the early players; Ember, Frost, Neon earned by rare drops). Each page header has a bar that fills once when the page opens.
 - Construction page: the worker tosses each brick up to the wall from a pile instead of the crane lowering it.
 
 ## 0.4.11

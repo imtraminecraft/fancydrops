@@ -984,6 +984,11 @@ public class FancyScreen extends Screen {
         }
         Gfx.text(g, font, r.sub, r.x + 12, r.y + 20, Ui.SUB);
         String badge = r.pSubs != null && r.pSubs.length > 0 ? r.pSubs[0] : "";
+        if (!badge.isEmpty() && badge.matches("\\d+ / \\d+")) {                                                // how much is unlocked: a bar that fills once when the page opens
+            String[] pr = badge.split(" / "); float want = Math.min(1f, Integer.parseInt(pr[0]) / (float) Math.max(1, Integer.parseInt(pr[1])));
+            float fk = ease(Math.min(1f, (now - cosAt) / 1300f)) * want; int bw2 = Gfx.w(font, badge) + 10, bx2 = r.x + r.w - bw2 - 8;
+            g.fill(bx2, r.y + 26, bx2 + bw2, r.y + 29, 0x55000000); g.fill(bx2, r.y + 26, bx2 + Math.round(bw2 * fk), r.y + 29, Canvas.mix(col, 0xFFFFFFFF, 0.2f));
+        }
         if (!badge.isEmpty()) { int bw = Gfx.w(font, badge) + 10; pill(g, r.x + r.w - bw - 8, r.y + 8, bw, 16, Canvas.mix(Ui.PANEL2, col, 0.25f)); rout(g, r.x + r.w - bw - 8, r.y + 8, bw, 16, Gfx.argb(160, col & 0xFFFFFF)); Gfx.text(g, font, badge, r.x + r.w - bw - 3, r.y + 12, Canvas.mix(col, 0xFFFFFFFF, 0.6f)); }
     }
     private Row catHeader(String title, String sub, String badge, int col) {
@@ -1021,6 +1026,11 @@ public class FancyScreen extends Screen {
             case "glitch" -> "Hot red-orange, a warning stripe sweeps over it, and a letter flashes white. ";
             case "contribfx" -> "Flowing water with foam and a sweeping light. ";
             case "royal" -> "Liquid gold with a running glint. ";
+            case "rainbow" -> "The whole spectrum rolls along your name. ";
+            case "aurora" -> "Green, teal and violet curtains drift through it. ";
+            case "ember" -> "Glowing coals with flickers rising through the letters. ";
+            case "frost" -> "Pale ice with a cold glint, and a letter that frosts over. ";
+            case "neon" -> "Cyan and magenta trade places like a sign, with a flicker. ";
             default -> "";
         };
     }

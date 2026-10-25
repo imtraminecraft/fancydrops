@@ -44,7 +44,15 @@ final class Cosmetics {
         new Suffix("contrib", "Builder", "Special", fr(0xE110)),
         new Suffix("patron", "Patron", "Special", fr(0xE120)),
         new Suffix("hoarder", "Hoarder", "Everyone", fr(0xE180)),
-        new Suffix("legend", "Legend", "Everyone", fr(0xE190))};
+        new Suffix("legend", "Legend", "Everyone", fr(0xE190)),
+        new Suffix("dice", "Lucky Dice", "Everyone", fr(0xE200)),
+        new Suffix("shovel", "Shovel", "Everyone", fr(0xE210)),
+        new Suffix("skull", "Skull", "Everyone", fr(0xE220)),
+        new Suffix("moon", "Moon", "Everyone", fr(0xE230)),
+        new Suffix("comet", "Comet", "Everyone", fr(0xE240)),
+        new Suffix("eye", "Watcher", "v0.5.0", fr(0xE250)),
+        new Suffix("rocket", "Rocket", "v0.5.0", fr(0xE260)),
+        new Suffix("cat", "Cat", "v0.5.0", fr(0xE270))};
     /** Who owns cosmetics. Everyone with the mod sees their suffix; only they can open the Cosmetics page. */
     /** Owners are stored as SHA-256 codes of their UUID, never as the UUID itself. This one is built in; more come from cosmetics.json. */
     static final String OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8";
