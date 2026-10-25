@@ -2809,7 +2809,7 @@ public class FancyScreen extends Screen {
             Gfx.text(g, font, Gfx.fit(font, hoverFx >= 0 ? FX_DESC[hoverFx] : "Hover an effect to see it play.", eRw()), eRx(), eY() + 96 + 4 * 25 + 2, hoverFx >= 0 ? Ui.SUB : Ui.DIM);
         } else if (editor == 2 && ePage == 1) {
             String[] lb = {"Overall text size", "Title size", "Sub Title size", "Sub Title delay"};
-            Gfx.text(g, font, Gfx.fit(font, "Text position: above or below the scene", eRw()), eRx(), eY() + 62, Ui.SUB);
+            Gfx.text(g, font, Gfx.fit(font, "Text position (animation in the middle)", eRw()), eRx(), eY() + 62, Ui.SUB);
             for (int i = 0; i < 2; i++) {
                 int[] b = eSegBox(i); boolean on = Math.floorMod(c.textPos, 2) == i, hv = in(mx, my, b);
                 tile(g, b, on, hv);
@@ -2973,7 +2973,7 @@ public class FancyScreen extends Screen {
         rows.add(section(all ? CATS[cat] + " frame and size" : "Frame and size"));
         String[] posNames = eff == 2 ? AnimationManager.FARM_POS_NAMES : c.cine(eff) ? AnimationManager.POS_BAR_NAMES : AnimationManager.POS9_NAMES;
         Row pos = row(0, "fd:position", CATS[eff] + " position", eff == 2 ? "3 x 3 grid, or Custom: drag the preview or use the arrow keys"
-                : c.cine(eff) ? "Top, middle or bottom between the bars" : "3 x 3 grid  ·  text goes where there is room", Ui.ACCENT);
+                : c.cine(eff) ? "Top, middle or bottom between the bars  ·  words follow it" : "3 x 3 grid  ·  words go above it (top), around it (middle) or under it (bottom)", Ui.ACCENT);
         Dd posDd = new Dd(() -> AnimationManager.positionName(c, eff), "dd_pos", 110);
         pos.ctls.add(posDd);
         rows.add(pos);
@@ -2994,8 +2994,9 @@ public class FancyScreen extends Screen {
             fz.ctls.add(new Slider(0.5, 1.1, 0.05, () -> c.farmScale, v -> c.farmScale = (float) v, () -> Math.round(c.farmScale * 100) + "%").typed(100).live());
             rows.add(fz);
         } else {
-            Row as = row(0, "fd:size", CATS[eff] + " size", c.cine(eff) ? "Scene size inside the frame  ·  each animation has its own" : "Scene size, 100% to 140%  ·  each animation has its own", Ui.ACCENT);
-            as.ctls.add(new Slider(c.cine(eff) ? 0.6 : 1.0, 1.4, 0.05, () -> c.cine(eff) ? c.sizeOf(eff) : Math.max(1f, c.sizeOf(eff)), v -> c.setSizeOf(eff, (float) v), () -> Math.round((c.cine(eff) ? c.sizeOf(eff) : Math.max(1f, c.sizeOf(eff))) * 100) + "%").typed(100).live());
+            boolean my = eff == 3;
+            Row as = row(0, "fd:size", CATS[eff] + " size", my ? "100% is the default  \u00B7  Normal and RNG both follow it" : c.cine(eff) ? "Scene size inside the frame  \u00B7  each animation has its own" : "Scene size, 100% to 140%  \u00B7  each animation has its own", Ui.ACCENT);
+            as.ctls.add(new Slider(my ? 0.5 : c.cine(eff) ? 0.6 : 1.0, my ? 2.0 : 1.4, 0.05, () -> my ? c.sizeOf(eff) : c.cine(eff) ? c.sizeOf(eff) : Math.max(1f, c.sizeOf(eff)), v -> c.setSizeOf(eff, (float) v), () -> Math.round((my || c.cine(eff) ? c.sizeOf(eff) : Math.max(1f, c.sizeOf(eff))) * 100) + "%").typed(100).live());
             rows.add(as);
         }
     }

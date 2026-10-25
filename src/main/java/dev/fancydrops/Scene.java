@@ -2306,48 +2306,19 @@ final class Scene {
         }
     }
 
-    /** RNG Mythological: a night sky behind the ritual (dark veil, twinkling stars, a violet glow). */
-    private static void rngBack(Canvas out, float t) {
-        float in = cl(t / 0.5f);
-        for (int i = 0; i < 26; i++) {
-            int x = (int) (h(i, 81) * 112), y = (int) (h(i, 82) * 56); float tw = 0.5f + 0.5f * (float) Math.sin(t * 3 + i * 1.7f);
-            out.set(x, y, Canvas.rgb((int) (200 * in * tw), i % 4 == 0 ? 0xFFE8A0 : 0xFFFFFF));
-        }
-        out.glow(56, 62, 52, 0x6A5CFF, 0.10f * in);
-    }
-    /** RNG Mythological: a white flash on each strike, then god rays, rune halos and falling griffin feathers round the drop. */
+    /** RNG Mythological, behind the scene: nothing is drawn inside the picture any more. The sky, flashes, rays and shockwaves are drawn over the whole screen by AnimationManager.mythRngFx, so the box of the scene never shows. */
+    private static void rngBack(Canvas out, float t) { }
+    /** RNG Mythological, in the picture: only what sits on the ground (a rune ring turning round the drop and small halos). */
     private static void rngFront(Canvas out, Params p, float t, float ts, int cx, int gy) {
-        for (int k = 0; k < 3; k++) { float a = t - impact(p, k); if (a >= 0f && a < 0.12f) out.rect(0, 0, 112, 96, Canvas.rgb((int) (90 * (1f - a / 0.12f)), 0xDCE8FF)); }
         float a = t - ts; if (a < 0f) return;
         int ix = cx, iy = gy - 24; float fin = easeOut(a / 0.4f);
-        if (a < 0.22f) out.rect(0, 0, 112, 96, Canvas.rgb((int) (150 * (1f - a / 0.22f)), 0xFFF6D8));                    // the reveal flash
-        float pil = cl(a / 0.25f) * (0.8f + 0.2f * (float) Math.sin(t * 9));                                             // a pillar of light through the drop
-        for (int q = 0; q < iy; q++) { float fall = 1f - q / (float) iy * 0.75f; int w = 1 + (int) (3 * fall);
-            out.rect(ix - w, q, ix + w + 1, q + 1, Canvas.rgb((int) (44 * pil * fall), 0xFFF0B0)); out.rect(ix, q, ix + 1, q + 1, Canvas.rgb((int) (90 * pil * fall), 0xFFFFFF)); }
-        if (a < 0.9f) { float sw = easeOut(a / 0.9f), rad = 6 + 84 * sw;                                                  // two shockwave rings
-            for (int w = 0; w < 2; w++) for (int i = 0; i < 160; i++) { double an = i * Math.PI * 2 / 160; float rr = rad - w * 3;
-                out.set((int) (ix + Math.cos(an) * rr), (int) (iy + Math.sin(an) * rr * 0.62), Canvas.rgb((int) (230 * (1f - sw) * (w == 0 ? 1f : 0.6f)), w == 0 ? 0xFFFFFF : 0xFFD764)); } }
-        for (int i = 0; i < 26 && a < 1.6f; i++) {                                                                       // sparks thrown out of the drop, pulled down by gravity
-            float sp = 26 + h(i, 120) * 46, an = h(i, 121) * 6.2832f, life = a * (0.8f + h(i, 122) * 0.6f);
-            int x = Math.round(ix + (float) Math.cos(an) * sp * life), y = Math.round(iy + (float) Math.sin(an) * sp * life * 0.8f + 38 * life * life);
-            out.rect(x, y, x + 2, y + 2, Canvas.rgb((int) (230 * (1f - a / 1.6f)), i % 3 == 0 ? 0xFFFFFF : i % 3 == 1 ? 0xFFD764 : 0xB8A8FF));
-        }
-        for (int i = 0; i < 12; i++) {                                                                                   // a rune ring turning on the floor
+        for (int i = 0; i < 12; i++) {
             double an = i * Math.PI / 6 + t * 1.2; int rx = (int) (ix + Math.cos(an) * 34), ry = (int) (gy + 2 + Math.sin(an) * 7);
             out.rect(rx - 1, ry, rx + 2, ry + 1, Canvas.rgb((int) (190 * fin), i % 2 == 0 ? 0xFFD764 : 0xFFFFFF));
         }
-        for (int i = 0; i < 10; i++) {
-            double an = i * Math.PI / 5 + t * 0.5;
-            float x1 = ix + (float) Math.cos(an) * 90, y1 = iy + (float) Math.sin(an) * 90;
-            lin(out, ix, iy, x1, y1, Canvas.rgb((int) (46 * fin), 0xFFE8A0)); lin(out, ix + 1, iy, x1 + 1, y1, Canvas.rgb((int) (30 * fin), 0xFFE8A0));
-        }
         for (int r = 0; r < 3; r++) {
-            float life = ((a * 0.8f + r / 3f) % 1f), rad = 8 + 26 * life;
+            float life = ((a * 0.8f + r / 3f) % 1f), rad = 8 + 22 * life;
             for (int i = 0; i < 64; i++) { double an = i * Math.PI * 2 / 64 + r; out.set((int) (ix + Math.cos(an) * rad), (int) (iy + Math.sin(an) * rad * 0.8), Canvas.rgb((int) (170 * (1f - life) * fin), r == 1 ? 0xFFFFFF : 0xFFD764)); }
-        }
-        for (int i = 0; i < 12; i++) {
-            float life = a + h(i, 90) * 1.5f; int x = Math.round(cx + (h(i, 91) - 0.5f) * 90 + (float) Math.sin(life * 2 + i) * 6), y = Math.round(-4 + (life % 2.4f) * 38);
-            out.rect(x, y, x + 2, y + 1, Canvas.rgb((int) (170 * fin), i % 2 == 0 ? 0xFFF3C0 : 0xFFFFFF));
         }
     }
 

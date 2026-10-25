@@ -1,3 +1,9 @@
+## 0.4.6
+- Fixed: RNG Mythological flashes, rays, shockwaves, sparks, stars and feathers are drawn over the whole screen, not inside the scene's box, so no box edge shows with the bars or the blur on or off. The scene's edges are feathered
+- Changed: Mythological size is 50% to 200%, 100% is the default, and Normal and RNG both follow it (it no longer copies the Slayers size)
+- Changed: the words follow the animation's position: top row = above the animation, middle row = your Text position choice, bottom row = as before. With bars, they sit in the bar on the animation's side
+- Fixed: Text Changes preview shows the words at the top or the bottom for the Text position choice
+
 ## 0.4.5
 - Fixed: Mythological words come in with the reveal and stay about 2.6 s, so they can be read (Normal and RNG)
 - Fixed: Text position now says "Top of animation" / "Bottom of animation", and Normal scenes follow it (words above or below the scene)

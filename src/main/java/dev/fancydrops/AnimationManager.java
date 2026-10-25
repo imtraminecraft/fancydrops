@@ -128,6 +128,8 @@ public final class AnimationManager {
      */
     /** The black bars only frame an RNG drop; every other scene is short and bar-less. Set just before layout() by whoever draws. */
     static boolean rngBars = true;
+    /** Set by layout(): the words of a barred scene sit in the top bar (true) or the bottom bar. */
+    static boolean barTop = false;
     public static Layout layout(int W, int H, FancyConfig c, int rows) { return layout(W, H, c, rows, 0); }
 
     /** farm = the small Farming scene: never framed by bars, has its own position and size, slightly smaller text. */
@@ -137,32 +139,34 @@ public final class AnimationManager {
         boolean bars = c.cine(cat) && !farm && rngBars;
         float tsc = c.textK() * uk(W, H) * (farm ? 0.9f : 1f);
         int lineH = Math.max(6, Math.round(11 * tsc)), textH = lineH * (rows + 1);
-        float want = (farm ? Math.max(0.5f, Math.min(1.1f, c.farmScale)) * 0.24f : (bars ? c.sizeOf(cat) : Math.max(1f, c.sizeOf(cat))) * 0.8f * 0.4f) * m / Scene.W;
+        float want = (farm ? Math.max(0.5f, Math.min(1.1f, c.farmScale)) * 0.24f : (bars || cat == 3 ? c.sizeOf(cat) : Math.max(1f, c.sizeOf(cat))) * 0.8f * 0.4f) * m / Scene.W;
         if (bars) {
             int bar = Math.round(H * c.barHeight / 100f), side = Math.round(bar * sideK()), frameH = H - 2 * bar, frameW = W - 2 * side;
             float fit = Math.min(frameH * 0.97f / (Scene.H * 1.12f), frameW * 0.97f / (Scene.W * 1.12f));      // 1.12 = how far the scene punches out at the reveal
             float cell = Math.max(0.2f, Math.min(want, fit));
             int sw = Math.round(Scene.W * cell), sh = Math.round(Scene.H * cell);
             int margin = Math.round(0.06f * sh + 0.02f * frameH), pb = posBarsOf(c, cat);
+            barTop = pb == 0 ? true : pb == 2 ? false : c.textPos == 0;                          // the words go in the bar on the side of the scene's position
             int sx = (W - sw) / 2, sy = pb == 0 ? bar + margin : pb == 2 ? H - bar - sh - margin : bar + (frameH - sh) / 2;
             return new Layout(W / 2, cell, tsc, lineH, sx, sy, sy, sw, sh, sx, sy, sx + sw, sy + sh);
         }
         if (compact && !bars) {                                                              // the small Mythological scene: only the rows it draws, the words right under it, clear of the action bar
             int mg2 = Math.round(0.03f * m), gap2 = Math.max(2, lineH / 4), pp = pos9Of(c, cat), col2 = pp % 3, row2 = pp / 3;
-            float cell2 = Math.max(0.2f, Math.min(Math.max(0.6f, c.sizeOf(cat)) * 0.46f * m / Scene.W, (W - 2 * mg2) / (float) Scene.W));
+            float cell2 = Math.max(0.2f, Math.min(Math.max(0.5f, c.sizeOf(cat)) * 0.46f * m / Scene.W, (W - 2 * mg2) / (float) Scene.W));
             int sw2 = Math.round(Scene.W * cell2), sh2 = Math.round(Scene.H * cell2), vh = Math.round((Scene.CROP_B - Scene.CROP_T) * cell2);
             int blockH = vh + gap2 + textH, lift2 = row2 == 2 ? Math.max(0, 80 - mg2) : 0;
             int top = row2 == 0 ? mg2 : row2 == 1 ? (H - blockH) / 2 : H - mg2 - lift2 - blockH;
             int half2 = Math.min((W - 2 * mg2) / 2, Math.max(sw2 / 2, Math.round(110 * tsc)));
             int cx2 = col2 == 0 ? mg2 + half2 : col2 == 2 ? W - mg2 - half2 : W / 2;
-            if (c.textPos == 0)                                                              // words above the scene
+            boolean above = row2 == 0 || (row2 == 1 && c.textPos == 0);                          // top row: words above the scene; middle: your choice; bottom: under it, as before
+            if (above)                                                                       // words above the scene
                 return new Layout(cx2, cell2, tsc, lineH, cx2 - sw2 / 2, top + textH + gap2 - Math.round(Scene.CROP_T * cell2), top, sw2, sh2, cx2 - half2, top, cx2 + half2, top + blockH);
             return new Layout(cx2, cell2, tsc, lineH, cx2 - sw2 / 2, top - Math.round(Scene.CROP_T * cell2), top + vh + gap2, sw2, sh2, cx2 - half2, top, cx2 + half2, top + blockH);
         }
         int mg = Math.round(0.03f * m), gap = Math.max(2, lineH / 4), p9 = farm ? Math.max(0, Math.min(9, c.farmPos)) : pos9Of(c, cat), col = p9 % 3, row = p9 / 3;
         boolean custom = farm && p9 == 9;
         if (custom) { col = 1; row = c.farmY < 0.5f ? 0 : 2; }
-        boolean below = row == 0 || (row == 1 && c.textPos == 1);
+        boolean below = row == 1 && c.textPos == 1;                                          // top and bottom rows: the words sit above the scene; the middle row follows the Text position choice
         int lift = row == 2 && col == 1 && !custom ? Math.max(0, 64 - mg) : 0;               // bottom centre sits above the held item's name, which hangs over the hotbar
         float roomH = (row == 1 ? H - 2 * (mg + textH + gap) : H - 2 * mg - textH - gap) - lift;
         float cell = Math.max(0.2f, Math.min(want, Math.min(roomH / (Scene.H * 0.92f), (W - 2 * mg) / (float) Scene.W)));
@@ -482,7 +486,8 @@ public final class AnimationManager {
         boolean hasMf = c.showMagicFind && mf != null;
         boolean facts = a.item != null && a.item2 == null && hasFacts(a.item, c);
         int total = Math.round(9 * big) + 4 + Math.round(9 * small * (facts ? 1.95f : 1f)) + (hasMf ? 3 + Math.round(9 * small) : 0);
-        int ty = c.textPos == 0 ? Math.max(2, (bar - total) / 2) : Math.min(H - total - 2, H - bar + Math.max(2, (bar - total) / 2)), dy = ty + Math.round(9 * big) + 4;      // in the top or the bottom bar
+        boolean tTop = textOnly ? c.textPos == 0 : barTop;
+        int ty = bar >= H ? (tTop ? 4 : H - total - 4) : tTop ? Math.max(2, (bar - total) / 2) : Math.min(H - total - 2, H - bar + Math.max(2, (bar - total) / 2)), dy = ty + Math.round(9 * big) + 4;      // in the top or the bottom bar
         if (a.item == null) {
             line(g, font, W / 2, ty, big, alpha, lit("Nothing :(").withStyle(ChatFormatting.BOLD), 0xFFB9BFC9);
             line(g, font, W / 2, dy, small, alpha, lit("Better Luck Next Time"), 0xFF7C8494);
@@ -728,7 +733,7 @@ public final class AnimationManager {
         else if (loopTxt) { t = Math.min(len - 1.0f, rv0 - 0.3f + ((System.currentTimeMillis() - textT0) % 4600L) / 1000f); sec = t; }       // the words play again and again
         boolean sceneOn = tm == null || t < len || freezeT >= 0f || loopTxt;                      // after the scene ends only the words remain, as in the game
         int frame = (int) (Math.min(t, len) * 30f);
-        if (frame != previewFrame) { previewFrame = frame; Scene.draw(OUT, L3, p, frame / 30f); if (cine) feather(OUT); SceneTexture.upload(OUT); }
+        if (frame != previewFrame) { previewFrame = frame; Scene.draw(OUT, L3, p, frame / 30f); if (cine || bigMyth(p)) feather(OUT); SceneTexture.upload(OUT); }
         float rv = tm == null ? ts + 0.15f : tm[1];
         float ga = (tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f))) * sceneAlpha(p);            // the scene fades in and out like the real one
         float gt = tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((full - t) / 0.5f));
@@ -750,15 +755,18 @@ public final class AnimationManager {
             bars(g, W, H, barFull, side, p.rarity | 0xFF000000, p.rarity | 0xFF000000);
             g.enableScissor(side, barFull, W - side, H - barFull);
             if (sceneOn && !textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), ga)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), ga);
+            if (sceneOn && bigMyth(p)) mythRngFx(g, p, t, L.ox(), L.oy(), L.cell(), ga, side, barFull, W - side, H - barFull);
             g.disableScissor();
             barText(g, font, cat == 4 ? PREVIEW_ANIM_EXP : farm ? PREVIEW_ANIM_FARM : PREVIEW_ANIM, c, tal, W, H, barFull);
             return;
         }
         if (sceneOn && !textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), ga)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), ga);
+        if (sceneOn && bigMyth(p)) mythRngFx(g, p, t, L.ox(), L.oy(), L.cell(), ga, 0, 0, W, H);
         if (wordsLikeFarm) farmText(g, font, L, pi, c, tal); else text(g, font, L, pi, c, tal);
     }
 
     /** Fades the scene's edges to see-through so it melts into the blurred world instead of sitting there as a hard box. */
+    private static boolean bigMyth(Scene.Params p) { return p.myth && p.tier == 2 && p.hasItem; }
     private static void feather(Canvas cv) {
         int fx = 18, fy = 16;
         for (int y = 0; y < cv.h; y++) {
@@ -896,7 +904,7 @@ public final class AnimationManager {
 
         if (t < sLen) {                                      // after the scene ends only the words remain
         int frame = (int) (t * 30f);                         // the scene is redrawn 30 times a second, not every frame
-        if (frame != a.frame) { a.frame = frame; Scene.draw(OUT, L3, a.p, frame / 30f); if (cine) feather(OUT); a.sx = a.p.shakeX; a.sy = a.p.shakeY; SceneTexture.upload(OUT); }
+        if (frame != a.frame) { a.frame = frame; Scene.draw(OUT, L3, a.p, frame / 30f); if (cine || bigMyth(a.p)) feather(OUT); a.sx = a.p.shakeX; a.sy = a.p.shakeY; SceneTexture.upload(OUT); }
         float since = t - ts, kick = since >= 0f && since < 0.45f ? (float) Math.sin(Math.PI * since / 0.45f) * (a.tier == 2 ? 0.07f : 0.045f) : 0f;   // the picture punches in at the reveal
         float zoom = (cine ? 1f + 0.05f * easeIO(clamp(t / sLen)) : 1f) + (cine ? kick : 0f);
         int zw = Math.round(Scene.W * cellF * zoom), zh = Math.round(Scene.H * cellF * zoom);
@@ -907,6 +915,7 @@ public final class AnimationManager {
         }
         revealT = t - reveal; waveIn = clamp((t - reveal) / 0.6f); waveOut = clamp((t - (len - 1.0f * a.speed)) / (0.7f * a.speed)); waveT = t; bounceT = t - (reveal + 0.6f);
         if (epic && t > ts) epicFront(g, a, t - ts, W, H, scx, scy, cin * ga);
+        if (bigMyth(a.p)) { int sd = framed ? sideFull : 0, bb = framed ? barFull : 0; mythRngFx(g, a.p, t, sceneX, sceneY, cellF, ga, sd, bb, W - sd, H - bb); }
         if (waveIn > 0f) {
             int al = (int) (255 * gt);
             if (framed) { twinCell = L.cell(); barText(g, font, a, c, al, W, H, barFull); }
@@ -1054,6 +1063,56 @@ public final class AnimationManager {
                 g.fill(0, -H, 8, H, Gfx.argb((int) (34 * Math.sin(f * Math.PI) * cin), col));
                 Gfx.pop(g);
             }
+        }
+    }
+
+    /**
+     * RNG Mythological, over the whole screen (not inside the scene's picture, so no box edge ever shows): stars, a flash on every strike and at the reveal,
+     * a pillar of light, shockwave rings, god rays, sparks and falling griffin feathers. (ox, oy) = where the picture starts, cell = screen pixels per picture pixel.
+     * The effect is clipped to [x0, x1] x [y0, y1] (the frame between the bars, or the whole screen).
+     */
+    private static void mythRngFx(GuiGraphicsExtractor g, Scene.Params p, float t, int ox, int oy, float cell, float k, int x0, int y0, int x1, int y1) {
+        if (k <= 0.02f) return;
+        float u = Math.max(0.5f, cell), ts = Scene.splitTime(p);
+        int W = x1 - x0, H = y1 - y0;
+        float sky = clamp(t / 0.5f);
+        for (int i = 0; i < 40; i++) {                                                                       // twinkling stars across the sky
+            int x = x0 + (int) (Tex.h(i, 81) * W), y = y0 + (int) (Tex.h(i, 82) * H * 0.7f); float tw = 0.5f + 0.5f * (float) Math.sin(t * 3 + i * 1.7f);
+            g.fill(x, y, x + (i % 5 == 0 ? 2 : 1), y + (i % 5 == 0 ? 2 : 1), Gfx.argb((int) (200 * sky * tw * k), i % 4 == 0 ? 0xFFE8A0 : 0xFFFFFF));
+        }
+        for (int q = 0; q < 3; q++) { float a2 = t - Scene.impact(p, q); if (a2 >= 0f && a2 < 0.12f) g.fill(x0, y0, x1, y1, Gfx.argb((int) (80 * (1f - a2 / 0.12f) * k), 0xDCE8FF)); }      // a flash on each strike
+        float a = t - ts; if (a < 0f) return;
+        float fin = clamp(1f - (1f - clamp(a / 0.4f)) * (1f - clamp(a / 0.4f)));
+        int ix = ox + Math.round(56 * cell), iy = oy + Math.round(46 * cell);
+        if (a < 0.22f) g.fill(x0, y0, x1, y1, Gfx.argb((int) (150 * (1f - a / 0.22f) * k), 0xFFF6D8));            // the reveal flash
+        float pil = clamp(a / 0.25f) * (0.8f + 0.2f * (float) Math.sin(t * 9)) * k;                           // a pillar of light through the drop
+        for (int y = y0; y < iy; y += 2) { float fall = 1f - (iy - y) / (float) Math.max(1, iy - y0) * 0.75f; int w = Math.round((1 + 3 * fall) * u);
+            g.fill(ix - w, y, ix + w + 1, y + 2, Gfx.argb((int) (44 * pil * fall), 0xFFF0B0)); g.fill(ix - 1, y, ix + 1, y + 2, Gfx.argb((int) (90 * pil * fall), 0xFFFFFF)); }
+        int dot = Math.max(1, Math.round(u * 0.8f));
+        if (a < 1.0f) { float sw = clamp(a / 1.0f), e = 1f - (1f - sw) * (1f - sw) * (1f - sw), rad = (6 + 130 * e) * u;      // two shockwave rings
+            for (int w = 0; w < 2; w++) for (int i = 0; i < 220; i++) { double an = i * Math.PI * 2 / 220; float rr = rad - w * 3 * u;
+                int sx = (int) (ix + Math.cos(an) * rr), sy = (int) (iy + Math.sin(an) * rr * 0.62);
+                if (sx < x0 || sx >= x1 || sy < y0 || sy >= y1) continue;
+                g.fill(sx, sy, sx + dot, sy + dot, Gfx.argb((int) (230 * (1f - sw) * (w == 0 ? 1f : 0.6f) * k), w == 0 ? 0xFFFFFF : 0xFFD764)); } }
+        int reach = (int) Math.hypot(W, H);                                                                    // god rays, fading with distance
+        for (int r = 0; r < 10; r++) {
+            double an = r * Math.PI / 5 + t * 0.5;
+            for (int d = (int) (14 * u); d < reach; d += 6) {
+                int sx = (int) (ix + Math.cos(an) * d), sy = (int) (iy + Math.sin(an) * d);
+                if (sx < x0 || sx >= x1 || sy < y0 || sy >= y1) break;
+                g.fill(sx, sy, sx + 3, sy + 2, Gfx.argb((int) (40 * fin * k * (1f - d / (float) reach)), 0xFFE8A0));
+            }
+        }
+        for (int i = 0; i < 26 && a < 1.8f; i++) {                                                            // sparks thrown out of the drop, pulled down by gravity
+            float sp = (30 + Tex.h(i, 120) * 60) * u, an = Tex.h(i, 121) * 6.2832f, life = a * (0.8f + Tex.h(i, 122) * 0.6f);
+            int sx = Math.round(ix + (float) Math.cos(an) * sp * life), sy = Math.round(iy + (float) Math.sin(an) * sp * life * 0.8f + 40 * u * life * life);
+            if (sx < x0 || sx >= x1 || sy < y0 || sy >= y1) continue;
+            g.fill(sx, sy, sx + dot + 1, sy + dot + 1, Gfx.argb((int) (230 * (1f - a / 1.8f) * k), i % 3 == 0 ? 0xFFFFFF : i % 3 == 1 ? 0xFFD764 : 0xB8A8FF));
+        }
+        for (int i = 0; i < 14; i++) {                                                                        // griffin feathers drifting down
+            float life = a + Tex.h(i, 90) * 1.5f; int sx = Math.round(x0 + (0.1f + 0.8f * Tex.h(i, 91)) * W + (float) Math.sin(life * 2 + i) * 6 * u), sy = Math.round(y0 + (life % 2.6f) / 2.6f * H);
+            if (sy >= y1) continue;
+            g.fill(sx, sy, sx + dot + 1, sy + dot, Gfx.argb((int) (170 * fin * k), i % 2 == 0 ? 0xFFF3C0 : 0xFFFFFF));
         }
     }
 

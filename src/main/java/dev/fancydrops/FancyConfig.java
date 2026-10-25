@@ -87,6 +87,7 @@ public class FancyConfig {
     /** Animation size of one category (0 Slayers, 1 Dye, 2 Farming = its own farmScale, 3 Mythological, 4 Experiments). */
     public float sizeOf(int cat) {
         float v = switch (cat) { case 1 -> dyeSize; case 3 -> mythSize; case 4 -> expSize; default -> -1f; };
+        if (cat == 3) return v < 0f ? 1f : Math.max(0.5f, Math.min(2f, v));          // Mythological has its own size: 100% = the default look
         return v < 0f ? size : Math.max(0.6f, Math.min(1.4f, v));
     }
     public void setSizeOf(int cat, float v) { switch (cat) { case 1 -> dyeSize = v; case 3 -> mythSize = v; case 4 -> expSize = v; default -> size = v; } }
