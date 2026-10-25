@@ -547,7 +547,6 @@ public class FancyScreen extends Screen {
         d.add(new String[]{"Animation", gr.name()});
         d.add(new String[]{"Type", ty.name()});
         d.add(new String[]{"Length", String.format(Locale.ROOT, "%.1f s", a.secs)});
-        d.add(new String[]{"Position", POS_NAMES[Math.max(0, Math.min(2, a.pos))]});
         d.add(new String[]{"Size", Math.round(a.size * 100) + "%"});
         if (ty == Categories.RNG) { d.add(new String[]{"Bars", a.bars ? "On  ·  " + c.barPx + " px" : "Off"}); d.add(new String[]{"Blur", a.blur ? "On" : "Off"}); }
         d.add(new String[]{"Item size", Math.round(c.itemScale * 100) + "%"});
@@ -2591,6 +2590,7 @@ public class FancyScreen extends Screen {
         String[] sb = {c.barPx + " px tall", fxOn + " effects on", "Size " + Math.round(c.itemScale * 100) + "%"};
         Row ch = picker("Looks for every animation", "", lb, sb, new String[]{":bars:", ":text:", ":size:"}, new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFFFFC857}, null, 3, () -> -1, i -> openEditor(i + 1));
         rows.add(ch);
+        rows.add(picker("Position", "Where every animation sits on the screen", POS_NAMES, POS_SUBS, new String[3], new int[]{0xFF56D8FF, 0xFFFF72C6, 0xFFFFC857}, null, 3, () -> c.animPos, i -> { c.animPos = i; FancyConfig.save(); }));
         rows.add(section("Categories"));
         rows.add(catTiles());
     }
@@ -2603,7 +2603,7 @@ public class FancyScreen extends Screen {
         rows.add(picker("", "", lb, sb, ic, co, null, 2, () -> -1, i -> openPage(curSub(), cat.groups().get(i).id(), lb[i])));
     }
 
-    /** The Animation Editor of one group: pick the type, then its length, position and size (and the bars and blur of RNG). */
+    /** The Animation Editor of one group: pick the type, then its length and size (and the bars and blur of RNG). */
     private void animationEditor(Categories.Cat cat, Categories.Group gr, FancyConfig c) {
         int ti = Math.max(0, Math.min(gr.types().size() - 1, edType));
         Categories.Type ty = gr.types().get(ti);
@@ -2616,8 +2616,6 @@ public class FancyScreen extends Screen {
         pl.ctls.add(new Btn("▶ Play", GREEN, () -> play(() -> DropListener.playSample(gr.id(), ti)))); rows.add(pl);
         Row len = row(0, ":clock:", "Length", "Between 5 and 7 seconds. The first half is the same for every type", Ui.ACCENT);
         len.ctls.add(new Slider(5, 7, 0.1, () -> a.secs, v -> { a.secs = (float) (Math.round(v * 10) / 10.0); }, () -> String.format(Locale.ROOT, "%.1f s", a.secs))); rows.add(len);
-        String[] pn = POS_NAMES, ps = POS_SUBS; int[] pc = {0xFF56D8FF, 0xFFFF72C6, 0xFFFFC857};
-        rows.add(picker("Position", "Where the animation sits on the screen", pn, ps, new String[3], pc, null, 3, () -> a.pos, i -> a.pos = i));
         Row sz = row(0, ":size:", "Size", "Make the animation bigger or smaller", Ui.ACCENT);
         sz.ctls.add(new Slider(0.5, 1.2, 0.05, () -> a.size, v -> a.size = (float) v, () -> Math.round(a.size * 100) + "%").typed(100).live()); rows.add(sz);
         if (ty == Categories.RNG) {                                         // only the big finish has cinematic bars and a blurred background

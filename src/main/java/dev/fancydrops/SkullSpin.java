@@ -16,7 +16,7 @@ import java.util.Map;
  * The turn is quantised to 144 steps, so it looks continuous. If a texture can't be made the caller falls back to the old 16x16 sprite.
  */
 final class SkullSpin {
-    private static final int N = 64, SS = 3, STEPS = 144;
+    private static final int N = 128, SS = 2, STEPS = 144;
     private static final class Entry { DynamicTexture tex; Identifier id; int step = -1; }
     private static final Map<String, Entry> MAP = new HashMap<>();
     private static boolean failed;

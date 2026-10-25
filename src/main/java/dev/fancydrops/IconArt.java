@@ -295,22 +295,22 @@ final class IconArt {
                 outline();
                 glint(11 - Math.round(f * 4), 8 + Math.round((float) Math.sin(f * 6.28f) * 1.5f), 1, 0xFFE9A0, 0.3f + 0.7f * t);
             }
-            case "dice" -> {                                                                 // a die tumbling across the floor and settling on a 6
-                float roll = Math.min(1f, f / 0.72f);                                                   // 0..1 while rolling, then it rests
-                int sh = roll < 1f ? Math.round((float) Math.abs(Math.sin(roll * 9.4f)) * 3f) : 0;      // bounces get lower
-                int dx = Math.round((1f - roll) * -3f), dyy = -sh;
-                float lean = roll < 1f ? (float) Math.sin(roll * 9.4f) * 1.6f : 0f;
-                int body = 0xFFF0F6, edge = 0xFF72C6;
-                quad(2 + dx + lean, 3 + dyy, 14 + dx + lean, 3 + dyy, 14 + dx - lean * 0.3f, 14 + dyy, 2 + dx - lean * 0.3f, 14 + dyy, body);   // the face
-                rect(2 + dx, 14 + dyy, 12, 1, dark(edge, 0.25f));
-                rect(14 + dx, 4 + dyy, 1, 10, dark(edge, 0.1f));
-                int[][] six = {{4, 5}, {4, 8}, {4, 11}, {10, 5}, {10, 8}, {10, 11}};
-                int[][][] faces = {{{7, 8}}, {{4, 5}, {10, 11}}, {{4, 5}, {7, 8}, {10, 11}}, {{4, 5}, {10, 5}, {4, 11}, {10, 11}}, {{4, 5}, {10, 5}, {7, 8}, {4, 11}, {10, 11}}};
-                int[][] pips = roll >= 1f ? six : faces[Math.min(4, (int) (roll * 10) % 5)];
-                for (int[] pp : pips) { rect(pp[0] + dx, pp[1] + dyy, 2, 2, 0xC8267F); px(pp[0] + dx, pp[1] + dyy, 0xFF72C6); }
+            case "dice" -> {                                                                 // a 3D die hops, tumbles and lands on a 6 (short: it has landed by half the loop)
+                float roll = Math.min(1f, f / 0.5f);
+                int dyy = roll < 1f ? -Math.round((float) Math.abs(Math.sin(roll * 6.283f)) * 4f * (1f - roll)) : 0;
+                float lean = roll < 1f ? (float) Math.sin(roll * 14f) * 1.6f * (1f - roll) : 0f;
+                int dx = Math.round((1f - roll) * -2f);
+                int top = 0xFFFFFF, front = 0xFFEFF5, side = 0xC9B4CC, edge = 0xB02A6A;
+                quad(3 + dx + lean, 6 + dyy, 12 + dx + lean, 6 + dyy, 14 + dx + lean, 4 + dyy, 5 + dx + lean, 4 + dyy, top);
+                quad(12 + dx + lean, 6 + dyy, 14 + dx + lean, 4 + dyy, 14 + dx + lean, 12 + dyy, 12 + dx + lean, 14 + dyy, side);
+                rect(3 + dx + Math.round(lean), 6 + dyy, 9, 8, front);
+                rect(3 + dx + Math.round(lean), 14 + dyy, 11, 1, dark(side, 0.3f));
+                int nn = roll >= 1f ? 6 : 1 + (int) (roll * 14f) % 6;
+                int[][] pp = {{}, {7, 10}, {5, 8, 9, 12}, {5, 8, 7, 10, 9, 12}, {5, 8, 9, 8, 5, 12, 9, 12}, {5, 8, 9, 8, 7, 10, 5, 12, 9, 12}, {5, 8, 5, 10, 5, 12, 9, 8, 9, 10, 9, 12}};
+                for (int i = 0; i + 1 < pp[nn].length; i += 2) { int qx = pp[nn][i] + dx + Math.round(lean), qy = pp[nn][i + 1] + dyy; rect(qx, qy, 2, 1, edge); px(qx, qy + 1, dark(edge, 0.3f)); px(qx + 1, qy + 1, dark(edge, 0.3f)); }
                 outline();
-                if (roll >= 1f) { glint(13, 3, 2, 0xFFFFFF, 1f - (f - 0.72f) * 2f); px(2, 2, 0xFFE27A); px(14, 1, 0xFFE27A); }
-                else { pxa(1, 15, 0xB8C0D4, 0.7f); pxa(0, 14, 0xB8C0D4, 0.4f); }
+                if (roll >= 1f) { glint(13, 3, 2, 0xFFFFFF, 1f - (f - 0.5f) * 2f); px(2, 2, 0xFFE27A); }
+                else { pxa(1, 15, 0xB8C0D4, 0.6f); pxa(0, 14, 0xB8C0D4, 0.35f); }
             }
             case "emblem" -> {                                                               // a set badge: a shield with a star, in the set's colour
                 int col = tint != 0 ? tint : 0xB48CFF;

@@ -18,8 +18,7 @@ final class CosmeticData {
         new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, null, "glitch", "glitchaura", 3),
         new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, null, "contribfx", "stardust", 3),
         new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, null, "royal", "patronaura", 3),
-        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, null, "pulse", null, 2),
-        new SetDef("common", "Common", "Everyone gets this set.", 0xFF9AA3B5, null, "", null, 0));
+        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, null, "pulse", null, 2));
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
     private static final String BETA_HOW = "Downloaded the mod before v1.0", RARE_HOW = "Rare: given to the first players of the mod";

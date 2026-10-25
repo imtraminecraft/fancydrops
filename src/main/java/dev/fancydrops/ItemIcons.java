@@ -61,6 +61,23 @@ public final class ItemIcons {
         return ic;
     }
 
+    /** The skull of every Mythological creature (the Hypixel bestiary heads), by creature id. Shown as 3D heads for "MOB_<id>". */
+    private static final Map<String, String> MOB_SKINS = new java.util.HashMap<>();
+    static {
+        MOB_SKINS.put("minos_hunter", "db705068740cd6b4c2b0263daeab6103d652b9efbcaad8acbabee68e6fd1c4b4");
+        MOB_SKINS.put("siamese_lynxes", "e18f77331b2cab64e2b430fa8e4273e4db7f78fcdfa4b1a9a418af47375056eb");
+        MOB_SKINS.put("stranded_nymph", "5596b05a16b34310a448526238b2fc655c8955c856698c7d6b1db9ad9e4227fb");
+        MOB_SKINS.put("cretan_bull", "5d6c6eda942f7f5f71c3161c7306f4aed307d82895f9d2b07ab4525718edc5");
+        MOB_SKINS.put("harpy", "470ee91ee1a0059331d7ec924a09b86480bd96dae1914ff85c2cd3b7134ab683");
+        MOB_SKINS.put("gaia_construct", "22bcaceeb4162f400d44743315932ac820d3119ac8986a0161a726161ccc93fc");
+        MOB_SKINS.put("minotaur", "7f92d814b997fb7a676fc8cd15df23b7d485d6111060b3f1de3dd1b9cfa8111c");
+        MOB_SKINS.put("minos_champion", "eefcd13d5877ee4edd83a342088520a9cf2265484bfb93aa135cacd651b4fe85");
+        MOB_SKINS.put("sphinx", "cbba3f3ae5e3577e0ae37c302e8bf838d344359a7c7698c236687b74bc573a1a");
+        MOB_SKINS.put("minos_inquisitor", "19aac356dbbef3ea7ee3440d7b3ab9efc2965e259fadcb9b0851b0b244347b7d");
+        MOB_SKINS.put("manticore", "9e057e819907a638975760b9cd935cb8a57dbf2816954ac8d944196a4e8b02ca");
+        MOB_SKINS.put("king_minos", "c84cd85a049fa9b3256baa34894ec07d858c4f324c30ebd80435f2c4ca9869d5");
+    }
+
     private static Path cacheFile(String id) {
         return DataFiles.dir().resolve("icon-cache").resolve(id.replaceAll("[^A-Za-z0-9_]", "_") + ".json");
     }
@@ -68,17 +85,22 @@ public final class ItemIcons {
     private static void load(String id, Icon ic) {
         if (isBook(id)) {                                          // every enchanted book / bundle: a proper book, never a head or a wiki render
             Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = bookSprite();
-            ic.data = b; ic.ready = true; return;
+            ic.data = applyFolder(id, b); ic.ready = true; return;
         }
         if ("GRIFFIN_FEATHER".equals(id) || "BRAIDED_GRIFFIN_FEATHER".equals(id)) {             // a real feather, never the Griffin pet the wiki page shows first
-            Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = b; ic.ready = true; return;
+            Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = applyFolder(id, b); ic.ready = true; return;
+        }
+        if (id.startsWith("MOB_") && MOB_SKINS.containsKey(id.substring(4))) {                   // a creature's head
+            Cached b = new Cached(); b.wikiVersion = 12;
+            try { if (!Files.exists(texDir().resolve(id.replaceAll("[^A-Za-z0-9_]", "_") + "_head.png"))) { b.heads = fetchHead(MOB_SKINS.get(id.substring(4))); b.face = b.heads[4]; } } catch (Exception e) { log(id + ": head failed: " + e); }
+            ic.data = applyFolder(id, b); ic.ready = true; return;
         }
         Cached c = new Cached();
         try {
             Path cf = cacheFile(id);
             if (Files.exists(cf)) {
                 Cached old = GSON.fromJson(Files.readString(cf), Cached.class);
-                if (old != null && old.wikiVersion >= 12 && (old.wikiPixels != null || old.face != null) && (old.heads != null || (!skullFlag(id) && !"@COIN".equals(id)))) { ic.data = old; ic.ready = true; return; }
+                if (old != null && old.wikiVersion >= 12 && (old.wikiPixels != null || old.face != null) && (old.heads != null || (!skullFlag(id) && !"@COIN".equals(id)))) { ic.data = applyFolder(id, old); ic.ready = true; return; }
             }
         } catch (Exception ignored) {}
 
@@ -116,8 +138,37 @@ public final class ItemIcons {
             Files.createDirectories(cf.getParent());
             Files.writeString(cf, GSON.toJson(c));
         } catch (Exception ignored) {}
-        ic.data = c;
+        ic.data = applyFolder(id, c);
         ic.ready = true;
+    }
+
+    // ---- the textures folder: config/fancydrops/textures/. Every item picture is saved there once; put your own PNG with the same name to replace it (the game reads it the next time the item loads).
+    //      <ID>.png       = flat item art (any size, it is scaled to 16x16)
+    //      <ID>_head.png  = the skin of a head item (64x64 or 64x32), shown as the 3D block
+    static Path texDir() { return DataFiles.dir().resolve("textures"); }
+    private static Cached applyFolder(String id, Cached c) {
+        try {
+            Path dir = texDir(); Files.createDirectories(dir);
+            String nm = id.replaceAll("[^A-Za-z0-9_]", "_");
+            Path flat = dir.resolve(nm + ".png"), head = dir.resolve(nm + "_head.png");
+            if (Files.exists(head)) {
+                var im = ImageIO.read(head.toFile());
+                if (im != null && im.getWidth() >= 32) { c.heads = facesOf(im); c.face = c.heads[4]; c.iso = null; c.spin = null; c.faces6 = null; }
+            } else if (c.heads != null) {
+                var sk = new java.awt.image.BufferedImage(64, 32, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                for (int f = 0; f < 6; f++) for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) sk.setRGB(SKIN_SRC[f][0] + x, SKIN_SRC[f][1] + y, c.heads[f][y * 8 + x]);
+                ImageIO.write(sk, "png", head.toFile());
+            }
+            if (Files.exists(flat)) {
+                var im = ImageIO.read(flat.toFile());
+                if (im != null) { c.wikiPixels = pixels16(im); c.iso = null; }
+            } else if (c.wikiPixels != null && c.heads == null) {
+                var out = new java.awt.image.BufferedImage(16, 16, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                out.setRGB(0, 0, 16, 16, c.wikiPixels, 0, 16);
+                ImageIO.write(out, "png", flat.toFile());
+            }
+        } catch (Exception ignored) {}
+        return c;
     }
 
     private static boolean isBook(String id) {
@@ -379,6 +430,11 @@ public final class ItemIcons {
         if (r.statusCode() != 200) throw new java.io.IOException("Wiki image HTTP " + r.statusCode());
         var img = ImageIO.read(new ByteArrayInputStream(r.body()));
         if (img == null) throw new java.io.IOException("Unsupported Wiki image");
+        return pixels16(img);
+    }
+
+    /** Any picture -> 16x16 item art (big pictures are averaged down, small ones stay crisp, always centred). */
+    private static int[] pixels16(java.awt.image.BufferedImage img) {
         var scaled = new java.awt.image.BufferedImage(16, 16, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         var graphics = scaled.createGraphics();
         boolean big = Math.max(img.getWidth(), img.getHeight()) > 32;                      // a big picture is averaged down, a small one stays crisp
@@ -411,7 +467,7 @@ public final class ItemIcons {
         if (raw.startsWith("http")) url = raw;
         else if (raw.matches("[0-9a-fA-F]{40,80}")) url = "https://textures.minecraft.net/texture/" + raw;
         else {
-            String json = raw.startsWith("{") ? raw : new String(Base64.getDecoder().decode(raw), StandardCharsets.UTF_8);
+            String json = raw.startsWith("{") ? raw : new String(Base64.getDecoder().decode(raw + "=".repeat((4 - raw.length() % 4) % 4)), StandardCharsets.UTF_8);
             JsonObject tex = JsonParser.parseString(json).getAsJsonObject().getAsJsonObject("textures").getAsJsonObject("SKIN");
             url = tex.get("url").getAsString();
         }
@@ -419,9 +475,14 @@ public final class ItemIcons {
         HttpResponse<byte[]> r = HTTP.send(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(20))
                 .header("User-Agent", "FancyDrops").GET().build(), HttpResponse.BodyHandlers.ofByteArray());
         if (r.statusCode() != 200) throw new java.io.IOException("HTTP " + r.statusCode());
-        var img = ImageIO.read(new ByteArrayInputStream(r.body()));
+        return facesOf(ImageIO.read(new ByteArrayInputStream(r.body())));
+    }
+
+    private static final int[][] SKIN_SRC = {{16, 8}, {0, 8}, {8, 0}, {16, 0}, {8, 8}, {24, 8}};    // +x, -x, +y, -y, +z, -z (x, y of each 8x8 region)
+    /** A skin picture -> the six faces of the head (hat layer merged on top). */
+    private static int[][] facesOf(java.awt.image.BufferedImage img) {
         boolean hat = img.getWidth() >= 64 && img.getHeight() >= 16;
-        int[][] src = {{16, 8}, {0, 8}, {8, 0}, {16, 0}, {8, 8}, {24, 8}};    // +x, -x, +y, -y, +z, -z (x, y of each 8x8 region)
+        int[][] src = SKIN_SRC;
         int[][] faces = new int[6][64];
         for (int f = 0; f < 6; f++) for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) {
             int base = img.getRGB(src[f][0] + x, src[f][1] + y) | 0xFF000000;

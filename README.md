@@ -19,3 +19,6 @@ CC0.
 
 ## Editing art
 Icons: `IconArt.java` (16x16, one `case` per `:name:`). Scene animations: `Ritual.java`. Timing: `AnimationManager.java`. Item art: `ItemIcons.java`, `SkullSpin.java`. Defaults: `FancyConfig.java`.
+
+## Replacing item textures
+Open `config/fancydrops/textures/`. Each item has `<ID>.png` (flat) or `<ID>_head.png` (a 64x64 skin for heads). Replace a file and re-open the game or the item.

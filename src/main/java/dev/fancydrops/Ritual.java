@@ -598,7 +598,7 @@ final class Ritual {
         // where everything is (canvas units)
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f));
         float hi = 16 * sz * isc * (rng ? 1.2f : 1f);
-        float icy = CH * POS[Math.max(0, Math.min(2, cfg.pos))];
+        float icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
         if (barsOn) icy = Math.max(barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
         float u = (float) H / CH;                                                          // gui units per canvas unit
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
@@ -631,7 +631,7 @@ final class Ritual {
         }
 
         // ---- the item (flat icons stay flat, skulls are 3D and turn)
-        if (it != null && p >= 0f && !nod) {
+        if (it != null && p >= 0f && !nod && !TextFx.textOnly) {
             float grow = 0.25f + 0.75f * eob(p / 0.7f);
             float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f);
             float gcx = CW / 2f * W / CW + sx, gcy = itemY(tb, p, icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
@@ -643,7 +643,7 @@ final class Ritual {
         if (!TextFx.itemOnly && (textT > 0f || TextFx.textOnly)) {
             float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * (0.8f + 0.2f * csz);
             float th = TextFx.blockHeight(it, sc, c);
-            float top = cfg.pos == 2 ? (icy - hi - 14 * sz) * u - th : (icy + hi + 26 * sz) * u;
+            float top = c.animPos == 2 ? (icy - hi - 14 * sz) * u - th : (icy + hi + 26 * sz) * u;
             if (barsOn) { float bhg = barH * u; top = Math.max(bhg + 6, Math.min(H - bhg - th - 6, top)); }
             float tl = TextFx.textOnly ? TextFx.loopClock(4.6f) : 0f;                                    // the Text editor replays the words on their own clock
             TextFx.revealT = TextFx.textOnly ? tl : textT; TextFx.waveT = TextFx.textOnly ? tl : t; TextFx.waveOut = TextFx.textOnly ? sm((tl - 3.9f) / 0.6f) : textOut; TextFx.lineDelay = 0f;

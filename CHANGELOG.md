@@ -1,3 +1,9 @@
+## 0.4.17
+- Fixed the 3D head blur: the head texture is now 128 x 128 (was 64) so it stays sharp when big.
+- New folder `config/fancydrops/textures/`: every item picture is saved there as `<ITEM_ID>.png` (flat art, any size) and head items as `<ITEM_ID>_head.png` (the skin). Put your own PNG with the same name there to replace it; it loads the next time the item loads.
+- The Mythological creature icons are now each creature's own 3D head (Hypixel bestiary skins), with the pixel icon shown until it loads.
+- Head skins with missing base64 padding no longer fail to load.
+
 ## 0.4.16
 - Mythological animations: every creature has its own shape now (Minotaur, Minos Hunter, Siamese Lynxes as two cats, Stranded Nymph, Cretan Bull, Harpy, Gaia Construct, Minos Champion, Sphinx, Minos Inquisitor, Manticore, King Minos). On the Animations page they stay ONE "Mythological Mobs" group; its preview cycles through all twelve.
 - Treasure animation remade: a digger in a straw hat with a proper spade (wind up, drive in, prise, lift, fling) onto a growing pile, a hole that deepens, and a chest that rises. Normal treasure shows the chest too.
