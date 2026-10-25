@@ -607,30 +607,6 @@ public class FancyScreen extends Screen {
     }
 
     /** The Home tip card: an indigo-to-magenta ribbon with a floating bulb, a light sweep, the tip, and dots that follow the 3-second rotation. */
-    private void drawTip(GuiGraphicsExtractor g, Row r, int mx, int my) {
-        long now = System.currentTimeMillis(); float sec = (now % 3600000L) / 1000f;
-        boolean hv = mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h;
-        pill(g, r.x, r.y, r.w, r.h, 0xFF1B1840);
-        g.enableScissor(r.x + 1, r.y + 1, r.x + r.w - 1, r.y + r.h - 1);
-        for (int x = 0; x < r.w - 2; x += 2) {                                                     // a colour wash, left to right
-            float u = x / (float) r.w; int col = Canvas.mix(0xFF4B3FD8, 0xFFD84BB4, u);
-            g.fill(r.x + 1 + x, r.y + 1, r.x + 3 + x, r.y + r.h - 1, Gfx.argb(hv ? 120 : 92, col & 0xFFFFFF));
-        }
-        int sweep = r.x + (int) (((sec * 0.4f) % 1.6f - 0.3f) * r.w);
-        for (int i = 0; i < 16; i++) g.fill(sweep + i, r.y, sweep + i + 1, r.y + r.h, Gfx.argb(Math.round(30 * (1f - Math.abs(i - 8) / 8f)), 0xFFFFFF));
-        g.disableScissor();
-        rout(g, r.x, r.y, r.w, r.h, Gfx.argb(hv ? 220 : 140, 0xC9A8FF));
-        int bx = r.x + 8, by = r.y + r.h / 2 - 8 + Math.round((float) Math.sin(sec * 2.4f) * 1.5f);
-        if (Icons.has(r.icon)) Icons.draw(g, r.icon, bx, by, now);
-        int tx = r.x + 30, tw = r.w - 30 - 8;
-        List<String> ln = wrap(r.title, tw - 22);
-        int n = Math.min(2, ln.size()), ty = r.y + (r.h - (n * 10 - 1)) / 2 - 1;
-        Gfx.text(g, font, "TIP", tx, ty, 0xFFFFE08A);
-        for (int i = 0; i < n; i++) Gfx.text(g, font, ln.get(i), tx + 22, ty + i * 10, 0xFFFFFFFF);
-        float left = 1f - ((now - tipAt) % 10000L) / 10000f;                                           // time until the next tip
-        g.fill(r.x + 3, r.y + r.h - 3, r.x + 3 + Math.round((r.w - 6) * left), r.y + r.h - 2, 0x88FFE08A);
-    }
-
     private static final int[] PICK_PALETTE = {0xFF6C86FF, 0xFFFF72C6, 0xFF7BE05A, 0xFFFFC857, 0xFFB56BFF, 0xFF56D8FF};
 
     /** A box of tiles to pick one thing from: a title, then one tile per choice (icon and name), the chosen one lit in its own colour. */
@@ -2164,26 +2140,6 @@ public class FancyScreen extends Screen {
     }
 
 
-    private static int tipIdx = 0;
-    private static long tipAt = System.currentTimeMillis();
-    /** The tip shown now: moves on by itself every 10 seconds, and a click skips ahead (restarting the 10 seconds). */
-    private static int tipNow() { return Math.floorMod(tipIdx + (int) ((System.currentTimeMillis() - tipAt) / 10000L), TIPS.length); }
-    private static final String[] TIPS = {
-        "Type /fd simulate Mythological or /fd simulate Treasure to play a drop for real, without touching your stats.",
-        "Drop Library > Mythological: pick Auto, Normal, RNG or Off for every drop, and toggle its Chat Alert.",
-        "Auto plays RNG for a rare drop and Normal for the rest. No Drops plays when a ritual ends with nothing.",
-        "Animations > Mythological: every animation is 5 to 7 seconds. Set its length, position and size.",
-        "Only RNG has cinematic bars and a blurred background. Switch either one off in its editor.",
-        "Sounds: click a moment under the preview to hear just that sound.",
-        "Treasure plays its own animations: pick your spade on the Treasure page of the Drop Library.",
-        "Chat can announce a rare drop to your party, your co-op or everyone. Each category has its own message.",
-        "Animations > Bar Changes, Text Changes and Item Changes edit the look every animation shares.",
-        "Cosmetics: pick a suffix, a name effect and an aura. Search \"cosmetics\" to find the button.",
-        "Turn the Active lever off to pause the whole mod, cosmetics included.",
-        "The live preview can sit above the menu, below it, or be hidden.",
-        "Slayers, Dyes, Farming, Experiments, Mining and Fishing are coming back one at a time. Slayers is next.",
-        "/fd mute silences the mod whenever you need quiet."};
-
     /** A little fake player head: skin, hair and two eyes. */
     private static void head(GuiGraphicsExtractor g, int x, int y, int skin, int hair) {
         g.fill(x, y, x + 8, y + 8, skin); g.fill(x, y, x + 8, y + 3, hair);
@@ -2471,11 +2427,6 @@ public class FancyScreen extends Screen {
 
     private void homePage(FancyConfig c) {
         if (!landing()) { resourcesPage(); return; }
-        if (c.showTips) {
-            Row tip = new Row(); tip.kind = TIP; tip.h = 30; tip.noSearch = true; tip.icon = ":tipcard:"; tip.title = TIPS[tipNow()]; tip.sub = "";
-            tip.click = () -> { tipIdx = tipNow() + 1; tipAt = System.currentTimeMillis(); };
-            rows.add(tip);
-        }
         rows.add(hero(":fancydrops:", "FancyDrops", "Every rare drop becomes a short animation you design yourself: how it looks, how it sounds and what your party reads in chat. Mythological Rituals come first, Slayers next.", Ui.ACCENT));
         UpdateCheck.check(false);
         rows.add(section("Updates"));
@@ -2755,7 +2706,6 @@ public class FancyScreen extends Screen {
                     new String[]{"Above the menu", "Below the menu", "Hidden"}, new String[]{":dock_top:", ":dock_bottom:", ":dock_off:"},
                     new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFF8A8F9E}, null, 3, () -> c.previewAt, i -> c.previewAt = i));
                 rows.add(section("Notices"));
-                rows.add(toggle(":tipcard:", "Tip card", "The rotating tip at the top of Home", () -> c.showTips, v -> c.showTips = v));
                 rows.add(toggle(":bell:", "Pop-up notices", "Small notices under the menu (saved, discarded, links) instead of chat messages", () -> c.popups, v -> c.popups = v));
                 rows.add(section("Cosmetics"));
                 rows.add(section("You"));
@@ -3160,7 +3110,6 @@ public class FancyScreen extends Screen {
             if (r.y + r.h < lt || r.y > lb) continue;
             if (r.kind == SECTION) { drawSection(g, r); continue; }
             if (r.kind == PREVIEW) { drawPositionPreview(g, r); continue; }
-            if (r.kind == TIP) { drawTip(g, r, mx, my); continue; }
             if (r.kind == PICKER) { drawPicker(g, r, mx, my); continue; }
             if (r.kind == CAT) { drawCat(g, r); continue; }
             if (r.kind == CHATPREV) { drawChatPrev(g, r); continue; }

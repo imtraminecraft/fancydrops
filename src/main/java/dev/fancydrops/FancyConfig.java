@@ -40,7 +40,6 @@ public class FancyConfig {
     public boolean epicEffects = true;       // a drop worth epicThreshold or more plays RNG even when its rarity says Normal
     public long epicThreshold = 20_000_000L; // coins
     public boolean popups = true;            // notices pop up under the menu instead of going to chat
-    public boolean showTips = true;          // the rotating tip card on the Home page
 
     // ------------------------------------------------------------------ prices
     public boolean useBazaar = true, useAuctions = true;

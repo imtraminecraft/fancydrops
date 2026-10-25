@@ -307,12 +307,12 @@ public final class DropListener {
     }
 
     /** /fd simulate Treasure [Drop]: a pretend Griffin burrow treasure (a random one when no name is given). */
-    static void simulateTreasure(String name, Consumer<String> reply) {
+    static void simulateTreasure(String name, int mf, Consumer<String> reply) {
         List<DropData.Drop> pool = new ArrayList<>(); java.util.Set<String> seen = new java.util.HashSet<>();
         for (int sp = 0; sp < 3; sp++) for (DropData.Drop d : TreasureData.drops(sp)) if (seen.add(d.name)) pool.add(d);
         List<DropData.Drop> picks = name.isBlank() ? List.of(pool.get(new Random().nextInt(pool.size()))) : pickDrops(pool, name, 1, "a treasure drop", reply);
         if (picks == null || picks.isEmpty()) return;
-        reply.accept("Simulating " + picks.get(0).name + " from a burrow");
+        reply.accept("Simulating " + picks.get(0).name + " from a burrow at " + mf + " Magic Find");
         launchTreasure(picks.get(0), -1);
     }
 
