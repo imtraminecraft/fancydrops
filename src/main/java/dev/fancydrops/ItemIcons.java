@@ -70,6 +70,9 @@ public final class ItemIcons {
             Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = bookSprite();
             ic.data = b; ic.ready = true; return;
         }
+        if ("GRIFFIN_FEATHER".equals(id) || "BRAIDED_GRIFFIN_FEATHER".equals(id)) {             // a real feather, never the Griffin pet the wiki page shows first
+            Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = b; ic.ready = true; return;
+        }
         if ("@COIN".equals(id)) { Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = coinSprite(); ic.data = b; ic.ready = true; return; }
         if ("@seed".equals(FarmData.imgOf(id))) {                  // Seasoning is not a real item: a few seeds
             Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = seedSprite();
@@ -181,6 +184,35 @@ public final class ItemIcons {
             px[y * 16 + x] = c;
         }
         return px;
+    }
+
+    private static final String[] FEATHER = {
+        "................",
+        "................",
+        "...........oo...",
+        "........oooWWo..",
+        ".......oWWWWSSo.",
+        "......oWWWWSSGGo",
+        ".....oWWWWSSGGo.",
+        "....oWWWWSSGGo..",
+        "...oWWWWSSGGGGo.",
+        "..oWWWWSSGGGGo..",
+        ".oWWWWSSGGGGo...",
+        "..oWWSSGGGGo....",
+        ".oWWSSGGGGo.....",
+        "..oSSGGGGo......",
+        ".oSoGGGGo.......",
+        "oSo.oooo........"};
+    /** A hand-drawn feather (the braided one is gold), 16x16. */
+    static int[] featherSprite(boolean braided) {
+        int[] p = new int[256];
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
+            p[y * 16 + x] = switch (FEATHER[y].charAt(x)) {
+                case 'o' -> braided ? 0xFF5A4318 : 0xFF4A4458; case 'W' -> braided ? 0xFFF3E2A0 : 0xFFF4F4F8; case 'G' -> braided ? 0xFFD2B56A : 0xFFC9CBD6; case 'S' -> braided ? 0xFF9A7A3A : 0xFF8A8FA6;
+                default -> 0;
+            };
+        }
+        return p;
     }
 
     static int[] bookSprite() {

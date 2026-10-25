@@ -184,16 +184,38 @@ final class Cosmetics {
     }
     /** Logs any suffix whose picture file or font entry is missing, so a wrong id never shows up as an empty box silently. */
     static void checkIcons() {
+        for (Suffix s : SUFFIXES) try {                                                   // the chat/tab sprite must show what the strip shows; tools/make_suffix_sprites.py rebuilds the sprites
+            String n = "sparkle".equals(s.id()) ? "sparkle" : "suffix_" + s.id();
+            try (java.io.InputStream a = Cosmetics.class.getResourceAsStream("/assets/fancydrops/textures/font/" + n + ".png"); java.io.InputStream b = Cosmetics.class.getResourceAsStream("/assets/fancydrops/textures/gui/sprites/suffix/" + s.id() + ".png")) {
+                if (a == null || b == null) { System.err.println("[FancyDrops] suffix " + s.id() + ": strip or chat sprite missing"); continue; }
+                java.awt.image.BufferedImage sa = javax.imageio.ImageIO.read(a), sb = javax.imageio.ImageIO.read(b); boolean same = sb.getHeight() == 60;
+                for (int f = 0; f < 6 && same; f++) for (int y = 0; y < 10 && same; y++) for (int x = 0; x < 10; x++) if (sa.getRGB(f * 10 + x, y) != sb.getRGB(x, f * 10 + y)) { same = false; break; }
+                if (!same) System.err.println("[FancyDrops] suffix " + s.id() + ": the chat sprite differs from its strip. Run tools/make_suffix_sprites.py");
+            }
+        } catch (Throwable ignored) { }
         for (Suffix s : SUFFIXES) {
             if (Cosmetics.class.getResource("/assets/fancydrops/textures/font/suffix_" + s.id() + ".png") == null) System.err.println("[FancyDrops] suffix " + s.id() + " has no picture (textures/font/suffix_" + s.id() + ".png)");
         }
     }
     static Component glyph(String g) { return Component.literal(g).withStyle(Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)); }
-    /** One frame of a suffix as a menu icon. */
+    private static final Map<String, int[][]> STRIPS = new HashMap<>();
+    /** A suffix's six 10x10 frames, read straight from its strip picture (the one source of the suffix's looks). */
+    private static int[][] strip(String id) {
+        return STRIPS.computeIfAbsent(id, k -> {
+            int[][] fr = new int[6][100];
+            String path = "/assets/fancydrops/textures/font/" + ("sparkle".equals(k) ? "sparkle" : "suffix_" + k) + ".png";
+            try (java.io.InputStream in = Cosmetics.class.getResourceAsStream(path)) {
+                if (in != null) { java.awt.image.BufferedImage im = javax.imageio.ImageIO.read(in); for (int f = 0; f < 6; f++) for (int y = 0; y < 10; y++) for (int x = 0; x < 10; x++) fr[f][y * 10 + x] = im.getRGB(f * 10 + x, y); }
+            } catch (Throwable t) { System.err.println("[FancyDrops] suffix strip " + k + " unreadable: " + t); }
+            return fr;
+        });
+    }
+    /** One frame of a suffix as a menu icon: its picture drawn pixel by pixel, centred in the 16 x 16 icon box (the same place for every suffix and for the Discord button). */
     static void drawIcon(net.minecraft.client.gui.GuiGraphicsExtractor g, String id, int x, int y, long now) {
         Suffix s = byId(id); if (s == null) return;
-        Gfx.push(g); Gfx.translate(g, x + 1, y + 1); Gfx.scale(g, 1.4f);
-        g.text(Minecraft.getInstance().font, glyph(frameNow(s, now)), 0, 0, 0xFFFFFFFF, false);
+        int[] px = strip(id)[(int) ((now / 100L) % 6)];
+        Gfx.push(g); Gfx.translate(g, x + 0.5f, y + 0.5f); Gfx.scale(g, 1.5f);
+        for (int yy = 0; yy < 10; yy++) { int xx = 0; while (xx < 10) { int c = px[yy * 10 + xx]; if ((c >>> 24) < 8) { xx++; continue; } int x2 = xx + 1; while (x2 < 10 && px[yy * 10 + x2] == c) x2++; g.fill(xx, yy, x2, yy + 1, c); xx = x2; } }
         Gfx.pop(g);
     }
 

@@ -241,7 +241,7 @@ public final class AnimationManager {
             return new float[]{3.0f / total, Scene.splitTime(p) + 0.12f, total};
         }
         if (p.myth && p.tier == 2 && p.hasItem) {                                       // the RNG ritual: 6 s by default, 2 to 7 s by choice, same story as Normal but slower and with the night sky
-            Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 6.0f;
+            Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : Math.min(7f, Scene.length(p));       // by default it plays at exactly the speed of Normal, so the strikes land at the same pace
             return new float[]{Scene.length(p) / total, Scene.splitTime(p) + 0.12f, total};
         }
         boolean farm = farm0 || p.tier != 2;
@@ -255,7 +255,7 @@ public final class AnimationManager {
     /** How long an animation lasts by default, in real seconds, for the length slider. */
     public static float naturalSecs(String key, FancyConfig c) {
         if (key.equals("myth") || key.equals("mythnothing")) return 3.0f;
-        if (key.equals("mythrng")) return 6.0f;
+        if (key.equals("mythrng")) { Scene.Params rp = new Scene.Params(2, true); rp.myth = true; rp.chops = Scene.RNG_STRIKES; return Math.min(7f, Scene.length(rp)); }
         c.fixChops();
         int t = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
         Scene.Params p = new Scene.Params(t, !key.endsWith("nothing"));
@@ -282,7 +282,7 @@ public final class AnimationManager {
         p.style = c.slayerStyle;
         if (a.farm) { p.farm = true; p.chops = a.pest ? 1 : 3; p.helios = a.helios; p.pest = a.pest; p.alt = c.farmStyle == 1; }
         if (a.isExp()) { p.exp = true; p.chops = tier == 2 ? c.expFlipsRng : c.expFlips; p.alt = c.expStyle == 1; }
-        else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); p.alt = c.mythStyle == 1; p.treasure = a.slayer == TreasureData.SOURCE; if (Scene.sceneN(p)) p.chops = 3; }
+        else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); p.alt = c.mythStyle == 1; p.treasure = a.slayer == TreasureData.SOURCE; if (Scene.sceneN(p)) p.chops = tier == 2 ? Scene.RNG_STRIKES : 3; }
         p.seed = Math.abs(a.slayer.id.hashCode() % 97);                                   // the mob's look stays the same
         p.cutSeed = java.util.concurrent.ThreadLocalRandom.current().nextInt(1, 100000);   // but the slashes are different every time
         p.theme = java.util.List.of("zombie", "spider", "wolf", "enderman", "blaze", "vampire").indexOf(a.slayer.id);
@@ -648,7 +648,7 @@ public final class AnimationManager {
             case "exprng" -> p.chops = Math.max(1, Math.min(12, c.expFlipsRng));
             default -> { p.chops = Math.max(1, Math.min(20, tier == 2 ? c.chopsEpic : tier == 1 ? c.chopsCool : c.chopsDefault)); p.style = c.slayerStyle; }
         }
-        if (p.myth && Scene.sceneN(p)) p.chops = 3;                                          // the same three beats as the real scene, so the sound waves line up
+        if (p.myth && Scene.sceneN(p)) p.chops = tier == 2 ? Scene.RNG_STRIKES : 3;          // the same beats as the real scene (3 strikes, 5 in RNG), so the sound waves line up
         return p;
     }
 

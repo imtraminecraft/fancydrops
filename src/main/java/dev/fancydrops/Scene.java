@@ -57,16 +57,17 @@ final class Scene {
     static float chopIv(Params p, int k) { return k < 2 ? 0.42f : interval(p.tier); }
     /** A Mythological drop in the Normal state: the small, see-through scene (a ritual circle for a creature, a dig for a treasure) that plays 3 seconds. */
     /** The Mythological scenes built on the ritual circle / the dig: Normal, No Drops, and the RNG version (the same story, slower, with night, god rays and halos). */
+    static final int RNG_STRIKES = 5;                                     // lightning strikes in the RNG ritual (Normal has 3, at the same pace)
     static boolean sceneN(Params p) { return p.myth && (p.tier != 2 || p.hasItem); }
     static boolean normalMyth(Params p) { return p.myth && p.tier != 2; }          // Normal and No Drops: the small scene above the action bar
     /** The rows of the 112 x 96 canvas the Normal Mythological scene really uses: the layout crops the empty rest so nothing floats above the action bar. */
     static final int CROP_T = 20, CROP_B = 80;
 
     static float impact(Params p, int k) { return p.exp ? (p.tier == 2 ? 1.45f + 0.3f * k - 0.008f * k * k : 1.45f + 0.36f * k) : p.myth ? (sceneN(p) ? 0.4f + 0.5f * k : 0.55f + 0.5f * k) : p.farm ? (p.pest ? 1.15f : p.helios ? 0.5f + 0.35f * k : 0.12f + 0.18f * k) : p.dye ? 0.75f : chopStart(p, k) + 0.8095f * chopIv(p, k); }   // dye: when each paint blob lands
-    static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? (sceneN(p) ? (p.treasure ? 2.0f : 1.85f) : impact(p, Math.max(0, p.chops - 1)) + 0.6f) : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.pest ? 0.32f : p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
+    static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? (sceneN(p) ? impact(p, Math.max(0, p.chops - 1)) + (p.treasure ? 0.6f : 0.45f) : impact(p, Math.max(0, p.chops - 1)) + 0.6f) : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.pest ? 0.32f : p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
     /** 0 = plain sword (first two slices of every scene); 1 = dramatic (Rare Drop); 2 = super dramatic (RNG Drop). */
     static int drama(Params p, int k) { return k < 2 ? 0 : p.tier; }
-    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (sceneN(p) ? 1.15f : p.tier == 2 ? 6.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
+    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (sceneN(p) ? (p.tier == 2 ? 4.0f : 1.15f) : p.tier == 2 ? 6.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
 
     private static float cl(float v) { return Math.max(0f, Math.min(1f, v)); }
     private static float easeOut(float x) { x = cl(x); return 1 - (1 - x) * (1 - x) * (1 - x); }

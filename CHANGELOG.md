@@ -11,6 +11,10 @@
 - Home hero shows its words again. Tips, page descriptions, mod description and README now describe the current mod (Mythological live, the rest being rebuilt).
 - Cosmetics: 8 new animated suffix icons (Lucky Dice, Shovel, Skull, Moon, Comet earned by rare drops; Watcher, Rocket, Cat for the early players) and 5 new name effects (Rainbow, Aurora for the early players; Ember, Frost, Neon earned by rare drops). Each page header has a bar that fills once when the page opens.
 - Construction page: the worker tosses each brick up to the wall from a pile instead of the crane lowering it.
+- Chat and tab-list suffixes used old sprite files that no longer matched the menu (that was the Discord egg). Every suffix sprite is rebuilt from its strip (tools/make_suffix_sprites.py), menu icons are drawn from the same strip and centred in the icon box, and a startup check logs any sprite that differs. New Ghost and Lucky Dice art (they looked like eggs).
+- Duplicate icon names: a hand-pixeled picture always won over a code-drawn one of the same name, so the new Dye palette never showed. The old animated Dye picture is removed. The RNG icon is the tumbling die. The Discord community button uses the Discord suffix picture.
+- Griffin Feather (and Braided) show a feather in the animation, not the Griffin pet.
+- Mythological lightning: Normal strikes 3 times and RNG strikes 5 times, at the same pace by default (RNG is about 6.9 s by default).
 - Every icon is now written as :name: (the old fd:name still works). The Discord suffix looked like an egg because ":discord:" fell through to the old community-button picture; suffix names are now :suf_discord: and the Discord community button uses the same picture as the suffix.
 - Skull icons are real spinning 3D blocks that bob, like a dropped item (they hold still when menu animations are off).
 - Slayers: new sound bank (Slash, Cleave, Slayer reveal, Epic reveal, Ember hum, Farewell) is the default for the Slayer scenes. The Slayer pages, drops and sound slots are unchanged.
