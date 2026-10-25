@@ -625,6 +625,17 @@ public final class DropListener {
         return true;
     }
 
+    /** The Animations page's Play button for Treasure: a Griffin Feather dig (RNG = the big scene). */
+    public static void playTreasureTest(boolean rng) {
+        SlayerData.Drop dr = null;
+        for (SlayerData.Drop d : TreasureData.drops(FancyConfig.get().mythSpade)) if (d.name.equals(rng ? "Myth the Fish" : "Griffin Feather")) dr = d;
+        if (dr == null) return;
+        Item it = treasureItem(dr);
+        if (TreasureData.coins(dr.name) == 0) previewPrice(it); else ItemIcons.prefetch(it.id);
+        Anim a = new Anim(TreasureData.SOURCE, it, rng ? 2 : 0, null); a.myth = true;
+        AnimationManager.play(a);
+    }
+
     /** Menu "play" button of a treasure drop. */
     public static void playTreasureDrop(SlayerData.Drop dr) {
         Item it = treasureItem(dr);

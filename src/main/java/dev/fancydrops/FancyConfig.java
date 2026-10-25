@@ -179,6 +179,7 @@ public class FancyConfig {
         if (instance.nameFx == null) instance.nameFx = "";
         if (instance.aura == null) instance.aura = "";
         if (instance.uiVer < 2) { instance.uiVer = 2; if (instance.slayers != null) for (SlayerCfg sc : instance.slayers.values()) sc.drops.clear(); if (instance.rngPick != null) instance.rngPick.clear(); save(); }          // the library works on states now: start every drop from its rarity default
+        if (instance.uiVer < 3) { instance.uiVer = 3; if (instance.rngPick != null) instance.rngPick.remove("chimera i"); if (instance.slayers != null) { SlayerCfg mc = instance.slayers.get("minos_inquisitor"); if (mc != null) { DropCfg cc = mc.drops.get("Chimera I"); if (cc != null) { cc.animate = true; cc.announce = true; } } } save(); }          // Chimera I is an RNG drop from now on
         instance.fixChops();
         if (!instance.enabled) { instance.masterAnimate = false; instance.masterAnnounce = false; instance.enabled = true; }   // older configs had one master switch
         instance.scale = Math.max(0.5f, Math.min(1.1f, instance.scale));

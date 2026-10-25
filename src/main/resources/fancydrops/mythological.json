@@ -1,5 +1,5 @@
 {
- "v": 5,
+ "v": 6,
  "sources": [
   {
    "id": "minos_hunter",
@@ -13,15 +13,6 @@
     "eye": "#FFE066"
    },
    "drops": [
-    {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
     {
      "name": "Hilt of Revelations",
      "id": "HILT_OF_REVELATIONS",
@@ -39,16 +30,6 @@
       1.5,
       2
      ]
-    },
-    {
-     "name": "Minos Hunter Shard",
-     "id": "SHARD_MINOS_HUNTER",
-     "icon": "prismarine_shard",
-     "odds": "",
-     "chance": "Based on your ❣ Charm Chance",
-     "rank": 1,
-     "untradeable": false,
-     "img": "Minos_Hunter_Shard"
     },
     {
      "name": "Mythological Dye",
@@ -75,15 +56,6 @@
     "eye": "#7FE5FF"
    },
    "drops": [
-    {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
     {
      "name": "Crochet Tiger Plushie",
      "id": "CROCHET_TIGER_PLUSHIE",
@@ -127,15 +99,6 @@
    },
    "drops": [
     {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
-    {
      "name": "Washed-up Souvenir",
      "id": "WASHED_UP_SOUVENIR",
      "icon": "sea_pickle",
@@ -178,15 +141,6 @@
    },
    "drops": [
     {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
-    {
      "name": "Cretan Urn",
      "id": "CRETAN_URN",
      "icon": "decorated_pot",
@@ -202,16 +156,6 @@
       0.4,
       0.5
      ]
-    },
-    {
-     "name": "Cretan Bull Shard",
-     "id": "SHARD_CRETAN_BULL",
-     "icon": "prismarine_shard",
-     "odds": "",
-     "chance": "Based on your ❣ Charm Chance",
-     "rank": 1,
-     "untradeable": false,
-     "img": "Cretan_Bull_Shard"
     },
     {
      "name": "Mythological Dye",
@@ -239,15 +183,6 @@
    },
    "drops": [
     {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
-    {
      "name": "Antique Remedies",
      "id": "ANTIQUE_REMEDIES",
      "icon": "potion",
@@ -263,16 +198,6 @@
       0.5,
       0.6
      ]
-    },
-    {
-     "name": "Harpy Shard",
-     "id": "SHARD_HARPY",
-     "icon": "prismarine_shard",
-     "odds": "",
-     "chance": "Based on your ❣ Charm Chance",
-     "rank": 1,
-     "untradeable": false,
-     "img": "Harpy_Shard"
     },
     {
      "name": "Mythological Dye",
@@ -299,15 +224,6 @@
     "eye": "#FFE066"
    },
    "drops": [
-    {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
     {
      "name": "Dwarf Turtle Shelmet",
      "id": "DWARF_TURTLE_SHELMET",
@@ -351,15 +267,6 @@
    },
    "drops": [
     {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
-    {
      "name": "Daedalus Stick",
      "id": "DAEDALUS_STICK",
      "icon": "stick",
@@ -376,16 +283,6 @@
       0.06,
       0.08
      ]
-    },
-    {
-     "name": "Minotaur Shard",
-     "id": "SHARD_MINOTAUR",
-     "icon": "prismarine_shard",
-     "odds": "",
-     "chance": "Based on your ❣ Charm Chance",
-     "rank": 1,
-     "untradeable": false,
-     "img": "Minotaur_Shard"
     },
     {
      "name": "Mythological Dye",
@@ -412,15 +309,6 @@
     "eye": "#FFFFFF"
    },
    "drops": [
-    {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
     {
      "name": "Minos Relic",
      "id": "MINOS_RELIC",
@@ -464,15 +352,6 @@
    },
    "drops": [
     {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
-    {
      "name": "Enchanted Ancient Claw",
      "id": "ENCHANTED_ANCIENT_CLAW",
      "icon": "flint",
@@ -497,16 +376,6 @@
       0.25,
       0.5
      ]
-    },
-    {
-     "name": "Sphinx Shard",
-     "id": "SHARD_SPHINX",
-     "icon": "prismarine_shard",
-     "odds": "",
-     "chance": "Based on your ❣ Charm Chance",
-     "rank": 1,
-     "untradeable": false,
-     "img": "Sphinx_Shard"
     },
     {
      "name": "Mythological Dye",
@@ -534,15 +403,6 @@
    },
    "drops": [
     {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
-    {
      "name": "Enchanted Ancient Claw",
      "id": "ENCHANTED_ANCIENT_CLAW",
      "icon": "flint",
@@ -557,7 +417,7 @@
      "icon": "enchanted_book",
      "odds": "",
      "chance": "",
-     "rank": 1,
+     "rank": 2,
      "untradeable": false,
      "pct": [
       0,
@@ -593,15 +453,6 @@
     "eye": "#FFD166"
    },
    "drops": [
-    {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
     {
      "name": "Enchanted Ancient Claw",
      "id": "ENCHANTED_ANCIENT_CLAW",
@@ -655,15 +506,6 @@
    },
    "drops": [
     {
-     "name": "Enchanted Gold Ingot",
-     "id": "ENCHANTED_GOLD",
-     "icon": "gold_ingot",
-     "odds": "",
-     "chance": "1 in 2",
-     "rank": 0,
-     "untradeable": false
-    },
-    {
      "name": "Enchanted Ancient Claw",
      "id": "ENCHANTED_ANCIENT_CLAW",
      "icon": "flint",
@@ -689,16 +531,6 @@
      "chance": "1 in 500",
      "rank": 2,
      "untradeable": false
-    },
-    {
-     "name": "King Minos Shard",
-     "id": "SHARD_KING_MINOS",
-     "icon": "prismarine_shard",
-     "odds": "",
-     "chance": "Based on your ❣ Charm Chance",
-     "rank": 1,
-     "untradeable": false,
-     "img": "King_Minos_Shard"
     },
     {
      "name": "Mythological Dye",

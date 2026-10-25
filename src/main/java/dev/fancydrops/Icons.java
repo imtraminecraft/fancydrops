@@ -338,18 +338,44 @@ final class Icons {
                 r(g, x, y, 5 - open, 4, 3, 4, 0xFFE0A21B); r(g, x, y, 8 + open, 4, 3, 4, 0xFFE0A21B); r(g, x, y, 7, 3 - (open > 1 ? 1 : 0), 2, 3, 0xFFFFD36B);
                 if (u > 0.4f) for (int i = 0; i < 6; i++) { double an = i * Math.PI / 3 - Math.PI / 2; float rr = (u - 0.4f) * 12; r(g, x, y, Math.round(8 + (float) Math.cos(an) * rr), Math.round(4 + (float) Math.sin(an) * rr * 0.8f), 1, 1, al(Math.round(255 * (1 - u)), 0xFFE08A)); }
             }
-            case "slot_chop_myth" -> {                                                                  // a lightning bolt striking
-                boolean on = ((int) (s * 4)) % 3 != 2; float fl = on ? 1f : 0.3f;
-                int[][] pts = {{9, 0}, {6, 5}, {9, 6}, {5, 11}, {7, 11}, {4, 15}};
-                for (int i = 0; i < pts.length - 1; i++) { ln(g, x, y, pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], al(Math.round(255 * fl), 0xFFFFE066)); ln(g, x, y, pts[i][0] + 1, pts[i][1], pts[i + 1][0] + 1, pts[i + 1][1], al(Math.round(200 * fl), 0xFFFFFFFF)); }
-                if (on) { spark(g, x, y, 12, 4, 1, 0xFFB8E0FF); spark(g, x, y, 3, 8, 0, 0xFF9AB8FF); }
-                for (int i = 0; i < 3; i++) r(g, x, y, 2 + i * 5, 15, 2, 1, al(120, 0xB56BFF));
+            case "slot_chop_myth" -> {                                                                  // Call: a rune ring on the ground pulses and a violet glow rises from it
+                float u = (s * 0.9f) % 1f;
+                for (int k = 0; k < 14; k++) { double an = k * Math.PI / 7 + s * 0.8; r(g, x, y, Math.round(8 + (float) Math.cos(an) * 6.5f), Math.round(12 + (float) Math.sin(an) * 2.4f), 1, 1, al(k % 2 == 0 ? 255 : 140, 0xFFB56BFF)); }
+                int h = Math.round(Math.min(1f, u * 1.4f) * 8); r(g, x, y, 5, 12 - h, 6, h, al(Math.round(110 * (1f - u)), 0xFFC8A0FF)); r(g, x, y, 7, 12 - h, 2, h, al(Math.round(220 * (1f - u * 0.7f)), 0xFFFFFFFF));
+                r(g, x, y, 6, 12, 4, 1, 0xFFE0C8FF); if (u > 0.25f) spark(g, x, y, 8, 12 - h, 1, 0xFFFFFFFF);
             }
-            case "slot_split_myth" -> {                                                                 // the rune circle erupts in a column of light
-                float u = (s * 1.1f) % 1f;
-                for (int i = 0; i < 16; i++) { double an = i * Math.PI / 8 + s; r(g, x, y, Math.round(8 + (float) Math.cos(an) * 6.5f), Math.round(12 + (float) Math.sin(an) * 2.2f), 1, 1, al(i % 2 == 0 ? 255 : 150, 0xFFB56BFF)); }
-                int h = Math.round(Math.min(1f, u * 1.6f) * 11); r(g, x, y, 6, 12 - h, 4, h, al(Math.round(190 * (1f - u * 0.5f)), 0xFFE0C8FF)); r(g, x, y, 7, 12 - h, 2, h, al(255, 0xFFFFFFFF));
-                if (u > 0.3f) for (int i = 0; i < 4; i++) r(g, x, y, 3 + i * 3, Math.round(10 - u * 9 + (i % 2) * 2), 1, 1, al(220, 0xFFFFFFFF));
+            case "slot_split_myth" -> {                                                                 // Shatter: a horned head cracks and breaks into pieces
+                float u = (s * 0.8f) % 1f, sp = u < 0.4f ? 0f : (u - 0.4f) / 0.6f; int d = Math.round(sp * 3);
+                int hc = 0xFFB0764A, hd = 0xFF7A4A2C, hn = 0xFFF2E6C8;
+                r(g, x, y, 4 - d, 5 - d / 2, 4, 6, hc); r(g, x, y, 8 + d, 5 - d / 2, 4, 6, hd); r(g, x, y, 5 - d, 10 + d, 3, 2, hd); r(g, x, y, 8 + d, 10 + d, 3, 2, hc);
+                r(g, x, y, 3 - d, 3 - d, 2, 3, hn); r(g, x, y, 11 + d, 3 - d, 2, 3, hn);
+                if (u < 0.4f) { r(g, x, y, 7, 4, 1, 3, 0xFFFFE066); r(g, x, y, 8, 7, 1, 3, 0xFFFFE066); } else spark(g, x, y, 8, 8, 2 + d, al(Math.round(255 * (1f - sp)), 0xFFFFE066));
+                r(g, x, y, 5 - d, 7, 1, 1, 0xFFFF4632); r(g, x, y, 10 + d, 7, 1, 1, 0xFFFF4632);
+            }
+            case "slot_chop_treasure" -> {                                                              // Dig: a spade digs into the soil and earth flies up
+                float u = (s * 1.2f) % 1f; int dip = u < 0.5f ? Math.round(u * 6f) : Math.round((1f - u) * 6f);
+                r(g, x, y, 1, 12, 14, 3, 0xFF6B4A2E); r(g, x, y, 1, 12, 14, 1, 0xFF8A6240); r(g, x, y, 3, 14, 3, 1, 0xFF4A3220);
+                r(g, x, y, 8, 0 + dip, 2, 6, 0xFFB08040); r(g, x, y, 7, 6 + dip, 4, 4, 0xFFC8CDD6); r(g, x, y, 8, 10 + dip, 2, 1, 0xFF8A93A0); r(g, x, y, 7, 6 + dip, 1, 4, 0xFFE8ECF4);
+                if (u > 0.5f) for (int k = 0; k < 4; k++) r(g, x, y, 3 + k * 3, Math.round(10 - (u - 0.5f) * 14 + (k % 2) * 2), 1, 1, 0xFF8A6240);
+            }
+            case "slot_split_treasure" -> {                                                             // Open: a chest's lid lifts and gold light pours out
+                float u = (s * 0.9f) % 1f, lift = Math.min(1f, u * 1.6f); int lh = Math.round(lift * 4);
+                r(g, x, y, 2, 8, 12, 7, 0xFF8A5A2C); r(g, x, y, 2, 8, 12, 1, 0xFFB07A3C); r(g, x, y, 2, 11, 12, 1, 0xFF4A3220); r(g, x, y, 7, 10, 2, 3, 0xFFFFD25A);
+                r(g, x, y, 2, 5 - lh, 12, 3, 0xFFA06A34); r(g, x, y, 2, 5 - lh, 12, 1, 0xFFC8904A);
+                if (lift > 0.3f) { r(g, x, y, 4, 8 - Math.round(lift * 7), 8, Math.round(lift * 7), al(Math.round(150 * (1f - u * 0.5f)), 0xFFFFE9A8)); spark(g, x, y, 8, 3, 2, 0xFFFFFFFF); }
+            }
+            case "t_fragment" -> {                                                                      // Mythos Fragment: a faceted teal-violet crystal that glints
+                float gl = (s * 0.8f) % 1f;
+                r(g, x, y, 7, 1, 2, 1, 0xFFBFF4FF); r(g, x, y, 6, 2, 4, 2, 0xFF7FE0F0); r(g, x, y, 5, 4, 6, 3, 0xFF4AB8D8); r(g, x, y, 4, 7, 8, 3, 0xFF3A86C8); r(g, x, y, 5, 10, 6, 2, 0xFF5A58C0); r(g, x, y, 6, 12, 4, 2, 0xFF4A3C98); r(g, x, y, 7, 14, 2, 1, 0xFF352A70);
+                r(g, x, y, 6, 3, 1, 5, 0xFFE8FCFF); r(g, x, y, 9, 5, 1, 5, 0xFF2E6FA8); r(g, x, y, 10, 8, 1, 3, 0xFF6A58D0);
+                if (gl < 0.3f) spark(g, x, y, 6, 4, 2, 0xFFFFFFFF); else if (gl > 0.6f && gl < 0.85f) spark(g, x, y, 11, 10, 1, 0xFFE0D0FF);
+            }
+            case "t_fish" -> {                                                                          // Myth the Fish: a small golden-blue fish, a sparkle on its scales
+                float gl = (s * 0.9f) % 1f; int wob = gl < 0.5f ? 0 : 1;
+                r(g, x, y, 4, 5, 8, 6, 0xFF3FA0D8); r(g, x, y, 5, 4, 6, 1, 0xFF7FD0F0); r(g, x, y, 5, 11, 6, 1, 0xFF2A70A8); r(g, x, y, 3, 6, 1, 4, 0xFF3FA0D8);
+                r(g, x, y, 12, 4 + wob, 2, 2, 0xFFFFC857); r(g, x, y, 12, 9 - wob, 2, 2, 0xFFFFC857); r(g, x, y, 13, 6, 1, 3, 0xFFE0A030);
+                r(g, x, y, 5, 6, 1, 1, 0xFF14263A); r(g, x, y, 7, 7, 1, 3, 0xFF8AE0FF); r(g, x, y, 9, 6, 1, 4, 0xFF8AE0FF);
+                if (gl > 0.55f && gl < 0.8f) spark(g, x, y, 8, 6, 1, 0xFFFFFFFF);
             }
             case "slot_chop_exp" -> {                                                                   // a book with a page flipping over
                 r(g, x, y, 1, 5, 14, 9, 0xFF3A2160); r(g, x, y, 2, 6, 6, 7, 0xFFF3EBD0); r(g, x, y, 8, 6, 6, 7, 0xFFE6DCBA); r(g, x, y, 7, 5, 2, 9, 0xFF2A1748);

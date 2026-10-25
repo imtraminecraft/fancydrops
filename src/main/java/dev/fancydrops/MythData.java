@@ -51,6 +51,10 @@ public final class MythData {
     }
 
     private static List<SlayerData.Slayer> sorted(List<SlayerData.Slayer> in) {
+        for (SlayerData.Slayer s : in) {                                       // no Enchanted Gold Ingot and no shards; Chimera I is an RNG drop (also for a saved copy of the data)
+            s.drops.removeIf(d -> d.name.equals("Enchanted Gold Ingot") || d.name.endsWith(" Shard"));
+            for (SlayerData.Drop d : s.drops) if (d.name.equals("Chimera I")) d.rank = 2;
+        }
         for (SlayerData.Slayer s : in) s.drops.sort(java.util.Comparator.comparingDouble(SlayerData::oneIn));
         return List.copyOf(in);
     }

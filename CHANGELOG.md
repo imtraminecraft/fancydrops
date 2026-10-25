@@ -1,3 +1,15 @@
+## 0.4.7
+- Changed: Stats page has room again (the Mythological list keeps its normal size)
+- Changed: the Treasure hub tile just says how many drops. The Spade, Pet and Erudite settings moved to the main Mythological Ritual page, and every drop chance follows them
+- Changed: the Drop Library has no mob shards or Enchanted Gold Ingot. Chimera I is an RNG drop. Sub pages open with their page in the sidebar
+- Added: Mythological > Treasure pages in Animations and Sounds (Dig, Open, Reveal, Linger, End), with Normal / RNG, their own icons and a play button
+- Fixed: Coins, Griffin Feather, Mythos Fragment and Myth the Fish icons
+- Changed: Sent in Chat for Mythological includes the Treasure drops
+- Changed: placeholders are small buttons at the far left, outside the menu; the menu never moves
+- Changed: the construction page slowly builds a wall, then an accident brings it down and it starts again
+- Removed: Item Changes. All items are flat except skulls, which stay 3D
+- Changed: the Active lever eases over, no bounce
+
 ## 0.4.6
 - Fixed: RNG Mythological flashes, rays, shockwaves, sparks, stars and feathers are drawn over the whole screen, not inside the scene's box, so no box edge shows with the bars or the blur on or off. The scene's edges are feathered
 - Changed: Mythological size is 50% to 200%, 100% is the default, and Normal and RNG both follow it (it no longer copies the Slayers size)

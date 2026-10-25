@@ -1434,7 +1434,7 @@ public class FancyScreen extends Screen {
         int col = sceneIdx == 3 ? Ui.DIM : sceneIdx == 0 ? Ui.SUB : sceneIdx == 1 ? Ui.R_CRAZY : (sceneIdx == 5 || sceneIdx == 8) ? 0xFF7BE05A : (sceneIdx == 6 || sceneIdx == 9 || sceneIdx == 11) ? 0xFFFFC857 : sceneIdx == 7 ? 0xFFB56BFF : Ui.ACCENT;
         for (int k = 0; k < SoundFx.SLOTS.length; k++) {
             final String slot = SoundFx.SLOTS[k];
-            Row sr = row(1, "fd:slot_" + slot + (k <= 1 ? (sceneIdx == 10 ? "_pest" : sceneIdx == 4 ? "_dye" : (sceneIdx == 5 || sceneIdx == 8) ? "_farm" : (sceneIdx == 6 || sceneIdx == 9 || sceneIdx == 11) ? "_myth" : sceneIdx == 7 ? "_exp" : "") : ""), sceneIdx == 11 ? TREAS_SLOT_NAMES[k] : sceneIdx == 10 ? PEST_SLOT_NAMES[k] : sceneIdx == 7 ? EXP_SLOT_NAMES[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_NAMES[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_NAMES[k] : sceneIdx == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k], sceneIdx == 11 ? TREAS_SLOT_SUBS[k] : sceneIdx == 10 ? PEST_SLOT_SUBS[k] : sceneIdx == 7 ? EXP_SLOT_SUBS[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_SUBS[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_SUBS[k] : sceneIdx == 4 ? DYE_SLOT_SUBS[k] : SLOT_SUBS[k], col);
+            Row sr = row(1, "fd:slot_" + slot + (k <= 1 ? (sceneIdx == 10 ? "_pest" : sceneIdx == 4 ? "_dye" : (sceneIdx == 5 || sceneIdx == 8) ? "_farm" : sceneIdx == 11 ? "_treasure" : (sceneIdx == 6 || sceneIdx == 9) ? "_myth" : sceneIdx == 7 ? "_exp" : "") : ""), sceneIdx == 11 ? TREAS_SLOT_NAMES[k] : sceneIdx == 10 ? PEST_SLOT_NAMES[k] : sceneIdx == 7 ? EXP_SLOT_NAMES[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_NAMES[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_NAMES[k] : sceneIdx == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k], sceneIdx == 11 ? TREAS_SLOT_SUBS[k] : sceneIdx == 10 ? PEST_SLOT_SUBS[k] : sceneIdx == 7 ? EXP_SLOT_SUBS[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_SUBS[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_SUBS[k] : sceneIdx == 4 ? DYE_SLOT_SUBS[k] : SLOT_SUBS[k], col);
             final int slotIdx = k;
             sr.ctls.add(new Btn("▶", GREEN, () -> { pulseAt[slotIdx] = System.currentTimeMillis(); SoundFx.Fx fx = SoundFx.byName(SoundFx.chosen(scene, slot)); if (fx != null) SoundFx.preview(fx); }));
             final String ddKey = "dd_" + scene + "_" + slot;
@@ -1544,17 +1544,77 @@ public class FancyScreen extends Screen {
         Gfx.push(g); Gfx.translate(g, r.x + 8, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
         Gfx.push(g); Gfx.translate(g, r.x + r.w - 30, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
         g.fill(r.x + 6, gy, r.x + r.w - 6, gy + 1, 0x33FFFFFF);                                    // the ground line everything stands on
-        int lx = 12;                                                                                // left: cone, barrel, bricks, then the bulldozer's lane
-        if (lx + 12 < pl - 70) { Gfx.push(g); Gfx.translate(g, r.x + lx - 1, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); lx += 18; }
-        if (lx + 8 < pl - 70) { int ax = r.x + lx, ay = gy - 9; g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); lx += 16; }
-        if (lx + 12 < pl - 70) { int ax = r.x + lx; for (int j = 0; j < 3; j++) { int by = gy - 5 - j * 5; g.fill(ax, by, ax + 12, by + 4, 0xFFB5532E); g.fill(ax, by, ax + 12, by + 1, 0xFFD9703E); g.fill(ax + 6, by, ax + 7, by + 4, 0xFF7A3418); } lx += 20; }
-        int lo = lx + 6, hi = pl - 34;                                                              // one bulldozer pacing slowly between the props and the sign
-        if (hi - lo > 12) { float u = 0.5f + 0.5f * (float) Math.sin(sec * 0.35f); int dir = Math.cos(sec * 0.35f) >= 0 ? 1 : -1; bulldozer(g, r.x + lo + Math.round((hi - lo) * u), gy - 15, dir, sec); }
+        int laneL = 12, laneR = pl - 18;
+        if (laneR - laneL >= 84) build(g, r, sec, gy, laneL, laneR);                               // a little wall goes up brick by brick... then it all comes down
         int rx = r.w - 44;                                                                          // right: the crane, then a pallet with a crate, then a cone
-        crane(g, r.x + rx, gy - 52, 28, 52, sec);
-        rx -= 4;
+        if (rx > pr + 12) { int ax = r.x + rx + 12, ay = gy - 9; g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); }
+        rx -= 6;
         if (rx - 20 > pr + 12) { rx -= 20; int ax = r.x + rx, ay = gy - 6; g.fill(ax, ay, ax + 20, ay + 2, 0xFFC8964E); g.fill(ax, ay + 2, ax + 20, ay + 4, 0xFFB0803E); g.fill(ax, ay + 4, ax + 20, ay + 6, 0xFFC8964E); g.fill(ax + 4, ay - 7, ax + 14, ay, 0xFFD03A30); g.fill(ax + 4, ay - 7, ax + 14, ay - 6, 0xFFFF6A5A); g.fill(ax + 8, ay - 5, ax + 10, ay - 3, 0xFFFFD84A); rx -= 8; }
         if (rx - 12 > pr + 12) { Gfx.push(g); Gfx.translate(g, r.x + rx - 13, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); }
+    }
+
+    /** The construction loop: a crane lays a wall one brick at a time (slow), swings, bumps it, and the whole wall collapses; then it starts over. */
+    private static void build(GuiGraphicsExtractor g, Row r, float sec, int gy, int laneL, int laneR) {
+        final float CYC = 20f, PER = 0.5f; final int COLS = 4, ROWS = 6, N = COLS * ROWS;
+        float ph = sec % CYC, buildEnd = N * PER;                                                 // 12 s of building
+        int bw = 11, bh = 5, wx = r.x + laneL + 38 + Math.max(0, (laneR - laneL - 38 - COLS * bw) / 2), mastX = r.x + laneL + 4, top = gy - 62;
+        // the crane: mast, jib out over the wall
+        g.fill(mastX, top, mastX + 3, gy, 0xFFE0A020); g.fill(mastX - 3, gy - 3, mastX + 6, gy, 0xFF6B5410);
+        for (int yy = top + 3; yy < gy - 4; yy += 5) g.fill(mastX, yy, mastX + 3, yy + 1, 0xFF8A6410);
+        int hookX0 = wx + COLS * bw / 2;
+        g.fill(mastX - 4, top - 1, hookX0 + 8, top + 1, 0xFFE0A020); g.fill(mastX - 1, top - 4, mastX + 4, top - 1, 0xFF5A5A66);
+        boolean acc = ph >= buildEnd + 0.8f;                                                       // after the last brick: the accident
+        float swing = ph < buildEnd ? 0f : Math.min(1f, (ph - buildEnd) / 0.8f);
+        // bricks
+        for (int i = 0; i < N; i++) {
+            int row = i / COLS, col = i % COLS; float placed = i * PER, local = ph - placed;
+            int bx = wx + col * bw + (row % 2 == 1 ? 3 : 0) - (row % 2 == 1 && col == COLS - 1 ? 3 : 0), by = gy - bh * (row + 1);
+            float h = ((i * 2654435761L) & 0xFFFF) / 65536f;
+            if (ph >= buildEnd + 2.6f) {                                                            // the collapse: every brick falls its own way
+                float tc = ph - (buildEnd + 2.6f) - h * 0.25f; if (tc < 0) tc = 0;
+                float fall = 0.5f * 150f * tc * tc, vx = (h - 0.45f) * 46f;
+                int rest = gy - bh - (i % 3 == 0 ? bh : 0) * (h > 0.6f ? 1 : 0);
+                int yy = (int) Math.min(rest, by + fall), xx = Math.round(bx + vx * Math.min(tc, 0.7f));
+                xx = Math.max(r.x + 8, Math.min(r.x + laneR + 14, xx));
+                if (ph < buildEnd + 6.2f) brick(g, xx, yy, bw, bh, 0);
+                else if (ph < buildEnd + 6.8f) brick(g, xx, yy, bw, bh, Math.round(255 * (ph - (buildEnd + 6.2f)) / 0.6f));
+                continue;
+            }
+            if (local < 0) continue;
+            int off = 0;
+            if (acc) off = (int) Math.round(Math.sin(ph * 50f) * Math.min(2.0, (ph - buildEnd - 0.8f) * 6.0));
+            if (local < PER * 0.65f) {                                                              // still being lowered by the hook
+                float u = local / (PER * 0.65f); u = u * u; int yy = Math.round(top + 6 + (by - top - 6) * u);
+                brick(g, Math.round((hookX0 - bw / 2) + (bx - (hookX0 - bw / 2)) * u), yy, bw, bh, 0);
+                if (u < 1f) { g.fill(hookX0, top + 1, hookX0 + 1, yy, 0xFFB0B0B8); }
+            } else brick(g, bx + off, by, bw, bh, 0);
+        }
+        // the hook while the wall is going up and during the accident
+        if (ph < buildEnd) {
+            g.fill(hookX0, top + 1, hookX0 + 1, top + 6, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 6, hookX0 + 4, top + 8, 0xFF8A8A94);                 // the hook picks up the next brick
+        } else if (ph < buildEnd + 2.6f) {
+            float t = ph - buildEnd, sw = (float) Math.sin(t * 5.5f) * Math.min(1f, t / 1.2f) * (t < 1.8f ? 1f : Math.max(0f, 1f - (t - 1.8f) / 0.8f));
+            int hx = hookX0 + Math.round(sw * 34), hy = top + 24 + Math.round(Math.abs(sw) * 4);                 // the load swings out of control
+            g.fill(hookX0, top + 1, hx, top + 2, 0xFFB0B0B8); g.fill(hx, top + 1, hx + 1, hy, 0xFFB0B0B8); brick(g, hx - bw / 2, hy, bw, bh, 0);
+            if (t > 1.6f && t < 2.6f) {                                                             // the crack
+                int cx2 = wx + COLS * bw / 2, cy2 = gy - bh * ROWS / 2; int cr = Gfx.argb(255, 0x1A0E08);
+                g.fill(cx2, cy2 - 8, cx2 + 1, cy2 - 3, cr); g.fill(cx2 + 1, cy2 - 3, cx2 + 2, cy2 + 1, cr); g.fill(cx2, cy2 + 1, cx2 + 1, cy2 + 6, cr); g.fill(cx2 - 1, cy2 + 6, cx2, cy2 + 9, cr);
+                int ey = gy - bh * ROWS - 14 - Math.round((float) Math.abs(Math.sin(t * 14f)) * 3);
+                g.fill(wx + COLS * bw / 2 - 1, ey, wx + COLS * bw / 2 + 1, ey + 6, 0xFFE5484D); g.fill(wx + COLS * bw / 2 - 1, ey + 8, wx + COLS * bw / 2 + 1, ey + 10, 0xFFE5484D);
+            }
+        } else {
+            g.fill(hookX0, top + 1, hookX0 + 1, top + 26, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 26, hookX0 + 4, top + 29, 0xFF8A8A94);       // an empty hook waits
+        }
+        // dust while it falls
+        float dt2 = ph - (buildEnd + 2.6f);
+        if (dt2 > 0.25f && dt2 < 2.4f) for (int i = 0; i < 9; i++) {
+            float u = (dt2 - 0.25f) / 2.15f, hx2 = ((i * 7919) % 100) / 100f; int dx = wx + Math.round(hx2 * (COLS * bw + 24)) - 12 + Math.round((hx2 - 0.5f) * 24 * u), dy = gy - 2 - Math.round(u * (6 + (i % 4) * 4)), sz = 3 + Math.round(u * 4);
+            g.fill(dx, dy - sz, dx + sz, dy, Gfx.argb(Math.round(110 * (1f - u)), 0xC8C0B0));
+        }
+    }
+    private static void brick(GuiGraphicsExtractor g, int x, int y, int w, int h, int fade) {
+        int a = 255 - Math.max(0, Math.min(255, fade)) ; if (a <= 0) return;
+        g.fill(x, y, x + w, y + h, Gfx.argb(a, 0xB5532E)); g.fill(x, y, x + w, y + 1, Gfx.argb(a, 0xD9703E)); g.fill(x + w - 1, y, x + w, y + h, Gfx.argb(a, 0x7A3418)); g.fill(x, y + h - 1, x + w, y + h, Gfx.argb(a, 0x7A3418));
     }
 
     private static void crane(GuiGraphicsExtractor g, int x, int y, int w, int h, float sec) {
@@ -1637,6 +1697,8 @@ public class FancyScreen extends Screen {
     }
 
     /** Chat > Rules: the drops of the chosen event that are being sent to chat right now, grouped by boss / source, so nobody has to open the Drop Library to check. */
+    /** The creatures a pet can call, then Treasure (it is part of Mythological in chat, too). */
+    private static List<SlayerData.Slayer> withTreasure(List<SlayerData.Slayer> l) { List<SlayerData.Slayer> o = new ArrayList<>(l); o.add(TreasureData.SOURCE); return o; }
     private void chatSent(List<Row> rows, FancyConfig c) {
         record Grp(String key, String icon, String title, int col, int[] total, List<Row> on) {}
         List<Grp> gs = new ArrayList<>();
@@ -1657,17 +1719,17 @@ public class FancyScreen extends Screen {
                 gs.add(g);
             }
         } else {
-            List<SlayerData.Slayer> src = ev == 0 ? SlayerData.ALL : ev == 2 ? FarmData.ALL : ev == 4 ? List.of(ExperimentData.slayer()) : MythData.spawnable(c.mythPet);
+            List<SlayerData.Slayer> src = ev == 0 ? SlayerData.ALL : ev == 2 ? FarmData.ALL : ev == 4 ? List.of(ExperimentData.slayer()) : withTreasure(MythData.spawnable(c.mythPet));
             for (SlayerData.Slayer s : src) {
-                String icon = ev == 0 ? bossIcon(s) : ev == 2 ? "fd:farm_" + s.id : ev == 4 ? "fd:experiments" : "fd:myth_" + s.id;
+                String icon = ev == 0 ? bossIcon(s) : ev == 2 ? "fd:farm_" + s.id : ev == 4 ? "fd:experiments" : s == TreasureData.SOURCE ? "fd:myth_treasure" : "fd:myth_" + s.id;
                 Grp g = new Grp((ev == 0 ? "s" : ev == 2 ? "f" : ev == 4 ? "x" : "m") + s.id, icon, s.boss, s.color(), new int[1], new ArrayList<>());
                 FancyConfig.SlayerCfg sc = c.slayer(s.id);
-                for (SlayerData.Drop d : ev == 0 ? nonDye(s) : s.drops) {
+                for (SlayerData.Drop d : ev == 0 ? nonDye(s) : s == TreasureData.SOURCE ? TreasureData.drops(c.mythSpade) : s.drops) {
                     g.total()[0]++;
                     FancyConfig.DropCfg dc = ev == 3 ? MythData.cfg(c, s, d) : c.drop(s.id, d.name);
                     if (!(sc.enabled && sc.announce && dc.announce)) continue;
                     Row r = row(2, d.icon, d.name, d.chance.isEmpty() ? "chance unknown" : d.chance, s.color());
-                    r.iconId = d.id; r.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds); r.cell = CELL;
+                    r.iconId = s == TreasureData.SOURCE ? null : d.id; r.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds); r.cell = CELL;
                     r.ctls.add(new Btn("Stop", 0xFF8A3030, () -> dc.announce = false));
                     g.on().add(r);
                 }
@@ -1707,7 +1769,7 @@ public class FancyScreen extends Screen {
     private Row dropRow(SlayerData.Slayer s, SlayerData.Drop d, FancyConfig c) {
         FancyConfig.DropCfg dc = MythData.ALL.contains(s) ? MythData.cfg(c, s, d) : c.drop(s.id, d.name);
         Row dr = row(2, d.icon, d.name, d.chance.isEmpty() ? "chance unknown" : d.chance, s.color());
-        dr.iconId = d.id; dr.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds);
+        dr.iconId = s == TreasureData.SOURCE ? null : d.id; dr.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds);       // treasure drops use their own pictures (the plain item or one of ours), never the downloaded art
         dr.cell = CELL;
         dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (FarmData.ALL.contains(s)) DropListener.playFarmDrop(s, d); else if (MythData.ALL.contains(s)) DropListener.playMythDrop(s, d); else if (s == TreasureData.SOURCE) DropListener.playTreasureDrop(d); else DropListener.playDrop(s, d, "+250%"); })));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
@@ -1837,11 +1899,6 @@ public class FancyScreen extends Screen {
             back.noSearch = true; back.click = () -> { mythPage = -1; dropSrc = null; scroll = 0; tabChanged = System.currentTimeMillis(); };
             rows.add(back);
         }
-        int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))];
-        Row pet = row(0, String.format("fd:griffin#%06X", pc & 0xFFFFFF), "Griffin pet", "Chances for this pet  \u00B7  Mythic is best  \u00B7  creatures it can't call are hidden", pc);
-        Dd petDd = new Dd(() -> MythData.PETS[c.mythPet], "dd_pet", 90); petDd.col = () -> pc;
-        pet.ctls.add(petDd); rows.add(pet);
-        if (open.contains("dd_pet") && !searching) { Row pl = miniList(pet, petDd, java.util.Arrays.asList(MythData.PETS), c.mythPet, i -> { c.mythPet = i; MythData.applyPet(i); open.remove("dd_pet"); }); pl.pickCols = PET_COLS; rows.add(pl); }
         for (SlayerData.Slayer s : MythData.spawnable(c.mythPet)) {
             Row src = fold("myth_" + s.id, "fd:myth_" + s.id, s.boss, s.drops.size() + (s.drops.size() == 1 ? " drop" : " drops"), s.color());
             src.indent = 1; rows.add(src);
@@ -1851,6 +1908,22 @@ public class FancyScreen extends Screen {
             rows.add(masterRow(sc, s, c));
             for (SlayerData.Drop d : s.drops) rows.add(dropRow(s, d, c));
         }
+    }
+    /** Mythological Ritual page: the Griffin pet, the spade and the Erudite reforge. Every chance in Mobs and Treasure follows these. */
+    private void mythSettings(List<Row> rows, FancyConfig c) {
+        rows.add(section("Settings"));
+        int sp = Math.max(0, Math.min(2, c.mythSpade)), col = TreasureData.COLS[sp];
+        int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))];
+        Row pet = row(0, String.format("fd:griffin#%06X", pc & 0xFFFFFF), "Griffin pet", "Chances for this pet  \u00B7  Mythic is best  \u00B7  creatures it can't call are hidden", pc);
+        Dd petDd = new Dd(() -> MythData.PETS[c.mythPet], "dd_pet", 90); petDd.col = () -> pc;
+        pet.ctls.add(petDd); rows.add(pet);
+        if (open.contains("dd_pet") && !searching) { Row pl = miniList(pet, petDd, java.util.Arrays.asList(MythData.PETS), c.mythPet, i -> { c.mythPet = i; MythData.applyPet(i); open.remove("dd_pet"); }); pl.pickCols = PET_COLS; rows.add(pl); }
+        Row pick = row(0, "fd:griffin#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  \u00B7  25% of burrows are treasure", col);
+        Dd dd = new Dd(() -> TreasureData.SPADES[Math.max(0, Math.min(2, c.mythSpade))], "dd_spade", 100); dd.col = () -> col;
+        pick.ctls.add(dd); rows.add(pick);
+        if (open.contains("dd_spade") && !searching) { Row pl = miniList(pick, dd, java.util.Arrays.asList(TreasureData.SPADES), sp, i -> { c.mythSpade = i; open.remove("dd_spade"); }); pl.pickCols = TreasureData.COLS; rows.add(pl); }
+        Row er = row(0, "fd:cos_aura", "Erudite reforge", "From Daedalus' Notes. Two more burrows in a chain", Ui.ACCENT);
+        er.ctls.add(sw(() -> c.mythErudite, v -> c.mythErudite = v)); er.click = () -> c.mythErudite = !c.mythErudite; rows.add(er);
     }
     /** Mythological Ritual > Treasure: what a burrow can hold, for the spade you dig with. */
     private void treasureRows(List<Row> rows, FancyConfig c) {
@@ -1867,12 +1940,6 @@ public class FancyScreen extends Screen {
             back.noSearch = true; back.click = () -> { mythPage = -1; dropSrc = null; scroll = 0; tabChanged = System.currentTimeMillis(); };
             rows.add(back);
         }
-        Row pick = row(2, "fd:griffin#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  \u00B7  25% of burrows are treasure", col);
-        Dd dd = new Dd(() -> TreasureData.SPADES[Math.max(0, Math.min(2, c.mythSpade))], "dd_spade", 100); dd.col = () -> col;
-        pick.ctls.add(dd); rows.add(pick);
-        if (open.contains("dd_spade") && !searching) { Row pl = miniList(pick, dd, java.util.Arrays.asList(TreasureData.SPADES), sp, i -> { c.mythSpade = i; open.remove("dd_spade"); }); pl.pickCols = TreasureData.COLS; rows.add(pl); }
-        Row er = row(2, "fd:cos_aura", "Erudite reforge", "From Daedalus' Notes. Two more burrows in a chain", Ui.ACCENT);
-        er.ctls.add(sw(() -> c.mythErudite, v -> c.mythErudite = v)); er.click = () -> c.mythErudite = !c.mythErudite; rows.add(er);
         Row cols = section(""); cols.dropCols = true; cols.indent = 2; cols.h = 14; rows.add(cols);
         SlayerData.Slayer gs = new SlayerData.Slayer();                                                  // the spade's drops as one little source: the switch-all row
         gs.id = TreasureData.SOURCE.id; gs.name = "Treasure"; gs.boss = "Treasure"; gs.icon = TreasureData.SOURCE.icon; gs.color = String.format("#%06X", col & 0xFFFFFF);
@@ -2066,7 +2133,7 @@ public class FancyScreen extends Screen {
                     int total = 0; for (SlayerData.Slayer s : MythData.spawnable(c.mythPet)) total += s.drops.size();
                     int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))], mcol = pc == 0xFFFFFFFF ? 0xFF55D8FF : pc;
                     srcList.clear();
-                    if (searching) { mythMobs(rows, c, total, mcol); treasureRows(rows, c); }
+                    if (searching) { mythSettings(rows, c); mythMobs(rows, c, total, mcol); treasureRows(rows, c); }
                     else if (mythPage == 0) mythMobs(rows, c, total, mcol);
                     else if (mythPage == 1) {
                         srcList.add(new String[]{"@mobs", "Mythological Mobs", "fd:myth_mobs", String.valueOf(mcol)});
@@ -2074,8 +2141,10 @@ public class FancyScreen extends Screen {
                     } else {
                         Row head = row(0, "fd:mytho", "Mythological Ritual", "Creatures and treasure from the Diana event", mcol);
                         head.kind = HERO; head.h = 84; head.noSearch = true; rows.add(head);
+                        mythSettings(rows, c);
+                        rows.add(section("Pages"));
                         int tc = TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))];
-                        String[] lb = {"Mythological Mobs", "Treasure"}, ls = {MythData.spawnable(c.mythPet).size() + " creatures  \u00B7  " + total + " drops", TreasureData.drops(Math.max(0, Math.min(2, c.mythSpade))).size() + " drops  \u00B7  spade and Erudite"}, li = {"fd:myth_mobs", "fd:myth_treasure"};
+                        String[] lb = {"Mythological Mobs", "Treasure"}, ls = {MythData.spawnable(c.mythPet).size() + " creatures  \u00B7  " + total + " drops", TreasureData.drops(Math.max(0, Math.min(2, c.mythSpade))).size() + " drops"}, li = {"fd:myth_mobs", "fd:myth_treasure"};
                         int[] lc = {mcol, tc};
                         srcList.add(new String[]{"@mobs", lb[0], li[0], String.valueOf(lc[0])}); srcList.add(new String[]{"@treasure", lb[1], li[1], String.valueOf(lc[1])});
                         rows.add(picker("", "", lb, ls, li, lc, new boolean[2], 2, () -> -1, q -> { mythPage = q; dropSrc = null; scroll = 0; tabChanged = System.currentTimeMillis(); }));
@@ -2098,15 +2167,18 @@ public class FancyScreen extends Screen {
                     back.noSearch = true; back.click = () -> { subSel[Tab.ANIMATIONS.ordinal()] = -1; scroll = 0; tabChanged = System.currentTimeMillis(); };
                     rows.add(back);
                 }
+                srcList.clear();
                 for (int di = 0; di < CATS.length; di++) {
                     int cat = ORD[di];
                     if (!(all || sub == di)) continue;
+                    if (cat == 3 && !all) mythSrc();
                     if (cat != 3) { if (!all) wipPanel(CATS[cat], "animations"); }
                     else animCategory(rows, c, cat, all);
                 }
                 if (all) animChanges(rows, c);
             }
             case SOUNDS -> {
+                srcList.clear();
                 if (searching) { soundMaster(rows, c); soundCat = 0; soundsPage(rows, c); }
                 else {
                     Row back = row(0, "fd:sounds", "Sounds", "Back to the volume and all the animation sounds", Ui.ACCENT);
@@ -2116,7 +2188,7 @@ public class FancyScreen extends Screen {
                         wipPanel(CATS[ORD[Math.max(0, Math.min(6, curSub()))]], "sounds"); break;
                     }
                     if (!c.sound) { rows.add(note("Sounds are off. Turn them on from the Sounds page.", Ui.DIM)); break; }
-                    soundCat = 3;
+                    soundCat = 3; mythSrc();
                     soundsPage(rows, c);
                 }
             }
@@ -2142,25 +2214,9 @@ public class FancyScreen extends Screen {
                     String samp = DropListener.sample(c.formatFor(chatEv), chatEv);
                     rows.add(chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, samp, chatEv));
                 }
-                Row fm = row(0, "fd:format", "Message format", "Type your own message. Add placeholders from the list below", Ui.ACCENT);
+                Row fm = row(0, "fd:format", "Message format", "Type your own message  ·  placeholders sit on the left", Ui.ACCENT);
                 fm.h = 44; fm.field = formatField; rows.add(fm);
                 if (formatError != null) rows.add(note("Not saved: " + formatError + ". Your last good message is still used.", 0xFFFF7777));
-                rows.add(section("Placeholders"));
-                String[][] ph = {
-                    {"{item}", "The drop's name", chatEv == 1 ? "Necron Dye" : chatEv == 2 ? "Cropie" : chatEv == 3 ? "Daedalus Stick" : chatEv == 4 ? "Titanic Experience Bottle" : "Warden Heart"},
-                    {"{price}", "What it's worth, with its unit", "12.5M coins   (or: untradeable / price unknown)"},
-                    {chatEv == 2 ? "{overbloom}" : "{mf}", chatEv == 2 ? "Your Overbloom on that drop (only when Hypixel shows it)" : "Your Magic Find on that drop", chatEv == 2 ? "25 Overbloom" : "250 Magic Find"},
-                    {"{source}", chatEv == 3 ? "The creature it dropped from" : chatEv == 4 ? "Where it came from" : chatEv == 1 ? "What it came from (a drop)" : "The boss it dropped from", chatEv == 3 ? "Minotaur" : chatEv == 4 ? "Experimentation Table" : chatEv == 2 ? "Wheat" : chatEv == 1 ? "a drop" : "Voidgloom Seraph"}};
-                if (chatEv == 4) ph = new String[][]{ph[0], ph[1], ph[3]};
-                else if (chatEv == 1 || chatEv == 2) ph = new String[][]{ph[0], ph[1], ph[2]};
-                String[] pic = chatEv == 4 ? new String[]{"fd:itemsize", "fd:coin", "fd:slayers"} : new String[]{"fd:itemsize", "fd:coin", "fd:mf", "fd:slayers"};
-                int[] pcol = chatEv == 4 ? new int[]{0xFF56D8FF, 0xFFFFC857, 0xFFFF72C6} : new int[]{0xFF56D8FF, 0xFFFFC857, 0xFF55E6FF, 0xFFFF72C6};
-                for (int pi = 0; pi < ph.length; pi++) {
-                    String[] p = ph[pi];
-                    Row pr = row(0, pic[pi], p[0], p[1] + "  ->  " + p[2], pcol[pi]);
-                    pr.click = () -> insertPlaceholder(p[0]);
-                    rows.add(pr);
-                }
                 rows.add(section("Test"));
                 Row tr = row(0, "fd:send", "Send a test message", "Posts the preview above to your " + (c.channel.equals("COOP") ? "co-op" : c.channel.equals("ALL") ? "public" : "party") + " chat", Ui.ACCENT);
                 tr.ctls.add(new Btn("Test", GREEN, () -> DropListener.testChat(msg -> { chatStatus = msg; chatStatusColor = msg.startsWith("Sent") ? 0xFF62E6A8 : 0xFFFF7777; toast(msg, msg.startsWith("Sent") ? 0xFF62E6A8 : DropListener.NOT_ON_HYPIXEL.equals(msg) ? 0xFFFFB86B : 0xFFFF7777); }, chatEv)));
@@ -2329,8 +2385,15 @@ public class FancyScreen extends Screen {
         {"Normal", "treasure", "11", "fd:mytho", "Small, above the action bar. A shovel digs three times, the chest bursts open and the drop springs out.", "Normal"},
         {"RNG", "treasurerng", "11", "fd:rng", "The big scene: the dig under a night sky, then god rays, rune halos and griffin feathers round the drop.", "RNG"}};
     /** The animation types a page lists; Sounds > Mythological > Treasure has its own two. */
-    private String[][] typesOf(int cat) { return tab == Tab.SOUNDS && cat == 3 && soundMyth == 1 ? TTYPES : ATYPES[cat]; }
-    private int typeIdx(int cat) { return tab == Tab.SOUNDS && cat == 3 && soundMyth == 1 ? treasureType : animType[cat]; }
+    private String[][] typesOf(int cat) { return (tab == Tab.SOUNDS || tab == Tab.ANIMATIONS) && cat == 3 && soundMyth == 1 ? TTYPES : ATYPES[cat]; }
+    private int typeIdx(int cat) { return (tab == Tab.SOUNDS || tab == Tab.ANIMATIONS) && cat == 3 && soundMyth == 1 ? treasureType : animType[cat]; }
+    /** Mythological opened in Animations or Sounds: the sidebar lists its two pages (add future pages here). */
+    private void mythSrc() {
+        srcList.clear();
+        FancyConfig c = FancyConfig.get(); int pcm = PET_COLS[Math.max(0, Math.min(5, c.mythPet))], mc2 = pcm == 0xFFFFFFFF ? 0xFF55D8FF : pcm;
+        srcList.add(new String[]{"@mobs", "Mythological Mobs", "fd:myth_mobs", String.valueOf(mc2)});
+        srcList.add(new String[]{"@treasure", "Treasure", "fd:myth_treasure", String.valueOf(TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))])});
+    }
     private static final String[][][] ATYPES = {
         {{"Nothing Happens", "nothing", "3", "fd:nothing", "When a kill drops nothing.", "Nothing"},
          {"Default", "default", "0", "fd:decent", "When a kill drops something decent.", "Default"},
@@ -2371,8 +2434,8 @@ public class FancyScreen extends Screen {
     /** One Animations page: the preview, the animation type (a list when there is more than one), that type's settings and sounds, then the frame and text. */
     private void animCategory(List<Row> rows, FancyConfig c, int cat, boolean all) {
         if (!all) previewSel = cat;                                            // the live preview floats beside the menu (drawSidePreview)
-        String[][] types = ATYPES[cat];
-        rows.add(section(all ? CATS[cat] + " animation" : "Animation"));
+        String[][] types = typesOf(cat);
+        rows.add(section(all ? CATS[cat] + " animation" : cat == 3 && soundMyth == 1 ? "Treasure animation" : "Animation"));
         if (cat == 0) {
             rows.add(picker("Animation style", "How the boss is cut", STYLE_NAMES, new String[]{"Slices the boss", "Cuts it with light"}, new String[]{"fd:slayers", "fd:spirit"}, new int[]{0xFF8FA8FF, 0xFFC77DFF}, null, 2, () -> Math.floorMod(c.slayerStyle, STYLE_NAMES.length), i -> c.slayerStyle = i));
             rows.add(toggle("fd:nothing", "Animate empty kills", "Play the empty scene when nothing drops", () -> c.animateNothing, v -> c.animateNothing = v));
@@ -2383,10 +2446,11 @@ public class FancyScreen extends Screen {
             final int cc = cat;
             rows.add(picker("Animation style", "Pick how this scene plays", sn[cat], sd[cat], si[cat], new int[]{0xFF8FA8FF, 0xFFC77DFF}, null, 2, () -> c.styleOf(cc), i -> { switch (cc) { case 1 -> c.dyeStyle = i; case 2 -> c.farmStyle = i; case 3 -> c.mythStyle = i; default -> c.expStyle = i; } }));
         }
-        int sel = Math.max(0, Math.min(types.length - 1, animType[cat]));
+        int sel = Math.max(0, Math.min(types.length - 1, typeIdx(cat)));
         if (types.length > 1 && !all) {
             String[] names = new String[types.length], tic = new String[types.length]; for (int i = 0; i < names.length; i++) { names[i] = types[i][5]; tic[i] = types[i][3]; }
-            rows.add(picker("Animation type", "Pick the one to edit", names, tic, () -> sel, i -> animType[cat] = i));
+            final boolean tre = types == TTYPES;
+            rows.add(picker("Animation type", "Pick the one to edit", names, tic, () -> sel, i -> { if (tre) treasureType = i; else animType[cat] = i; }));
         }
         for (int ti = 0; ti < types.length; ti++) if (all || ti == sel) animType(rows, c, types[ti]);
         sceneSettings(rows, c, cat, all);
@@ -2409,6 +2473,8 @@ public class FancyScreen extends Screen {
             case "helios" -> DropListener::playHeliosTest;
             case "pest" -> DropListener::playPestTest;
             case "myth" -> () -> DropListener.playMythTest(false);
+            case "treasure" -> () -> DropListener.playTreasureTest(false);
+            case "treasurerng" -> () -> DropListener.playTreasureTest(true);
             case "mythnothing" -> DropListener::playMythNothing;
             case "exp" -> () -> DropListener.playExpTest(false);
             case "exprng" -> () -> DropListener.playExpTest(true);
@@ -2419,7 +2485,7 @@ public class FancyScreen extends Screen {
     /** The settings of one animation type: Play, how many slices / drips / strikes, how long it lasts, and its sounds. */
     private void animType(List<Row> rows, FancyConfig c, String[] t) {
         final String key = t[1]; final int sc = Integer.parseInt(t[2]);
-        int col = switch (key) { case "nothing" -> Ui.DIM; case "default" -> Ui.SUB; case "rare" -> Ui.R_CRAZY; case "dye" -> 0xFFFF72C6; case "farm", "pest" -> 0xFF7BE05A; case "myth", "mythrng", "mythnothing" -> 0xFFFFC857; case "exp", "exprng" -> 0xFFB56BFF; default -> Ui.ACCENT; };
+        int col = switch (key) { case "nothing" -> Ui.DIM; case "default" -> Ui.SUB; case "rare" -> Ui.R_CRAZY; case "dye" -> 0xFFFF72C6; case "farm", "pest" -> 0xFF7BE05A; case "myth", "mythrng", "mythnothing", "treasure", "treasurerng" -> 0xFFFFC857; case "exp", "exprng" -> 0xFFB56BFF; default -> Ui.ACCENT; };
         String[] st = styled(t, c);
         Row head = row(0, t[3], st[0], st[4], col);
         Runnable go = playerOf(key);
@@ -2443,13 +2509,15 @@ public class FancyScreen extends Screen {
             cr.ctls.add(sd); rows.add(cr);
             if (open.contains(dk) && !searching) rows.add(miniList(cr, sd, flips, Math.max(1, Math.min(12, r ? c.expFlipsRng : c.expFlips)) - 1, i -> { if (r) c.expFlipsRng = i + 1; else c.expFlips = i + 1; open.remove(dk); }));
         }
+        final String lk = AnimationManager.lenKey(key);                                   // Treasure shares the length of its Mythological twin
         Row dl = row(0, "fd:clock", "Animation length", "Total time, 2 to 7 s  ·  click the number to type", col);
-        dl.ctls.add(new Btn("Default", Ui.ROW_HOVER, () -> c.animSecs.remove(key)));
-        dl.ctls.add(new Slider(2, 7, 0.1, () -> secsOf(c, key), v -> c.animSecs.put(key, (float) (Math.round(v * 10) / 10.0)), () -> String.format(java.util.Locale.ROOT, "%.1f s", secsOf(c, key))).typed(1));
+        dl.ctls.add(new Btn("Default", Ui.ROW_HOVER, () -> c.animSecs.remove(lk)));
+        dl.ctls.add(new Slider(2, 7, 0.1, () -> secsOf(c, lk), v -> c.animSecs.put(lk, (float) (Math.round(v * 10) / 10.0)), () -> String.format(java.util.Locale.ROOT, "%.1f s", secsOf(c, lk))).typed(1));
         rows.add(dl);
         Row ss = row(0, "fd:sounds", "Sounds", "What every moment of this animation plays", col);
         ss.ctls.add(new Btn("Edit sounds", 0xFF3A4FA0, () -> {
             for (int ci = 0; ci < ATYPES.length; ci++) for (int ti = 0; ti < ATYPES[ci].length; ti++) if (ATYPES[ci][ti][1].equals(key)) { soundCat = ci; animType[ci] = ti; }
+            for (int ti = 0; ti < TTYPES.length; ti++) if (TTYPES[ti][1].equals(key)) { soundCat = 3; treasureType = ti; }
             tab = Tab.SOUNDS; subSel[Tab.SOUNDS.ordinal()] = ordPos(soundCat); waveKey = null; scroll = 0; tabChanged = System.currentTimeMillis(); open.removeIf(o -> o.startsWith("dd_"));
         }));
         rows.add(ss);
@@ -2470,9 +2538,6 @@ public class FancyScreen extends Screen {
     private void soundsPage(List<Row> rows, FancyConfig c) {
         if (!c.customSounds) rows.add(note("Custom sounds are off: every animation uses Minecraft's own sounds. Your picks for this set are saved separately.", Ui.DIM));
         final int cat = Math.max(0, Math.min(4, soundCat));
-        if (cat == 3 && !searching) {
-            rows.add(picker("Mythological page", "Creatures and treasure have their own sounds", new String[]{"Mythological Mobs", "Treasure"}, new String[]{"fd:myth_mobs", "fd:myth_treasure"}, () -> soundMyth, i -> { soundMyth = i; waveKey = null; SoundFx.stopPreviews(); dirty = true; }));
-        }
         String[][] types = typesOf(cat);
         final int sel = Math.max(0, Math.min(types.length - 1, typeIdx(cat)));
         if (types.length > 1) {
@@ -2501,9 +2566,6 @@ public class FancyScreen extends Screen {
         Row tc = row(0, "fd:text", "Text Changes", String.format(java.util.Locale.ROOT, "Words after %.1f s  \u00B7  %d of 3 effects on", c.textDelayAll, fxOn), Ui.ACCENT);
         tc.ctls.add(new Btn("Edit", 0xFF3A4FA0, () -> openEditor(2)));
         rows.add(tc);
-        Row is = row(0, "fd:itemsize", "Item Changes", Math.round(c.itemScale * 100) + "% size  \u00B7  " + (c.show3d ? "3D items" : "flat items"), Ui.ACCENT);
-        is.ctls.add(new Btn("Edit", 0xFF3A4FA0, () -> openEditor(3)));
-        rows.add(is);
     }
 
     // ------------------------------------------------------------------ the Bar / Text editors
@@ -3155,7 +3217,7 @@ public class FancyScreen extends Screen {
                 n += DyeData.ALL.size() + ExperimentData.ALL.length;
                 return n + " drops tracked";
             }
-            case ANIMATIONS -> { int n = 0; for (String[][] a : ATYPES) n += a.length; return n + " scenes  ·  animations " + (c.masterAnimate ? "on" : "OFF"); }
+            case ANIMATIONS -> { int n = TTYPES.length; for (String[][] a : ATYPES) n += a.length; return n + " scenes  ·  animations " + (c.masterAnimate ? "on" : "OFF"); }
             case STATS -> { try { return coinsText(ProfitTracker.coins(ProfitTracker.overall(ProfitTracker.ALL))) + " profit"; } catch (Throwable e) { return pages + " pages"; } }
             default -> { return pages + " pages"; }
         }
@@ -3309,6 +3371,31 @@ public class FancyScreen extends Screen {
         for (SlayerData.Drop d : s.drops) { FancyConfig.DropCfg dc = cfgOf(s, d, c); if (animate != null) dc.animate = animate; if (announce != null) dc.announce = announce; }
     }
 
+    // ---- the placeholder strip: small buttons outside the menu, far left; it never moves the menu
+    private static final int PH_W = 66;
+    private boolean phShown() { return tab == Tab.CHAT && !searching && chatEv == 3 && !FancyConfig.get().channel.equals("OFF") && px >= PH_W + 8 && editor == 0 && !cosWin(); }
+    private String[] phTokens() { return new String[]{"{item}", "{price}", "{mf}", "{source}"}; }
+    private int[] phBox(int i) { return new int[]{px - PH_W - 6, py + 52 + i * 18, PH_W, 15}; }
+    private void drawPh(GuiGraphicsExtractor g, int mx, int my) {
+        if (!phShown()) return;
+        int x = px - PH_W - 6, y = py + 36;
+        pill(g, x, y, PH_W, 15 + 18 * phTokens().length, 0xCC14161F);
+        Gfx.text(g, font, "Insert", x + 6, y + 4, Ui.DIM);
+        String[] t = phTokens(); int[] cols = {0xFF56D8FF, 0xFFFFC857, 0xFF55E6FF, 0xFFFF72C6};
+        for (int i = 0; i < t.length; i++) {
+            int[] b = phBox(i); boolean hv = mx >= b[0] && mx < b[0] + b[2] && my >= b[1] && my < b[1] + b[3];
+            pill(g, b[0] + 3, b[1], b[2] - 6, b[3], hv ? Canvas.mix(Ui.ROW_HOVER, cols[i], 0.25f) : Ui.ROW);
+            g.fill(b[0] + 3, b[1] + 2, b[0] + 5, b[1] + b[3] - 2, cols[i]);
+            Gfx.text(g, font, t[i], b[0] + 9, b[1] + 4, Ui.TEXT);
+        }
+    }
+    private boolean phClick(double mx, double my) {
+        if (!phShown()) return false;
+        String[] t = phTokens();
+        for (int i = 0; i < t.length; i++) { int[] b = phBox(i); if (mx >= b[0] && mx < b[0] + b[2] && my >= b[1] && my < b[1] + b[3]) { insertPlaceholder(t[i]); return true; } }
+        return false;
+    }
+
     private void insertPlaceholder(String token) {
         String v = formatField.getValue();
         if (v.length() + token.length() + 1 > ChatFilter.MAX) return;
@@ -3357,7 +3444,7 @@ public class FancyScreen extends Screen {
     }
     private static final int SUBH = 17;
     /** Sub page row height: shrinks a little when the open page has so many that they would run off the bottom of the menu. */
-    private int subH() { if (tab == Tab.GENERAL) return SUBH; int n = Math.max(1, subs().length); int room = py + ph - 6 - (py + 70 + tab.ordinal() * 24 + 25); return Math.max(12, Math.min(SUBH, room / n)); }
+    private int subH() { return SUBH; }                         // never squished: a long list scrolls with the sidebar
     private final List<int[]> prevBoxes = new ArrayList<>();           // {x, y, w, h, category} of every preview drawn this frame (for dragging a custom Farming spot)
     private boolean dragFarm;
     private static final String[] CHAT_EVENTS = {"Slayers", "Dye", "Farming", "Mythological", "Experiments", "Mining", "Fishing"};
@@ -3385,7 +3472,8 @@ public class FancyScreen extends Screen {
     private int curSub() { String[] n = subs(); return n.length == 0 ? 0 : Math.max(0, Math.min(n.length - 1, subSel[tab.ordinal()])); }
 
     private int sideScroll;                                   // the sidebar scrolls when the tabs and sub pages are taller than the menu
-    private int srcExtra() { return tab == Tab.DROPS ? Math.round(srcExp * SRCH * srcList.size()) : 0; }
+    private boolean srcTab() { return tab == Tab.DROPS || tab == Tab.SOUNDS || tab == Tab.ANIMATIONS; }
+    private int srcExtra() { return srcTab() ? Math.round(srcExp * SRCH * srcList.size()) : 0; }
     private static final int SRCH = 14;
     /** The pinned Settings block at the bottom of the sidebar: a line, then the Settings tab (its pages open upwards). */
     private int pinTop() { return py + ph - 29 - (tab == Tab.GENERAL ? Math.round(subExp * SUBH * subs().length) + 2 : 0); }
@@ -3399,7 +3487,7 @@ public class FancyScreen extends Screen {
         return new int[]{px + 8, y, px + sw - 6, y + 22};
     }
     private int[] srcBox(int j) { int[] b = subBox(curSub()); int y = b[1] + subH() + j * SRCH; return new int[]{px + 26, y, px + sw - 6, y + SRCH - 1}; }
-    private int[] subBox(int k) { if (tab == Tab.GENERAL) { int y = py + ph - 27 - subs().length * SUBH + k * SUBH; return new int[]{px + 16, y, px + sw - 6, y + SUBH - 1}; } int y = tabBox(tab.ordinal())[1] + 25 + k * subH() + (tab == Tab.DROPS && k > curSub() ? srcExtra() : 0); return new int[]{px + 16, y, px + sw - 6, y + subH() - 1}; }
+    private int[] subBox(int k) { if (tab == Tab.GENERAL) { int y = py + ph - 27 - subs().length * SUBH + k * SUBH; return new int[]{px + 16, y, px + sw - 6, y + SUBH - 1}; } int y = tabBox(tab.ordinal())[1] + 25 + k * subH() + (srcTab() && k > curSub() ? srcExtra() : 0); return new int[]{px + 16, y, px + sw - 6, y + subH() - 1}; }
 
     /** Keeps only the rows under the chosen sub heading (the headings themselves become the sidebar list). */
     private void filterSub() {
@@ -3520,7 +3608,7 @@ public class FancyScreen extends Screen {
         int sy = Math.round(selY);
         tabAcc = Canvas.mix(tabAcc == 0 ? tabCol(tab) : tabAcc, tabCol(tab), animOn ? 0.2f : 1f);
         subExp = anim("subExp", subs().length > 0 && query.isBlank() ? 1f : 0f, 40f);
-        srcExp = anim("srcExp", tab == Tab.DROPS && !onLanding() && !srcList.isEmpty() && query.isBlank() ? 1f : 0f, 30f);
+        srcExp = anim("srcExp", srcTab() && !onLanding() && !srcList.isEmpty() && query.isBlank() ? 1f : 0f, 30f);
         String[] sn = subs();
         for (int pass = 0; pass < 2; pass++) {                                     // pass 0: the scrolling list. pass 1: Settings, pinned under a line at the bottom
         if (pass == 0) g.enableScissor(px + 4, py + 42, px + sw, sideBottom()); else g.enableScissor(px + 4, pinTop() - 1, px + sw, py + ph - 4);
@@ -3564,11 +3652,11 @@ public class FancyScreen extends Screen {
                 Gfx.pop(g);
                 if (wip) { Gfx.push(g); Gfx.translate(g, b[2] - 17, b[1] + 6); Gfx.scale(g, 0.75f); Gfx.text(g, font, "WIP", 0, 0, 0xFFB08A20); Gfx.pop(g); }
             }
-            if (tab == Tab.DROPS && srcExp > 0.02f) {                                  // the open page lists its bosses / sources, the open one lit
+            if (srcTab() && srcExp > 0.02f) {                                  // the open page lists its bosses / sources, the open one lit
                 g.enableScissor(px + 8, srcBox(0)[1], px + sw - 6, srcBox(0)[1] + srcExtra());
                 for (int j = 0; j < srcList.size(); j++) {
                     String[] e = srcList.get(j); int[] b = srcBox(j);
-                    boolean act = e[0].startsWith("@") ? (e[0].equals("@mobs") ? mythPage == 0 : mythPage == 1) : e[0].equals(dropSrc), hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
+                    boolean act = e[0].startsWith("@") ? (tab != Tab.DROPS ? (e[0].equals("@mobs") ? soundMyth == 0 : soundMyth == 1) : e[0].equals("@mobs") ? mythPage == 0 : mythPage == 1) : e[0].equals(dropSrc), hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
                     float hv = anim("src|" + j, hov && !act ? 1f : 0f, 48f);
                     int col = Integer.parseInt(e[3]);
                     if (act) { pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.ROW, Ui.ACCENT, 0.22f)); g.fill(b[0], b[1] + 2, b[0] + 2, b[3] - 2, Ui.ACCENT); }
@@ -3607,10 +3695,11 @@ public class FancyScreen extends Screen {
             rout(g, b[0], b[1], w, h, Gfx.argb(Math.round(70 + 60 * hv + 70 * pulse * mv), mv > 0.5f ? 0x62E6A8 : 0xE5484D));
             Gfx.text(g, font, "Active", b[0] + 7, b[1] + 3, Canvas.mix(0xFF9A9AA8, Ui.TEXT, mv));
             Gfx.text(g, font, on ? "ON" : "OFF", b[0] + 7, b[1] + 12, Canvas.mix(0xFFE5484D, 0xFF62E6A8, mv));
-            // a lever in a lit slot: thrown from the left (off, red) to the right (on, green); it springs past and settles, throws sparks and the knob glows
+            // a lever in a lit slot: thrown from the left (off, red) to the right (on, green); it eases over and the knob glows
             if (on != masterLast) { masterLast = on; masterAt = now; }
             float tt = Math.min(1.4f, (now - masterAt) / 1000f), target = on ? 1f : 0f;
-            float pos = (now - masterAt) > 2000L && masterAt != 0L ? target : target + ((on ? 0f : 1f) - target) * (float) (Math.exp(-6.5 * tt) * Math.cos(15 * tt));
+            float ep = Math.min(1f, tt / 0.22f); ep = 1f - (1f - ep) * (1f - ep);                      // a plain ease-out: no bounce
+            float pos = target + ((on ? 0f : 1f) - target) * (1f - ep);
             if (masterAt == 0L) pos = target;
             int sx0 = b[0] + 46, sx1 = b[2] - 7, lvY = b[1] + 16, slotW = sx1 - sx0;                      // the slot the lever runs in
             pill(g, sx0 - 3, lvY - 4, slotW + 6, 9, 0xFF080A10); rout(g, sx0 - 3, lvY - 4, slotW + 6, 9, Canvas.mix(0xFF3A4054, on ? 0xFF62E6A8 : 0xFFE5484D, 0.35f + 0.3f * pulse * mv));
@@ -3621,7 +3710,7 @@ public class FancyScreen extends Screen {
                 g.fill(lxx, lvY - 1, lxx + 3, lvY + 2, lit ? lc : 0xFF1B1F2C);
                 if (lit) g.fill(lxx, lvY - 1, lxx + 3, lvY, Canvas.mix(lc, 0xFFFFFFFF, 0.45f));
             }
-            float kp = Math.max(-0.12f, Math.min(1.12f, pos));
+            float kp = Math.max(0f, Math.min(1f, pos));
             int kx = sx0 + 2 + Math.round(kp * (slotW - 6)) + 1;
             double lean = Math.toRadians(-26 + 52 * kp); int ky0 = lvY + 1, handle = 11;                      // the handle leans with the throw
             int hx = kx + (int) Math.round(Math.sin(lean) * handle), hy = ky0 - (int) Math.round(Math.cos(lean) * handle);
@@ -3633,13 +3722,9 @@ public class FancyScreen extends Screen {
             if (mv > 0.05f) for (int gl = 3; gl >= 1; gl--) pill(g, hx - 1 - gl * 2, hy - 1 - gl * 2, 6 + gl * 4, 6 + gl * 4, Gfx.argb(Math.round((18 + 26 * pulse) * mv / gl), kc & 0xFFFFFF));      // the knob glows while it is on
             g.fill(hx - 2, hy - 2, hx + 4, hy + 4, 0xFF0C0E14); g.fill(hx - 1, hy - 1, hx + 3, hy + 3, kc); g.fill(hx - 1, hy - 1, hx + 1, hy, Canvas.mix(kc, 0xFFFFFFFF, 0.6f));
             g.fill(kx - 2, ky0 - 1, kx + 3, ky0 + 3, 0xFF8A90A6); g.fill(kx - 1, ky0, kx + 2, ky0 + 2, 0xFFD6DAE8);          // the pivot bolt
-            if (tt < 0.5f && masterAt != 0L) for (int spk = 0; spk < 8; spk++) {                                  // sparks fly off the knob when it is thrown
-                double an = spk * Math.PI / 4 + 0.4, rr2 = 3 + 16 * tt * (0.6 + 0.4 * ((spk * 37) % 5) / 4.0); int al = Math.round(255 * (1f - tt / 0.5f));
-                int spx = hx + 1 + (int) Math.round(Math.cos(an) * rr2), spy = hy + 1 + (int) Math.round(Math.sin(an) * rr2 * 0.8);
-                g.fill(spx, spy, spx + 1, spy + 1, Gfx.argb(al, 0xFFFFFF)); if (spk % 2 == 0) g.fill(spx - 1, spy, spx + 2, spy + 1, Gfx.argb(al / 3, kc & 0xFFFFFF));
-            }
             if (on && !STILL) { int sw = b[0] + 2 + (int) (((now % 2600L) / 2600f) * (w - 4)); g.enableScissor(b[0] + 1, b[1] + 1, b[2] - 1, b[3] - 1); for (int i = 0; i < 6; i++) g.fill(sw + i, b[1] + 1, sw + i + 1, b[3] - 1, Gfx.argb(Math.round(26 * (1f - Math.abs(i - 3) / 3f)), 0xFFFFFF)); g.disableScissor(); }
         }
+        drawPh(g, mx, my);
         // page header
         Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 12, Ui.TEXT);
         Gfx.text(g, font, Gfx.fit(font, query.isBlank() ? pageSub() : "Searching every page", cw - 134), cx, py + 25, Ui.SUB);
@@ -3928,6 +4013,7 @@ public class FancyScreen extends Screen {
             if (!inBox) endTyping(true);
         }
         if (editor != 0) { editorClick(event.x(), event.y(), event.button()); return true; }
+        if (event.button() == 0 && phClick(event.x(), event.y())) return true;
         if (event.button() == 0 && updClick(event.x(), event.y())) return true;
         if (event.button() == 0 && event.y() >= lt && event.y() < lb && tab != null && mockOn() && WipMock.click((int) event.x(), (int) event.y())) return true;                       // pick up something on a building site
         if (event.button() == 0 && totalH > lb - lt && event.x() >= cx + cw && event.x() < cx + cw + 12 && event.y() >= lt && event.y() < lb) { dragScroll = true; scrollTo(event.y()); return true; }          // the bar on the right can be grabbed
@@ -3983,10 +4069,10 @@ public class FancyScreen extends Screen {
             if (i != Tab.GENERAL.ordinal() && my >= sideBottom()) continue;
             if (inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = null; mythPage = -1; if (tab != Tab.values()[i]) { tabChanged = System.currentTimeMillis(); } tab = Tab.values()[i]; subSel[tab.ordinal()] = -1; scroll = 0; open.removeIf(o -> o.startsWith("dd_")); return true; }
         }
-        if (tab == Tab.DROPS && srcExp > 0.9f && query.isBlank()) {
+        if (srcTab() && srcExp > 0.9f && query.isBlank()) {
             for (int j = 0; j < srcList.size(); j++) {
                 int[] b = srcBox(j);
-                if (my < sideBottom() && inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { String sk = srcList.get(j)[0]; if (sk.equals("@mobs")) { mythPage = 0; dropSrc = null; } else if (sk.equals("@treasure")) { mythPage = 1; dropSrc = null; } else dropSrc = sk; scroll = 0; tabChanged = System.currentTimeMillis(); return true; }
+                if (my < sideBottom() && inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { String sk = srcList.get(j)[0]; if (tab != Tab.DROPS) { soundMyth = sk.equals("@treasure") ? 1 : 0; waveKey = null; SoundFx.stopPreviews(); } else if (sk.equals("@mobs")) { mythPage = 0; dropSrc = null; } else if (sk.equals("@treasure")) { mythPage = 1; dropSrc = null; } else dropSrc = sk; scroll = 0; tabChanged = System.currentTimeMillis(); return true; }
             }
         }
         if (subExp > 0.9f && query.isBlank()) {

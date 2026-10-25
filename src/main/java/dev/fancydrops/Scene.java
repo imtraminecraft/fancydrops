@@ -743,7 +743,7 @@ final class Scene {
         int rst = p.exp ? 2 : p.myth ? 1 : 0;
         if (epic && side == 0) rngAura(out, rst, sx, sy, (float) size, us, uu, rar, false);                                             // the RNG stage: floor light, orbits, speed lines
         if (m.sprite != null) {
-            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f) * (epic ? popK : 1f), epic, (float) spin, rst);
+            flatItem(out, p, m, rar, sx, sy, (float) size, us, uu, (float) FancyConfig.get().itemK() * (side != 0 ? 0.72f : 1f) * (epic ? popK : 1f), false, (float) spin, rst);   // items are flat; only skulls stay 3D
         } else if (m.puffy != null) {
             m.puffy.draw(IT, sx, sy, (float) (size / 16.0), spin, 0.35);
         } else {
