@@ -44,7 +44,7 @@ final class TreasureData {
             {"Myth the Fish", "MYTH_THE_FISH", "player_head", "0.01%", "45,714.29", "44,444.44"}}};
 
     /** The source every treasure drop belongs to (a stand-in creature: it has no cube, its drops come from DROPS). */
-    static final SlayerData.Slayer SOURCE = new SlayerData.Slayer();
+    static final DropData.Source SOURCE = new DropData.Source();
     static { SOURCE.id = "myth_treasure"; SOURCE.name = "Treasure"; SOURCE.boss = "Treasure"; SOURCE.icon = "gold_ingot"; SOURCE.color = "#FFD25A"; }
 
     /** The chance of one burrow ("1 in 7.29 burrows" -> "1 in 7.29  |  13.72%"); a drop with no figure falls back to its share of the treasures. */
@@ -80,8 +80,8 @@ final class TreasureData {
         if (name == null || !name.toLowerCase(java.util.Locale.ROOT).endsWith(" coins")) return 0L;
         try { return Long.parseLong(name.substring(0, name.length() - 6).replace(",", "").trim()); } catch (RuntimeException e) { return 0L; }
     }
-    private static SlayerData.Drop make(String[] e) {
-        SlayerData.Drop d = new SlayerData.Drop();
+    private static DropData.Drop make(String[] e) {
+        DropData.Drop d = new DropData.Drop();
         d.name = e[0]; d.id = e[1].isEmpty() ? e[2].toUpperCase(java.util.Locale.ROOT) : e[1]; d.icon = e[2].equals("player_head") ? "player_head" : e[2]; d.chance = perBurrow(FancyConfig.get().mythErudite ? e[5] : e[4], e[3]);
         long c = coins(e[0]);
         if (c > 0) { d.id = "@COIN"; d.icon = ":coin:"; }                              // coins use the Total profit coin everywhere
@@ -89,17 +89,17 @@ final class TreasureData {
         return d;
     }
     /** Every drop of a spade, built fresh for the library. */
-    static java.util.List<SlayerData.Drop> drops(int sp) {
-        java.util.List<SlayerData.Drop> out = new java.util.ArrayList<>();
+    static java.util.List<DropData.Drop> drops(int sp) {
+        java.util.List<DropData.Drop> out = new java.util.ArrayList<>();
         for (String[] e : DROPS[Math.max(0, Math.min(2, sp))]) out.add(make(e));
         return out;
     }
     /** Every treasure drop starts from its rarity default (see FancyConfig.initDrop). */
     static void initDefaults(FancyConfig c) {
-        for (int sp = 0; sp < 3; sp++) for (SlayerData.Drop d : drops(sp)) FancyConfig.initDrop(c.drop(SOURCE.id, d.name), d.rank);
+        for (int sp = 0; sp < 3; sp++) for (DropData.Drop d : drops(sp)) FancyConfig.initDrop(c.drop(SOURCE.id, d.name), d.rank);
     }
     /** A drop by its name: the chosen spade first, then the others. Null when it is not a treasure. */
-    static SlayerData.Drop find(String name, int sp) {
+    static DropData.Drop find(String name, int sp) {
         if (name == null) return null;
         for (int k = 0; k < 3; k++) for (String[] e : DROPS[(Math.max(0, Math.min(2, sp)) + k) % 3]) if (e[0].equalsIgnoreCase(name.trim())) return make(e);
         long cn = coins(name);                                                                 // any other amount of coins ("12,500,000 coins"): built on the spot, the exact amount

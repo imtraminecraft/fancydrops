@@ -1,3 +1,11 @@
+## 0.4.13
+- Full rewrite from the ground up, step 1. The menu look and shell are kept; the pages are new: Home, Drop Library, Animations, Sounds, Chat, Stats (WIP) and Settings (bottom left).
+- Sub pages are Mythological, Slayers, Farming, Experiments, Mining, Fishing and Dyes; the creatures of each are sub-sub pages. New ones show up in Drop Library, Animations and Sounds by themselves. Everything except Mythological shows the WIP page.
+- Every category has three animations (No Drops, Normal, RNG). Drops pick one of them, or Off. Price no longer pushes a drop to RNG on its own, and the "RNG Drop scene" setting is gone.
+- Icons: one kind only, written `:name:`. All old icons and the pixel-art code are deleted; new animated ones come later. Sparkle is the only suffix left, redrawn with depth.
+- Removed: Custom Drops, the old Slayer, Dye, Farming and Experiment data, kill and profit trackers, the old scenes, the old sounds and the tests. They stay in git history (commit 3b05554).
+- Not compiled or played yet: the animation timeline (5-7 s, shared opening, new pivots) comes in the next step.
+
 ## 0.4.12
 - Chat preview: no more empty space, the box hugs its messages with a little room above and below.
 - RNG dice icon is now a real 3D die that tumbles, hops and settles.

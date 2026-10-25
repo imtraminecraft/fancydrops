@@ -29,7 +29,7 @@ public final class SoundFx {
     }
 
     public static final String NONE = "none";
-    public static final String[] SCENES = {"default", "cool", "epic", "nothing", "dye", "farm", "mytho", "exp", "helios", "mythnothing", "pest", "treasure"};
+    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng"};
     public static final String[] SLOTS = {"chop", "split", "reveal", "linger", "end"};
 
     private static final Map<String, Fx> ALL = new LinkedHashMap<>();
@@ -41,61 +41,7 @@ public final class SoundFx {
     }
     private static boolean isMc(String name) { return name != null && name.startsWith("mc_"); }
 
-    // custom (ogg): a bank written for this mod, grouped by the moment it is meant for. Each ends in a soft tail, so nothing is cut off.
-    // chop
-    public static final Fx FLICK = reg("flick", "Tink", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.8f);
-    public static final Fx SATIN = reg("satin", "Tick", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
-    public static final Fx MARIMBA = reg("marimba", "Marimba", SoundEvents.NOTE_BLOCK_XYLOPHONE.value(), 0.9f);
-    public static final Fx PLUCK = reg("pluck", "Pluck", SoundEvents.NOTE_BLOCK_HARP.value(), 0.9f);
-    public static final Fx DRIP = reg("drip", "Drip", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.85f);
-    public static final Fx BLIP = reg("blip", "Blip", SoundEvents.NOTE_BLOCK_BIT.value(), 0.6f);
-    // split
-    public static final Fx THUMP = reg("thump", "Kick", SoundEvents.ANVIL_LAND, 0.95f);
-    public static final Fx BURST = reg("burst", "Burst", SoundEvents.GENERIC_EXPLODE.value(), 0.85f);
-    public static final Fx SNAP = reg("snap", "Snap", SoundEvents.PLAYER_ATTACK_CRIT, 0.85f);
-    public static final Fx SLAM = reg("slam", "Slam", SoundEvents.ANVIL_LAND, 0.8f);
-    public static final Fx PLOP = reg("plop", "Plop", SoundEvents.SLIME_BLOCK_PLACE, 0.9f);
-    public static final Fx ARC = reg("arc", "Arc", SoundEvents.LIGHTNING_BOLT_IMPACT, 0.75f);
-    // reveal
-    public static final Fx HALO = reg("halo", "Chimes", SoundEvents.BEACON_ACTIVATE, 0.8f);
-    public static final Fx NECTAR = reg("nectar", "Pluck run", SoundEvents.NOTE_BLOCK_BELL.value(), 0.9f);
-    public static final Fx CASCADE = reg("cascade", "Run", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
-    public static final Fx LIFT = reg("lift", "Rise", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-    public static final Fx SPARKLE = reg("sparkle", "Sparkle", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
-    public static final Fx FANFARE = reg("fanfare", "Fanfare", SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 0.75f);
-    public static final Fx BLOOM = reg("bloom", "Bloom", SoundEvents.BEACON_ACTIVATE, 0.7f);
-    public static final Fx SPROUT = reg("sprout", "Sprout", SoundEvents.AMETHYST_BLOCK_CHIME, 0.9f);
-    public static final Fx BEAM = reg("beam", "Beam", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f);
-    public static final Fx FLARE = reg("flare", "Flare", SoundEvents.BEACON_ACTIVATE, 0.8f);
-    public static final Fx GLOW = reg("glow", "Glow", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
-    public static final Fx PAGE = reg("page", "Page", SoundEvents.BOOK_PAGE_TURN, 0.9f);
-    // linger
-    public static final Fx LULL = reg("lull", "Lull", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-    public static final Fx EMBER = reg("ember", "Ember", SoundEvents.BEACON_AMBIENT, 0.7f);
-    public static final Fx RIPPLE = reg("ripple", "Ripple", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
-    public static final Fx STORM = reg("storm", "Storm", SoundEvents.LIGHTNING_BOLT_THUNDER, 0.55f);
-    public static final Fx CHANT = reg("chant", "Chant", SoundEvents.ENCHANTMENT_TABLE_USE, 0.7f);
-    public static final Fx BREEZE = reg("breeze", "Breeze", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.75f);
-    public static final Fx SHIMMER = reg("shimmer", "Shimmer", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.6f);
-    public static final Fx HUM = reg("hum", "Hum", SoundEvents.BEACON_AMBIENT, 0.7f);
-    // end
-    public static final Fx DUSK = reg("dusk", "Whoosh", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8f);
-    public static final Fx SIGH = reg("sigh", "Sigh", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-    public static final Fx SETTLE = reg("settle", "Settle", SoundEvents.AMETHYST_BLOCK_CHIME, 0.9f);
-    public static final Fx FADE = reg("fade", "Fade", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.6f);
-    // one-shot
-    public static final Fx REAP = reg("reap", "Reap", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
-    public static final Fx RUSTLE = reg("rustle", "Rustle", SoundEvents.CROP_BREAK, 0.85f);
-    public static final Fx VACUUM = reg("vacuum", "Vacuum", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
-    public static final Fx SQUEAK = reg("squeak", "Squeak", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.85f);
-    // the Mythological bank, written new for the ritual scenes: every one fades to silence by itself. "_big" twins play in the RNG scene.
     static {
-        reg("slay_slash", "Slash", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);                       // the Slayer bank: blade, blow, rising chord, ember hum, farewell
-        reg("slay_cleave", "Cleave", SoundEvents.PLAYER_ATTACK_STRONG, 0.9f);
-        reg("slay_reveal", "Slayer reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-        reg("slay_reveal_epic", "Slayer reveal (epic)", SoundEvents.BEACON_ACTIVATE, 0.9f);
-        reg("slay_glow", "Ember hum", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-        reg("slay_end", "Slayer farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
         reg("myth_bolt", "Bolt", SoundEvents.LIGHTNING_BOLT_IMPACT, 0.8f);
         reg("myth_shatter", "Shatter", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
         reg("myth_reveal", "Reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
@@ -153,37 +99,25 @@ public final class SoundFx {
     private static final Map<String, String> MC_DEFAULTS = new LinkedHashMap<>();
     static {
         String[][] d = {                                           // the same five moments as the custom set, built only from Minecraft sounds
-            {"default", "mc_chime", "mc_crit", "mc_orb", "mc_shimmer", "mc_powerdown"},
-            {"cool", "mc_bell", "mc_trident", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"epic", "mc_xylo", "mc_bolt", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"nothing", "mc_bass", "mc_fizzle", "mc_nope", NONE, NONE},
-            {"dye", "mc_squish", "mc_twinkle", "mc_gift", "mc_shimmer", "mc_powerdown"},
-            {"farm", "mc_swish", "mc_harvest", "mc_orb", "mc_pling", "mc_orb"},
-            {"mytho", "mc_bolt", "mc_thunder", "mc_power", "mc_hum", "mc_powerdown"},
-            {"exp", "mc_page", "mc_enchant", "mc_levelup", "mc_shimmer", "mc_powerdown"},
-            {"helios", "mc_swish", "mc_beacon", "mc_orb", "mc_pling", "mc_orb"},
-            {"mythnothing", "mc_bolt", "mc_fizzle", NONE, NONE, NONE},
-            {"pest", "mc_swish", "mc_crit", "mc_orb", "mc_pling", "mc_orb"},
-            {"treasure", "mc_harvest", "mc_anvil", "mc_levelup", "mc_hum", "mc_powerdown"}};
+            {"myth.nodrops", "mc_bolt", "mc_fizzle", NONE, NONE, NONE},
+            {"myth.normal", "mc_bolt", "mc_thunder", "mc_power", "mc_hum", "mc_powerdown"},
+            {"myth.rng", "mc_bolt", "mc_trident", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"treasure.nodrops", "mc_harvest", "mc_fizzle", NONE, NONE, NONE},
+            {"treasure.normal", "mc_harvest", "mc_anvil", "mc_levelup", "mc_hum", "mc_powerdown"},
+            {"treasure.rng", "mc_harvest", "mc_anvil", "mc_fanfare", "mc_hum", "mc_powerdown"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) MC_DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
     /** What each slot plays until the player changes it. */
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
     static {
-        String[][] d = {                                         // every animation plays from the same bank; the long ones are picked so they end with the scene
-            {"default", "slay_slash", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
-            {"cool", "slay_slash", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},      // "cool" = Rare Drop
-            {"epic", "slay_slash", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"},         // "epic" = RNG Drop
-            {"nothing", "drip", "thump", "lift", "hum", "sigh"},
-            {"dye", "plop", "burst", "cascade", "ripple", "dusk"},
-            {"farm", "reap", "rustle", "sprout", "breeze", "settle"},
-            {"mytho", "myth_bolt", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
-            {"exp", "page", "glow", "halo", "chant", "dusk"},
-            {"helios", "beam", "flare", "sprout", "breeze", "settle"},
-            {"mythnothing", "myth_bolt", "myth_fizzle", NONE, NONE, NONE},
-            {"pest", "vacuum", "squeak", "sprout", "breeze", "settle"},
-            {"treasure", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"}};
+        String[][] d = {                                         // one sound set for every animation: the Mythological bank
+            {"myth.nodrops", "myth_bolt", "myth_fizzle", NONE, NONE, NONE},
+            {"myth.normal", "myth_bolt", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
+            {"myth.rng", "myth_bolt", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
+            {"treasure.nodrops", "myth_dig", "myth_fizzle", NONE, NONE, NONE},
+            {"treasure.normal", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"},
+            {"treasure.rng", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 

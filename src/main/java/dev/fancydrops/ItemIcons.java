@@ -74,10 +74,6 @@ public final class ItemIcons {
             Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = b; ic.ready = true; return;
         }
         if ("@COIN".equals(id)) { Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = coinSprite(); ic.data = b; ic.ready = true; return; }
-        if ("@seed".equals(FarmData.imgOf(id))) {                  // Seasoning is not a real item: a few seeds
-            Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = seedSprite();
-            ic.data = b; ic.ready = true; return;
-        }
         Cached c = new Cached();
         try {
             Path cf = cacheFile(id);
@@ -87,23 +83,12 @@ public final class ItemIcons {
             }
         } catch (Exception ignored) {}
 
-        if (FarmData.hasId(id)) {                                  // farming items: the page's own picture file (/images/Name.png, as on the Rare Crops page) comes first
-            String img = FarmData.imgOf(id);
-            java.util.List<String> files = new java.util.ArrayList<>(); if (img != null) files.add(img); files.addAll(wikiPages(id));
-            for (String page : files) {
-                try { c.wikiPixels = downloadWikiPixels("https://hypixelskyblock.minecraft.wiki/images/" + URLEncoder.encode(page.trim().replace(' ', '_'), StandardCharsets.UTF_8).replace("+", "%20").replace("%27", "'") + ".png"); if (c.wikiPixels != null) break; } catch (Exception ignored) {}
-            }
-        }
-        if (c.wikiPixels == null && FarmData.hasId(id)) for (String page : wikiPages(id)) {      // farming items: the picture in the page's own info box (its og:image), not the "lead image" guess that can pick a pest
-            try { c.wikiPixels = ogImagePixels(page); if (c.wikiPixels != null) break; } catch (Exception ignored) {}
-        }
-        if (c.wikiPixels == null && !FarmData.hasId(id)) for (String page : wikiPages(id)) {                       // try the likely page names until one has a picture
+        if (c.wikiPixels == null) for (String page : wikiPages(id)) {                       // try the likely page names until one has a picture
             try { c.wikiPixels = fetchWikiPixels(page); if (c.wikiPixels != null) break; } catch (Exception ignored) {}
         }
-        if (c.wikiPixels == null && !FarmData.hasId(id)) try { c.wikiPixels = fetchWikiPixels(searchWiki(wikiPageName(id))); } catch (Exception ignored) {}   // a search can land on the wrong page (a pest for a crop), so farming items go without
+        if (c.wikiPixels == null) try { c.wikiPixels = fetchWikiPixels(searchWiki(wikiPageName(id))); } catch (Exception ignored) {}   // a search can land on the wrong page (a pest for a crop), so farming items go without
         c.wikiVersion = 11;
-        boolean flatFarm = FarmData.hasId(id) && !skullFlag(id) && c.wikiPixels != null;      // a plain farming item (Cornucopia...) keeps the wiki's own picture, never a head cube
-        if (!flatFarm) for (String cand : neuIds(id)) {
+        for (String cand : neuIds(id)) {
             if (c.heads != null) break;
             try {
             JsonObject j = JsonParser.parseString(httpString(REPO + URLEncoder.encode(cand, StandardCharsets.UTF_8) + ".json")).getAsJsonObject();
@@ -119,7 +104,7 @@ public final class ItemIcons {
                 if (skullFlag(id)) log(id + ": NEU '" + cand + "' failed: " + e);        // the next candidate id, the Hypixel item list, or finally the wiki PNG / gem; the log says why a head did not load
             }
         }
-        if (c.heads == null && !flatFarm) {                       // second source: Hypixel's own item list knows every skull's skin
+        if (c.heads == null) {                       // second source: Hypixel's own item list knows every skull's skin
             try {
                 String skin = apiSkin(id);
                 if (skin != null) { c.heads = fetchHead(skin); c.face = c.heads[4]; c.headTexture = skin; }
@@ -136,9 +121,7 @@ public final class ItemIcons {
     }
 
     private static boolean isBook(String id) {
-        for (SlayerData.Slayer s : SlayerData.ALL) for (SlayerData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
-        for (SlayerData.Slayer s : FarmData.ALL) for (SlayerData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
-        for (SlayerData.Slayer s : MythData.ALL) for (SlayerData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
+        for (DropData.Source s : MythData.ALL) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
         return false;
     }
 
@@ -235,8 +218,7 @@ public final class ItemIcons {
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).endsWith("_DYE")) return true;          // every SkyBlock dye is a player head
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).startsWith("DYE_")) return true;
         if (TreasureData.headArt(id)) return true;
-        for (SlayerData.Slayer s : SlayerData.ALL) for (SlayerData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
-        for (SlayerData.Slayer s : MythData.ALL) for (SlayerData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
+        for (DropData.Source s : MythData.ALL) for (DropData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
         return false;
     }
 
@@ -295,11 +277,7 @@ public final class ItemIcons {
     /** Use the configured display name as the Wiki page title, not the internal SkyBlock id. */
     private static String wikiPageName(String id) {
         if ("MYTHOLOGICAL_RITUAL".equals(id)) return "Mythological Ritual";
-        for (SlayerData.Slayer slayer : SlayerData.ALL) for (SlayerData.Drop drop : slayer.drops)
-            if (drop.id.equalsIgnoreCase(id)) return drop.name;
-        for (SlayerData.Slayer slayer : FarmData.ALL) for (SlayerData.Drop drop : slayer.drops)
-            if (drop.id.equalsIgnoreCase(id)) return drop.name;
-        for (SlayerData.Slayer slayer : MythData.ALL) for (SlayerData.Drop drop : slayer.drops)
+        for (DropData.Source slayer : MythData.ALL) for (DropData.Drop drop : slayer.drops)
             if (drop.id.equalsIgnoreCase(id)) return drop.name;
         return id.replace('_', ' ');
     }
@@ -462,26 +440,26 @@ public final class ItemIcons {
     }
 
     /** The 3D model of this item for the scene (null while the art is still loading). */
-    static Scene.Model model(String id, int tint) {
+    static ItemModel model(String id, int tint) {
         Icon ic = get(id);
         if (!ic.ready) return null;
         Cached d = ic.data;
         if (d != null && d.heads != null && FancyConfig.get().show3d) {
             Render3D.Box b = new Render3D.Box(4, 4, 4);
             for (int f = 0; f < 6; f++) b.face(f, d.heads[f], 8);
-            return new Scene.Model(new Render3D.Obj[]{b}, 8, 0.6);
+            return new ItemModel(new Render3D.Obj[]{b}, 8, 0.6);
         }
         if (d != null && d.heads == null && d.wikiPixels != null && skullFlag(id) && FancyConfig.get().show3d && !isBook(id)) {   // no skin found: rebuild the cube from the head's picture so it still spins as a real block
             int[][] cube = isoHead(d.wikiPixels);
             if (cube != null) {
                 Render3D.Box b = new Render3D.Box(4, 4, 4);
                 for (int f = 0; f < 6; f++) b.face(f, cube[f], 8);
-                return new Scene.Model(new Render3D.Obj[]{b}, 8, 0.6);
+                return new ItemModel(new Render3D.Obj[]{b}, 8, 0.6);
             }
         }
         int[] px = d != null && d.wikiPixels != null ? d.wikiPixels : d != null && d.face != null ? upscale(d.face) : gem(tint & 0xFFFFFF);
-        if (skullFlag(id) && FancyConfig.get().show3d) return new Scene.Model(PuffyItem.of(px, 16, 16, true, 2.2f), null);   // a skull whose skin we could not find still spins in 3D
-        return new Scene.Model(PuffyItem.of(px, 16, 16, true), px);
+        if (skullFlag(id) && FancyConfig.get().show3d) return new ItemModel(PuffyItem.of(px, 16, 16, true, 2.2f), null);   // a skull whose skin we could not find still spins in 3D
+        return new ItemModel(PuffyItem.of(px, 16, 16, true), px);
     }
 
     /**

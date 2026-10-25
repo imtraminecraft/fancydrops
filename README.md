@@ -1,25 +1,16 @@
 # FancyDrops
 
-Fabric mod (Minecraft 26.2) that plays a cinematic animation for Hypixel SkyBlock Mythological Ritual drops (mobs and Griffin burrow treasure) and can announce them in party / co-op chat. Slayers, Dye, Farming, Experiments, Mining and Fishing are being rebuilt.
+Fabric mod (Minecraft 26.2) that plays a short animation when you drop something on Hypixel SkyBlock, and can announce it in chat. Mythological Rituals (creatures and Griffin burrow treasure) are live. Slayers is next, then Dyes, Farming, Experiments, Mining and Fishing.
 
-* `/fancydrops` or `/fd` - settings menu (Drop Library, Animations, Sounds, Chat, General, Stats)
-* `/fd simulate Mythological|Treasure [drop]` - plays a pretend drop through the real animation (never counted in stats)
+* `/fancydrops` or `/fd` - settings menu (Home, Drop Library, Animations, Sounds, Chat, Stats, Settings)
+* `/fd simulate Mythological|Treasure [drop]` - plays a pretend drop through the real animation
 * `/fd help` - every command
 
-Three scenes: Default, Rare Drop (crazy-rare class drops) and RNG Drop (drops worth 20M+, configurable). A kill that drops nothing you ticked plays the empty "nothing" scene.
-Chat announcements only go out on Hypixel, and only for drops worth at least the RNG Drop price. The message format is filtered (no swearing, links or commands).
-Stats tracks profit per slayer and combined: overall (saved), this session, and per hour of actual slaying.
+Every category has three animations: No Drops, Normal and RNG. Each has its own length, position, size and sounds. Only RNG has the cinematic bars and blur. Chat announcements only go out on Hypixel, and the message format is filtered (no swearing, links or commands).
 
 ## Version
 
 The version lives in one place: `version=` in `gradle.properties`. It flows into `fabric.mod.json` and from there into the menu and `/fancydrops status`.
-
-## Tests
-
-`LogicTest` covers the chat parsing and the kill/drop pairing (no Minecraft needed):
-
-    javac -d out src/main/java/dev/fancydrops/ChatParser.java src/main/java/dev/fancydrops/KillTracker.java src/main/java/dev/fancydrops/ChatFilter.java src/test/java/dev/fancydrops/LogicTest.java
-    java -cp out dev.fancydrops.LogicTest
 
 ## License
 

@@ -45,7 +45,7 @@ final class CosmeticData {
         new Def("fresh", "Fresh", Line.FREE, Kind.NAME, "Downloaded the mod", 0xFF9BE8A8, "common"),
         new Def("ember", "Ember", Line.FREE, Kind.NAME, "Got 15 rare drops", 0xFFFF8A3D),
         new Def("frost", "Frost", Line.FREE, Kind.NAME, "Got 75 rare drops", 0xFF9AD8FF),
-        new Def("neon", "Neon", Line.FREE, Kind.NAME, "Got 300 rare drops", 0xFFFF5AE0),
+        new Def("neon", "Neon", Line.FREE, Kind.NAME, "Got 300 rare drops", 0xFFFF5AE0));
 
     static Def byId(String id) { for (Def d : ALL) if (d.id().equals(id)) return d; return null; }
     static List<Def> line(Line l) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (d.line() == l) o.add(d); return o; }
