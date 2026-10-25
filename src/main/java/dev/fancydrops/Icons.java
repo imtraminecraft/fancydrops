@@ -4,7 +4,16 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 /** Hand-drawn, always-moving 16x16 icons for the menu (a row's icon "fd:name" draws one of these instead of an item). */
 final class Icons {
-    static boolean has(String k) { return k != null && k.startsWith("fd:"); }
+    static boolean has(String k) { return k != null && (k.startsWith("fd:") || (k.length() > 2 && k.charAt(0) == ':' && k.indexOf(':', 1) > 1)); }
+    /** The one way to name an icon: ":name:", like a Discord emoji. Change what ":name:" looks like in one place and every page, preview and list follows. */
+    static boolean STILL_ICONS = false;
+    static String tok(String name) { return ":" + name + ":"; }
+    /** ":name:" (or ":name:#RRGGBB" with a tint, or the old "fd:name") as the plain name the drawing code switches on. */
+    static String nameOf(String key) {
+        if (key.startsWith("fd:")) return key.substring(3);
+        if (key.length() > 2 && key.charAt(0) == ':') { int e = key.indexOf(':', 1); if (e > 1) return key.substring(1, e) + key.substring(e + 1); }
+        return key;
+    }
 
     private static void r(GuiGraphicsExtractor g, int x, int y, int cx, int cy, int w, int h, int c) { g.fill(x + cx, y + cy, x + cx + w, y + cy + h, c); }
     private static void disc(GuiGraphicsExtractor g, int x, int y, float cx, float cy, float rad, int c) {
@@ -80,10 +89,10 @@ final class Icons {
 
     private static void body(GuiGraphicsExtractor g, String key, int x, int y, long now) {
         float s = (now % 3600000L) / 1000f;
-        String name = key.startsWith("fd:") ? key.substring(3) : key; int tint = 0xFF888888;
+        String name = nameOf(key); int tint = 0xFF888888;
         int hash = name.indexOf('#');
         if (hash >= 0) { try { tint = 0xFF000000 | Integer.parseInt(name.substring(hash + 1), 16); } catch (Exception ignored) {} name = name.substring(0, hash); }
-        if (name.length() > 2 && name.charAt(0) == ':' && name.endsWith(":")) { Cosmetics.drawIcon(g, name.substring(1, name.length() - 1), x, y, now); return; }        // ":discord:" draws that suffix, like an emoji
+        if (name.equals("discord")) { Cosmetics.drawIcon(g, "discord", x, y, now); return; }               // the Discord community button uses the Discord suffix's picture, so it can never differ from it
         if (name.startsWith("cx_")) { Cosmetics.drawCosIcon(g, name.substring(3), x, y, now); return; }
         if (PixArt.draw(g, name, x, y, s, tint == 0xFF888888 ? 0 : tint & 0xFFFFFF)) return;                                                          // the hand-pixeled pictures
         if (name.startsWith("suf_")) { Cosmetics.drawIcon(g, name.substring(4), x, y, now); return; }

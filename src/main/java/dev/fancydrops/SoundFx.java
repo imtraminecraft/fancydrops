@@ -90,6 +90,12 @@ public final class SoundFx {
     public static final Fx SQUEAK = reg("squeak", "Squeak", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.85f);
     // the Mythological bank, written new for the ritual scenes: every one fades to silence by itself. "_big" twins play in the RNG scene.
     static {
+        reg("slay_slash", "Slash", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);                       // the Slayer bank: blade, blow, rising chord, ember hum, farewell
+        reg("slay_cleave", "Cleave", SoundEvents.PLAYER_ATTACK_STRONG, 0.9f);
+        reg("slay_reveal", "Slayer reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
+        reg("slay_reveal_epic", "Slayer reveal (epic)", SoundEvents.BEACON_ACTIVATE, 0.9f);
+        reg("slay_glow", "Ember hum", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
+        reg("slay_end", "Slayer farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
         reg("myth_bolt", "Bolt", SoundEvents.LIGHTNING_BOLT_IMPACT, 0.8f);
         reg("myth_shatter", "Shatter", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
         reg("myth_reveal", "Reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
@@ -166,9 +172,9 @@ public final class SoundFx {
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
     static {
         String[][] d = {                                         // every animation plays from the same bank; the long ones are picked so they end with the scene
-            {"default", "satin", "thump", "nectar", "lull", "dusk"},
-            {"cool", "satin", "thump", "cascade", "ember", "dusk"},      // "cool" = Rare Drop
-            {"epic", "flick", "burst", "halo", "ember", "dusk"},         // "epic" = RNG Drop
+            {"default", "slay_slash", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
+            {"cool", "slay_slash", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},      // "cool" = Rare Drop
+            {"epic", "slay_slash", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"},         // "epic" = RNG Drop
             {"nothing", "drip", "thump", "lift", "hum", "sigh"},
             {"dye", "plop", "burst", "cascade", "ripple", "dusk"},
             {"farm", "reap", "rustle", "sprout", "breeze", "settle"},

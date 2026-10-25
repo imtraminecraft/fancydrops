@@ -173,12 +173,12 @@ final class Cosmetics {
     }
     static String frameNow(Suffix s, long now) { return s.frames()[(int) ((now / 100L) % s.frames().length)]; }
     /** A suffix written like a Discord emoji: ":discord:". Every place that shows a suffix (menu tiles, previews, chat, tab list) goes through its id, and the picture is only ever read from textures/font/suffix_<id>.png, so changing that one file changes it everywhere. */
-    static String token(String id) { return ":" + id + ":"; }
+    static String token(String id) { return ":suf_" + id + ":"; }
     /** Replaces every ":id:" in a text with that suffix's current animated frame. */
     static Component expand(String text, long now) {
         net.minecraft.network.chat.MutableComponent out = Component.empty(); int i = 0;
         java.util.regex.Matcher m = java.util.regex.Pattern.compile(":([a-z0-9_]+):").matcher(text);
-        while (m.find()) { Suffix s = byId(m.group(1)); if (s == null) continue; if (m.start() > i) out.append(Component.literal(text.substring(i, m.start()))); out.append(glyph(frameNow(s, now))); i = m.end(); }
+        while (m.find()) { String sid = m.group(1).startsWith("suf_") ? m.group(1).substring(4) : m.group(1); Suffix s = byId(sid); if (s == null) continue; if (m.start() > i) out.append(Component.literal(text.substring(i, m.start()))); out.append(glyph(frameNow(s, now))); i = m.end(); }
         if (i < text.length()) out.append(Component.literal(text.substring(i)));
         return out;
     }

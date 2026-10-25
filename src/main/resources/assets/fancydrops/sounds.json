@@ -398,5 +398,53 @@
         "stream": false
       }
     ]
+  },
+  "slay_slash": {
+    "sounds": [
+      {
+        "name": "fancydrops:slay_slash",
+        "stream": false
+      }
+    ]
+  },
+  "slay_cleave": {
+    "sounds": [
+      {
+        "name": "fancydrops:slay_cleave",
+        "stream": false
+      }
+    ]
+  },
+  "slay_reveal": {
+    "sounds": [
+      {
+        "name": "fancydrops:slay_reveal",
+        "stream": false
+      }
+    ]
+  },
+  "slay_reveal_epic": {
+    "sounds": [
+      {
+        "name": "fancydrops:slay_reveal_epic",
+        "stream": false
+      }
+    ]
+  },
+  "slay_glow": {
+    "sounds": [
+      {
+        "name": "fancydrops:slay_glow",
+        "stream": false
+      }
+    ]
+  },
+  "slay_end": {
+    "sounds": [
+      {
+        "name": "fancydrops:slay_end",
+        "stream": false
+      }
+    ]
   }
 }

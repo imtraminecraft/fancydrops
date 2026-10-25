@@ -11,6 +11,10 @@
 - Home hero shows its words again. Tips, page descriptions, mod description and README now describe the current mod (Mythological live, the rest being rebuilt).
 - Cosmetics: 8 new animated suffix icons (Lucky Dice, Shovel, Skull, Moon, Comet earned by rare drops; Watcher, Rocket, Cat for the early players) and 5 new name effects (Rainbow, Aurora for the early players; Ember, Frost, Neon earned by rare drops). Each page header has a bar that fills once when the page opens.
 - Construction page: the worker tosses each brick up to the wall from a pile instead of the crane lowering it.
+- Every icon is now written as :name: (the old fd:name still works). The Discord suffix looked like an egg because ":discord:" fell through to the old community-button picture; suffix names are now :suf_discord: and the Discord community button uses the same picture as the suffix.
+- Skull icons are real spinning 3D blocks that bob, like a dropped item (they hold still when menu animations are off).
+- Slayers: new sound bank (Slash, Cleave, Slayer reveal, Epic reveal, Ember hum, Farewell) is the default for the Slayer scenes. The Slayer pages, drops and sound slots are unchanged.
+- More depth in drop animations: a wider drifting mote field behind and in front of the item with a slow camera sway, a floor shadow and a pale pool of light.
 - Cosmetics: suffixes are now referred to as :id: (like Discord emoji). Menu tiles, previews, chat and the tab list all read the same strip file, so changing textures/font/suffix_<id>.png changes it everywhere; a missing picture is logged at startup. The Collection row is now a small "Owned x / total" bar under the Search box. The close X is centred.
 - Construction page: the hard hats are replaced by swinging road-work signs.
 - Drop animation has more depth: a floor shadow under the item, far motes behind it and soft motes drifting past in front.

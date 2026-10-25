@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  */
 public final class ItemIcons {
     /** heads: six 8x8 faces in Box order (+x, -x, +y, -y, +z, -z). */
-    private static final class Cached { String legacy, headTexture; int[] face, wikiPixels; int[][] heads; int wikiVersion; transient int[] iso; }
+    private static final class Cached { String legacy, headTexture; int[] face, wikiPixels; int[][] heads; int wikiVersion; transient int[] iso; transient int[][] spin; transient int[][] faces6; }
 
     public static final class Icon {
         volatile boolean ready;
@@ -506,13 +506,26 @@ public final class ItemIcons {
         Icon ic = get(id);
         Cached d = ic.ready ? ic.data : null;
         Gfx.push(g); Gfx.translate(g, cx, cy);
+        int[] spun = null;
         boolean head = d != null && d.heads != null;                                   // any item that is a skull (NEU says so) shows a 3D head block, never the flat wiki picture (Myth the Fish, pets, fragments...)
         if (d != null && d.heads == null && d.wikiPixels != null && skullFlag(id) && !isBook(id)) {         // no skin found: the icon is still a real block, rebuilt from the wiki picture of the head
             if (d.iso == null) { int[][] cube = isoHead(d.wikiPixels); if (cube != null) d.iso = isoCube(cube); }
         }
-        int[] pix = d == null ? null : d.iso != null && d.heads == null && skullFlag(id) ? d.iso : head ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : d.wikiPixels != null ? d.wikiPixels : d.heads != null ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : null;
+        int bobY = 0;
+        if (d != null && (d.heads != null || (d.iso != null && skullFlag(id))) && !Icons.STILL_ICONS) {                       // a skull turns and bobs like an item dropped in the world
+            if (d.faces6 == null) d.faces6 = d.heads != null ? d.heads : isoHead(d.wikiPixels);
+            if (d.faces6 != null) {
+                if (d.spin == null) d.spin = new int[SPIN_FRAMES][];
+                long tm = System.currentTimeMillis(); float ph0 = (id.hashCode() & 255) / 255f, ang = (float) ((tm / 1000.0 * 1.15 + ph0 * 6.28) % (Math.PI * 2));
+                int fr = Math.round(ang / (float) (Math.PI * 2) * SPIN_FRAMES) % SPIN_FRAMES;
+                if (d.spin[fr] == null) d.spin[fr] = spinCube(d.faces6, fr * (float) (Math.PI * 2) / SPIN_FRAMES);
+                bobY = Math.round((float) Math.sin(tm / 380.0 + ph0 * 6.28) * 1.2f);
+                spun = d.spin[fr];
+            }
+        }
+        int[] pix = spun != null ? spun : d == null ? null : d.iso != null && d.heads == null && skullFlag(id) ? d.iso : head ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : d.wikiPixels != null ? d.wikiPixels : d.heads != null ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : null;
         if (pix != null) {
-            Gfx.scale(g, scale);
+            Gfx.scale(g, scale); if (bobY != 0) Gfx.translate(g, 0, bobY);
             for (int y = 0; y < 16; y++) {                         // one fill per run of the same colour, not per pixel (far fewer draw calls)
                 int x = 0;
                 while (x < 16) {
@@ -540,6 +553,53 @@ public final class ItemIcons {
         }
         Gfx.pop(g);
     }
+    private static final int SPIN_FRAMES = 36;
+    /** A real little block turning on its own axis, one picture per angle (cached): each pixel is a ray through a unit cube, so every face is textured, shaded by a fixed light and outlined. */
+    private static int[] spinCube(int[][] f, float yaw) {
+        int[] out = new int[256]; float pitch = 0.52f, cy = (float) Math.cos(yaw), sy = (float) Math.sin(yaw), cp = (float) Math.cos(pitch), sp = (float) Math.sin(pitch), k = 5.1f;
+        float lx = -0.45f, ly = 0.8f, lz = 0.55f, ll = (float) Math.sqrt(lx * lx + ly * ly + lz * lz); lx /= ll; ly /= ll; lz /= ll;
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
+            float vx = (x + 0.5f - 8f) / k, vy = -(y + 0.5f - 8.4f) / k, vz = 10f;                       // the ray starts in front of the block and goes straight back
+            float ry = vy * cp + vz * sp, rz = -vy * sp + vz * cp;                                       // undo the tilt, then the turn
+            float ox = vx * cy - rz * sy, oz = vx * sy + rz * cy, oy = ry;
+            float wdx = cp * sy, wdy = -sp, wdz = -cp * cy;                                              // the view direction (0,0,-1) in the block's own space
+            float t0 = -1e9f, t1 = 1e9f; int face = -1; float[] o3 = {ox, oy, oz}, d3 = {wdx, wdy, wdz};
+            boolean miss = false;
+            for (int ax = 0; ax < 3 && !miss; ax++) {
+                if (Math.abs(d3[ax]) < 1e-6f) { if (Math.abs(o3[ax]) > 1f) miss = true; continue; }
+                float ta = (-1f - o3[ax]) / d3[ax], tb = (1f - o3[ax]) / d3[ax];
+                if (ta > tb) { float tmp = ta; ta = tb; tb = tmp; }
+                if (ta > t0) { t0 = ta; face = d3[ax] > 0 ? ax * 2 + 1 : ax * 2; }
+                if (tb < t1) t1 = tb;
+            }
+            if (miss || t0 > t1 || face < 0) continue;
+            float hx = ox + wdx * t0, hy = oy + wdy * t0, hz = oz + wdz * t0;
+            // face ids from the axis: x -> 0 (+x) / 1 (-x), y -> 2 / 3, z -> 4 / 5
+            int fi = face; float u, v;
+            switch (fi) {
+                case 0 -> { u = (1f - hz) / 2f; v = (1f - hy) / 2f; }
+                case 1 -> { u = (hz + 1f) / 2f; v = (1f - hy) / 2f; }
+                case 2 -> { u = (hx + 1f) / 2f; v = (hz + 1f) / 2f; }
+                case 3 -> { u = (hx + 1f) / 2f; v = (1f - hz) / 2f; }
+                case 4 -> { u = (hx + 1f) / 2f; v = (1f - hy) / 2f; }
+                default -> { u = (1f - hx) / 2f; v = (1f - hy) / 2f; }
+            }
+            int c = f[fi][Math.min(7, Math.max(0, (int) (v * 8))) * 8 + Math.min(7, Math.max(0, (int) (u * 8)))];
+            float nx = fi == 0 ? 1 : fi == 1 ? -1 : 0, ny = fi == 2 ? 1 : fi == 3 ? -1 : 0, nz = fi == 4 ? 1 : fi == 5 ? -1 : 0;     // the face's normal in view space
+            float wx = nx * cy + nz * sy, wz = -nx * sy + nz * cy, wy = ny;
+            float vyv = wy * cp - wz * sp, vzv = wy * sp + wz * cp, vxv = wx;
+            float lit = 0.5f + 0.62f * Math.max(0f, vxv * lx + vyv * ly + vzv * lz);
+            out[y * 16 + x] = Canvas.shade(c | 0xFF000000, lit);
+        }
+        int[] res = out.clone();
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
+            if ((out[y * 16 + x] >>> 24) == 0) continue;
+            boolean edge = x == 0 || y == 0 || x == 15 || y == 15 || (out[y * 16 + x - 1] >>> 24) == 0 || (out[y * 16 + x + 1] >>> 24) == 0 || (out[(y - 1) * 16 + x] >>> 24) == 0 || (out[(y + 1) * 16 + x] >>> 24) == 0;
+            if (edge) res[y * 16 + x] = Canvas.shade(out[y * 16 + x], 0.5f);
+        }
+        return res;
+    }
+
     /** A small 3D block (top, front and side) made from a head's faces, for lists that show a flat 16 x 16 picture. */
     private static int[] isoCube(int[][] heads) {
         int[] out = new int[256];

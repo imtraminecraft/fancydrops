@@ -764,6 +764,7 @@ final class Scene {
     private static void depthShadow(Canvas out, float sx, float sy, float size, float uu, float us) {
         float lift = 0.6f + 0.4f * (float) Math.sin(us * 2.0), a = Math.min(1f, uu) * 0.42f * lift;
         int fy = Math.round(sy + size * 0.95f + 6), rx = Math.round(size * (0.55f + 0.1f * (1f - lift)));
+        out.glow(sx, fy, size * 1.1f, 0x8890B8, Math.min(1f, uu) * 0.18f);                                    // a pale pool of light on the floor round the shadow
         for (int dy = -3; dy <= 3; dy++) {
             int half = Math.round(rx * (float) Math.sqrt(Math.max(0f, 1f - (dy / 3.4f) * (dy / 3.4f))));
             for (int dx = -half; dx <= half; dx++) { float e = 1f - Math.abs(dx) / (float) Math.max(1, half); out.set(Math.round(sx) + dx, fy + dy, Canvas.rgb(Math.round(150 * a * e * (1f - Math.abs(dy) / 4f)), 0x000000)); }
@@ -772,14 +773,14 @@ final class Scene {
     /** Two layers of drifting motes: small dim ones far behind the item that move slowly, and bigger softer ones in front that move faster, which gives the scene depth. */
     private static void depthMotes(Canvas out, float sx, float sy, float us, float uu, int rar, boolean front) {
         int col = rar & 0xFFFFFF; float a0 = Math.min(1f, uu);
-        int n = front ? 5 : 12;
+        int n = front ? 9 : 26; float sway = (float) Math.sin(us * 0.7f);                                  // the camera drifts a little: near motes slide more than far ones, which is what reads as depth
         for (int i = 0; i < n; i++) {
             float h1 = ((i * 2654435761L + (front ? 77 : 0)) & 0xFFFF) / 65536f, h2 = ((i * 40503L + 11 + (front ? 5 : 0)) & 0xFFFF) / 65536f;
             float sp = front ? 0.32f + h2 * 0.25f : 0.08f + h2 * 0.1f, u = (us * sp + h1) % 1f;
-            float px = sx + (h1 - 0.5f) * (front ? 150f : 190f) + (float) Math.sin(us * 0.9f + i) * (front ? 7f : 3f), py = sy + 40f - u * 110f;
-            float al = (float) Math.sin(u * Math.PI) * a0 * (front ? 0.5f : 0.4f);
-            if (front) { out.glow(px, py, 5f, col, al * 0.55f); out.rect(Math.round(px), Math.round(py), Math.round(px) + 2, Math.round(py) + 2, Canvas.rgb(Math.round(200 * al), 0xFFFFFF)); }
-            else out.set(Math.round(px), Math.round(py), Canvas.rgb(Math.round(170 * al), Canvas.mix(0xFF000000 | col, 0xFFFFFFFF, 0.4f) & 0xFFFFFF));
+            float px = sx + (h1 - 0.5f) * (front ? 170f : 210f) + (float) Math.sin(us * 0.9f + i) * (front ? 7f : 3f) + sway * (front ? 14f : -5f), py = sy + 46f - u * 120f;
+            float al = (float) Math.sin(u * Math.PI) * a0 * (front ? 0.75f : 0.6f);
+            if (front) { out.glow(px, py, 8f, col, al * 0.6f); out.rect(Math.round(px), Math.round(py), Math.round(px) + 3, Math.round(py) + 3, Canvas.rgb(Math.round(210 * al), 0xFFFFFF)); }
+            else { out.set(Math.round(px), Math.round(py), Canvas.rgb(Math.round(200 * al), Canvas.mix(0xFF000000 | col, 0xFFFFFFFF, 0.4f) & 0xFFFFFF)); if (i % 3 == 0) out.glow(px, py, 3f, col, al * 0.3f); }
         }
     }
 
