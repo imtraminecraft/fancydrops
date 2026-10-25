@@ -2039,6 +2039,7 @@ public class FancyScreen extends Screen {
         FancyConfig c = FancyConfig.get();
         int ex = eX(), ey = eY(), ew = eW(), eh = eHt();
         g.fill(px, py, px + pw, py + ph, 0xCC0A0C12);
+        g.fill(ex + 2, ey + 2, ex + ew - 2, ey + eh - 2, Ui.PANEL);                       // solid underneath: the menu's see-through setting must not let the page show through
         pill(g, ex, ey, ew, eh, Ui.PANEL); rout(g, ex, ey, ew, eh, Ui.BORDER);
         g.fill(ex + 1, ey + 1, ex + ew - 1, ey + 2, Gfx.argb(160, Ui.ACCENT & 0xFFFFFF));
         Gfx.text(g, font, editor == 1 ? "Bar Changes" : editor == 3 ? "Item Changes" : editor == 4 ? "Position Changes" : "Text Changes", ex + 10, ey + 9, Ui.TEXT);

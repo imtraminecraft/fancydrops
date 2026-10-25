@@ -1,3 +1,6 @@
+## 0.4.27
+- Fix: the Position/Bar/Text/Item editors are solid now, so the page behind no longer shows through as ghost text.
+
 ## 0.4.26
 - Fix: the art source files are back in the normal package folder, so the editor resolves `Icons` and the others again. `ART.md` lists which file draws what.
 
