@@ -58,16 +58,6 @@ final class WipMock {
         return out;
     }
 
-    private static java.util.List<String> wrap(Font font, String text, int w) {
-        java.util.List<String> out = new java.util.ArrayList<>(); StringBuilder cur = new StringBuilder();
-        for (String word : text.split(" ")) {
-            String t = cur.length() == 0 ? word : cur + " " + word;
-            if (Gfx.w(font, t) > w && cur.length() > 0) { out.add(cur.toString()); cur = new StringBuilder(word); } else { cur = new StringBuilder(t); }
-        }
-        if (cur.length() > 0) out.add(cur.toString());
-        return out;
-    }
-
     static void reset() { }
     static boolean click(int mx, int my) { return false; }
 
