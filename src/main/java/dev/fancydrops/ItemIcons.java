@@ -506,7 +506,8 @@ public final class ItemIcons {
         Icon ic = get(id);
         Cached d = ic.ready ? ic.data : null;
         Gfx.push(g); Gfx.translate(g, cx, cy);
-        int[] pix = d == null ? null : d.wikiPixels != null ? d.wikiPixels : d.heads != null ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : null;
+        boolean head = d != null && d.heads != null && skullFlag(id);                                   // a skull item shows its 3D head, never the wiki picture
+        int[] pix = d == null ? null : head ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : d.wikiPixels != null ? d.wikiPixels : d.heads != null ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : null;
         if (pix != null) {
             Gfx.scale(g, scale);
             for (int y = 0; y < 16; y++) {                         // one fill per run of the same colour, not per pixel (far fewer draw calls)

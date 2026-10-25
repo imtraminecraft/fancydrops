@@ -1336,7 +1336,6 @@ public class FancyScreen extends Screen {
         long prevAt = PREV_AT.computeIfAbsent(r.title + "|" + r.sub, k -> now);
         // the box: dark glass, a gradient edge on the left, a thin light along the top
         pill(g, r.x, r.y, r.w, r.h, 0xE00A0C14);
-        for (int yy = 0; yy < r.h; yy++) { float f = yy / (float) Math.max(1, r.h - 1); int gc = Chat.GRADIENT[Math.min(Chat.GRADIENT.length - 1, (int) (f * (Chat.GRADIENT.length - 1)))]; g.fill(r.x, r.y + yy, r.x + 3, r.y + yy + 1, 0xFF000000 | gc); }
         g.fill(r.x + 3, r.y + 1, r.x + r.w - 1, r.y + 2, 0x22FFFFFF);
         rout(g, r.x, r.y, r.w, r.h, 0x33FFFFFF);
         int y = r.y + 7, maxW = r.w - 24; double cps = 30, off = 0;
@@ -1890,7 +1889,7 @@ public class FancyScreen extends Screen {
             if (showBarOn()) rows.add(showBarRow());
             Row f = folds.get(open); dropSrcName = f.title;
             String pg = CATS[Math.max(0, Math.min(CATS.length - 1, cat))];
-            Row back = row(0, "fd:back", pg, "Back to the " + pg + " page", f.accent);
+            Row back = row(0, "fd:back", cat == 3 ? "Mythological Mobs" : pg, cat == 3 ? "Back to all the creatures" : "Back to the " + pg + " page", f.accent);
             back.noSearch = true; back.click = () -> { dropSrc = null; scroll = dropBackScroll; tabChanged = System.currentTimeMillis(); };
             rows.add(back);
             boolean any = false; for (Row r : segs.get(open)) if (r.dcfg != null && dropKeep(r)) { any = true; break; }
@@ -1954,17 +1953,13 @@ public class FancyScreen extends Screen {
             srcList.clear();
             Row head = row(0, "fd:myth_mobs", "Mythological Mobs", MythData.spawnable(c.mythPet).size() + " of " + MythData.ALL.size() + " creatures  \u00B7  " + total + " drops", mcol);
             head.kind = HERO; head.h = 84; head.noSearch = true; rows.add(head);
-            boolean one = dropSrc != null && dropSrc.startsWith("m:");
-            Row back = row(0, "fd:back", one ? "Mythological Mobs" : "Mythological", one ? "Back to all the creatures" : "Back to the Mythological page", mcol);
-            back.noSearch = true; back.click = () -> { if (one) dropSrc = null; else { mythPage = -1; dropSrc = null; } scroll = 0; tabChanged = System.currentTimeMillis(); };
+            Row back = row(0, "fd:back", "Mythological", "Back to the Mythological page", mcol);
+            back.noSearch = true; back.click = () -> { mythPage = -1; dropSrc = null; scroll = 0; tabChanged = System.currentTimeMillis(); };
             rows.add(back);
         }
-        String only = !searching && dropSrc != null && dropSrc.startsWith("m:") ? dropSrc.substring(2) : null;
         for (SlayerData.Slayer s : MythData.spawnable(c.mythPet)) {
-            if (only != null && !s.id.equals(only)) continue;
             Row src = fold("myth_" + s.id, "fd:myth_" + s.id, s.boss, s.drops.size() + (s.drops.size() == 1 ? " drop" : " drops"), s.color());
             src.indent = 1; rows.add(src);
-            if (only != null) src.open = true;
             if (!src.open) continue;
             FancyConfig.SlayerCfg sc = c.slayer(s.id);
             Row cols = section(""); cols.dropCols = true; cols.indent = 2; cols.h = 14; rows.add(cols);
@@ -2215,7 +2210,7 @@ public class FancyScreen extends Screen {
                     int pcm = PET_COLS[Math.max(0, Math.min(5, c.mythPet))], mc2 = pcm == 0xFFFFFFFF ? 0xFF55D8FF : pcm;
                     srcList.clear();
                     srcList.add(new String[]{"@mobs", "Mythological Mobs", "fd:myth_mobs", String.valueOf(mc2)});
-                    if (mythPage == 0) for (SlayerData.Slayer ms : MythData.spawnable(c.mythPet)) srcList.add(new String[]{"m:" + ms.id, ms.boss, "fd:myth_" + ms.id, String.valueOf(ms.color()), "1"});     // each creature, under Mythological Mobs
+                    if (mythPage == 0) for (SlayerData.Slayer ms : MythData.spawnable(c.mythPet)) srcList.add(new String[]{"myth_" + ms.id, ms.boss, "fd:myth_" + ms.id, String.valueOf(ms.color()), "1"});     // each creature, under Mythological Mobs
                     srcList.add(new String[]{"@treasure", "Treasure", "fd:myth_treasure", String.valueOf(TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))])});
                 }
                 buildAll = false;

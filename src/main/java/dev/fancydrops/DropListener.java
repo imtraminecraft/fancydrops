@@ -786,6 +786,19 @@ public final class DropListener {
         AnimationManager.play(an);
     }
 
+    /** /fd simulate Treasure [Drop]: a pretend Griffin burrow treasure (a random one when no name is given). Never counted in profit. */
+    static void simulateTreasure(String name, Consumer<String> reply) {
+        List<SlayerData.Drop> pool = new ArrayList<>(); java.util.Set<String> seen = new java.util.HashSet<>();
+        for (int sp = 0; sp < 3; sp++) for (SlayerData.Drop d : TreasureData.drops(sp)) if (seen.add(d.name)) pool.add(d);
+        List<SlayerData.Drop> picks = name.isBlank() ? List.of(pool.get(new Random().nextInt(pool.size()))) : pickDrops(pool, name, 1, "a treasure drop", reply);
+        if (picks == null || picks.isEmpty()) return;
+        reply.accept("Simulating " + picks.get(0).name + " from a burrow");
+        Item it = treasureItem(picks.get(0)); it.sim = true;
+        if (TreasureData.coins(it.name) == 0) previewPrice(it); else ItemIcons.prefetch(it.id);
+        Anim a = new Anim(TreasureData.SOURCE, it, -1, null); a.myth = true;
+        AnimationManager.play(a);
+    }
+
     /** Plays one of the four scenes: tier 0 / 1 / 2 with a sample drop, or the "nothing" scene. */
     public static void playTest(int tier, boolean nothing) {
         SlayerData.Slayer sl = nothingSlayer();

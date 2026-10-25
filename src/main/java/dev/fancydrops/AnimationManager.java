@@ -1090,8 +1090,25 @@ public final class AnimationManager {
      * a pillar of light, shockwave rings, god rays, sparks and falling griffin feathers. (ox, oy) = where the picture starts, cell = screen pixels per picture pixel.
      * The effect is clipped to [x0, x1] x [y0, y1] (the frame between the bars, or the whole screen).
      */
+    /** A flat colour over the window, cut by the same rounded corners as the bars, so a flash never lights the carved corners. */
+    private static void fillRound(GuiGraphicsExtractor g, int x0, int y0, int x1, int y1, int argb) {
+        int r = curveR(x1 + x0, y1 + y0, y0, x0);
+        if (r == 0) { g.fill(x0, y0, x1, y1, argb); return; }
+        g.fill(x0, y0 + r, x1, y1 - r, argb);
+        int steps = Math.min(r, 12);
+        for (int st = 0; st < steps; st++) {
+            int ya = r * st / steps, yb = r * (st + 1) / steps; double mid = (ya + yb) / 2.0;
+            int in = (int) Math.round(r - Math.sqrt(Math.max(0.0, (double) r * r - (r - mid) * (r - mid))));
+            g.fill(x0 + in, y0 + ya, x1 - in, y0 + yb, argb); g.fill(x0 + in, y1 - yb, x1 - in, y1 - ya, argb);
+        }
+    }
+
     private static void mythRngFx(GuiGraphicsExtractor g, Scene.Params p, float t, int ox, int oy, float cell, float k, int x0, int y0, int x1, int y1) {
         if (k <= 0.02f) return;
+        g.enableScissor(x0, y0, x1, y1);                                                                      // nothing here ever spills into the bars
+        try { mythRngFx2(g, p, t, ox, oy, cell, k, x0, y0, x1, y1); } finally { g.disableScissor(); }
+    }
+    private static void mythRngFx2(GuiGraphicsExtractor g, Scene.Params p, float t, int ox, int oy, float cell, float k, int x0, int y0, int x1, int y1) {
         float u = Math.max(0.5f, cell), ts = Scene.splitTime(p);
         int W = x1 - x0, H = y1 - y0;
         float sky = clamp(t / 0.5f);
@@ -1099,7 +1116,7 @@ public final class AnimationManager {
             int x = x0 + (int) (Tex.h(i, 81) * W), y = y0 + (int) (Tex.h(i, 82) * H * 0.7f); float tw = 0.5f + 0.5f * (float) Math.sin(t * 3 + i * 1.7f);
             g.fill(x, y, x + (i % 5 == 0 ? 2 : 1), y + (i % 5 == 0 ? 2 : 1), Gfx.argb((int) (200 * sky * tw * k), i % 4 == 0 ? 0xFFE8A0 : 0xFFFFFF));
         }
-        for (int q = 0; q < 3; q++) { float a2 = t - Scene.impact(p, q); if (a2 >= 0f && a2 < 0.12f) g.fill(x0, y0, x1, y1, Gfx.argb((int) (80 * (1f - a2 / 0.12f) * k), 0xDCE8FF)); }      // a flash on each strike
+        for (int q = 0; q < 3; q++) { float a2 = t - Scene.impact(p, q); if (a2 >= 0f && a2 < 0.12f) fillRound(g, x0, y0, x1, y1, Gfx.argb((int) (80 * (1f - a2 / 0.12f) * k), 0xDCE8FF)); }      // a flash on each strike
         int cxs = ox + Math.round(56 * cell), cys = oy + Math.round(46 * cell), dt0 = Math.max(1, Math.round(u * 0.8f));
         for (int q = 0; q < p.chops && q < 8; q++) {                                                          // the call: every strike drops a lightning bolt into the circle and sends a ring across the ground
             float d = t - Scene.impact(p, q); if (d < 0f || d > 0.5f) continue;
@@ -1123,12 +1140,12 @@ public final class AnimationManager {
                 int sx = Math.round(cxs + (float) Math.cos(an) * rad), sy = Math.round(cys + (float) Math.sin(an) * rad * 0.6f);
                 if (sx >= x0 && sx < x1 && sy >= y0 && sy < y1) g.fill(sx, sy, sx + dt0 + 1, sy + dt0 + 1, Gfx.argb((int) (220 * life * ch * k), i % 3 == 0 ? 0xFFFFFF : 0xB8A8FF));
             }
-            g.fill(x0, y0, x1, y1, Gfx.argb((int) (36 * ch * ch * k * (0.6f + 0.4f * (float) Math.sin(t * 16))), 0x6A4CFF));       // the screen throbs violet as it charges
+            fillRound(g, x0, y0, x1, y1, Gfx.argb((int) (36 * ch * ch * k * (0.6f + 0.4f * (float) Math.sin(t * 16))), 0x6A4CFF));       // the screen throbs violet as it charges
         }
         float a = t - ts; if (a < 0f) return;
         float fin = clamp(1f - (1f - clamp(a / 0.4f)) * (1f - clamp(a / 0.4f)));
         int ix = ox + Math.round(56 * cell), iy = oy + Math.round(46 * cell);
-        if (a < 0.22f) g.fill(x0, y0, x1, y1, Gfx.argb((int) (150 * (1f - a / 0.22f) * k), 0xFFF6D8));            // the reveal flash
+        if (a < 0.22f) fillRound(g, x0, y0, x1, y1, Gfx.argb((int) (150 * (1f - a / 0.22f) * k), 0xFFF6D8));            // the reveal flash
         float pil = clamp(a / 0.25f) * (0.8f + 0.2f * (float) Math.sin(t * 9)) * k;                           // a pillar of light through the drop
         int PB = 10;                                                                                           // the pillar in a few soft bands (a fill each), brighter near the drop
         for (int bnd = 0; bnd < PB; bnd++) { int ya = y0 + (iy - y0) * bnd / PB, yb = y0 + (iy - y0) * (bnd + 1) / PB; float fall = 1f - (1f - (bnd + 0.5f) / PB) * 0.75f; int w = Math.round((1 + 3 * fall) * u);

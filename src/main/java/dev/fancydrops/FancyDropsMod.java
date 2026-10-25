@@ -224,18 +224,15 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         helpLine(s, "/fd cosmetics", "Open the cosmetics menu");
         helpLine(s, "/fd <search>", "Open the menu and search for what you typed");
         helpHead(s, "Try a drop  (never counts toward profit)");
-        helpLine(s, "/fd simulate Slayer <Boss> <Drop 1|Nothing> [Drop 2] [mf]", "A boss kill with one or two drops");
-        helpLine(s, "/fd simulate Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]", "A Mythological Ritual");
-        helpLine(s, "/fd simulate Dye <Dye>", "One dye");
-        helpLine(s, "/fd simulate Farming <Crop|Pest> <Drop 1> [ob]", "One farming drop, with Overbloom");
-        helpLine(s, "/fd simulate Experiments <Drop 1> [Drop 2]", "Experimentation Table rewards");
+        helpLine(s, "/fd simulate Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]", "A Mythological Ritual creature kill");
+        helpLine(s, "/fd simulate Treasure <Drop>", "One Griffin burrow treasure (blank = a random one)");
         helpHead(s, "Handy");
         helpLine(s, "/fd editor [animations|sounds]", "Open the Animations or Sounds editor");
         helpLine(s, "/fd magicfind <magic find> [drop]", "What your Magic Find does to a drop chance");
         helpLine(s, "/fd mute", "Turn sounds on or off");
         helpLine(s, "/fd toggle", "Turn the whole mod on or off");
         s.sendFeedback(Component.literal(" "));
-        s.sendFeedback(Chat.color("Example  ", Chat.DIM).append(Chat.color("/fd simulate Experiments Power VII Protection VI", Chat.COMMAND)));
+        s.sendFeedback(Chat.color("Example  ", Chat.DIM).append(Chat.color("/fd simulate Mythological Minos Hunter Daedalus Stick", Chat.COMMAND)));
         s.sendFeedback(Chat.color("Tab completes names. The magic find goes last and defaults to 250.", Chat.DIM));
         return Command.SINGLE_SUCCESS;
     }
@@ -310,8 +307,8 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         return builder.buildFuture();
     }
 
-    private static final String[] SIM_KINDS = {"Slayer", "Mythological", "Dye", "Farming", "Experiments"};
-    private static final String SIM_USAGE = "/fd simulate Slayer <Boss> <Drop 1|Nothing> [Drop 2] [mf]   ·   Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]   ·   Dye <Dye>   ·   Farming <Crop|Pest> <Drop 1> [ob]   ·   Experiments <Drop 1> [Drop 2]";
+    private static final String[] SIM_KINDS = {"Mythological", "Treasure"};           // only the finished pages are listed (Slayer, Dye, Farming and Experiments still answer, but wait for their rebuild)
+    private static final String SIM_USAGE = "/fd simulate Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]   ·   Treasure <Drop>";
 
     private static LiteralArgumentBuilder<FabricClientCommandSource> simNode(String name) {
         return ClientCommands.literal(name)
@@ -339,7 +336,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     private static int simulate(FabricClientCommandSource source, String kind, String args) {
         String t = args.trim(); String k = kind.toLowerCase(Locale.ROOT);
         Integer num = null; String[] w = t.split("\\s+");
-        if (w.length > 0 && w[w.length - 1].matches("\\d{1,5}") && !k.equals("dye") && !k.equals("experiments")) { num = Math.min(10000, Integer.parseInt(w[w.length - 1])); t = t.substring(0, t.length() - w[w.length - 1].length()).trim(); }
+        if (w.length > 0 && w[w.length - 1].matches("\\d{1,5}") && !k.equals("dye") && !k.equals("experiments") && !k.equals("treasure")) { num = Math.min(10000, Integer.parseInt(w[w.length - 1])); t = t.substring(0, t.length() - w[w.length - 1].length()).trim(); }
         switch (k) {
             case "slayer" -> {
                 SlayerData.Slayer[] hit = new SlayerData.Slayer[1]; int n = DropListener.bossPrefix(t, hit);
@@ -353,6 +350,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                 if (rest.isEmpty()) { say(source, "Use /fd simulate Mythological <Mob> <Drop 1|Nothing> [Drop 2] [mf]"); return 0; }
                 DropListener.simulateMyth(num == null ? 250 : num, t, m -> source.sendFeedback(Chat.msg(m)));
             }
+            case "treasure" -> DropListener.simulateTreasure(t, m -> source.sendFeedback(Chat.msg(m)));
             case "dye" -> {
                 if (t.isEmpty()) { say(source, "Use /fd simulate Dye <Dye>"); return 0; }
                 DropListener.simulateDye(250, t, m -> source.sendFeedback(Chat.msg(m)));
@@ -387,6 +385,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             case "slayer" -> { srcs = SlayerData.ALL; max = 2; nothing = true; tail = new String[]{"100", "250", "400"}; }
             case "mythological" -> { srcs = MythData.ALL; max = 2; nothing = true; tail = new String[]{"100", "250", "400"}; }
             case "farming" -> { srcs = FarmData.ALL; tail = new String[]{"25", "50", "100"}; }
+            case "treasure" -> { }
             case "dye" -> { }
             case "experiments" -> max = 2;
             default -> { return builder.buildFuture(); }
@@ -404,6 +403,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             }
             pos = lead + own.boss.length();
             for (SlayerData.Drop d : own.drops) pool.add(d.name);
+        } else if (k.equals("treasure")) { java.util.Set<String> seen = new java.util.LinkedHashSet<>(); for (int sp = 0; sp < 3; sp++) for (SlayerData.Drop d : TreasureData.drops(sp)) seen.add(d.name); pool.addAll(seen);
         } else if (k.equals("dye")) { for (Object[] o : DropListener.allDyes()) pool.add(((SlayerData.Drop) o[1]).name); }
         else { for (String[] e : ExperimentData.ALL) pool.add(e[0]); }
         if (nothing) pool.add("Nothing");

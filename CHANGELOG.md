@@ -1,3 +1,10 @@
+## 0.4.10
+- Fixed: skull items (Mythos Fragment and the other heads) show their 3D head in lists, not the wiki picture
+- Fixed: clicking a creature under Mythological Mobs in the sidebar opens that creature, and the open page is highlighted
+- Fixed: RNG flashes follow the curved corners and stay inside the window (no more flash or rays over the bars or carved corners)
+- Changed: /fd simulate lists Mythological and Treasure only (new: /fd simulate Treasure <Drop>); the other kinds come back with their rebuilds
+- Removed: the coloured strip on the left of the chat preview
+
 ## 0.4.9
 - Changed: the construction page shows "Coming Soon" where the old text was, the crane no longer draws a line to the bricks, and three builders chat on a bench at the right
 - Changed: the RNG item stays 1 s longer (RNG default length is 6 s) and a head turns to face you before the scene ends. Flat items sway softly after their flips
