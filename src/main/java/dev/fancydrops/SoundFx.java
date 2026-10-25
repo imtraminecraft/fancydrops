@@ -29,7 +29,7 @@ public final class SoundFx {
     }
 
     public static final String NONE = "none";
-    public static final String[] SCENES = {"default", "cool", "epic", "nothing", "dye", "farm", "mytho", "exp", "helios", "mythnothing", "pest"};
+    public static final String[] SCENES = {"default", "cool", "epic", "nothing", "dye", "farm", "mytho", "exp", "helios", "mythnothing", "pest", "treasure"};
     public static final String[] SLOTS = {"chop", "split", "reveal", "linger", "end"};
 
     private static final Map<String, Fx> ALL = new LinkedHashMap<>();
@@ -144,7 +144,8 @@ public final class SoundFx {
             {"exp", "mc_page", "mc_enchant", "mc_levelup", "mc_shimmer", "mc_powerdown"},
             {"helios", "mc_swish", "mc_beacon", "mc_orb", "mc_pling", "mc_orb"},
             {"mythnothing", "mc_bolt", "mc_fizzle", NONE, NONE, NONE},
-            {"pest", "mc_swish", "mc_crit", "mc_orb", "mc_pling", "mc_orb"}};
+            {"pest", "mc_swish", "mc_crit", "mc_orb", "mc_pling", "mc_orb"},
+            {"treasure", "mc_harvest", "mc_anvil", "mc_levelup", "mc_hum", "mc_powerdown"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) MC_DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
@@ -162,7 +163,8 @@ public final class SoundFx {
             {"exp", "page", "glow", "halo", "chant", "dusk"},
             {"helios", "beam", "flare", "sprout", "breeze", "settle"},
             {"mythnothing", "arc", "sigh", NONE, NONE, "dusk"},
-            {"pest", "vacuum", "squeak", "sprout", "breeze", "settle"}};
+            {"pest", "vacuum", "squeak", "sprout", "breeze", "settle"},
+            {"treasure", "thump", "rustle", "halo", "ember", "dusk"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 

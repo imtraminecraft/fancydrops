@@ -23,6 +23,8 @@ final class UpdateCheck {
     static volatile long checkedAt = 0L, minShowUntil = 0L;
     /** True while a check runs, and for a moment after a button press so the wording does not flicker. */
     static boolean busy() { return state == 1 || state == 0 || System.currentTimeMillis() < minShowUntil; }
+    /** Releases published before this moment are from the old 0.9.x line and are ignored (the mod was restarted at 0.4.x). */
+    private static final String RESET_AT = "2026-10-25T00:00:00Z";
     private static final Pattern VER = Pattern.compile("(\\d+)\\.(\\d+)\\.(\\d+)");
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8)).build();
 
@@ -38,18 +40,22 @@ final class UpdateCheck {
             try {
                 HttpResponse<String> res = HTTP.send(HttpRequest.newBuilder(URI.create("https://api.github.com/repos/" + REPO + "/releases?per_page=8"))
                         .timeout(Duration.ofSeconds(10)).header("User-Agent", "FancyDrops").header("Accept", "application/vnd.github+json").GET().build(), HttpResponse.BodyHandlers.ofString());
+                if (res.statusCode() == 404) { latest = ""; latestName = ""; error = ""; state = 2; checkedAt = System.currentTimeMillis(); return; }          // no releases (or no public repo) yet
                 if (res.statusCode() != 200) throw new IllegalStateException("GitHub said " + res.statusCode());
                 JsonArray a = JsonParser.parseString(res.body()).getAsJsonArray();
-                int[] best = null; String bestTag = "", bestName = "";
+                int[] best = null; String bestTag = "", bestName = "", bestAt = "";
                 for (JsonElement e : a) {
                     JsonObject o = e.getAsJsonObject();
                     if (o.has("draft") && o.get("draft").getAsBoolean()) continue;
+                    String at = o.has("published_at") && !o.get("published_at").isJsonNull() ? o.get("published_at").getAsString() : "";
+                    if (at.compareTo(RESET_AT) < 0) continue;                                              // the old 0.9.x releases (before the rework restarted at 0.4) never count
                     String tag = o.has("tag_name") && !o.get("tag_name").isJsonNull() ? o.get("tag_name").getAsString() : "";
                     int[] v = parse(tag); if (v == null) continue;
-                    best = v; bestTag = tag; bestName = best[0] + "." + best[1] + "." + best[2]; break;          // GitHub lists the newest release first: the version was restarted at 0.4.x, so the highest number is not the newest release
+                    if (best == null || at.compareTo(bestAt) > 0) { best = v; bestTag = tag; bestAt = at; bestName = v[0] + "." + v[1] + "." + v[2]; }
                 }
-                latest = bestTag; latestName = bestName; error = ""; state = best == null ? 3 : 2;
-                if (best == null) error = "No releases yet";
+                if (best == null) { latest = ""; latestName = ""; }       // no release published yet
+                else { latest = bestTag; latestName = bestName; }
+                error = ""; state = 2;
             } catch (Throwable e) { error = e.getMessage() == null ? "No connection" : e.getMessage(); state = 3; }
             checkedAt = System.currentTimeMillis();
         }, "FancyDrops-update");
@@ -62,6 +68,9 @@ final class UpdateCheck {
         return new int[]{Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3))};
     }
     private static boolean newer(int[] a, int[] b) { for (int i = 0; i < 3; i++) if (a[i] != b[i]) return a[i] > b[i]; return false; }
+
+    /** True when a check finished and GitHub has no release at all. */
+    static boolean noReleases() { return state == 2 && latest.isEmpty(); }
 
     /** True when the newest release on GitHub is newer than the version running now. */
     static boolean updateAvailable() {

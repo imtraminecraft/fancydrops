@@ -1,3 +1,15 @@
+## 0.4.5
+- Fixed: Mythological words come in with the reveal and stay about 2.6 s, so they can be read (Normal and RNG)
+- Fixed: Text position now says "Top of animation" / "Bottom of animation", and Normal scenes follow it (words above or below the scene)
+- Fixed: Text Changes preview shows a current Mythological drop (Daedalus Stick, "1 in 213 | 0.47%")
+- Fixed: Animations and Sounds previews are gone on WIP pages (Slayers, Dye, Farming, Experiments, Mining, Fishing). They show the construction page like Slayers
+- Fixed: Mining and Fishing show the construction page again; the in-development animation is removed
+- Fixed: Chat preview panel hugs its message, no more empty space
+- Fixed: update checker shows "No Releases found yet." when GitHub has none
+- Fixed: Settings > Cosmetics sliders and switches refresh the look at once; its icon is the Cosmetics icon
+- Added: Sounds > Mythological has Mobs and Treasure pages. Treasure has its own sound set (Dig, Open, Reveal, Linger, End)
+- Changed: Stats pages match the Drop Library (Mythological first), WIP pages are tagged and show the construction page
+
 ## 0.4.4
 - Fixed: Settings page crashed the game (a missing tile). Settings now has Menu, Cosmetics, Prices and Drop Data
 - Fixed: Chat Alert follows the state. Normal turns it off, RNG turns it on, and rare drops start as RNG

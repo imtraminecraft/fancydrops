@@ -55,7 +55,9 @@ public class FancyScreen extends Screen {
     private static final String[] PEST_SLOT_SUBS = {"The vacuum sucks up the pest", "The pest pops", "The drop shoots out", "The glow after it", "The scene fades out"};
     private static final String[] SLOT_NAMES = {"Chop", "Split", "Reveal", "Linger", "End"};
     private static final String[] MYTH_SLOT_NAMES = {"Call", "Shatter", "Reveal", "Linger", "End"};
-    private static final String[] MYTH_SLOT_SUBS = {"Every beat that calls the creature or the dig", "The creature shatters or the mound opens", "The drop appears", "The glow after it", "The scene fades out"};
+    private static final String[] TREAS_SLOT_NAMES = {"Dig", "Open", "Reveal", "Linger", "End"};
+    private static final String[] TREAS_SLOT_SUBS = {"Every shovel dig", "The chest bursts open", "The drop springs out", "The glow after it", "The scene fades out"};
+    private static final String[] MYTH_SLOT_SUBS = {"Every beat that calls the creature", "The creature shatters", "The drop appears", "The glow after it", "The scene fades out"};
     private static final String[] DYE_SLOT_NAMES = {"Splash", "Burst", "Reveal", "Linger", "End"};
     private static final String[] DYE_SLOT_SUBS = {"Every paint splash landing", "The paint bursts open", "The dye appears", "The glow after it", "The scene fades out"};
     private static final String[] SLOT_SUBS = {"Every slice of the cleaver", "The cube splits open", "The drop appears", "The glow after it", "The scene fades out"};
@@ -515,7 +517,7 @@ public class FancyScreen extends Screen {
 
     // ------------------------------------------------------------------ the live preview dock
 
-    private static final int DOCK_H = 128, DOCK_GAP = 6, COS_H = 124, AURA_W = 118;
+    private static final int DOCK_H0 = 128, DOCK_GAP = 6, COS_H = 124, AURA_W = 118;
     private float cosK;
     private static final int[] SLOT_COL = {0xFF56D8FF, 0xFFFF72C6, 0xFFFFC857, 0xFF7CE06A, 0xFFB56BFF};     // chop, split, reveal, linger, end
     private static final long[] pulseAt = new long[5];                                            // when each sound slot was last played by hand
@@ -523,17 +525,26 @@ public class FancyScreen extends Screen {
     private float dockK;                                                                          // 0..1: how far the dock has slid open
     private static int soundCat;                                                                  // Sounds > Animation Sounds: which animation page is open
 
+    private String chatKey = ""; private int chatRowH = 40;
+    /** The dock's height: the scene dock is 128, the chat dock hugs its message(s) so no empty space is left. */
+    private int dockH() {
+        if (tab != Tab.CHAT) return DOCK_H0;
+        FancyConfig c = FancyConfig.get();
+        String k = c.channel + c.alsoAll + c.formatFor(chatEv) + chatEv + cw;
+        if (!k.equals(chatKey)) { chatKey = k; boolean xtra = c.alsoAll && !c.channel.equals("ALL"); chatRowH = c.channel.equals("OFF") ? 14 : chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, DropListener.sample(c.formatFor(chatEv), chatEv), chatEv).h; }
+        return Math.min(DOCK_H0, 30 + chatRowH);
+    }
     private boolean dockPossible() { return height >= 390 && FancyConfig.get().previewAt != 2; }
     private boolean dockWanted() {
         if (!dockPossible() || !query.isBlank()) return false;
         if (tab == Tab.CHAT) return chatEv == 3 && formatError == null;        // the message preview sits above the menu
-        if (tab == Tab.ANIMATIONS) return !onLanding();                      // only inside a scene page
-        return tab == Tab.SOUNDS && FancyConfig.get().sound && !onLanding() && curSub() < 5;
+        if (tab == Tab.ANIMATIONS) return !onLanding() && ORD[Math.max(0, Math.min(6, curSub()))] == 3;          // only inside a page that is built (WIP pages show the construction site instead)
+        return tab == Tab.SOUNDS && FancyConfig.get().sound && !onLanding() && ORD[Math.max(0, Math.min(6, curSub()))] == 3;
     }
     private static final int SW_H = 28;      // the Active switch above the menu
-    private static int menuHeight(int screenH) { return Math.min(350, screenH - 16 - SW_H - (screenH >= 390 && FancyConfig.get().previewAt != 2 ? DOCK_H + DOCK_GAP : 0)); }
+    private int menuHeight(int screenH) { return Math.min(350, screenH - 16 - SW_H - (screenH >= 390 && FancyConfig.get().previewAt != 2 ? dockH() + DOCK_GAP : 0)); }
 
-    private static String slotName(int sc, int k) { return sc == 10 ? PEST_SLOT_NAMES[k] : sc == 7 ? EXP_SLOT_NAMES[k] : (sc == 6 || sc == 9) ? MYTH_SLOT_NAMES[k] : (sc == 5 || sc == 8) ? FARM_SLOT_NAMES[k] : sc == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k]; }
+    private static String slotName(int sc, int k) { return sc == 11 ? TREAS_SLOT_NAMES[k] : sc == 10 ? PEST_SLOT_NAMES[k] : sc == 7 ? EXP_SLOT_NAMES[k] : (sc == 6 || sc == 9) ? MYTH_SLOT_NAMES[k] : (sc == 5 || sc == 8) ? FARM_SLOT_NAMES[k] : sc == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k]; }
 
     /** The live preview: the real scene on the left, and on the right either every setting of the animation (Animations) or animated sound waves (Sounds). Sits above or below the menu. */
     private void drawDock(GuiGraphicsExtractor g, int mx, int my, float intro, long now) {
@@ -541,19 +552,19 @@ public class FancyScreen extends Screen {
         if (dockK < 0.97f) return;
         FancyConfig c = FancyConfig.get();
         boolean top = c.previewAt == 0, sounds = tab == Tab.SOUNDS;
-        int x0 = px, w = pw, y0 = top ? py - DOCK_H - DOCK_GAP : py + ph + DOCK_GAP;
+        int x0 = px, w = pw, y0 = top ? py - dockH() - DOCK_GAP : py + ph + DOCK_GAP;
         if (tab == Tab.CHAT) { drawChatDock(g, mx, my, x0, y0, w, top, intro); return; }
         int cat = Math.max(0, Math.min(CATS.length - 1, sounds ? soundCat : ORD[Math.min(CATS.length - 1, curSub())]));
         String key = null, tname = CATS[cat]; int sc = 0;
-        if (cat < ATYPES.length) { String[] t = ATYPES[cat][Math.max(0, Math.min(ATYPES[cat].length - 1, animType[cat]))]; key = t[1]; tname = t[0]; sc = Integer.parseInt(t[2]); }
-        pill(g, x0, y0, w, DOCK_H, Ui.PANEL);
-        rout(g, x0, y0, w, DOCK_H, Ui.BORDER);
+        if (cat < ATYPES.length) { String[][] ty = typesOf(cat); String[] t = ty[Math.max(0, Math.min(ty.length - 1, typeIdx(cat)))]; key = t[1]; tname = t[0]; sc = Integer.parseInt(t[2]); }
+        pill(g, x0, y0, w, dockH(), Ui.PANEL);
+        rout(g, x0, y0, w, dockH(), Ui.BORDER);
         int acc = catCol(CATS[cat]);
         g.fill(x0 + 6, y0 + 1, x0 + w - 6, y0 + 2, Gfx.argb(150, acc & 0xFFFFFF));                                            // the panel's accent line, in the colour of the animation
         float live = 0.5f + 0.5f * (float) Math.sin(now / 380.0);
         pill(g, x0 + 8, y0 + 5, 7, 7, Gfx.argb(Math.round(110 + 145 * live), 0xFF4A5E)); pill(g, x0 + 18, y0 + 4, Gfx.w(font, "LIVE") + 8, 11, Canvas.mix(Ui.PANEL2, 0xFFFF4A5E, 0.2f));
         Gfx.text(g, font, "LIVE", x0 + 22, y0 + 6, 0xFFFF8A94);
-        String ttl = (sounds ? "Sounds" : "Animation") + "  \u00B7  " + CATS[cat] + (cat < ATYPES.length && ATYPES[cat].length > 1 ? "  \u00B7  " + tname : "");
+        String ttl = (sounds ? "Sounds" : "Animation") + "  \u00B7  " + (sounds && cat == 3 && soundMyth == 1 ? "Treasure" : CATS[cat]) + (cat < ATYPES.length && typesOf(cat).length > 1 ? "  \u00B7  " + tname : "");
         Gfx.push(g); Gfx.translate(g, x0 + 54, y0 + 4); Gfx.scale(g, 0.75f); Icons.draw(g, catIcon(CATS[cat]), 0, 0, 2400L); Gfx.pop(g);
         Gfx.text(g, font, ttl, x0 + 70, y0 + 6, Canvas.mix(Ui.SUB, acc, 0.55f));
         String lab = top ? "▼ Move to bottom" : "▲ Move to top";
@@ -563,7 +574,7 @@ public class FancyScreen extends Screen {
         Gfx.text(g, font, lab, bx2 + 6, by2 + 3, hv ? Ui.TEXT : Ui.SUB);
         dockBtn[0] = bx2; dockBtn[1] = by2; dockBtn[2] = bx2 + bwid; dockBtn[3] = by2 + 13;
 
-        int ph0 = DOCK_H - 22, bw = Math.min(w / 2 - 10, Math.round(ph0 * width / (float) Math.max(1, height)));
+        int ph0 = dockH() - 22, bw = Math.min(w / 2 - 10, Math.round(ph0 * width / (float) Math.max(1, height)));
         Row syn = new Row(); syn.x = x0 + 8; syn.y = y0 + 19; syn.w = bw; syn.pcat = cat; syn.pkey = key; syn.nolabel = true; syn.pbw = bw;
         if (sounds && waveKey != null && key != null && waveKey.equals(key) && now - waveNow < 250) AnimationManager.syncSec = Math.max(0f, waveT);      // the scene follows the sound waves
         drawPositionPreview(g, syn);
@@ -572,13 +583,13 @@ public class FancyScreen extends Screen {
         int rx = x0 + 8 + bw + 14, rw = x0 + w - 8 - rx;
         if (sounds) drawWaves(g, rx, y0 + 19, rw, ph0, sc, key, now);
         else drawDetails(g, rx, y0 + 19, rw, cat, key, tname, sc, c);
-        if (intro < 1f) pill(g, x0, y0, w, DOCK_H, Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
+        if (intro < 1f) pill(g, x0, y0, w, dockH(), Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
     }
 
     /** Chat page: the message exactly as it will look, in its own panel above (or below) the menu. */
     private void drawChatDock(GuiGraphicsExtractor g, int mx, int my, int x0, int y0, int w, boolean top, float intro) {
         FancyConfig c = FancyConfig.get();
-        pill(g, x0, y0, w, DOCK_H, Ui.PANEL); rout(g, x0, y0, w, DOCK_H, Ui.BORDER);
+        pill(g, x0, y0, w, dockH(), Ui.PANEL); rout(g, x0, y0, w, dockH(), Ui.BORDER);
         g.fill(x0 + 6, y0 + 1, x0 + w - 6, y0 + 2, Gfx.argb(150, 0xFFC857));
         Gfx.text(g, font, "Preview  \u00B7  " + catNameOf(chatEv), x0 + 10, y0 + 6, Ui.SUB);
         String lab = top ? "\u25BC Move to bottom" : "\u25B2 Move to top";
@@ -590,10 +601,10 @@ public class FancyScreen extends Screen {
         if (c.channel.equals("OFF")) { Gfx.text(g, font, "Announcing is off", x0 + 10, y0 + 30, Ui.DIM); }
         else {
             Row r = chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, DropListener.sample(c.formatFor(chatEv), chatEv), chatEv);
-            r.x = x0 + 8; r.y = y0 + 22; r.w = w - 16; r.h = Math.min(r.h, DOCK_H - 28);
+            r.x = x0 + 8; r.y = y0 + 22; r.w = w - 16; r.h = Math.min(r.h, dockH() - 28);
             drawChatPrev(g, r);
         }
-        if (intro < 1f) pill(g, x0, y0, w, DOCK_H, Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
+        if (intro < 1f) pill(g, x0, y0, w, dockH(), Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
     }
 
     /** Everything about the open animation, in two columns, plus its four sounds. */
@@ -1420,10 +1431,10 @@ public class FancyScreen extends Screen {
     private void soundRows(int sceneIdx, FancyConfig c) {
         final String scene = SoundFx.SCENES[sceneIdx];
         List<String> choices = SoundFx.choices();
-        int col = sceneIdx == 3 ? Ui.DIM : sceneIdx == 0 ? Ui.SUB : sceneIdx == 1 ? Ui.R_CRAZY : (sceneIdx == 5 || sceneIdx == 8) ? 0xFF7BE05A : (sceneIdx == 6 || sceneIdx == 9) ? 0xFFFFC857 : sceneIdx == 7 ? 0xFFB56BFF : Ui.ACCENT;
+        int col = sceneIdx == 3 ? Ui.DIM : sceneIdx == 0 ? Ui.SUB : sceneIdx == 1 ? Ui.R_CRAZY : (sceneIdx == 5 || sceneIdx == 8) ? 0xFF7BE05A : (sceneIdx == 6 || sceneIdx == 9 || sceneIdx == 11) ? 0xFFFFC857 : sceneIdx == 7 ? 0xFFB56BFF : Ui.ACCENT;
         for (int k = 0; k < SoundFx.SLOTS.length; k++) {
             final String slot = SoundFx.SLOTS[k];
-            Row sr = row(1, "fd:slot_" + slot + (k <= 1 ? (sceneIdx == 10 ? "_pest" : sceneIdx == 4 ? "_dye" : (sceneIdx == 5 || sceneIdx == 8) ? "_farm" : (sceneIdx == 6 || sceneIdx == 9) ? "_myth" : sceneIdx == 7 ? "_exp" : "") : ""), sceneIdx == 10 ? PEST_SLOT_NAMES[k] : sceneIdx == 7 ? EXP_SLOT_NAMES[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_NAMES[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_NAMES[k] : sceneIdx == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k], sceneIdx == 10 ? PEST_SLOT_SUBS[k] : sceneIdx == 7 ? EXP_SLOT_SUBS[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_SUBS[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_SUBS[k] : sceneIdx == 4 ? DYE_SLOT_SUBS[k] : SLOT_SUBS[k], col);
+            Row sr = row(1, "fd:slot_" + slot + (k <= 1 ? (sceneIdx == 10 ? "_pest" : sceneIdx == 4 ? "_dye" : (sceneIdx == 5 || sceneIdx == 8) ? "_farm" : (sceneIdx == 6 || sceneIdx == 9 || sceneIdx == 11) ? "_myth" : sceneIdx == 7 ? "_exp" : "") : ""), sceneIdx == 11 ? TREAS_SLOT_NAMES[k] : sceneIdx == 10 ? PEST_SLOT_NAMES[k] : sceneIdx == 7 ? EXP_SLOT_NAMES[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_NAMES[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_NAMES[k] : sceneIdx == 4 ? DYE_SLOT_NAMES[k] : SLOT_NAMES[k], sceneIdx == 11 ? TREAS_SLOT_SUBS[k] : sceneIdx == 10 ? PEST_SLOT_SUBS[k] : sceneIdx == 7 ? EXP_SLOT_SUBS[k] : (sceneIdx == 6 || sceneIdx == 9) ? MYTH_SLOT_SUBS[k] : (sceneIdx == 5 || sceneIdx == 8) ? FARM_SLOT_SUBS[k] : sceneIdx == 4 ? DYE_SLOT_SUBS[k] : SLOT_SUBS[k], col);
             final int slotIdx = k;
             sr.ctls.add(new Btn("▶", GREEN, () -> { pulseAt[slotIdx] = System.currentTimeMillis(); SoundFx.Fx fx = SoundFx.byName(SoundFx.chosen(scene, slot)); if (fx != null) SoundFx.preview(fx); }));
             final String ddKey = "dd_" + scene + "_" + slot;
@@ -1506,7 +1517,7 @@ public class FancyScreen extends Screen {
         int bw = 56, bh = 16, by = r.y + (r.h - bh) / 2, bx = r.x + r.w - bw - 8;
         updCheck = new int[]{bx, by, bw, bh};
         int gw = 66; if (upd) { updGet = new int[]{bx - gw - 4, by, gw, bh}; }
-        String st = busy ? "Checking GitHub" + ".".repeat(1 + (int) ((now / 350L) % 3)) : bad ? "Could not reach GitHub" : upd ? "v" + UpdateCheck.latestName + " is out  \u00B7  you have v" + FancyDropsMod.VERSION : "You have the latest  \u00B7  v" + FancyDropsMod.VERSION;
+        String st = busy ? "Checking GitHub" + ".".repeat(1 + (int) ((now / 350L) % 3)) : bad ? "Could not reach GitHub" : UpdateCheck.noReleases() ? "No Releases found yet." : upd ? "v" + UpdateCheck.latestName + " is out  \u00B7  you have v" + FancyDropsMod.VERSION : "You have the latest  \u00B7  v" + FancyDropsMod.VERSION;
         Gfx.text(g, font, Gfx.fit(font, st, r.w - 34 - (upd ? gw + 4 : 0) - bw - 22), r.x + 34, r.y + 20, Canvas.mix(Ui.SUB, col, 0.55f));
         boolean hv = !busy && mx >= bx && mx < bx + bw && my >= by && my < by + bh;
         pill(g, bx, by, bw, bh, busy ? Ui.PANEL2 : hv ? Canvas.mix(0xFF3A4FA0, 0xFFFFFFFF, 0.18f) : 0xFF3A4FA0);
@@ -1592,7 +1603,7 @@ public class FancyScreen extends Screen {
         return "cosmetics".startsWith(q) || q.contains("cosmetic") || "suffix".startsWith(q) || "aura".startsWith(q) || q.contains("name effect") || "name effects".startsWith(q);
     }
     private boolean masterLast; private long masterAt;
-    private int[] masterBox() { int top = FancyConfig.get().previewAt == 0 ? Math.round((DOCK_H + DOCK_GAP) * dockK) : 0; int w = 100, y = Math.max(2, py - top - 25); return new int[]{px, y, px + w, y + 22}; }
+    private int[] masterBox() { int top = FancyConfig.get().previewAt == 0 ? Math.round((dockH() + DOCK_GAP) * dockK) : 0; int w = 100, y = Math.max(2, py - top - 25); return new int[]{px, y, px + w, y + 22}; }
 
     /** The header line: the tab, and the page inside it ("Animations  >  Slayers"). */
     private String pageTitle() {
@@ -1613,7 +1624,7 @@ public class FancyScreen extends Screen {
             {"Lightning scene, sounds and looks", "Boss scenes, sounds and looks", "Paint scene, sounds and looks", "Scythe scene, sounds and looks", "Book scene, sounds and looks", "Coming soon", "Coming soon"},
             {"Ritual sounds, moment by moment", "Slayer sounds, moment by moment", "Paint sounds, moment by moment", "Farming sounds, moment by moment", "Book sounds, moment by moment", "Coming soon", "Coming soon"}, {tab.sub},
             {"How the menu looks", "Where prices come from", "Reload the drop data"},
-            {"Profit, kills and drops", "Slayer profit and drops", "Mythological profit and drops", "Dye profit and drops", "Farming profit and drops", "Everything you dropped, newest first"},
+            {"Profit, kills and drops", "Mythological profit and drops", "Slayer profit and drops", "Dye profit and drops", "Farming profit and drops", "Experiments profit and drops", "Coming soon", "Coming soon", "Everything you dropped, newest first"},
             {tab.sub}, {tab.sub}};
         String[] a = t[tab.ordinal()];
         return a[Math.min(k, a.length - 1)];
@@ -1713,7 +1724,7 @@ public class FancyScreen extends Screen {
     }
     private static final String[] SHOW_L = {"Enabled", "Normal", "RNG", "Disabled"}, SHOW_I = {"fd:dropped", "fd:animations", "fd:rng", "fd:nothing"};
     private static final int[] SHOW_C = {0xFF62E6A8, 0xFF4A6CF0, 0xFF8A3FD0, 0xFFE5484D};
-    private boolean showBarOn() { return tab == Tab.DROPS && !onLanding() && query.isBlank() && ORD[Math.max(0, Math.min(CATS.length - 1, curSub()))] <= 4; }
+    private boolean showBarOn() { return tab == Tab.DROPS && !onLanding() && query.isBlank() && ORD[Math.max(0, Math.min(CATS.length - 1, curSub()))] == 3; }
     /** The Show filter lives in a strip above the menu (like the community buttons), and only while the Drop Library is open. */
     private Row showRow;
     private int[] showBtn(int i) {
@@ -1965,7 +1976,7 @@ public class FancyScreen extends Screen {
             case DROPS -> {
                 buildAll = true; srcList.clear();
                 int cat = searching ? 0 : ORD[Math.max(0, Math.min(CATS.length - 1, subSel[Tab.DROPS.ordinal()]))];
-                if (!searching && cat != 3 && cat < 5) {
+                if (!searching && cat != 3) {
                     wipPanel(CATS[cat], "drops");
                 } else if (cat == 0) {
                     int total = 0; for (SlayerData.Slayer s : SlayerData.ALL) total += nonDye(s).size();
@@ -2090,11 +2101,7 @@ public class FancyScreen extends Screen {
                 for (int di = 0; di < CATS.length; di++) {
                     int cat = ORD[di];
                     if (!(all || sub == di)) continue;
-                    if (cat >= 5) {
-                        String nm = CATS[cat].toLowerCase(Locale.ROOT);
-                        Row wp = row(0, cat == 5 ? "fd:mining" : "fd:fishing", CATS[cat] + " animations", "", Ui.ACCENT);
-                        wp.kind = MOCK; wp.h = 186; wp.noSearch = true; rows.add(wp);
-                    } else if (cat != 3) { if (!all) wipPanel(CATS[cat], "animations"); }
+                    if (cat != 3) { if (!all) wipPanel(CATS[cat], "animations"); }
                     else animCategory(rows, c, cat, all);
                 }
                 if (all) animChanges(rows, c);
@@ -2197,22 +2204,22 @@ public class FancyScreen extends Screen {
                 rows.add(toggle("fd:cos_name", "Your name effect", "Moving colours on your name", () -> c.selfName, v -> { c.selfName = v; CosmeticData.changed(); }));
                 rows.add(toggle("fd:cos_aura", "Your aura", "Particles around you", () -> c.selfAura, v -> { c.selfAura = v; CosmeticData.changed(); }));
                 rows.add(toggle("fd:cos_aura", "Calm mode", "Names stay still and auras slow down", () -> c.cosCalm, v -> { c.cosCalm = v; CosmeticData.changed(); }));
-                rows.add(toggle("fd:cos_aura", "Hide my aura in first person", "It still shows in F5 and to others", () -> c.cosHideFirst, v -> c.cosHideFirst = v));
+                rows.add(toggle("fd:cos_aura", "Hide my aura in first person", "It still shows in F5 and to others", () -> c.cosHideFirst, v -> { c.cosHideFirst = v; CosmeticData.changed(); }));
                 rows.add(section("Other players"));
                 rows.add(toggle("fd:cos_suffix", "Their suffixes", "The little icon after other players' names", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }));
                 rows.add(toggle("fd:cos_name", "Their name effects", "Moving colours on other players' names", () -> c.othersName, v -> { c.othersName = v; CosmeticData.changed(); }));
                 rows.add(toggle("fd:cos_aura", "Their auras", "Particles around other players", () -> c.othersAura, v -> { c.othersAura = v; CosmeticData.changed(); }));
                 Row cr = row(0, "fd:cos_aura", "Show within", "Players further away look normal", Ui.ACCENT);
-                cr.ctls.add(new Slider(8, 48, 4, () -> c.cosRange, v -> c.cosRange = (int) v, () -> c.cosRange + " blocks").typed(1)); rows.add(cr);
+                cr.ctls.add(new Slider(8, 48, 4, () -> c.cosRange, v -> { c.cosRange = (int) v; CosmeticData.changed(); }, () -> c.cosRange + " blocks").typed(1)); rows.add(cr);
                 rows.add(picker("Most players with an aura", "Fewer is lighter on your FPS", new String[]{"4", "8", "16", "All"}, new String[]{"", "", "", ""}, new String[]{"fd:cos_aura", "fd:cos_aura", "fd:cos_aura", "fd:cos_aura"},
-                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFFC857, 0xFFFF72C6}, null, 4, () -> c.cosMax == 4 ? 0 : c.cosMax == 8 ? 1 : c.cosMax == 16 ? 2 : 3, i -> c.cosMax = new int[]{4, 8, 16, 0}[i]));
+                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFFC857, 0xFFFF72C6}, null, 4, () -> c.cosMax == 4 ? 0 : c.cosMax == 8 ? 1 : c.cosMax == 16 ? 2 : 3, i -> { c.cosMax = new int[]{4, 8, 16, 0}[i]; CosmeticData.changed(); }));
                 rows.add(section("Look and speed"));
                 Row sp = row(0, "fd:cos_name", "Name effect speed", "How fast the colours move", Ui.ACCENT);
-                sp.ctls.add(new Slider(25, 200, 5, () -> c.cosSpeed, v -> c.cosSpeed = (int) v, () -> c.cosSpeed + "%").typed(1)); rows.add(sp);
+                sp.ctls.add(new Slider(25, 200, 5, () -> c.cosSpeed, v -> { c.cosSpeed = (int) v; CosmeticData.changed(); }, () -> c.cosSpeed + "%").typed(1)); rows.add(sp);
                 Row am = row(0, "fd:cos_aura", "Aura amount", "Fewer particles also helps FPS", Ui.ACCENT);
-                am.ctls.add(new Slider(25, 150, 5, () -> c.cosAmount, v -> c.cosAmount = (int) v, () -> c.cosAmount + "%").typed(1)); rows.add(am);
+                am.ctls.add(new Slider(25, 150, 5, () -> c.cosAmount, v -> { c.cosAmount = (int) v; CosmeticData.changed(); }, () -> c.cosAmount + "%").typed(1)); rows.add(am);
                 Row sz = row(0, "fd:cos_aura", "Aura size", "Size of each particle", Ui.ACCENT);
-                sz.ctls.add(new Slider(50, 150, 5, () -> c.cosSize, v -> c.cosSize = (int) v, () -> c.cosSize + "%").typed(1)); rows.add(sz);
+                sz.ctls.add(new Slider(50, 150, 5, () -> c.cosSize, v -> { c.cosSize = (int) v; CosmeticData.changed(); }, () -> c.cosSize + "%").typed(1)); rows.add(sz);
                 rows.add(section("Prices"));
                 Row ps = fold("__price", "fd:coin", "Price source", "Bazaar for Bazaar items, Auction House for the rest", Ui.ACCENT);
                 rows.add(ps);
@@ -2245,11 +2252,9 @@ public class FancyScreen extends Screen {
                 int sub = searching ? 0 : curSub();
                 switch (sub) {
                     case 0 -> statsOverview(rows, now);
-                    case 1 -> statsSlayers(rows, c, now);
-                    case 2 -> statsCategory(rows, 3, now);
-                    case 3 -> statsCategory(rows, 1, now);
-                    case 4 -> statsCategory(rows, 2, now);
-                    default -> statsHistory(rows);
+                    case 1 -> statsCategory(rows, 3, now);
+                    case 8 -> statsHistory(rows);
+                    default -> { if (!searching) wipPanel(SUBS[Tab.STATS.ordinal()][sub], "stats"); }
                 }
                 statsFooter(rows);
             }
@@ -2319,6 +2324,13 @@ public class FancyScreen extends Screen {
     }
 
     private static final int[] animType = {1, 0, 0, 1, 0};                      // Animations: which animation type of each page is open
+    private static int soundMyth = 0, treasureType = 0;                      // Sounds > Mythological: 0 the creatures, 1 Treasure (and its Normal / RNG pick)
+    private static final String[][] TTYPES = {
+        {"Normal", "treasure", "11", "fd:mytho", "Small, above the action bar. A shovel digs three times, the chest bursts open and the drop springs out.", "Normal"},
+        {"RNG", "treasurerng", "11", "fd:rng", "The big scene: the dig under a night sky, then god rays, rune halos and griffin feathers round the drop.", "RNG"}};
+    /** The animation types a page lists; Sounds > Mythological > Treasure has its own two. */
+    private String[][] typesOf(int cat) { return tab == Tab.SOUNDS && cat == 3 && soundMyth == 1 ? TTYPES : ATYPES[cat]; }
+    private int typeIdx(int cat) { return tab == Tab.SOUNDS && cat == 3 && soundMyth == 1 ? treasureType : animType[cat]; }
     private static final String[][][] ATYPES = {
         {{"Nothing Happens", "nothing", "3", "fd:nothing", "When a kill drops nothing.", "Nothing"},
          {"Default", "default", "0", "fd:decent", "When a kill drops something decent.", "Default"},
@@ -2458,11 +2470,15 @@ public class FancyScreen extends Screen {
     private void soundsPage(List<Row> rows, FancyConfig c) {
         if (!c.customSounds) rows.add(note("Custom sounds are off: every animation uses Minecraft's own sounds. Your picks for this set are saved separately.", Ui.DIM));
         final int cat = Math.max(0, Math.min(4, soundCat));
-        String[][] types = ATYPES[cat];
-        final int sel = Math.max(0, Math.min(types.length - 1, animType[cat]));
+        if (cat == 3 && !searching) {
+            rows.add(picker("Mythological page", "Creatures and treasure have their own sounds", new String[]{"Mythological Mobs", "Treasure"}, new String[]{"fd:myth_mobs", "fd:myth_treasure"}, () -> soundMyth, i -> { soundMyth = i; waveKey = null; SoundFx.stopPreviews(); dirty = true; }));
+        }
+        String[][] types = typesOf(cat);
+        final int sel = Math.max(0, Math.min(types.length - 1, typeIdx(cat)));
         if (types.length > 1) {
             String[] names = new String[types.length], tic = new String[types.length]; for (int i = 0; i < names.length; i++) { names[i] = types[i][5]; tic[i] = types[i][3]; }
-            rows.add(picker("Animation type", "Pick the one to edit", names, tic, () -> sel, i -> { animType[cat] = i; waveKey = null; }));
+            final boolean tre = types == TTYPES;
+            rows.add(picker("Animation type", "Pick the one to edit", names, tic, () -> sel, i -> { if (tre) treasureType = i; else animType[cat] = i; waveKey = null; }));
         }
         String[] t = types[sel];
         String[] st = styled(t, c);
@@ -2793,11 +2809,12 @@ public class FancyScreen extends Screen {
             Gfx.text(g, font, Gfx.fit(font, hoverFx >= 0 ? FX_DESC[hoverFx] : "Hover an effect to see it play.", eRw()), eRx(), eY() + 96 + 4 * 25 + 2, hoverFx >= 0 ? Ui.SUB : Ui.DIM);
         } else if (editor == 2 && ePage == 1) {
             String[] lb = {"Overall text size", "Title size", "Sub Title size", "Sub Title delay"};
-            Gfx.text(g, font, "Text position", eRx(), eY() + 62, Ui.SUB);
+            Gfx.text(g, font, Gfx.fit(font, "Text position: above or below the scene", eRw()), eRx(), eY() + 62, Ui.SUB);
             for (int i = 0; i < 2; i++) {
                 int[] b = eSegBox(i); boolean on = Math.floorMod(c.textPos, 2) == i, hv = in(mx, my, b);
                 tile(g, b, on, hv);
-                Gfx.textCentered(g, font, i == 0 ? "Top" : "Bottom", b[0] + b[2] / 2, b[1] + 5, on ? Ui.TEXT : Ui.SUB);
+                { String tl = i == 0 ? "Top of animation" : "Bottom of animation"; int tw = Gfx.w(font, tl), av = b[2] - 6; float tk = tw > av ? av / (float) tw : 1f;
+                    Gfx.push(g); Gfx.translate(g, b[0] + b[2] / 2f - tw * tk / 2f, b[1] + 5 + (1f - tk) * 4f); Gfx.scale(g, tk); Gfx.text(g, font, tl, 0, 0, on ? Ui.TEXT : Ui.SUB); Gfx.pop(g); }
             }
             Gfx.text(g, font, "Show", eRx(), eY() + 100, Ui.SUB);
             String[] tn = {"Drop chance", "Price", "Price source", null}; String[] ti = {"fd:dice", "fd:coin", "fd:bazaar", null}; boolean[] to = {c.showOdds, c.showPrice, c.showPriceSource, c.showMagicFind};
@@ -2927,7 +2944,7 @@ public class FancyScreen extends Screen {
         String[] ln = toastText.split("\n"); int tw = 0; for (String s : ln) tw = Math.max(tw, Gfx.w(font, s));
         int w = tw + 46, h = 10 + ln.length * 11 + 6, x = px + (pw - w) / 2;
         if (toastShake && age < 600) { float dk = 1f - age / 600f; x += Math.round((float) Math.sin(age * 0.03) * 5f * dk * dk); }          // LOCKED! rattles
-        int y = py + ph + 8 + (dockK > 0.97f && FancyConfig.get().previewAt != 0 && dockWanted() ? DOCK_H + DOCK_GAP : 0) + Math.round((1f - in) * 10f);
+        int y = py + ph + 8 + (dockK > 0.97f && FancyConfig.get().previewAt != 0 && dockWanted() ? dockH() + DOCK_GAP : 0) + Math.round((1f - in) * 10f);
         if (y + h > height - 2) y = Math.max(2, height - h - 2);
         int al = Math.round(255 * in * out);
         if (al < 6) return;
@@ -3095,9 +3112,9 @@ public class FancyScreen extends Screen {
             "fd:mytho|Mythological|Ritual sounds", "fd:slayers|Slayers|Boss sounds", "fd:dye|Dye|Paint sounds", "fd:farm|Farming|Scythe sounds", "fd:experiments|Experiments|Book sounds", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
         {},
         {"fd:settings", "Settings", "How the menu looks, where prices come from and how drop data is loaded. Position, size and text for each animation now live under Animations.",
-            "fd:glass|Menu|Look and feel", "fd:cos_aura|Cosmetics|Names, auras, range", "fd:coin|Prices|Bazaar and Auction House", "fd:refresh|Drop Data|Reload data"},
+            "fd:glass|Menu|Look and feel", "fd:sparkle|Cosmetics|Names, auras, range", "fd:coin|Prices|Bazaar and Auction House", "fd:refresh|Drop Data|Reload data"},
         {"fd:stats", "Stats", "Your profit, kills and drops: totals, profit per hour, this session and what you've found in every category.",
-            "fd:stats|Overview|Totals", "fd:slayers|Slayers|Per boss", "fd:mytho|Mythological|Found drops", "fd:dye|Dye|Found dyes", "fd:farm|Farming|Found drops", "fd:clock|History|This session"},
+            "fd:stats|Overview|Totals", "fd:mytho|Mythological|Found drops", "fd:slayers|Slayers|Per boss", "fd:dye|Dye|Found dyes", "fd:farm|Farming|Found drops", "fd:experiments|Experiments|Found drops", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122", "fd:clock|History|This session"},
         {},
         {}};
 
@@ -3114,7 +3131,7 @@ public class FancyScreen extends Screen {
             String[] p = d[3 + k].split("\\|");
             li[k] = p[0]; lb[k] = p[1]; ls[k] = p[2];
             boolean cat = t == Tab.DROPS || t == Tab.ANIMATIONS || t == Tab.SOUNDS;
-            lw[k] = cat && isWip(names[k]);
+            lw[k] = (cat || t == Tab.STATS) && isWipPage(t, names[k]);
             lc[k] = cat ? catCol(names[k]) : PICK_PALETTE[k % PICK_PALETTE.length];
         }
         if (t == Tab.ANIMATIONS) animChanges(rows, FancyConfig.get());                        // the look every animation shares sits at the top of the main page
@@ -3319,6 +3336,7 @@ public class FancyScreen extends Screen {
     private static int ordPos(int cat) { for (int i = 0; i < ORD.length; i++) if (ORD[i] == cat) return i; return 0; }
     private static final String[] CATS = {"Slayers", "Dye", "Farming", "Mythological", "Experiments", "Mining", "Fishing"};
     /** Pages that are still being built show a WIP label in the sidebar. */
+    private static boolean isWipPage(Tab t, String name) { return t == Tab.STATS ? !(name.equals("Overview") || name.equals("Mythological") || name.equals("History")) : isWip(name); }
     private static boolean isWip(String name) { return !name.equals("Mythological"); }          // only Mythological is rebuilt so far; the rest wait behind the construction site
     private static String catNameOf(int cat) { return CATS[Math.max(0, Math.min(CATS.length - 1, cat))]; }
     private void wipPanel(String catName, String what) {
@@ -3358,7 +3376,7 @@ public class FancyScreen extends Screen {
         {"Mythological", "Slayers", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Sounds: the main page holds the volume, then one sound page per animation
         {},                                                        // Chat (one page)
         {"Menu", "Cosmetics", "Prices", "Drop Data"},     // Settings
-        {"Overview", "Slayers", "Mythological", "Dye", "Farming", "History"},
+        {"Overview", "Mythological", "Slayers", "Dye", "Farming", "Experiments", "Mining", "Fishing", "History"},
         {},                                                        // Cosmetics (one page)
         {}};                                                        // Resources                                      // Stats
     private String[] subs() { return SUBS[tab.ordinal()]; }
@@ -3437,7 +3455,7 @@ public class FancyScreen extends Screen {
         px = (width - pw) / 2; cx = px + sw + 10; cw = pw - sw - 20 - RS;
         ph = Math.round(menuHeight(height) + (Math.min(350, height - 2 * (COS_H + DOCK_GAP + 6)) - menuHeight(height)) * cosK);
         dockK = anim("dock", dockWanted() ? 1f : 0f, 14f);
-        int dockExtra = Math.round((DOCK_H + DOCK_GAP) * dockK);
+        int dockExtra = Math.round((dockH() + DOCK_GAP) * dockK);
         py = (height - ph - dockExtra - SW_H) / 2 + SW_H + (FancyConfig.get().previewAt == 0 ? dockExtra : 0) + Math.round((1f - intro) * 10f);        // the panel glides up into place; the live preview takes the room above or below it
         lt = py + 46; lb = py + ph - 10;
 
@@ -3527,7 +3545,7 @@ public class FancyScreen extends Screen {
             g.fill(px + 12, top, px + 13, top + subH() * sn.length + srcExtra() - 2, Canvas.mix(Ui.BORDER, subCol(tab), 0.45f));
             for (int k = 0; k < sn.length; k++) {
                 int[] b = subBox(k);
-                boolean wip = (tab == Tab.DROPS || tab == Tab.ANIMATIONS || tab == Tab.SOUNDS) && isWip(sn[k]); int dot = (tab == Tab.DROPS || tab == Tab.ANIMATIONS || tab == Tab.SOUNDS) ? catCol(sn[k]) : Ui.ACCENT;
+                boolean wip = (tab == Tab.DROPS || tab == Tab.ANIMATIONS || tab == Tab.SOUNDS || tab == Tab.STATS) && isWipPage(tab, sn[k]); int dot = (tab == Tab.DROPS || tab == Tab.ANIMATIONS || tab == Tab.SOUNDS) ? catCol(sn[k]) : Ui.ACCENT;
                 boolean act = !onLanding() && curSub() == k, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
                 float hv = anim("sub|" + k, hov && !act ? 1f : 0f, 48f);
                 int sc2 = subCol(tab);

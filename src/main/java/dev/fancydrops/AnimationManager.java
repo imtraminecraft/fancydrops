@@ -47,7 +47,7 @@ public final class AnimationManager {
         Scene.Params p; int tier; long start; int frame = -1; float sx, sy;
         boolean isMyth() { return myth || (slayer != null && (MythData.ALL.contains(slayer) || slayer == TreasureData.SOURCE)); }       // every drop of a Mythological creature gets the Mythological scene, whichever way it was started
         boolean isExp() { return exp || (slayer != null && slayer == ExperimentData.slayer()); }
-        String scene() { return pest ? "pest" : helios ? "helios" : farm ? "farm" : item == null && !isExp() ? (isMyth() ? "mythnothing" : "nothing") : isExp() ? "exp" : isMyth() ? "mytho" : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
+        String scene() { return pest ? "pest" : helios ? "helios" : farm ? "farm" : item == null && !isExp() ? (isMyth() ? "mythnothing" : "nothing") : isExp() ? "exp" : isMyth() ? (slayer == TreasureData.SOURCE ? "treasure" : "mytho") : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
         final boolean[] done = new boolean[24];
         public Anim(SlayerData.Slayer slayer, Item item, int forcedTier, Runnable onStart) {
             this.slayer = slayer; this.item = item; this.forcedTier = forcedTier; this.onStart = onStart;
@@ -66,7 +66,7 @@ public final class AnimationManager {
     public static final String[] POS_BAR_NAMES = {"Top Center", "Middle Center", "Bottom Center"};
     /** Without bars: a 3 x 3 grid, row by row. */
     public static final String[] POS9_NAMES = {"Top Left", "Top Center", "Top Right", "Middle Left", "Middle Center", "Middle Right", "Bottom Left", "Bottom Center", "Bottom Right"};
-    public static final String[] TEXT_POS_NAMES = {"Top", "Bottom"};
+    public static final String[] TEXT_POS_NAMES = {"Top of animation", "Bottom of animation"};
 
     /** The name of the position the current settings use. */
     public static String positionName(FancyConfig c) { return positionName(c, 0); }
@@ -155,6 +155,8 @@ public final class AnimationManager {
             int top = row2 == 0 ? mg2 : row2 == 1 ? (H - blockH) / 2 : H - mg2 - lift2 - blockH;
             int half2 = Math.min((W - 2 * mg2) / 2, Math.max(sw2 / 2, Math.round(110 * tsc)));
             int cx2 = col2 == 0 ? mg2 + half2 : col2 == 2 ? W - mg2 - half2 : W / 2;
+            if (c.textPos == 0)                                                              // words above the scene
+                return new Layout(cx2, cell2, tsc, lineH, cx2 - sw2 / 2, top + textH + gap2 - Math.round(Scene.CROP_T * cell2), top, sw2, sh2, cx2 - half2, top, cx2 + half2, top + blockH);
             return new Layout(cx2, cell2, tsc, lineH, cx2 - sw2 / 2, top - Math.round(Scene.CROP_T * cell2), top + vh + gap2, sw2, sh2, cx2 - half2, top, cx2 + half2, top + blockH);
         }
         int mg = Math.round(0.03f * m), gap = Math.max(2, lineH / 4), p9 = farm ? Math.max(0, Math.min(9, c.farmPos)) : pos9Of(c, cat), col = p9 % 3, row = p9 / 3;
@@ -232,11 +234,11 @@ public final class AnimationManager {
     static float[] timing(Scene.Params p, boolean farm0, String key, FancyConfig c) {
         if (Scene.normalMyth(p)) {                                                      // the small Mythological scene: 3 s by default, 2 to 7 s by choice, the words come in with the reveal
             Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 3.0f;
-            return new float[]{3.0f / total, Scene.splitTime(p) + 0.35f, total};
+            return new float[]{3.0f / total, Scene.splitTime(p) + 0.12f, total};
         }
         if (p.myth && p.tier == 2 && p.hasItem) {                                       // the RNG ritual: 5 s by default, 2 to 7 s by choice, same story as Normal but slower and with the night sky
             Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 5.0f;
-            return new float[]{Scene.length(p) / total, Scene.splitTime(p) + 0.35f, total};
+            return new float[]{Scene.length(p) / total, Scene.splitTime(p) + 0.12f, total};
         }
         boolean farm = farm0 || p.tier != 2;
         float natural = naturalScene(p, farm0), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
@@ -567,7 +569,7 @@ public final class AnimationManager {
     private static int previewFrame = -1, previewStyle = -1;
     private static long previewT0;
     private static final Item PREVIEW = new Item();
-    static { PREVIEW.name = "Example Drop"; PREVIEW.odds = "Pray RNGesus"; PREVIEW.chance = "1 in 735"; PREVIEW.price = 1_230_000; PREVIEW.source = "Bazaar"; PREVIEW.mf = "+250%"; PREVIEW.rank = 2; }
+    static { PREVIEW.name = "Daedalus Stick"; PREVIEW.odds = ""; PREVIEW.chance = "1 in 213  |  0.47%"; PREVIEW.price = 1_230_000; PREVIEW.source = "Bazaar"; PREVIEW.mf = "+250%"; PREVIEW.rank = 2; }
 
     private static final Item PREVIEW_EXP = new Item();       // Experiments: no Magic Find, Overbloom instead
     static { PREVIEW_EXP.name = "Example Drop"; PREVIEW_EXP.odds = ""; PREVIEW_EXP.chance = "1 in 89"; PREVIEW_EXP.price = 1_230_000; PREVIEW_EXP.source = "Bazaar"; PREVIEW_EXP.rank = 2; PREVIEW_EXP.mf = null; }
@@ -617,9 +619,9 @@ public final class AnimationManager {
 
     /** The preview scene of one animation type (nothing, default, rare, rng, dye, farm, helios, myth, mythrng), built from the live settings every frame. */
     private static Scene.Params previewForKey(String key, FancyConfig c) {
-        int cat = switch (key) { case "dye" -> 1; case "farm", "helios", "pest" -> 2; case "myth", "mythrng", "mythnothing" -> 3; case "exp", "exprng" -> 4; default -> 0; };
+        int cat = switch (key) { case "dye" -> 1; case "farm", "helios", "pest" -> 2; case "myth", "mythrng", "mythnothing", "treasure", "treasurerng" -> 3; case "exp", "exprng" -> 4; default -> 0; };
         Scene.Params base = previewFor(cat, c);
-        int tier = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
+        int tier = switch (key) { case "rng", "dye", "helios", "mythrng", "treasurerng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
         Scene.Params p = KEY_P.get(key);
         if (p == null) {
             p = new Scene.Params(tier, !key.endsWith("nothing"));
@@ -628,6 +630,7 @@ public final class AnimationManager {
                 case "dye" -> { p.dye = true; p.dyeCol = 0xFFE0409A; }
                 case "farm", "helios", "pest" -> { p.farm = true; p.helios = key.equals("helios"); p.pest = key.equals("pest"); p.rarity = 0xFF7BE05A; }
                 case "myth", "mythrng", "mythnothing" -> { p.myth = true; p.rarity = 0xFFFFC857; }
+                case "treasure", "treasurerng" -> { p.myth = true; p.treasure = true; p.rarity = 0xFFFFC857; }
                 case "exp", "exprng" -> { p.exp = true; p.rarity = key.equals("exprng") ? 0xFFFF55FF : 0xFFB56BFF; }
                 default -> { }
             }
@@ -640,7 +643,8 @@ public final class AnimationManager {
             case "farm", "helios" -> p.chops = 3;
             case "pest" -> p.chops = 1;
             case "myth", "mythnothing" -> p.chops = Math.max(1, Math.min(10, c.mythStrikes));
-            case "mythrng" -> p.chops = Math.max(1, Math.min(10, c.mythStrikesRng));
+            case "mythrng", "treasurerng" -> p.chops = Math.max(1, Math.min(10, c.mythStrikesRng));
+            case "treasure" -> p.chops = Math.max(1, Math.min(10, c.mythStrikes));
             case "exp" -> p.chops = Math.max(1, Math.min(12, c.expFlips));
             case "exprng" -> p.chops = Math.max(1, Math.min(12, c.expFlipsRng));
             default -> { p.chops = Math.max(1, Math.min(20, tier == 2 ? c.chopsEpic : tier == 1 ? c.chopsCool : c.chopsDefault)); p.style = c.slayerStyle; }
@@ -651,8 +655,10 @@ public final class AnimationManager {
 
     /** When each sound of one animation type fires, in real seconds: {total, chop count, chop times..., split, reveal, end}. Drives the sound waves in the menu. */
     /** The sound scene (index into SoundFx.SCENES) of an animation type. */
+    /** Treasure keeps the length the player set for the Mythological scene of the same state. */
+    static String lenKey(String key) { return key.equals("treasure") ? "myth" : key.equals("treasurerng") ? "mythrng" : key; }
     static int sceneIndex(String key) {
-        return switch (key) { case "default" -> 0; case "rare" -> 1; case "rng" -> 2; case "nothing" -> 3; case "dye" -> 4; case "farm" -> 5; case "myth", "mythrng" -> 6; case "exp", "exprng" -> 7; case "helios" -> 8; case "mythnothing" -> 9; case "pest" -> 10; default -> 0; };
+        return switch (key) { case "default" -> 0; case "rare" -> 1; case "rng" -> 2; case "nothing" -> 3; case "dye" -> 4; case "farm" -> 5; case "myth", "mythrng" -> 6; case "exp", "exprng" -> 7; case "helios" -> 8; case "mythnothing" -> 9; case "pest" -> 10; case "treasure", "treasurerng" -> 11; default -> 0; };
     }
     /**
      * When the split, reveal, linger and end sounds start, in real seconds. The sounds are laid out backwards from the end of the scene: the end sound is
@@ -672,7 +678,7 @@ public final class AnimationManager {
     public static float[] soundTimes(String key, FancyConfig c) {
         Scene.Params p = previewForKey(key, c);
         float natural = naturalScene(p, p.farm);
-        float secs = timing(p, p.farm, key, c)[2], k = secs / Math.max(0.1f, natural);
+        float secs = timing(p, p.farm, lenKey(key), c)[2], k = secs / Math.max(0.1f, natural);
         int n = Math.max(0, Math.min(p.chops, 20));
         float[] r = new float[n + 6];
         r[0] = secs; r[1] = n;
@@ -704,7 +710,7 @@ public final class AnimationManager {
             if (!SceneTexture.draw(g, OUT, dx, dy, zw, zh, 1f)) OUT.flush(g::fill, dx, dy, Math.max(1, Math.round(cell)), 1f);
             return;
         }
-        float[] tm = key == null ? null : timing(p, p.farm, key, c);
+        float[] tm = key == null ? null : timing(p, p.farm, lenKey(key), c);
         float speed = tm == null ? 1f : tm[0];
         if (cat == 3) p.mob = (int) ((System.currentTimeMillis() / 1000L / 9L) % 12L);      // the preview calls a different creature each loop
         String kk = key == null ? "" : key;
@@ -727,7 +733,7 @@ public final class AnimationManager {
         float ga = (tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f))) * sceneAlpha(p);            // the scene fades in and out like the real one
         float gt = tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((full - t) / 0.5f));
         int tal = Math.round(255 * gt);
-        revealT = t - rv; waveIn = clamp((t - rv) / 0.6f); waveOut = tm == null ? clamp((t - (len - 0.8f)) / 0.6f) : clamp((t - (full - 1.0f)) / 0.7f); waveT = sec; bounceT = t - (rv + 0.6f);
+        revealT = t - rv; waveIn = clamp((t - rv) / 0.6f); waveOut = tm == null ? clamp((t - (len - 0.8f)) / 0.6f) : clamp((t - (full - 1.0f * speed)) / (0.7f * speed)); waveT = sec; bounceT = t - (rv + 0.6f);
         int barFull = cine ? Math.round(H * c.barHeight / 100f) : 0;
         Item pi = cat == 4 ? PREVIEW_EXP : farm ? PREVIEW_FARM : PREVIEW;
         compact = Scene.normalMyth(p);
@@ -829,7 +835,7 @@ public final class AnimationManager {
     /** The words stay this many real seconds after the scene is over. */
     private static final float TEXT_EXTRA = 2f;
     /** How long the words outlast the scene: 1.5 s for the small Mythological scene, 2 s for the rest. */
-    private static float textExtra(Scene.Params p) { return Scene.normalMyth(p) ? 1.5f : TEXT_EXTRA; }
+    private static float textExtra(Scene.Params p) { return Scene.sceneN(p) ? 2.6f : TEXT_EXTRA; }       // Mythological: the words come in with the reveal and stay long enough to read
     /** How see-through the small Mythological scene is (the Animations settings). */
     private static float sceneAlpha(Scene.Params p) { return Scene.normalMyth(p) ? Math.max(0.3f, Math.min(1f, FancyConfig.get().normalAlpha)) : 1f; }
     /** Set just before layout() by whoever draws: the small Mythological scene is cropped to what it uses and the words sit under it. */
@@ -899,7 +905,7 @@ public final class AnimationManager {
         if (!SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga)) OUT.flush(g::fill, sceneX + Math.round(a.sx * cellF), sceneY + Math.round(a.sy * cellF), Math.max(1, Math.round(cellF)), ga);
         if (framed) g.disableScissor();
         }
-        revealT = t - reveal; waveIn = clamp((t - reveal) / 0.6f); waveOut = clamp((t - (len - 1.0f)) / 0.7f); waveT = t; bounceT = t - (reveal + 0.6f);
+        revealT = t - reveal; waveIn = clamp((t - reveal) / 0.6f); waveOut = clamp((t - (len - 1.0f * a.speed)) / (0.7f * a.speed)); waveT = t; bounceT = t - (reveal + 0.6f);
         if (epic && t > ts) epicFront(g, a, t - ts, W, H, scx, scy, cin * ga);
         if (waveIn > 0f) {
             int al = (int) (255 * gt);
