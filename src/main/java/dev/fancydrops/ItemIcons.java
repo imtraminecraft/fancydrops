@@ -511,8 +511,12 @@ public final class ItemIcons {
     }
 
     /** Draws the flat icon centred on (cx, cy). scale 1.0 = a normal 16px item. Used by the menu. */
+    /** 0..1: how see-through the next draw() is (the animations fade the item out with it). Always put it back to 1. */
+    public static float drawAlpha = 1f;
+    private static int fa(int c) { return drawAlpha >= 0.999f ? c : (c & 0xFFFFFF) | (Math.round((c >>> 24) * Math.max(0f, drawAlpha)) << 24); }
+
     public static void draw(GuiGraphicsExtractor g, String id, String fallback, int cx, int cy, float scale) {
-        if (scale <= 0.01f) return;
+        if (scale <= 0.01f || drawAlpha <= 0.01f) return;
         Icon ic = get(id);
         Cached d = ic.ready ? ic.data : null;
         Gfx.push(g); Gfx.translate(g, cx, cy);
@@ -543,7 +547,7 @@ public final class ItemIcons {
                     if ((c >>> 24) == 0) { x++; continue; }
                     int x2 = x + 1;
                     while (x2 < 16 && pix[y * 16 + x2] == c) x2++;
-                    g.fill(x - 8, y - 8, x2 - 8, y - 7, c);
+                    g.fill(x - 8, y - 8, x2 - 8, y - 7, fa(c));
                     x = x2;
                 }
             }
@@ -551,15 +555,15 @@ public final class ItemIcons {
             Gfx.scale(g, scale * 2f);
             for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) {
                 int c = d.face[y * 8 + x];
-                if ((c >>> 24) != 0) g.fill(x - 4, y - 4, x - 3, y - 3, c);
+                if ((c >>> 24) != 0) g.fill(x - 4, y - 4, x - 3, y - 3, fa(c));
             }
         } else if (fallback != null && !fallback.isEmpty() && !Icons.has(fallback)) {      // no art (yet): the plain Minecraft item, never a grey square
-            Gfx.scale(g, scale);
-            Gfx.item(g, fallback, -8, -8);
+            Gfx.scale(g, scale * (drawAlpha < 0.99f ? Math.max(0.01f, drawAlpha) : 1f));          // a plain Minecraft item cannot be made see-through: it shrinks away instead
+            if (drawAlpha > 0.12f) Gfx.item(g, fallback, -8, -8);
         } else if (ic.ready) {                                        // no art found: a little gem, never a Steve head
             Gfx.scale(g, scale);
             int[] gem = gem(0xC9A227);
-            for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) if ((gem[y * 16 + x] >>> 24) != 0) g.fill(x - 8, y - 8, x - 7, y - 7, gem[y * 16 + x]);
+            for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) if ((gem[y * 16 + x] >>> 24) != 0) g.fill(x - 8, y - 8, x - 7, y - 7, fa(gem[y * 16 + x]));
         }
         Gfx.pop(g);
     }

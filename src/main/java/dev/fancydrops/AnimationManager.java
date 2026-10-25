@@ -35,7 +35,7 @@ public final class AnimationManager {
         final String group;                      // "myth" or "treasure"
         final int type;                          // NO_DROPS, NORMAL or RNG
         final long created = System.currentTimeMillis();
-        long start;
+        long start; float lastT = -1f;
         Anim(String group, int type, Item item) { this.group = group; this.type = type; this.item = type == NO_DROPS ? null : item; }
         String key() { return group + "." + TYPE_IDS[type]; }
         FancyConfig.AnimCfg cfg() { return FancyConfig.get().anim(key()); }
@@ -67,22 +67,25 @@ public final class AnimationManager {
         if (cur == null && !QUEUE.isEmpty()) { cur = QUEUE.poll(); cur.start = now; DropListener.announceNow(cur.item); }          // the chat alert goes out together with the animation
         if (cur == null) return;
         Minecraft mc = Minecraft.getInstance();
-        draw(g, mc.font, cur, (now - cur.start) / 1000f, g.guiWidth(), g.guiHeight());
+        float t = (now - cur.start) / 1000f;
+        cues(cur, cur.lastT, t); cur.lastT = t;
+        draw(g, mc.font, cur, t, g.guiWidth(), g.guiHeight());
     }
 
-    /** Draws one animation at time t (seconds) inside a W x H screen. The new animations replace this holding page. */
-    static void draw(GuiGraphicsExtractor g, Font font, Anim a, float t, int W, int H) {
-        FancyConfig c = FancyConfig.get();
-        float secs = a.secs();
-        float in = Math.min(1f, t / 0.4f), out = Math.min(1f, Math.max(0f, (secs - t) / 0.5f));
-        int alpha = Math.round(255 * Math.min(in, out));
-        TextFx.revealT = t; TextFx.waveT = t; TextFx.waveOut = 0f; TextFx.lineDelay = 0f;
-        float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * a.cfg().size;
-        int y = a.cfg().pos == 0 ? Math.round(H * 0.28f) : a.cfg().pos == 1 ? Math.round(H * 0.45f) : Math.round(H * 0.62f);
-        if (a.item == null) { Gfx.textCentered(g, font, "Nothing :(", W / 2, y, Gfx.argb(alpha, 0xB8C0D4)); Gfx.textCentered(g, font, "Better luck next time", W / 2, y + 12, Gfx.argb(alpha, 0x8A93B0)); return; }
-        TextFx.block(g, font, W / 2, y, sc, a.item, c, alpha);
+    /** The sounds of the timeline: a beat for every strike or dig, the burst when the animation pivots, then the reveal, the linger and the end. */
+    private static void cues(Anim a, float prev, float t) {
+        float S = Math.max(3.6f, a.secs()), O = S - 2.5f; boolean big = a.type == RNG, tre = a.group.equals("treasure"), nod = a.type == NO_DROPS;
+        String scene = a.key();
+        float[] beats = tre ? new float[]{0.215f * O, 0.505f * O, 0.795f * O} : new float[]{0.34f * O, 0.58f * O, 0.80f * O};
+        for (int k = 0; k < 3; k++) if (prev < beats[k] && t >= beats[k]) SoundFx.playSlot(scene, "chop", 0.9f + 0.12f * k, big);
+        if (prev < O && t >= O) SoundFx.playSlot(scene, "split", nod ? 0.8f : 1f, big);
+        if (!nod && prev < O + 0.25f && t >= O + 0.25f) SoundFx.playSlot(scene, "reveal", 1f, big);
+        if (prev < O + 1.0f && t >= O + 1.0f) SoundFx.playSlot(scene, "linger", nod ? 0.85f : 1f, big);
+        if (prev < S - 1.4f && t >= S - 1.4f) SoundFx.playSlot(scene, "end", 1f, big);
     }
 
+    /** Draws one animation at time t (seconds) inside a W x H screen. */
+    static void draw(GuiGraphicsExtractor g, Font font, Anim a, float t, int W, int H) { Ritual.draw(g, font, a, t, W, H); }
 
     // ------------------------------------------------------------------ the menu preview
 
