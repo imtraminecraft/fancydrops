@@ -1,3 +1,6 @@
+## 0.4.23
+- The Spade setting has a shovel icon (blade in the spade tier colour, dips into the ground and flicks up dirt) instead of a sword.
+
 ## 0.4.22
 - The sidebar is back to how it was (it scrolls on its own). Only the main pages must not scroll.
 - Main pages that were too tall now hide the repeated title row first, then make tiles a little shorter (never below a size where their text fits).

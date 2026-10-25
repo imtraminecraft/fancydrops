@@ -2872,7 +2872,7 @@ public class FancyScreen extends Screen {
     private void treasureSettings(List<Row> rows, FancyConfig c) {
         rows.add(section("Settings"));
         int sp = Math.max(0, Math.min(2, c.mythSpade)), col = TreasureData.COLS[sp];
-        Row pick = row(0, ":sword:#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  \u00B7  25% of burrows are treasure", col);
+        Row pick = row(0, ":shovel:#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  \u00B7  25% of burrows are treasure", col);
         Dd dd = new Dd(() -> TreasureData.SPADES[Math.max(0, Math.min(2, c.mythSpade))], "dd_spade", 100); dd.col = () -> col;
         pick.ctls.add(dd); rows.add(pick);
         if (open.contains("dd_spade") && !searching) { Row pl = miniList(pick, dd, java.util.Arrays.asList(TreasureData.SPADES), sp, i -> { c.mythSpade = i; open.remove("dd_spade"); }); pl.pickCols = TreasureData.COLS; rows.add(pl); }

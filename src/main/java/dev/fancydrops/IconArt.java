@@ -193,6 +193,20 @@ final class IconArt {
                 outline();
                 glint(13 - Math.round(f * 7), 2 + Math.round(f * 7), 1, 0xFFFFFF, 0.35f + 0.65f * t);
             }
+            case "shovel" -> {                                                               // a digging shovel (the blade takes the spade's colour): it dips into the ground and flicks up a lump of dirt
+                int bl = tint != 0 ? tint : 0xC9D1E0;
+                float dip = t * 2f;
+                for (int x = 1; x < 15; x++) px(x, 14, 0x5A3E22);
+                for (int x = 2; x < 14; x += 3) px(x, 13, 0x7A5A38);
+                ln(12, 1 + dip, 6.5f, 9 + dip, 0x6B4423); ln(13, 1 + dip, 7.5f, 9 + dip, 0x9A6A38);
+                rect(11, 1 + (int) dip, 4, 1, 0x3A2410); px(11, 2 + (int) dip, 0x3A2410); px(14, 2 + (int) dip, 0x3A2410);                       // the D grip
+                quad(6, 9 + dip, 8.5f, 9.8f + dip, 6.8f, 14, 3.2f, 13, bl);
+                ln(6, 9 + dip, 3.3f, 13, lite(bl, 0.5f)); px((int) 6, (int) (14), dark(bl, 0.4f));
+                ln(5.5f, 9.5f + dip, 8, 10 + dip, dark(bl, 0.35f));
+                float u = f < 0.5f ? 0f : (f - 0.5f) * 2f;
+                if (u > 0f) { px(Math.round(8 + u * 4), Math.round(12 - 5 * (float) Math.sin(u * 3.14f)), 0x9A7A52); px(Math.round(9 + u * 5), Math.round(12 - 4 * (float) Math.sin(u * 3.14f)), 0x6B4A2B); }
+                outline();
+            }
             case "sword" -> {                                                                // the iron sword: grey blade, dark guard, wooden grip
                 int[][] bl = {{14, 1}, {13, 2}, {12, 3}, {11, 4}, {10, 5}, {9, 6}, {8, 7}, {7, 8}, {6, 9}};
                 for (int i = 0; i < bl.length; i++) {
