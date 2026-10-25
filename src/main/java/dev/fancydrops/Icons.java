@@ -93,7 +93,6 @@ final class Icons {
         int hash = name.indexOf('#');
         if (hash >= 0) { try { tint = 0xFF000000 | Integer.parseInt(name.substring(hash + 1), 16); } catch (Exception ignored) {} name = name.substring(0, hash); }
         if (name.equals("rng")) name = "dice";                                                                  // the RNG icon is the tumbling die everywhere
-        if (name.equals("discord")) { Cosmetics.drawIcon(g, "discord", x, y, now); return; }               // the Discord community button uses the Discord suffix's picture, so it can never differ from it
         if (name.startsWith("cx_")) { Cosmetics.drawCosIcon(g, name.substring(3), x, y, now); return; }
         if (PixArt.draw(g, name, x, y, s, tint == 0xFF888888 ? 0 : tint & 0xFFFFFF)) return;                                                          // the hand-pixeled pictures
         if (name.startsWith("suf_")) { Cosmetics.drawIcon(g, name.substring(4), x, y, now); return; }

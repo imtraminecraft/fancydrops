@@ -15,28 +15,16 @@ final class CosmeticData {
     record SetDef(String id, String name, String how, int color, String suffix, String fx, String aura, int rarity) {}
     static final List<SetDef> SETS = List.of(
         new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura", 3),
-        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, "glitchsfx", "glitch", "glitchaura", 3),
-        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "contrib", "contribfx", "stardust", 3),
-        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, "patron", "royal", "patronaura", 3),
-        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "flame", "pulse", null, 2),
-        new SetDef("common", "Common", "Everyone gets this set.", 0xFF9AA3B5, "newcomer", "fresh", null, 0));
+        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, null, "glitch", "glitchaura", 3),
+        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, null, "contribfx", "stardust", 3),
+        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, null, "royal", "patronaura", 3),
+        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, null, "pulse", null, 2),
+        new SetDef("common", "Common", "Everyone gets this set.", 0xFF9AA3B5, null, "fresh", null, 0));
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
     private static final String BETA_HOW = "Downloaded the mod before v1.0", RARE_HOW = "Rare: given to the first players of the mod";
     static final List<Def> ALL = List.of(
         // Beta: kept by everyone who had the mod before 1.0
-        new Def("crown", "Crown", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFFC857),
-        new Def("gem", "Gem", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF55D8FF),
-        new Def("flame", "Flame", Line.BETA, Kind.SUFFIX, BETA_HOW, 0xFFFF8A3D, "beta"),
-        new Def("clover", "Clover", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF62E6A8),
-        new Def("heart", "Heart", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFF6B8A),
-        new Def("bolt", "Bolt", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFFE066),
-        new Def("snow", "Snow", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF9AD8FF),
-        new Def("star", "Star", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFFD36B),
-        new Def("ghost", "Ghost", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFC9D2FF),
-        new Def("eye", "Watcher", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFF56D8FF),
-        new Def("rocket", "Rocket", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFFF6B6B),
-        new Def("cat", "Cat", Line.RARE, Kind.SUFFIX, RARE_HOW, 0xFFF0A050),
         new Def("rainbow", "Rainbow", Line.RARE, Kind.NAME, RARE_HOW, 0xFFFF9AC8),
         new Def("aurora", "Aurora", Line.RARE, Kind.NAME, RARE_HOW, 0xFF62E6C8),
         new Def("shimmer", "Shimmer", Line.RARE, Kind.NAME, RARE_HOW, 0xFFBFD4FF),
@@ -47,32 +35,17 @@ final class CosmeticData {
         new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFB48CFF, "sparkle"),
         new Def("sparklefx", "Starlight", Line.SPECIAL, Kind.NAME, "Special Set", 0xFFFFE9A8, "sparkle"),
         new Def("sparkleaura", "Twinkle", Line.SPECIAL, Kind.AURA, "Special Set", 0xFFFFE680, "sparkle"),
-        new Def("glitchsfx", "Hazard", Line.SPECIAL, Kind.SUFFIX, "Bug Finder Set", 0xFFFFB02E, "bugfinder"),
         new Def("glitch", "Critical", Line.SPECIAL, Kind.NAME, "Bug Finder Set", 0xFFFF5A36, "bugfinder"),
         new Def("glitchaura", "Alarm", Line.SPECIAL, Kind.AURA, "Bug Finder Set", 0xFFFF7A2E, "bugfinder"),
-        new Def("contrib", "Builder", Line.SPECIAL, Kind.SUFFIX, "Contributors Set", 0xFF5AFFC8, "contributors"),
         new Def("contribfx", "Aqua Flow", Line.SPECIAL, Kind.NAME, "Contributors Set", 0xFF55D8FF, "contributors"),
         new Def("stardust", "Stardust", Line.SPECIAL, Kind.AURA, "Contributors Set", 0xFF8FD0FF, "contributors"),
-        new Def("patron", "Patron", Line.SPECIAL, Kind.SUFFIX, "Patreon Set", 0xFFFFC832, "patreon"),
         new Def("royal", "Royal", Line.SPECIAL, Kind.NAME, "Patreon Set", 0xFFFFC832, "patreon"),
         new Def("patronaura", "Embers", Line.SPECIAL, Kind.AURA, "Patreon Set", 0xFFFF9B2E, "patreon"),
         // Everyone: earn them yourself (all still, except the secret one)
-        new Def("newcomer", "Newcomer", Line.FREE, Kind.SUFFIX, "Downloaded the mod", 0xFF7BE07B, "common"),
         new Def("fresh", "Fresh", Line.FREE, Kind.NAME, "Downloaded the mod", 0xFF9BE8A8, "common"),
-        new Def("discord", "Discord", Line.FREE, Kind.SUFFIX, "Pressed the Discord button", 0xFF7289DA),
-        new Def("firstdrop", "1st Drop", Line.FREE, Kind.SUFFIX, "Got a first rare drop", 0xFFFFD700),
-        new Def("collector", "Collector", Line.FREE, Kind.SUFFIX, "Got 25 rare drops", 0xFFD9A05B),
-        new Def("hoarder", "Hoarder", Line.FREE, Kind.SUFFIX, "Got 100 rare drops", 0xFFB0763C),
-        new Def("legend", "Legend", Line.FREE, Kind.SUFFIX, "Got 500 rare drops", 0xFFFFCD32),
-        new Def("dice", "Lucky Dice", Line.FREE, Kind.SUFFIX, "Got 5 rare drops", 0xFFF4F4FA),
-        new Def("shovel", "Shovel", Line.FREE, Kind.SUFFIX, "Got 10 rare drops", 0xFFC9D0DC),
-        new Def("skull", "Skull", Line.FREE, Kind.SUFFIX, "Got 50 rare drops", 0xFFECE9DC),
-        new Def("moon", "Moon", Line.FREE, Kind.SUFFIX, "Got 250 rare drops", 0xFFF2C45A),
-        new Def("comet", "Comet", Line.FREE, Kind.SUFFIX, "Got 1000 rare drops", 0xFFFF9A2E),
         new Def("ember", "Ember", Line.FREE, Kind.NAME, "Got 15 rare drops", 0xFFFF8A3D),
         new Def("frost", "Frost", Line.FREE, Kind.NAME, "Got 75 rare drops", 0xFF9AD8FF),
         new Def("neon", "Neon", Line.FREE, Kind.NAME, "Got 300 rare drops", 0xFFFF5AE0),
-        new Def("secret", "Secret", Line.FREE, Kind.SUFFIX, "Found the hidden button", 0xFFC08BFF));
 
     static Def byId(String id) { for (Def d : ALL) if (d.id().equals(id)) return d; return null; }
     static List<Def> line(Line l) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (d.line() == l) o.add(d); return o; }
@@ -120,20 +93,9 @@ final class CosmeticData {
             default:
                 if (d.id().equals("newcomer") || d.id().equals("fresh")) return true;
                 return switch (d.id()) {
-                    case "discord" -> c.discordJoined;
-                    case "secret" -> c.secretFound;
-                    case "firstdrop" -> c.dropsSeen >= 1;
-                    case "collector" -> c.dropsSeen >= 25;
-                    case "hoarder" -> c.dropsSeen >= 100;
-                    case "legend" -> c.dropsSeen >= 500;
-                    case "dice" -> c.dropsSeen >= 5;
-                    case "shovel" -> c.dropsSeen >= 10;
                     case "ember" -> c.dropsSeen >= 15;
-                    case "skull" -> c.dropsSeen >= 50;
                     case "frost" -> c.dropsSeen >= 75;
-                    case "moon" -> c.dropsSeen >= 250;
                     case "neon" -> c.dropsSeen >= 300;
-                    case "comet" -> c.dropsSeen >= 1000;
                     default -> false;
                 };
         }
@@ -144,19 +106,9 @@ final class CosmeticData {
         if (d.line() == Line.BETA) return "The beta is over. Only players who downloaded before v1.0 have it.";
         if (d.line() == Line.SPECIAL) return setById(d.set()).how();
         return switch (d.id()) {
-            case "discord" -> "Press the Discord button in the menu.";
-            case "firstdrop" -> "Get your first rare drop.";
-            case "collector" -> "Get 25 rare drops.";
-            case "hoarder" -> "Get 100 rare drops.";
-            case "legend" -> "Get 500 rare drops.";
-            case "dice" -> "Get 5 rare drops.";
-            case "shovel" -> "Get 10 rare drops.";
             case "ember" -> "Get 15 rare drops.";
-            case "skull" -> "Get 50 rare drops.";
             case "frost" -> "Get 75 rare drops.";
-            case "moon" -> "Get 250 rare drops.";
             case "neon" -> "Get 300 rare drops.";
-            case "comet" -> "Get 1000 rare drops.";
             default -> "Find the hidden button.";
         };
     }
@@ -178,10 +130,10 @@ final class CosmeticData {
     static void toggleSet(SetDef s) {
         FancyConfig c = FancyConfig.get();
         boolean on = wearingSet(s);
-        c.suffix = on ? "" : s.suffix(); c.nameFx = on ? "" : s.fx(); c.aura = on || s.aura() == null ? "" : s.aura();       // a set replaces what you wore: a set with no aura also turns the old aura off
+        c.suffix = on || s.suffix() == null ? "" : s.suffix(); c.nameFx = on ? "" : s.fx(); c.aura = on || s.aura() == null ? "" : s.aura();       // a set replaces what you wore: a set with no aura also turns the old aura off
         FancyConfig.save(); changed();
     }
-    static boolean wearingSet(SetDef s) { FancyConfig c = FancyConfig.get(); return s.suffix().equals(c.suffix) && s.fx().equals(c.nameFx) && (s.aura() == null || s.aura().equals(c.aura)); }
+    static boolean wearingSet(SetDef s) { FancyConfig c = FancyConfig.get(); return (s.suffix() == null ? "" : s.suffix()).equals(c.suffix) && s.fx().equals(c.nameFx) && (s.aura() == null || s.aura().equals(c.aura)); }
     /** Something you wear changed: chat lines already on screen are redone with the new look. */
     static void changed() { Cosmetics.historyDirty = true; UCACHE.clear(); }
     static String kindLabel(Kind k) { return k == Kind.SUFFIX ? "Suffix" : k == Kind.NAME ? "Name effect" : "Aura"; }

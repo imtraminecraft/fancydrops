@@ -25,34 +25,7 @@ final class Cosmetics {
     /** What one player shows: a suffix, a name effect and an aura (any of them may be none). */
     record Look(Suffix suffix, String fx, String aura) {}
     static final Suffix[] SUFFIXES = {
-        new Suffix("sparkle", "Sparkle", "Original", fr(0xE020)),
-        new Suffix("crown", "Crown", "v0.5.0", fr(0xE040)),
-        new Suffix("gem", "Gem", "v0.5.0", fr(0xE050)),
-        new Suffix("flame", "Flame", "v0.5.0", fr(0xE060)),
-        new Suffix("clover", "Lucky Clover", "v0.5.0", fr(0xE070)),
-        new Suffix("heart", "Heartbeat", "v0.8.0", fr(0xE080)),
-        new Suffix("bolt", "Lightning", "v0.8.0", fr(0xE090)),
-        new Suffix("snow", "Snowflake", "v0.8.0", fr(0xE0A0)),
-        new Suffix("star", "Shooting Star", "v0.8.0", fr(0xE0B0)),
-        new Suffix("ghost", "Ghost", "v0.8.0", fr(0xE0C0)),
-        new Suffix("newcomer", "Newcomer", "Everyone", fr(0xE140)),
-        new Suffix("discord", "Discord", "Everyone", fr(0xE150)),
-        new Suffix("firstdrop", "First Drop", "Everyone", fr(0xE160)),
-        new Suffix("collector", "Collector", "Everyone", fr(0xE170)),
-        new Suffix("secret", "Secret", "Everyone", fr(0xE1A0)),
-        new Suffix("glitchsfx", "Hazard", "Special", fr(0xE100)),
-        new Suffix("contrib", "Builder", "Special", fr(0xE110)),
-        new Suffix("patron", "Patron", "Special", fr(0xE120)),
-        new Suffix("hoarder", "Hoarder", "Everyone", fr(0xE180)),
-        new Suffix("legend", "Legend", "Everyone", fr(0xE190)),
-        new Suffix("dice", "Lucky Dice", "Everyone", fr(0xE200)),
-        new Suffix("shovel", "Shovel", "Everyone", fr(0xE210)),
-        new Suffix("skull", "Skull", "Everyone", fr(0xE220)),
-        new Suffix("moon", "Moon", "Everyone", fr(0xE230)),
-        new Suffix("comet", "Comet", "Everyone", fr(0xE240)),
-        new Suffix("eye", "Watcher", "v0.5.0", fr(0xE250)),
-        new Suffix("rocket", "Rocket", "v0.5.0", fr(0xE260)),
-        new Suffix("cat", "Cat", "v0.5.0", fr(0xE270))};
+        new Suffix("sparkle", "Sparkle", "Original", fr(0xE020))};
     /** Who owns cosmetics. Everyone with the mod sees their suffix; only they can open the Cosmetics page. */
     /** Owners are stored as SHA-256 codes of their UUID, never as the UUID itself. This one is built in; more come from cosmetics.json. */
     static final String OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8";
@@ -173,7 +146,7 @@ final class Cosmetics {
     }
     static String frameNow(Suffix s, long now) { return s.frames()[(int) ((now / 100L) % s.frames().length)]; }
     /** A suffix written like a Discord emoji: ":discord:". Every place that shows a suffix (menu tiles, previews, chat, tab list) goes through its id, and the picture is only ever read from textures/font/suffix_<id>.png, so changing that one file changes it everywhere. */
-    static String token(String id) { return ":suf_" + id + ":"; }
+    static String token(String id) { return id == null ? "" : ":" + id + ":"; }
     /** Replaces every ":id:" in a text with that suffix's current animated frame. */
     static Component expand(String text, long now) {
         net.minecraft.network.chat.MutableComponent out = Component.empty(); int i = 0;
