@@ -1,9 +1,9 @@
 # FancyDrops
 
-Fabric mod (Minecraft 26.2) that plays a short animation for Hypixel SkyBlock slayer drops and can announce them in party / co-op chat.
+Fabric mod (Minecraft 26.2) that plays a cinematic animation for Hypixel SkyBlock Mythological Ritual drops (mobs and Griffin burrow treasure) and can announce them in party / co-op chat. Slayers, Dye, Farming, Experiments, Mining and Fishing are being rebuilt.
 
 * `/fancydrops` or `/fd` - settings menu (Drop Library, Animations, Sounds, Chat, General, Stats)
-* `/fd test [nothing|<drop name>]` - simulates "Your Slayer Kill gave you ..." (and a RARE DROP line) through the real detection
+* `/fd simulate Mythological|Treasure [drop]` - plays a pretend drop through the real animation (never counted in stats)
 * `/fd help` - every command
 
 Three scenes: Default, Rare Drop (crazy-rare class drops) and RNG Drop (drops worth 20M+, configurable). A kill that drops nothing you ticked plays the empty "nothing" scene.

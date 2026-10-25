@@ -139,7 +139,7 @@ final class Render3D {
             }
             if (hit == null) continue;
             double dot = Math.max(0, (best.nx * LX + best.ny * LY + best.nz * LZ) / LN);
-            out.set(i, j, Canvas.shade(best.argb, (float) ((0.55 + 0.5 * dot) * hit.bright)));
+            out.set(i, j, Canvas.shade(best.argb, (float) ((0.4 + 0.78 * Math.pow(dot, 0.85)) * hit.bright)));
         }
     }
     private Render3D() {}

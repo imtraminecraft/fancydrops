@@ -7,6 +7,8 @@
 - New Mythological sounds (Bolt, Shatter, Reveal, Glow, Farewell, Dig, Chest, Fizzle, plus bigger twins for RNG). Each fades to silence by itself and the last one is timed to finish with the words.
 - Sounds follow the whole animation (words included), in the real scene, the previews and the Sounds page. The Sounds page plays the same pitches as the real scene.
 - /fd simulate, the Play buttons, the menu and the previews all start drops through the same two functions (creature and treasure). Simulated treasure now follows the drop's own Off / Normal / RNG state.
+- Item sprites turn as thick slabs (no more coin squash on thin items like the Hilt of Revelations). 3D heads get stronger light and shade.
+- Home hero shows its words again. Tips, page descriptions, mod description and README now describe the current mod (Mythological live, the rest being rebuilt).
 - Construction page: the worker tosses each brick up to the wall from a pile instead of the crane lowering it.
 
 ## 0.4.11

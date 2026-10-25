@@ -19,13 +19,13 @@ import java.util.function.*;
 public class FancyScreen extends Screen {
     private enum Tab {
         HOME("Home", "nether_star", ""),
-        DROPS("Drop Library", "chest", "Choose what animates and announces"),
-        ANIMATIONS("Animations", "firework_rocket", "Scenes, sounds and looks"),
-        SOUNDS("Sounds", "note_block", "Volume and sound packs"),
-        CHAT("Chat", "writable_book", "Tell your party about drops"),
+        DROPS("Drop Library", "chest", "Pick each drop's animation and chat alert"),
+        ANIMATIONS("Animations", "firework_rocket", "Normal and RNG scenes, length and looks"),
+        SOUNDS("Sounds", "note_block", "Volume and the sound of every moment"),
+        CHAT("Chat", "writable_book", "Announce rare drops to your party or co-op"),
         GENERAL("Settings", "comparator", "Menu, prices and data"),
-        STATS("Stats", "map", "Profit, kills and drops"),
-        COSMETICS("Cosmetics", "nether_star", "Suffixes and looks"),
+        STATS("Stats", "map", "Profit and drops"),
+        COSMETICS("Cosmetics", "nether_star", "Suffixes, name effects and auras"),
         RESOURCES("Resources", "book", "Credits and data sources");
         final String label, icon, sub;
         Tab(String l, String i, String s) { label = l; icon = i; sub = s; }
@@ -1746,11 +1746,11 @@ public class FancyScreen extends Screen {
         if (onLanding()) return tab.sub;
         String[][] t = {
             {tab.sub},
-            {"Ritual creatures and their drops", "Pick what animates and announces", "Every RNG dye, by rarity", "Crops, pests and feasts", "Experimentation Table drops", "Coming soon", "Coming soon"},
-            {"Lightning scene, sounds and looks", "Boss scenes, sounds and looks", "Paint scene, sounds and looks", "Scythe scene, sounds and looks", "Book scene, sounds and looks", "Coming soon", "Coming soon"},
-            {"Ritual sounds, moment by moment", "Slayer sounds, moment by moment", "Paint sounds, moment by moment", "Farming sounds, moment by moment", "Book sounds, moment by moment", "Coming soon", "Coming soon"}, {tab.sub},
+            {"Mythological Mobs and Treasure drops", "Being rebuilt", "Being rebuilt", "Being rebuilt", "Being rebuilt", "Coming soon", "Coming soon"},
+            {"Normal, RNG and No Drops scenes", "Being rebuilt", "Being rebuilt", "Being rebuilt", "Being rebuilt", "Coming soon", "Coming soon"},
+            {"Ritual sounds, moment by moment", "Being rebuilt", "Being rebuilt", "Being rebuilt", "Being rebuilt", "Coming soon", "Coming soon"}, {tab.sub},
             {"How the menu looks", "Where prices come from", "Reload the drop data"},
-            {"Profit, kills and drops", "Mythological profit and drops", "Slayer profit and drops", "Dye profit and drops", "Farming profit and drops", "Experiments profit and drops", "Coming soon", "Coming soon", "Everything you dropped, newest first"},
+            {"Profit, kills and drops", "Mythological profit and drops", "Being rebuilt", "Being rebuilt", "Being rebuilt", "Being rebuilt", "Coming soon", "Coming soon", "Everything you dropped, newest first"},
             {tab.sub}, {tab.sub}};
         String[] a = t[tab.ordinal()];
         return a[Math.min(k, a.length - 1)];
@@ -2097,7 +2097,7 @@ public class FancyScreen extends Screen {
                 if (c.showTips) { Row tip = new Row(); tip.kind = TIP; tip.h = 30; tip.noSearch = true; tip.icon = "fd:tipcard"; tip.title = TIPS[tipNow()]; tip.sub = "";
                 tip.click = () -> { tipIdx = tipNow() + 1; tipAt = System.currentTimeMillis(); };
                 rows.add(tip); }
-                Row hero = row(0, "fd:fancydrops", "FancyDrops", "Every rare drop becomes a show. Pick what animates and what gets announced.", Ui.ACCENT);
+                Row hero = row(0, "fd:fancydrops", "FancyDrops", "Every rare Mythological drop becomes a show. Pick what animates and what gets announced. More categories return soon.", Ui.ACCENT);
                 hero.kind = HERO; hero.h = 84; hero.noSearch = true; rows.add(hero);
                 UpdateCheck.check(false);
                 rows.add(section("Updates"));
@@ -3129,17 +3129,18 @@ public class FancyScreen extends Screen {
     /** The tip shown now: moves on by itself every 10 seconds, and a click skips ahead (restarting the 10 seconds). */
     private static int tipNow() { return Math.floorMod(tipIdx + (int) ((System.currentTimeMillis() - tipAt) / 10000L), TIPS.length); }
     private static final String[] TIPS = {
-        "Type /fd simulate to try any animation without touching your stats.",
-        "Drop Library: every drop has two switches, one for its animation and one for chat.",
-        "Animations > Changes edits the Bar, the Text and the Item of every scene.",
-        "RNG drops can spin and pop out bigger. Set both on the animation's own page.",
-        "Sounds: click a sound's name under the waves to hear just that one.",
-        "Animation length runs from 5 to 10 seconds, and the sounds are timed to fit it.",
-        "Chat can announce rare drops to your party, your co-op or everyone.",
+        "Type /fd simulate Mythological or /fd simulate Treasure to play a drop for real, without touching your stats.",
+        "Drop Library > Mythological: pick Off, Normal or RNG for every drop, and toggle its Chat Alert.",
+        "Normal is the small scene. RNG is the big one: black bars, the HUD hidden and a longer show.",
+        "Animations > Mythological: set each scene's length from 2 to 7 seconds. Sounds and previews follow it.",
+        "Sounds: click a sound's name under the waves to hear just that one, at the pitch it plays in the scene.",
+        "Treasure plays its own scene: a shovel digs, a chest bursts open. Pick your spade on the Treasure page.",
+        "Chat can announce a rare drop to your party, your co-op, or only when its Chat Alert is on.",
+        "Animations > Changes edits the Bar, the Text and the Item of the scenes.",
         "Cosmetics: pick a suffix, a name effect and an aura. Search \"cosmetics\" to find the button.",
         "Turn the Active lever off to pause the whole mod, cosmetics included.",
         "The live preview can sit above the menu, below it, or be hidden.",
-        "Esc twice discards what you changed in an editor.",
+        "Slayers, Dye, Farming, Experiments, Mining and Fishing are being rebuilt. They come back one at a time.",
         "Stats keeps your profit, kills and drops for this session and for good.",
         "/fd mute silences the mod whenever you need quiet."};
 
@@ -3228,17 +3229,17 @@ public class FancyScreen extends Screen {
 
     private static final String[][] LANDING = {
         {},
-        {"fd:dropped", "Drop Library", "Every drop the mod knows about, grouped by where it comes from. Open a page to choose which drops get an animation and which get a chat alert.",
-            "fd:mytho|Mythological|Mobs and treasure", "fd:slayers|Slayers|Slayer boss drops", "fd:dye|Dye|All dye drops", "fd:farm|Farming|Pest and crop drops", "fd:experiments|Experiments|Table drops", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
-        {"fd:animations", "Animations", "Pick the scene, sounds and look of the animation for each kind of drop, and try them out with the play buttons.",
-            "fd:mytho|Mythological|No Drops \u00B7 Normal \u00B7 RNG", "fd:slayers|Slayers|Nothing \u00B7 Default \u00B7 Rare \u00B7 RNG", "fd:dye|Dye|Paint splat", "fd:farm|Farming|Scythe \u00B7 Helios", "fd:experiments|Experiments|Book \u00B7 RNG", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
-        {"fd:sounds", "Sounds", "Volume, and the sound of every moment of every animation, with a live wave preview.",
-            "fd:mytho|Mythological|Ritual sounds", "fd:slayers|Slayers|Boss sounds", "fd:dye|Dye|Paint sounds", "fd:farm|Farming|Scythe sounds", "fd:experiments|Experiments|Book sounds", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
+        {"fd:dropped", "Drop Library", "Mythological drops, grouped by where they come from. Pick each drop's animation (Off, Normal or RNG) and its chat alert. The other categories are being rebuilt.",
+            "fd:mytho|Mythological|Mobs and treasure", "fd:slayers|Slayers|Soon\u2122", "fd:dye|Dye|Soon\u2122", "fd:farm|Farming|Soon\u2122", "fd:experiments|Experiments|Soon\u2122", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
+        {"fd:animations", "Animations", "The Mythological scenes: Normal, RNG and No Drops. Set each one's length, position, text and item, and try it with Play.",
+            "fd:mytho|Mythological|No Drops \u00B7 Normal \u00B7 RNG", "fd:slayers|Slayers|Soon\u2122", "fd:dye|Dye|Soon\u2122", "fd:farm|Farming|Soon\u2122", "fd:experiments|Experiments|Soon\u2122", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
+        {"fd:sounds", "Sounds", "Volume, and the sound of every moment of the Mythological scenes, with a live wave preview.",
+            "fd:mytho|Mythological|Ritual sounds", "fd:slayers|Slayers|Soon\u2122", "fd:dye|Dye|Soon\u2122", "fd:farm|Farming|Soon\u2122", "fd:experiments|Experiments|Soon\u2122", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
         {},
-        {"fd:settings", "Settings", "How the menu looks, where prices come from and how drop data is loaded. Position, size and text for each animation now live under Animations.",
+        {"fd:settings", "Settings", "How the menu looks, your cosmetics, where prices come from and how drop data loads. Animation position, size and text live under Animations.",
             "fd:menu|Menu|Look and feel", "fd:cosmetics|Cosmetics|Names, auras, range", "fd:coin|Prices|Bazaar and Auction House", "fd:refresh|Drop Data|Reload data"},
-        {"fd:stats", "Stats", "Your profit, kills and drops: totals, profit per hour, this session and what you've found in every category.",
-            "fd:stats|Overview|Totals", "fd:mytho|Mythological|Found drops", "fd:slayers|Slayers|Per boss", "fd:dye|Dye|Found dyes", "fd:farm|Farming|Found drops", "fd:experiments|Experiments|Found drops", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122", "fd:clock|History|This session"},
+        {"fd:stats", "Stats", "Your profit and drops: totals, this session and everything you've found. Mythological is live; the rest fill in as they return.",
+            "fd:stats|Overview|Totals", "fd:mytho|Mythological|Found drops", "fd:slayers|Slayers|Soon\u2122", "fd:dye|Dye|Soon\u2122", "fd:farm|Farming|Soon\u2122", "fd:experiments|Experiments|Soon\u2122", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122", "fd:clock|History|This session"},
         {},
         {}};
 
@@ -3773,7 +3774,7 @@ public class FancyScreen extends Screen {
                 }
                 if (r.iconId != null) ItemIcons.draw(g, r.iconId, r.icon, mid, cyi, 1.8f); else if (Icons.has(r.icon)) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Icons.draw(g, r.icon, 0, 0, nw); Gfx.pop(g); }
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
-                if (r.kind == HERO) continue;
+                if (r.kind == HERO) { int wy = r.y + 70; for (String ln : wrap(r.sub, cw - 60)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; } continue; }          // the words under the title
                 String wt = "Coming Soon", tm = "TM"; int tmw = Math.round(Gfx.w(font, tm) * 0.6f) + 1, wtw = Gfx.w(font, wt) + tmw, pw2 = wtw + 20, hx = mid - pw2 / 2, hy = r.y + 68;
                 int gl = 170 + (int) (80 * Math.sin(sec * 3));
                 pill(g, hx, hy, pw2, 16, 0xFF1A1710); rout(g, hx, hy, pw2, 16, Gfx.argb(gl, 0xFFC857));
