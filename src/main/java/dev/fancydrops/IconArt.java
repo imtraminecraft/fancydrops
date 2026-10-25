@@ -625,27 +625,33 @@ final class IconArt {
                 outline();
                 glint(3, 3, 2, 0xFFFFFF, t); glint(13, 2 + Math.round(t), 1, 0xFF72C6, 1f - t);
             }
-            case "discord" -> {                                                              // community: two bubbles in conversation
-                bev(1, 2, 9, 7, 0x7A8CF0); tri(3, 9, 3, 12, 6, 9, 0x7A8CF0);
-                bev(6, 7, 9, 6, 0xB8C2FF); tri(12, 13, 13, 15.5f, 10, 13, 0xB8C2FF);
-                rect(3, 4, 1, 1, 0xFFFFFF); rect(5, 4, 1, 1, 0xFFFFFF); rect(7, 4, 1, 1, 0xFFFFFF);
+            case "discord" -> {                                                              // community: two bubbles chatting, bobbing against each other, the dots typing in turn
+                int o1 = Math.round((float) Math.sin(f * Math.PI * 2) * 1.2f), o2 = -o1, lit = (int) (f * 3f) % 3, lit2 = (int) (f * 3f + 1f) % 3;
+                bev(1, 2 + o1, 9, 7, 0x7A8CF0); tri(3, 9 + o1, 3, 12 + o1, 6, 9 + o1, 0x7A8CF0);
+                bev(6, 7 + o2, 9, 6, 0xB8C2FF); tri(12, 13 + o2, 13, 15.5f + o2, 10, 13 + o2, 0xB8C2FF);
+                for (int d = 0; d < 3; d++) rect(3 + d * 2, 4 + o1 - (d == lit ? 1 : 0), 1, 1, d == lit ? 0xFFFFFF : 0xC9D2FF);
                 outline();
-                int dy = Math.round(Math.max(0f, s) * 1f); rect(8, 9 - dy, 1, 1, 0x4A5AD8); rect(10, 9, 1, 1, 0x4A5AD8); rect(12, 9 - Math.round(Math.max(0f, -s)), 1, 1, 0x4A5AD8);
+                for (int d = 0; d < 3; d++) rect(8 + d * 2, 9 + o2 - (d == lit2 ? 1 : 0), 1, 1, d == lit2 ? 0x2A36B8 : 0x4A5AD8);
             }
-            case "patreon" -> {                                                              // support: a heart that beats
-                float k = 1f + 0.12f * t;
-                poly(new float[]{8, 14, 15, 8 + 0, 1, 2}, new float[]{3.2f, 1.5f, 6, 15, 6, 1.5f}, 0xFF6A5A);
-                ball(4.6f, 5, 3.4f * k, 0xFF6A5A); ball(11.4f, 5, 3.4f * k, 0xFF6A5A);
-                tri(1.4f, 6.2f, 14.6f, 6.2f, 8, 14.5f, 0xE04A4A);
+            case "patreon" -> {                                                              // support: a heart that beats, with a spark
+                float k = 1f + 0.17f * t, cxh = 8f, cyh = 8.5f;
+                float[] hx = {8, 14, 15, 8, 1, 2}, hy = {3.2f, 1.5f, 6, 15, 6, 1.5f};
+                for (int q = 0; q < 6; q++) { hx[q] = cxh + (hx[q] - cxh) * k; hy[q] = cyh + (hy[q] - cyh) * k; }
+                poly(hx, hy, 0xFF6A5A);
+                ball(cxh + (4.6f - cxh) * k, cyh + (5 - cyh) * k, 3.4f * k, 0xFF6A5A); ball(cxh + (11.4f - cxh) * k, cyh + (5 - cyh) * k, 3.4f * k, 0xFF6A5A);
+                tri(cxh + (1.4f - cxh) * k, cyh + (6.2f - cyh) * k, cxh + (14.6f - cxh) * k, cyh + (6.2f - cyh) * k, 8, cyh + (14.5f - cyh) * k, 0xE04A4A);
                 outline();
-                px(4, 3, 0xFFFFFF);
+                px(4, 3, 0xFFFFFF); glint(13, 2, 1, 0xFFE08A, Math.max(0f, t));
             }
-            case "github" -> {                                                               // source: a branching tree
+            case "github" -> {                                                               // source: a branching tree, nodes breathing in turn, a commit travelling up
                 ln(5, 3, 5, 13, 0xC8D0E4); ln(6, 3, 6, 13, 0x9AA4C0);
                 ln(5, 8, 11, 4, 0xC8D0E4); ln(6, 8, 12, 4, 0x9AA4C0);
-                ball(5.5f, 3, 2.2f, 0x62E6A8); ball(5.5f, 13, 2.2f, 0x62E6A8); ball(11.5f, 4, 2.2f, 0xFFC857);
+                float w = f * (float) Math.PI * 2;
+                ball(5.5f, 3, 2.2f + 0.7f * (float) Math.sin(w), 0x62E6A8); ball(5.5f, 13, 2.2f + 0.7f * (float) Math.sin(w + 2.1f), 0x62E6A8); ball(11.5f, 4, 2.2f + 0.7f * (float) Math.sin(w + 4.2f), 0xFFC857);
                 outline();
-                glint(5, 3, 1, 0xFFFFFF, 0.3f + 0.7f * t);
+                float u = f; int cx2, cy2;
+                if (u < 0.5f) { cx2 = 5; cy2 = Math.round(13 - 10 * u); } else { float v = (u - 0.5f) * 2f; cx2 = Math.round(5.5f + 6 * v); cy2 = Math.round(8 - 4 * v); }
+                px(cx2, cy2, 0xFFFFFF); pxa(cx2, cy2 + 1, 0xFFFFFF, 0.5f);
             }
             default -> {
                 if (n.startsWith("cx_")) return generic(n, f);

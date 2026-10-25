@@ -283,7 +283,7 @@ public class FancyScreen extends Screen {
     public FancyScreen() {
         super(Component.literal("FancyDrops"));
         prefetchAll();
-        if (!skipIntro) { tab = Tab.HOME; scroll = 0; query = ""; }
+        if (!skipIntro) { tab = Tab.HOME; subSel[Tab.HOME.ordinal()] = -1; dropSrc = null; dropSrcName = null; scroll = 0; query = ""; }          // a fresh /fd opens on the Home page itself, never on Resources
         if (pendingStats) { pendingStats = false; tab = Tab.STATS; subSel[Tab.STATS.ordinal()] = -1; scroll = 0; }
         if (pendingTab != null) { Tab pt = pendingTab.equals("sounds") ? Tab.SOUNDS : Tab.ANIMATIONS; pendingTab = null; tab = pt; subSel[pt.ordinal()] = -1; scroll = 0; query = ""; }          // /fd editor
         if (pendingCos) { pendingCos = false; prevTab = Tab.HOME; tab = Tab.COSMETICS; query = ""; scroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; }
@@ -563,7 +563,7 @@ public class FancyScreen extends Screen {
         d.add(new String[]{"Animation", gr.name()});
         d.add(new String[]{"Type", ty.name()});
         d.add(new String[]{"Length", String.format(Locale.ROOT, "%.1f s", a.secs)});
-        d.add(new String[]{"Size", Math.round(a.size * 100) + "%"});
+        d.add(new String[]{"Size", Math.round(50 + 50 * c.animScale) + "%"});
         if (ty == Categories.RNG) { d.add(new String[]{"Bars", a.bars ? "On  ·  " + c.barPx + " px" : "Off"}); d.add(new String[]{"Blur", a.blur ? "On" : "Off"}); }
         d.add(new String[]{"Item size", Math.round(c.itemScale * 100) + "%"});
         final float k0 = 0.75f; int colW = w / 2, per = 8, lh = 12;
@@ -1768,7 +1768,8 @@ public class FancyScreen extends Screen {
         }
         c.setFx(i, !was); TextFx.restartText();
     }
-    private int[] e3Box(int i) { return new int[]{eRx(), eY() + 62 + i * 21, eRw(), 18}; }                                // Item Changes > Extras: one tile per extra, on the right
+    private int e3Sliders() { return FancyConfig.get().itemBob ? 4 : 3; }                                                      // Float height only shows while Floating is on
+    private int[] e3Box(int i) { int w = (eRw() - 4) / 2; return new int[]{eRx() + (i % 2) * (w + 4), eY() + 42 + e3Sliders() * 27 + 6 + (i / 2) * 19, w, 16}; }     // Item Changes: the toggles sit under the sliders
     private static boolean contains(int[] a, int v) { for (int x : a) if (x == v) return true; return false; }
 
     private int eW() { return Math.min(pw - 6, 540); }
@@ -1844,11 +1845,11 @@ public class FancyScreen extends Screen {
         int grp = previewH(ePrevW()) + (editor == 1 ? 26 : 0);
         return top + Math.max(0, (eHt() - 38 - 30 - grp) / 2);
     }
-    private int[] eSliderBox(int i) { return editor == 2 ? new int[]{eX() + 10, eY() + 38 + previewH(ePrevW()) + 34 + i * 29, ePrevW(), 14} : new int[]{eRx(), eY() + 70 + i * 34, eRw(), 14}; }
+    private int[] eSliderBox(int i) { return editor == 3 ? new int[]{eRx(), eY() + 53 + i * 27, eRw(), 14} : editor == 2 ? new int[]{eX() + 10, eY() + 38 + previewH(ePrevW()) + 34 + i * 29, ePrevW(), 14} : new int[]{eRx(), eY() + 70 + i * 34, eRw(), 14}; }
     private int[] eTogBox(int i) { int w = (eRw() - 4) / 2; return new int[]{eRx() + (i % 2) * (w + 4), eY() + 112 + (i / 2) * 19, w, 16}; }
     // every Changes menu has the same right-hand side: page tabs on top, the controls of that page below
     private int ePage;
-    private String[] ePages() { return editor == 4 ? new String[0] : editor == 1 ? new String[]{"Size", "Colour"} : editor == 3 ? new String[]{"Size", "Extras"} : new String[]{"Effects", "Layout", "Font"}; }
+    private String[] ePages() { return editor == 4 ? new String[0] : editor == 1 ? new String[]{"Size", "Colour"} : editor == 3 ? new String[0] : new String[]{"Effects", "Layout", "Font"}; }
     private int[] ePageBox(int i) { int n = ePages().length, w = (eRw() - (n - 1) * 3) / n; return new int[]{eRx() + i * (w + 3), eY() + 34, w, 17}; }
     private int[] eFontBox(int i) { int w = (eRw() - 4) / 2; return new int[]{eRx() + (i % 2) * (w + 4), eY() + 62 + (i / 2) * 21, w, 18}; }
     private int[] eFTog(int i) { return new int[]{eRx(), eY() + 62 + 4 * 21 + 8 + i * 19, eRw(), 16}; }
@@ -1955,7 +1956,7 @@ public class FancyScreen extends Screen {
             c.barCustom = true; c.barColor = hsvToRgb(eHue, eSat, eVal);
         }
     }
-    private Slider[] eSliders() { return editor == 4 ? new Slider[0] : editor == 1 ? new Slider[]{slBar, slBarOp, slBarCurve} : editor == 3 ? new Slider[]{slItem, slSpin, slGlow, slBob} : new Slider[]{slAll, slTitle, slSub, slDelay}; }
+    private Slider[] eSliders() { return editor == 4 ? new Slider[0] : editor == 1 ? new Slider[]{slBar, slBarOp, slBarCurve} : editor == 3 ? (FancyConfig.get().itemBob ? new Slider[]{slItem, slSpin, slGlow, slBob} : new Slider[]{slItem, slSpin, slGlow}) : new Slider[]{slAll, slTitle, slSub, slDelay}; }
     private void editorClick(double mx, double my, int button) {
         FancyConfig c = FancyConfig.get();
         if (button != 0) return;
@@ -1975,7 +1976,7 @@ public class FancyScreen extends Screen {
             for (int i = 0; i < 3; i++) if (in(mx, my, ePosBox(i))) { c.animPos = i; return; }
             for (int j = 0; j < 2; j++) if (in(mx, my, eTxtBox(j))) {
                 if (!textChoiceOpen(c, j)) { toast(c.animPos == 0 ? "With the animation at the top,\nthe words can only sit below it." : "With the animation above the action bar,\nthe words can only sit above it.", 0xFFFFB86B); return; }
-                c.textPos = j; return;
+                c.textPos = j == 0 ? 1 : 0; return;                                                 // the first button is "above" (1), the second "below" (0)
             }
             return;
         }
@@ -2002,9 +2003,9 @@ public class FancyScreen extends Screen {
             if (in(mx, my, eAuto())) { c.barCustom = false; return; }
             for (int i = 0; i < PRESETS.length; i++) if (in(mx, my, ePreset(i))) { eSetColor(PRESETS[i]); return; }
         } else if (editor == 3) {
-            if (ePage == 1) for (int k = 0; k < 5; k++) if (in(mx, my, e3Box(k))) {
-                if (k == 0) c.show3d = !c.show3d; else if (k == 1) c.itemBob = !c.itemBob; else if (k == 2) c.itemGlints = !c.itemGlints; else if (k == 3) c.itemOutline = !c.itemOutline; else c.itemSpinRev = !c.itemSpinRev;
-                TextFx.restartText();
+            for (int k = 0; k < 5; k++) if (in(mx, my, e3Box(k))) {
+                if (k == 0) c.itemBob = !c.itemBob; else if (k == 1) c.itemOutline = !c.itemOutline; else if (k == 2) c.itemGlints = !c.itemGlints; else if (k == 3) c.show3d = !c.show3d; else c.itemSpinRev = !c.itemSpinRev;
+                TextFx.restartText(); return;
             }
         } else if (editor == 2) {
             if (ePage == 0) {
@@ -2030,7 +2031,7 @@ public class FancyScreen extends Screen {
         pill(g, ex, ey, ew, eh, Ui.PANEL); rout(g, ex, ey, ew, eh, Ui.BORDER);
         g.fill(ex + 1, ey + 1, ex + ew - 1, ey + 2, Gfx.argb(160, Ui.ACCENT & 0xFFFFFF));
         Gfx.text(g, font, editor == 1 ? "Bar Changes" : editor == 3 ? "Item Changes" : editor == 4 ? "Position Changes" : "Text Changes", ex + 10, ey + 9, Ui.TEXT);
-        Gfx.text(g, font, editor == 1 ? "Height and colour of the cinematic bars" : editor == 4 ? "Where the animation and its words sit on the screen" : editor == 3 ? "Size, spin, glow and extras for the dropped item" : "Sizes, effects and what the words show", ex + 10, ey + 21, Ui.DIM);
+        Gfx.text(g, font, editor == 1 ? "Height and colour of the cinematic bars" : editor == 4 ? "Where the animation and its words sit on the screen" : editor == 3 ? "Size, spin, glow and float of the dropped item" : "Sizes, effects and what the words show", ex + 10, ey + 21, Ui.DIM);
         drawX(g, eClose(), in(mx, my, eClose()), "edx");
         int bw = ePrevW(), bh = previewH(bw), bx = ex + 10, by = eBy();
         hoverFx = -1;
@@ -2152,21 +2153,20 @@ public class FancyScreen extends Screen {
             Gfx.text(g, font, "Hex code", eRx(), eY() + 158, Ui.DIM);
             g.fill(eRx(), eY() + 188, eRx() + 14, eY() + 200, cur); g.outline(eRx(), eY() + 188, 14, 12, Ui.BORDER);
             Gfx.text(g, font, c.barCustom ? "Your colour" : "Follows the drop", eRx() + 20, eY() + 190, Ui.DIM);
-        } else if (editor == 3 && ePage == 0) {
+        } else if (editor == 3) {
             String[] il = {"Item size", "Spin speed", "Glow", "Float height"}; Slider[] ss3 = eSliders();
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < ss3.length; i++) {
                 int[] b = eSliderBox(i);
                 Gfx.text(g, font, il[i], b[0], b[1] - 11, Ui.SUB);
                 ss3[i].x0 = b[0]; ss3[i].x1 = b[0] + b[2]; ss3[i].draw(g, b[1], b[3], in(mx, my, new int[]{b[0], b[1] - 2, b[2], 18}));
             }
-        } else if (editor == 3) {
-            String[] tl = {"3D items", "Floating", "Glints", "Outline", "Spin the other way"}; String[] ti3 = {":cube:", ":speed:", ":sparkle:", ":size:", ":switch:"}; boolean[] tv = {c.show3d, c.itemBob, c.itemGlints, c.itemOutline, c.itemSpinRev};
+            String[] tl = {"Floating", "Outline", "Glints", "3D items", "Spin back"}; String[] ti3 = {":speed:", ":size:", ":sparkle:", ":cube:", ":switch:"}; boolean[] tv = {c.itemBob, c.itemOutline, c.itemGlints, c.show3d, c.itemSpinRev};
             for (int i = 0; i < 5; i++) {
                 int[] b = e3Box(i); boolean on = tv[i], hv = in(mx, my, b);
                 tile(g, b, on, hv);
-                Gfx.push(g); Gfx.translate(g, b[0] + 5, b[1] + 1); Gfx.scale(g, 0.95f); Icons.draw(g, ti3[i], 0, 0, hv || on ? System.currentTimeMillis() : 2400L); Gfx.pop(g);
-                Gfx.text(g, font, tl[i], b[0] + 25, b[1] + 5, on ? Ui.TEXT : Ui.SUB);
-                if (on) g.fill(b[0] + b[2] - 8, b[1] + 7, b[0] + b[2] - 5, b[1] + 10, 0xFF62E6A8);
+                Gfx.push(g); Gfx.translate(g, b[0] + 5, b[1] + 1); Gfx.scale(g, 0.875f); Icons.draw(g, ti3[i], 0, 0, hv || on ? System.currentTimeMillis() : 2400L); Gfx.pop(g);
+                Gfx.text(g, font, tl[i], b[0] + 21, b[1] + 4, on ? Ui.TEXT : Ui.SUB);
+                if (on) g.fill(b[0] + b[2] - 8, b[1] + 6, b[0] + b[2] - 5, b[1] + 9, 0xFF62E6A8);
             }
         }
         if (editWarn && !c.popups) {
@@ -2491,6 +2491,7 @@ public class FancyScreen extends Screen {
         hdrBack = null; hdrBackLabel = "";                              // the back button sits in the header, not in the list
         if (query.isBlank()) for (Row r : rows) if (r.backGo != null) { hdrBack = r.backGo; hdrBackLabel = r.backLabel; break; }
         rows.removeIf(r -> r.backGo != null);
+        if (hdrBack == null && query.isBlank() && subs().length > 0 && !landing()) { hdrBack = () -> openPage(-1, null, null); hdrBackLabel = tab.label; }          // every sub page can go back to its main page
         for (Row r : rows) {                                           // a description too long for its row wraps onto more lines instead of scrolling
             if (r.kind != NORMAL || r.sub.isEmpty() || r.wrapSub || r.field != null || r.pickLabels != null) continue;
             int avail = cw - r.indent * 12 - 8 - (r.arrow ? 14 : 0) - 14 - 32;
@@ -2502,12 +2503,14 @@ public class FancyScreen extends Screen {
         relayout();
         if (landing() && query.isBlank()) {                                // main pages never scroll: the tiles get a little shorter until everything fits
             int viewH = lb - lt;
-            if (totalH > viewH) { rows.removeIf(r -> r.kind == TEXT); relayout(); }          // the page title above already says it
-            for (int pass = 0; pass < 26 && totalH > viewH; pass++) {
-                boolean ch = false;
-                for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 40 : r.pSubs != null ? 31 : 27)) { r.pTh -= 1; fit(r); ch = true; }
-                if (!ch) break;
-                relayout();
+            for (int round = 0; round < 2; round++) {                      // first the tiles get shorter; only when that is not enough does the page's own description go
+                for (int pass = 0; pass < 26 && totalH > viewH; pass++) {
+                    boolean ch = false;
+                    for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 40 : r.pSubs != null ? 31 : 27)) { r.pTh -= 1; fit(r); ch = true; }
+                    if (!ch) break;
+                    relayout();
+                }
+                if (round == 0 && totalH > viewH) { rows.removeIf(r -> r.kind == TEXT); relayout(); }
             }
             if (totalH > viewH) totalH = viewH;                           // anything left over is clipped, never scrolled
             scroll = 0;
@@ -2656,6 +2659,8 @@ public class FancyScreen extends Screen {
         String[] sb = {c.barPx + " px tall", fxOn + " effects on", "Size " + Math.round(c.itemScale * 100) + "%", POS_NAMES[c.animPos] + "  \u00B7  words " + (c.textAbove() ? "above" : "below")};
         Row ch = picker("Animation Changes", "The look every animation shares", lb, sb, new String[]{":bars:", ":text:", ":size:", ":dock_top:"}, new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFFFFC857, 0xFF56D8FF}, null, 2, () -> -1, i -> openEditor(i + 1));
         rows.add(ch);
+        Row sz = row(0, ":size:", "Animation size", "How big every animation is", Ui.ACCENT);
+        sz.ctls.add(new Slider(0.5, 1.5, 0.05, () -> c.animScale, v -> c.animScale = (float) v, () -> Math.round(50 + 50 * c.animScale) + "%").live()); rows.add(sz);
         rows.add(section("Categories"));
         rows.add(catTiles());
     }
@@ -2681,8 +2686,6 @@ public class FancyScreen extends Screen {
         pl.ctls.add(new Btn("▶ Play", GREEN, () -> play(() -> DropListener.playSample(gr.id(), ti)))); rows.add(pl);
         Row len = row(0, ":clock:", "Length", "Between 5 and 7 seconds. The first half is the same for every type", Ui.ACCENT);
         len.ctls.add(new Slider(5, 7, 0.1, () -> a.secs, v -> { a.secs = (float) (Math.round(v * 10) / 10.0); }, () -> String.format(Locale.ROOT, "%.1f s", a.secs))); rows.add(len);
-        Row sz = row(0, ":size:", "Size", "How big the scene is. 100% is the standard size", Ui.ACCENT);
-        sz.ctls.add(new Slider(0.5, 1.5, 0.05, () -> a.size, v -> a.size = (float) v, () -> Math.round(a.size * 100) + "%").typed(100).live()); rows.add(sz);
         if (ty == Categories.RNG) {                                         // only the big finish has cinematic bars and a blurred background
             rows.add(section("Cinematic"));
             rows.add(toggle(":bars:", "Cinematic bars", "Black bars close in from the top and bottom", () -> a.bars, v -> a.bars = v));
@@ -2717,7 +2720,7 @@ public class FancyScreen extends Screen {
     }
 
     private void soundsLanding(FancyConfig c) {
-        rows.add(textRow(":sounds:", "Sounds", "The sound of every moment of an animation. Set the volume here, then open a category to pick the sounds."));
+        rows.add(textRow(":sounds:", "Sounds", "Edit each sound based on what you want."));
         rows.add(section("Sound"));
         rows.add(toggle(":sounds:", "Sounds", "Master switch (also /fd mute)", () -> c.sound, v -> { c.sound = v; SoundFx.stopPreviews(); waveKey = null; }));
         Row vo = row(0, ":bell:", "Volume", "Applies to every FancyDrops sound", Ui.ACCENT);
@@ -2767,7 +2770,7 @@ public class FancyScreen extends Screen {
     }
 
     private void chatLanding(FancyConfig c) {
-        rows.add(textRow(":chat:", "Chat", "Tell your party or co-op about a rare drop. Pick where the message goes and what it says, and choose which kinds of drops are announced."));
+        rows.add(textRow(":chat:", "Chat", "Tell people about the rare drop you just got. Pick where the messages go and what they say, and choose which kinds of drops are announced."));
         int on = 0, all = 0;                                                                              // how many drops announce, for the tile and the status
         for (Categories.Cat cat : Categories.ALL) if (!cat.wip()) for (Categories.Group gr : cat.groups()) for (DropData.Source src : cat.sources(gr.id())) for (DropData.Drop d : src.drops) { FancyConfig.DropCfg dc = c.drop(src.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); all++; if (dc.announce) on++; }
         boolean off = c.channel.equals("OFF");
@@ -2845,7 +2848,15 @@ public class FancyScreen extends Screen {
 
     // ---- Settings
 
+    private void settingsLanding() {
+        rows.add(textRow(":settings:", "Settings", "Change how the menu looks, your cosmetics, where prices come from and how the drop data loads."));
+        String[] lb = {"Menu", "Cosmetics", "Prices", "Drop Data"}, sb = {"How the menu looks", "Shown to you and others", "Where prices come from", "Reload the drop data"}, ic = {":menu:", ":cosmetics:", ":coin:", ":refresh:"};
+        int[] co = {0xFFB0B6C2, 0xFFC77DFF, 0xFFFFC857, 0xFF56D8FF};
+        rows.add(picker("", "", lb, sb, ic, co, null, 2, () -> -1, i -> openPage(i, null, null)));
+    }
+
     private void generalPage(FancyConfig c) {
+        if (landing() && !searching) { settingsLanding(); return; }
 
                 rows.add(section("Menu"));                                           // the page filter keys on this header: without it the Menu page came up empty
                 rows.add(section("Look"));
@@ -3007,7 +3018,7 @@ public class FancyScreen extends Screen {
     /** Keeps only the rows under the chosen sub heading (the headings themselves become the sidebar list). */
     private void filterSub() {
         String[] names = subs();
-        if (names.length == 0 || tab != Tab.GENERAL) return;
+        if (names.length == 0 || tab != Tab.GENERAL || (landing() && !searching)) return;
         int sel = curSub(), cur = -1;
         List<Row> keep = new ArrayList<>();
         for (Row r : rows) {

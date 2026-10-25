@@ -44,7 +44,7 @@ final class Icons {
 
     // ---- your own icons: config/fancydrops/icons/<name>.png. A 16 px wide picture; 16 tall = one still picture, 128 tall = the 8 animation frames stacked top to bottom.
     //      Every icon is saved there once. Edit a file and save it: the game picks it up within a second, no restart.
-    private static final String[] EXPORT = {"anim_icons", "anim_menu", "animations", "back", "bars", "bazaar", "bell", "chan_coop", "chan_off", "chan_party", "chan_public", "chat", "clock", "cone", "cos_aura", "cos_name", "cos_suffix", "cosmetics", "cube", "dice", "disc", "discord", "dock_bottom", "dock_off", "dock_top", "dropped", "dye", "experiments", "fancydrops", "farm", "fishing", "format", "glass", "griffin", "hammer", "menu", "mining", "mytho", "nodrops", "normal", "note", "play", "refresh", "send", "settings", "size", "slayers", "snd_beat", "snd_burst", "snd_end", "snd_linger", "snd_reveal", "sounds", "speed", "stats", "switch", "sword", "shovel", "text", "treasure", "updates"};
+    private static final String[] EXPORT = {"anim_icons", "anim_menu", "animations", "back", "bars", "bazaar", "bell", "chan_coop", "chan_off", "chan_party", "chan_public", "chat", "clock", "cone", "cos_aura", "cos_name", "cos_suffix", "cosmetics", "cube", "dice", "disc", "discord", "patreon", "github", "dock_bottom", "dock_off", "dock_top", "dropped", "dye", "experiments", "fancydrops", "farm", "fishing", "format", "glass", "griffin", "hammer", "menu", "mining", "mytho", "nodrops", "normal", "note", "play", "refresh", "send", "settings", "size", "slayers", "snd_beat", "snd_burst", "snd_end", "snd_linger", "snd_reveal", "sounds", "speed", "stats", "switch", "sword", "shovel", "text", "treasure", "updates"};
     private static final java.util.Map<String, int[][]> OVR = new java.util.HashMap<>();
     private static long ovrScan, ovrStamp; private static boolean exported;
     static java.nio.file.Path iconDir() { return DataFiles.art("icons"); }
@@ -55,17 +55,25 @@ final class Icons {
             java.nio.file.Path dir = iconDir();
             if (!exported) {
                 exported = true; java.nio.file.Files.createDirectories(dir);
-                for (String n : EXPORT) {
-                    java.nio.file.Path f = dir.resolve(n + ".png");
-                    if (java.nio.file.Files.exists(f)) {                                              // an old 8 frame export is moved to icons/old/ and made again with 16 frames
-                        var old = javax.imageio.ImageIO.read(f.toFile());
-                        if (old == null || (old.getHeight() != 128 && old.getHeight() != 192)) continue;
-                        java.nio.file.Files.createDirectories(dir.resolve("old")); java.nio.file.Files.move(f, dir.resolve("old").resolve(n + "_" + old.getHeight() / 16 + "f.png"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                    }
+                java.nio.file.Path manP = dir.resolve("original.txt"); java.util.Map<String, Long> man = new java.util.HashMap<>();
+                if (java.nio.file.Files.exists(manP)) for (String ln : java.nio.file.Files.readAllLines(manP)) { int q = ln.indexOf('='); if (q > 0) try { man.put(ln.substring(0, q), Long.parseLong(ln.substring(q + 1).trim())); } catch (NumberFormatException ignored) {} }
+                for (String n : EXPORT) {                                                           // each icon is saved as a picture; one you have NOT edited is refreshed when the mod's drawing changes, one you edited is never touched
                     var im = new java.awt.image.BufferedImage(16, 16 * IconArt.FRAMES, java.awt.image.BufferedImage.TYPE_INT_ARGB); boolean ok = true;
                     for (int fr = 0; fr < IconArt.FRAMES; fr++) { int[] px = IconArt.render(n, 0, fr); if (px == null) { ok = false; break; } im.setRGB(0, fr * 16, 16, 16, px, 0, 16); }
-                    if (ok) javax.imageio.ImageIO.write(im, "png", f.toFile());
+                    if (!ok) continue;
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream(); javax.imageio.ImageIO.write(im, "png", bo); byte[] nb = bo.toByteArray();
+                    java.util.zip.CRC32 cn = new java.util.zip.CRC32(); cn.update(nb);
+                    java.nio.file.Path f = dir.resolve(n + ".png");
+                    if (java.nio.file.Files.exists(f)) {
+                        byte[] cur = java.nio.file.Files.readAllBytes(f); java.util.zip.CRC32 cc = new java.util.zip.CRC32(); cc.update(cur);
+                        if (java.util.Arrays.equals(cur, nb)) { man.put(n, cn.getValue()); continue; }
+                        if (man.containsKey(n)) { if (man.get(n) != cc.getValue()) continue; }      // you edited it: keep your picture
+                        else { java.nio.file.Files.createDirectories(dir.resolve("old")); java.nio.file.Files.move(f, dir.resolve("old").resolve(n + "_prev.png"), java.nio.file.StandardCopyOption.REPLACE_EXISTING); }          // made by an older version, unknown if edited: kept in icons/old
+                    }
+                    java.nio.file.Files.write(f, nb); man.put(n, cn.getValue());
                 }
+                StringBuilder sb = new StringBuilder(); for (var e : new java.util.TreeMap<>(man).entrySet()) sb.append(e.getKey()).append('=').append(e.getValue()).append('\n');
+                java.nio.file.Files.writeString(manP, sb.toString());
             }
             if (!java.nio.file.Files.isDirectory(dir)) return;
             long stamp = 0; java.util.List<java.nio.file.Path> files = new java.util.ArrayList<>();

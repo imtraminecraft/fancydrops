@@ -20,6 +20,8 @@ final class SkullSpin {
     private static final class Entry { DynamicTexture tex; Identifier id; int step = -1; volatile int[] done; volatile int doneStep = -1; volatile boolean busy; }
     private static final Map<String, Entry> MAP = new HashMap<>();
     private static boolean failed;
+    /** The colour the head is multiplied by (white = as it is). The item outline draws the head tinted. */
+    static int tint = 0xFFFFFF;
     /** The tracing runs off the render thread (two low-priority workers): the game only copies a finished picture into the texture, so a page of spinning heads no longer costs frames. */
     private static final java.util.concurrent.ExecutorService POOL = java.util.concurrent.Executors.newFixedThreadPool(2, r -> { Thread t = new Thread(r, "fancydrops-skull"); t.setDaemon(true); t.setPriority(Thread.MIN_PRIORITY); return t; });
 
@@ -52,7 +54,7 @@ final class SkullSpin {
             }
             if (e.step < 0) return true;                                                        // the first picture is still being made: nothing to show for a moment
             int a = Math.max(0, Math.min(255, Math.round(alpha * 255)));
-            g.blit(RenderPipelines.GUI_TEXTURED, e.id, -8, -8, 0f, 0f, 16, 16, N, N, N, N, (a << 24) | 0xFFFFFF);
+            g.blit(RenderPipelines.GUI_TEXTURED, e.id, -8, -8, 0f, 0f, 16, 16, N, N, N, N, (a << 24) | (tint & 0xFFFFFF));
             return true;
         } catch (Throwable t) { failed = true; t.printStackTrace(); return false; }
     }

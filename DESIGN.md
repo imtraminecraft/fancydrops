@@ -189,3 +189,9 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - The back button lives in the page header (under the title), never as a row in the list.
 - A button inside a search result must work like on its own page: it moves to that page and clears the search.
 - Heads are traced off the render thread. Animation frames are real PNGs in art/animations; an edited frame replaces the drawn one.
+
+## Standing requirements added in 0.4.30
+- Animation size is one global setting (Animations > Animation Changes), shown 75-125%. Categories have no size.
+- Item Changes is a single page. Floating off hides Float height. Bar pillars are as thick as the bars.
+- Every sub page has a header back button to its main page; every tab with sub pages has a main page (Settings too).
+- Exported icon and animation PNGs never overwrite a file the author edited, but refresh when untouched (original.txt lists what the mod wrote).

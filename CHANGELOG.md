@@ -1,3 +1,16 @@
+## 0.4.30
+- Animations: one Animation size slider under Animation Changes (75% to 125%, the old 50% is now 75%). The Size row is gone from every category.
+- Position Changes: the Above/Below buttons now match what you click (they were swapped).
+- Text Changes: Exit effects work. Eleven effects (Twinkle, Fade away, Fly up, Shrink, Scatter, Slide in, Flip in, Swing, Gold, Slide out, Melt) were never saved before.
+- Bar Changes: Curved corners round the inner corners of the picture. Side pillars are exactly as thick as the bars.
+- Item Changes: one page. Floating (Float height hides when it is off), Outline (a rim in the drop's colour), Glints, 3D items and Spin back sit under the sliders.
+- Every sub page has a back button to its main page, in the header.
+- Settings opens on its own main page with four sub pages (Menu, Cosmetics, Prices, Drop Data).
+- Sounds and Chat have new descriptions; the page description now stays unless there is truly no room.
+- Community icons really move now (chatting bubbles, a beating heart, a commit travelling up the branch).
+- Icons you have not edited are refreshed from the mod when their drawing changes; ones you edited are kept; older exports move to icons/old.
+- A fresh /fd opens the Home page, not Resources.
+
 ## 0.4.29
 - Less lag: the 3D heads are now ray-traced on a background thread (96 steps a turn), so a page of spinning heads no longer stalls the game.
 - Animation frames: every scene is written to `config/fancydrops/art/animations` as PNG frames the first time the menu opens. Edit a frame and the mod plays yours.

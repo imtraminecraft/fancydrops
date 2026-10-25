@@ -20,7 +20,6 @@ public class FancyConfig {
     public static class AnimCfg {
         public float secs = 7f;          // 5..7
         public int pos = 1;              // (unused now: the position is one setting for every animation, FancyConfig.animPos)
-        public float size = 1f;          // 0.5 .. 1.2 (100% is the scene drawn 25% smaller than it used to be)
         public boolean bars = true, blur = true;   // RNG only
     }
 
@@ -55,6 +54,7 @@ public class FancyConfig {
     }
     // Bar changes
     public int barPx = 15;               // bar height in pixels of the 96-pixel-tall scene (5..15)
+    public float animScale = 1f;         // how big every animation is: 0.5 .. 1.5 (shown as 75% .. 125%; 1.0 is the standard 100%)
     public int barOpacity = 90;          // how solid the bars are (%)
     public boolean barPillars = false;    // the side pillars
     public int barCurve = 0;             // how round the window's corners are (0..100)
@@ -71,11 +71,12 @@ public class FancyConfig {
     public boolean textBold = false, textOutline = true;
     public boolean showPrice = true, showPriceSource = true, showOdds = true, showMagicFind = true;
     public boolean fxPop = true, fxShine = true, fxWave = false, fxRainbow = false, fxDrop = false, fxPulse = false, fxGlitch = false, fxGlow = false, fxBounce = false, fxType = false, fxFloat = false, fxShake = false, fxFire = false, fxFrost = false;
-    public boolean fx(int i) { return switch (i) { case 0 -> fxPop; case 1 -> fxShine; case 2 -> fxWave; case 3 -> fxRainbow; case 4 -> fxDrop; case 5 -> fxPulse; case 6 -> fxGlitch; case 7 -> fxGlow; case 8 -> fxBounce; case 9 -> fxType; case 10 -> fxFloat; case 11 -> fxShake; case 12 -> fxFire; case 13 -> fxFrost; default -> false; }; }
-    public void setFx(int i, boolean v) { switch (i) { case 0 -> fxPop = v; case 1 -> fxShine = v; case 2 -> fxWave = v; case 3 -> fxRainbow = v; case 4 -> fxDrop = v; case 5 -> fxPulse = v; case 6 -> fxGlitch = v; case 7 -> fxGlow = v; case 8 -> fxBounce = v; case 9 -> fxType = v; case 10 -> fxFloat = v; case 11 -> fxShake = v; case 12 -> fxFire = v; case 13 -> fxFrost = v; default -> { } } }
+    public boolean fxTwinkle = false, fxFade = false, fxRise = false, fxShrink = false, fxScatter = false, fxSlide = false, fxFlip = false, fxSwing = false, fxGold = false, fxSlideOut = false, fxMelt = false;          // 14..24: twinkle, then the exits (fade, fly up, shrink, scatter), slide in, flip in, swing, gold, slide out, melt
+    public boolean fx(int i) { return switch (i) { case 0 -> fxPop; case 1 -> fxShine; case 2 -> fxWave; case 3 -> fxRainbow; case 4 -> fxDrop; case 5 -> fxPulse; case 6 -> fxGlitch; case 7 -> fxGlow; case 8 -> fxBounce; case 9 -> fxType; case 10 -> fxFloat; case 11 -> fxShake; case 12 -> fxFire; case 13 -> fxFrost; case 14 -> fxTwinkle; case 15 -> fxFade; case 16 -> fxRise; case 17 -> fxShrink; case 18 -> fxScatter; case 19 -> fxSlide; case 20 -> fxFlip; case 21 -> fxSwing; case 22 -> fxGold; case 23 -> fxSlideOut; case 24 -> fxMelt; default -> false; }; }
+    public void setFx(int i, boolean v) { switch (i) { case 0 -> fxPop = v; case 1 -> fxShine = v; case 2 -> fxWave = v; case 3 -> fxRainbow = v; case 4 -> fxDrop = v; case 5 -> fxPulse = v; case 6 -> fxGlitch = v; case 7 -> fxGlow = v; case 8 -> fxBounce = v; case 9 -> fxType = v; case 10 -> fxFloat = v; case 11 -> fxShake = v; case 12 -> fxFire = v; case 13 -> fxFrost = v; case 14 -> fxTwinkle = v; case 15 -> fxFade = v; case 16 -> fxRise = v; case 17 -> fxShrink = v; case 18 -> fxScatter = v; case 19 -> fxSlide = v; case 20 -> fxFlip = v; case 21 -> fxSwing = v; case 22 -> fxGold = v; case 23 -> fxSlideOut = v; case 24 -> fxMelt = v; default -> { } } }
     // Item changes
     public float itemScale = 1f, itemSpin = 1f, itemGlow = 1f, itemBobAmp = 1f;
-    public boolean itemBob = true, itemGlints = true, itemOutline = true, itemSpinRev = false;
+    public boolean itemBob = true, itemGlints = true, itemOutline = false, itemSpinRev = false;
 
     // ------------------------------------------------------------------ chat
     public Map<String, String> formats = new LinkedHashMap<>();     // category id -> the message
@@ -150,12 +151,12 @@ public class FancyConfig {
         if (c.ver < 3) { c.ver = 3; c.sounds.clear(); c.mcSounds.clear(); save(); }          // the rewrite: old sound picks refer to sounds that no longer exist
         c.textScale = clamp(c.textScale, 0f, 1.1f); c.itemScale = clamp(c.itemScale, 0.5f, 1.1f);
         c.titleScale = clamp(c.titleScale, 0.5f, 1.5f); c.subScale = clamp(c.subScale, 0.5f, 1.5f); c.subDelay = clamp(c.subDelay, 0f, 3f);
-        c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);
+        c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);
         c.barPx = Math.max(5, Math.min(15, c.barPx));
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
         c.animPos = Math.max(0, Math.min(2, c.animPos)); c.textPos = Math.max(0, Math.min(1, c.textPos));
-        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 5f, 7f); a.size = clamp(a.size, 0.5f, 1.5f); a.pos = Math.max(0, Math.min(2, a.pos)); }
+        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 5f, 7f); a.pos = Math.max(0, Math.min(2, a.pos)); }
     }
     private static float clamp(float v, float lo, float hi) { return Math.max(lo, Math.min(hi, v)); }
 

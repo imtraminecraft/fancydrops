@@ -590,7 +590,7 @@ final class Ritual {
         FancyConfig c = FancyConfig.get(); FancyConfig.AnimCfg cfg = a.cfg(); Item it = a.item;
         boolean tre = a.group.equals("treasure"); kind = Math.max(0, a.kind); int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float S = Math.max(3.6f, cfg.secs), csz = Math.max(0.5f, Math.min(1.5f, cfg.size)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
+        float S = Math.max(3.6f, cfg.secs), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
@@ -609,7 +609,7 @@ final class Ritual {
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;
-        float csz = Math.max(0.5f, Math.min(1.5f, cfg.size)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
+        float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         boolean barsOn = (rng && cfg.bars) || TextFx.barsOnly, blurOn = rng && cfg.blur && !TextFx.barsOnly && !TextFx.itemOnly;
@@ -648,7 +648,19 @@ final class Ritual {
             int bh = Math.round(barH * u * barSlide), oa = Math.round(255 * c.barOpacity / 100f);
             int bc = c.barCustom ? (c.barColor & 0xFFFFFF) : mixc(0x05060C, rc, 0.10f);
             g.fill(0, 0, W, bh, Gfx.argb(oa, bc)); g.fill(0, H - bh, W, H, Gfx.argb(oa, bc));
-            if (c.barPillars) { int pw = Math.max(2, Math.round(bh * 0.55f)); g.fill(0, bh, pw, H - bh, Gfx.argb(oa, bc)); g.fill(W - pw, bh, W, H - bh, Gfx.argb(oa, bc)); if (c.barLine) { int lc = Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f)); g.fill(pw, bh, pw + 1, H - bh, lc); g.fill(W - pw - 1, bh, W - pw, H - bh, lc); } }
+             if (c.barPillars) { int pw = bh;   g.fill(0, bh, pw, H - bh, Gfx.argb(oa, bc)); g.fill(W - pw, bh, W, H - bh, Gfx.argb(oa, bc)); if (c.barLine) { int lc = Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f)); g.fill(pw, bh, pw + 1, H - bh, lc); g.fill(W - pw - 1, bh, W - pw, H - bh, lc); } }
+            if (c.barCurve > 0 && bh > 2) {                                                              // curved corners: the four inner corners of the picture are rounded off in the bar colour
+                int pwc = c.barPillars ? bh : 0, wx0 = pwc, wx1 = W - pwc, wy0 = bh, wy1 = H - bh;
+                int rr = Math.round(c.barCurve / 100f * Math.min(wx1 - wx0, wy1 - wy0) / 5f);
+                int col = Gfx.argb(oa, bc);
+                for (int i = 0; i < rr; i++) {
+                    double dv = rr - i - 0.5; int cut = (int) Math.round(rr - Math.sqrt(Math.max(0.0, (double) rr * rr - dv * dv)));
+                    if (cut <= 0) continue;
+                    g.fill(wx0, wy0 + i, wx0 + cut, wy0 + i + 1, col); g.fill(wx1 - cut, wy0 + i, wx1, wy0 + i + 1, col);
+                    g.fill(wx0, wy1 - 1 - i, wx0 + cut, wy1 - i, col); g.fill(wx1 - cut, wy1 - 1 - i, wx1, wy1 - i, col);
+                }
+            }
+            // (the pillars above are exactly as thick as the bars)
             if (c.barSoft) for (int i = 1; i <= 6; i++) { int al = Math.round(oa * (1f - i / 7f) * 0.5f); g.fill(0, bh + i - 1, W, bh + i, Gfx.argb(al, bc)); g.fill(0, H - bh - i, W, H - bh - i + 1, Gfx.argb(al, bc)); }
             if (c.barLine) { g.fill(0, bh, W, bh + 1, Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f))); g.fill(0, H - bh - 1, W, H - bh, Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f))); }
         }
@@ -663,8 +675,9 @@ final class Ritual {
                 for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }
             }
             ItemIcons.spinSpeed = c.itemSpin; ItemIcons.spinRev = c.itemSpinRev;
+            ItemIcons.outlineRgb = c.itemOutline ? mixc(rc, WHITE, 0.45f) & 0xFFFFFF : -1;
             ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA)); boolean still0 = Icons.STILL_ICONS; Icons.STILL_ICONS = false;                 // the dropped item always turns, whatever the menu says
-            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; ItemIcons.spinSpeed = 1f; ItemIcons.spinRev = false; }
+            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; ItemIcons.spinSpeed = 1f; ItemIcons.spinRev = false; ItemIcons.outlineRgb = -1; }
         }
 
         // ---- the words: below the animation (top and center), above it (bottom); never over the bars
