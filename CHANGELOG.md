@@ -1,3 +1,7 @@
+## 0.9.7
+- Changed: the menu rebuilds its rows when you click, type, scroll or move, and ten times a second otherwise, not on every frame. Lighter on FPS
+- Removed: old leftovers (the old rngdrops sounds and data, two empty files)
+
 ## 0.9.5
 - Changed: every animation is short and sweet like Farming. Only an RNG drop keeps the long scene with the black bars
 - New: Drop Library has an RNG button on every item: Auto (by price), RNG (always the big scene) or Off (never)

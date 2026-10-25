@@ -302,6 +302,7 @@ public class FancyScreen extends Screen {
     }
 
     @Override protected void init() {
+        dirty = true;
         PriceService.warm();
         pw = Math.min(560, width - 76); ph = menuHeight(height);
         px = (width - pw) / 2; py = (height - ph) / 2;
@@ -3423,6 +3424,7 @@ public class FancyScreen extends Screen {
         super.extractBackground(g, mx, my, delta);
     }
 
+    private boolean dirty = true; private long lastSig, lastBuild;
     @Override public void extractRenderState(GuiGraphicsExtractor g, int mx0, int my0, float delta) {
         Gfx.uiFont = Fonts.fix(FancyConfig.get().uiFont);
         final int mx = editor != 0 ? -9999 : mx0, my = editor != 0 ? -9999 : my0;       // an open editor sits on top: nothing behind it lights up
@@ -3460,7 +3462,8 @@ public class FancyScreen extends Screen {
 
         int viewH = lb - lt;
         long pf0 = System.nanoTime();
-        build();
+        long nb = System.currentTimeMillis(), bsig = ((((long) scroll * 31 + lt) * 31 + lb) * 31 + cw) * 31 + px * 7L + pw + tab.ordinal() + query.hashCode() * 3L;
+        if (dirty || bsig != lastSig || nb - lastBuild > 120) { build(); dirty = false; lastSig = bsig; lastBuild = nb; }          // the rows are rebuilt on input, when the layout moves, or ten times a second, not on every frame
         int scroll0 = scroll;
         scroll = Math.max(0, Math.min(scroll, Math.max(0, totalH - viewH)));
         if (scroll != scroll0) build();                                          // only again when the scroll position had to move
@@ -3917,7 +3920,7 @@ public class FancyScreen extends Screen {
         return false;
     }
 
-    @Override public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+    @Override public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) { dirty = true;
         if (adminOpen) return event.button() != 0 || adminClick(event.x(), event.y());
         if (adminHome) {
             if (event.button() == 0) for (Object[] h : adminHits) if (event.x() >= (int) h[0] && event.x() < (int) h[2] && event.y() >= (int) h[1] && event.y() < (int) h[3]) { ((Runnable) h[4]).run(); return true; }
@@ -4042,7 +4045,7 @@ public class FancyScreen extends Screen {
         return false;
     }
 
-    @Override public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+    @Override public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) { dirty = true;
         if (editor != 0) { if (eDrag != 0) eSet(event.x(), event.y()); return true; }
         if (siteDrag >= 0) { siteMove(event.x(), event.y()); return true; }
         if (dragScroll) { scrollTo(event.y()); return true; }
@@ -4051,13 +4054,13 @@ public class FancyScreen extends Screen {
         return super.mouseDragged(event, dx, dy);
     }
 
-    @Override public boolean mouseReleased(MouseButtonEvent event) {
+    @Override public boolean mouseReleased(MouseButtonEvent event) { dirty = true;
         eDrag = 0; siteDrop();
         dragCtl = null; dragFarm = false; dragScroll = false;
         return super.mouseReleased(event);
     }
 
-    @Override public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
+    @Override public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) { dirty = true;
         if (adminOpen || adminHome) { adminScroll = Math.max(0, adminScroll - (int) (scrollY * 24)); return true; }
         if (editor != 0) return true;
         if (popup != null && mx >= popX0 && mx < popX1 && my >= popY && my < popY + popVis * POP_H + 4 && popup.pickLabels.size() > popVis) {
@@ -4069,7 +4072,7 @@ public class FancyScreen extends Screen {
         return true;
     }
 
-    @Override public boolean keyPressed(KeyEvent event) {
+    @Override public boolean keyPressed(KeyEvent event) { dirty = true;
         int key = event.key();
         if (adminOpen) { if (key == 256) adminOpen = false; return true; }
         if (adminHome) { if (key == 256) { adminHome = false; adminField.setFocused(false); return true; } if (adminField.isFocused() && (key == 257 || key == 335)) { openAdmin(); return true; } return super.keyPressed(event); }
