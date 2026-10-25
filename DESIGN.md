@@ -4,7 +4,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## Working rules
 - Short UI text. Releases are manual (the author runs the "Release FancyDrops" workflow with the version).
-- Per update: bump `version=` in `gradle.properties`, add a `## x.y.z` section at the top of `CHANGELOG.md`, commit and push to `main`. The version was restarted at 0.4.1 for the full rework (author request): count up from there, 0.4.2, 0.4.3, 0.4.4, 0.4.5, 0.4.6, 0.4.7 and so on.
+- Per update: bump `version=` in `gradle.properties`, add a `## x.y.z` section at the top of `CHANGELOG.md`, commit and push to `main`. The version was restarted at 0.4.1 for the full rework (author request): count up from there, 0.4.2, 0.4.3, 0.4.4, 0.4.5, 0.4.6, 0.4.7, 0.4.8 and so on.
 - Commit as `tra` (`git -c user.name=tra -c user.email=imtraminecraft@gmail.com commit`).
 - Make a mockup first for anything visual and big, and wait for approval before building it.
 - Nothing can be compiled or run in the cloud workspace. Say so honestly. Check for duplicate methods and variable names by hand.
@@ -95,3 +95,9 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - The construction page loops: slow build, an accident, collapse, restart.
 - The Active lever eases over with no bounce.
 - Mythological Treasure has its own Animations and Sounds pages. Spade, Pet and Erudite live on the main Ritual page.
+
+## Standing requirements added in 0.4.8
+- Mythological is the baseline for every drop library. Slayers is next, and the existing Slayer boss identification stays untouched (a spawned boss that drops "RARE FIND!" must keep tracking).
+- Each creature or source is a sidebar entry under its page.
+- Bars and scene share one curve (curveR / blitRounded).
+- Heavy effects are drawn in a few bands, not hundreds of fills.

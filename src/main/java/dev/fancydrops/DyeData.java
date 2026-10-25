@@ -10,7 +10,6 @@ final class DyeData {
     /** The pages of the Drop Library: where a dye comes from. */
     static final String[] GROUPS = {"Special", "RNG", "Mob Drop", "Activity"};
     static final int[] GROUP_COL = {0xFF55FFFF, 0xFFFF72C6, 0xFFE5484D, 0xFF7BE05A};
-    static final String[] GROUP_SUB = {"Raffles, auctions and experiments", "Chests, dice and chance rewards", "Dropped by mobs and bosses", "Earned by doing things"};
     private static final String[][] GROUP_NAMES = {
         {"Nadeshiko Dye", "Dark Purple Dye", "Pure Blue Dye", "Pure Yellow Dye"},
         {"Secret Dye", "Mythological Dye", "Frostbitten Dye", "Nyanza Dye", "Tentacle Dye", "Copper Dye", "Archfiend Dye", "Holly Dye", "Livid Dye", "Necron Dye"},

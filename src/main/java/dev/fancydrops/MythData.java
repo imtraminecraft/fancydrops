@@ -89,10 +89,6 @@ public final class MythData {
         java.util.Map.entry("gaia_construct", "Iron_Golem_Sprite"), java.util.Map.entry("minos_champion", "Minos_Champion_Sprite"), java.util.Map.entry("minos_inquisitor", "Minos_Inquisitor_Sprite"),
         java.util.Map.entry("manticore", "Manticore_Sprite"), java.util.Map.entry("king_minos", "King_Minos_Sprite"), java.util.Map.entry("stranded_nymph", "Stranded_Nymph_Sprite"),
         java.util.Map.entry("harpy", "Harpy_Sprite"), java.util.Map.entry("sphinx", "Sphinx_Sprite"), java.util.Map.entry("cretan_bull", "Cretan_Bull_Sprite"));
-    /** "MYTHMOB_MINOS_HUNTER" -> "Minos_Hunter_Sprite", or null. */
-    public static String spriteOf(String iconId) {
-        return iconId != null && iconId.startsWith("MYTHMOB_") ? SPRITES.get(iconId.substring(8).toLowerCase(Locale.ROOT)) : null;
-    }
     /** The wiki picture file a drop asks for (shards, the dye), or null. */
     public static String imgOf(String id) {
         for (SlayerData.Slayer s : ALL) for (SlayerData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && !d.img.isBlank()) return d.img;

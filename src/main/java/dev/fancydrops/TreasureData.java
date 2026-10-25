@@ -7,6 +7,8 @@ package dev.fancydrops;
 final class TreasureData {
     private TreasureData() {}
     static final String[] SPADES = {"Ancestral Spade", "Archaic Spade", "Deific Spade"};
+    /** Items that are player heads: their art (a 3D head) is looked up by id like any other drop. */
+    static boolean headArt(String id) { return id.equals("MYTHOS_FRAGMENT") || id.equals("MYTH_THE_FISH"); }
     static final int[] CHAIN = {4, 6, 8};                       // burrows in a chain (Erudite adds 2, to 10 at most)
     static final int[] COLS = {0xFF55FF55, 0xFFFFAA00, 0xFFFF55FF};
 
@@ -17,21 +19,21 @@ final class TreasureData {
             {"5,000 Coins", "", "gold_nugget", "10.42%", "51.2", "46.08"},
             {"10,000 Coins", "", "gold_ingot", "5.21%", "102.4", "92.16"},
             {"25,000 Coins", "", "gold_ingot", "2.08%", "256", "230.4"},
-            {"Myth the Fish", "MYTH_THE_FISH", "fd:t_fish", "0.01%", "53,333.33", "48,000"}},
+            {"Myth the Fish", "MYTH_THE_FISH", "player_head", "0.01%", "53,333.33", "48,000"}},
         {   // Archaic Spade
             {"Griffin Feather", "GRIFFIN_FEATHER", "feather", "63.34%", "7.58", "6.97"},
             {"5,000 Coins", "", "gold_nugget", "16.89%", "28.42", "26.15"},
             {"10,000 Coins", "", "gold_ingot", "6.76%", "71.04", "65.37"},
-            {"Mythos Fragment", "MYTHOS_FRAGMENT", "fd:t_fragment", "6.76%", "71.04", "65.37"},
+            {"Mythos Fragment", "MYTHOS_FRAGMENT", "player_head", "6.76%", "71.04", "65.37"},
             {"25,000 Coins", "", "gold_ingot", "3.38%", "142.08", "130.74"},
             {"50,000 Coins", "", "gold_block", "1.69%", "284.16", "261.49"},
             {"100,000 Coins", "", "gold_block", "0.84%", "568.32", "522.97"},
             {"250,000 Coins", "", "gold_block", "0.34%", "1,420.8", "1,353.14"},
-            {"Myth the Fish", "MYTH_THE_FISH", "fd:t_fish", "0.01%", "48,000", "45,714.29"}},
+            {"Myth the Fish", "MYTH_THE_FISH", "player_head", "0.01%", "48,000", "45,714.29"}},
         {   // Deific Spade
             {"Griffin Feather", "GRIFFIN_FEATHER", "feather", "62.71%", "7.29", "7.09"},
             {"10,000 Coins", "", "gold_ingot", "15.52%", "29.45", "28.63"},
-            {"Mythos Fragment", "MYTHOS_FRAGMENT", "fd:t_fragment", "9.31%", "49.08", "47.72"},
+            {"Mythos Fragment", "MYTHOS_FRAGMENT", "player_head", "9.31%", "49.08", "47.72"},
             {"25,000 Coins", "", "gold_ingot", "6.21%", "73.62", "71.58"},
             {"50,000 Coins", "", "gold_block", "3.10%", "147.25", "143.16"},
             {"100,000 Coins", "", "gold_block", "1.55%", "294.49", "286.31"},
@@ -39,7 +41,7 @@ final class TreasureData {
             {"500,000 Coins", "", "gold_block", "0.47%", "981.64", "954.37"},
             {"1,000,000 Coins", "", "gold_block", "0.31%", "1,472.46", "1,431.56"},
             {"Braided Griffin Feather", "BRAIDED_GRIFFIN_FEATHER", "string", "0.03%", "14,724.57", "14,315.56"},
-            {"Myth the Fish", "MYTH_THE_FISH", "fd:t_fish", "0.01%", "45,714.29", "44,444.44"}}};
+            {"Myth the Fish", "MYTH_THE_FISH", "player_head", "0.01%", "45,714.29", "44,444.44"}}};
 
     /** The source every treasure drop belongs to (a stand-in creature: it has no cube, its drops come from DROPS). */
     static final SlayerData.Slayer SOURCE = new SlayerData.Slayer();
@@ -80,7 +82,7 @@ final class TreasureData {
     }
     private static SlayerData.Drop make(String[] e) {
         SlayerData.Drop d = new SlayerData.Drop();
-        d.name = e[0]; d.id = e[1].isEmpty() ? e[2].toUpperCase(java.util.Locale.ROOT) : e[1]; d.icon = e[2].equals("player_head") ? "fd:t_fragment" : e[2]; d.chance = perBurrow(FancyConfig.get().mythErudite ? e[5] : e[4], e[3]);
+        d.name = e[0]; d.id = e[1].isEmpty() ? e[2].toUpperCase(java.util.Locale.ROOT) : e[1]; d.icon = e[2].equals("player_head") ? "player_head" : e[2]; d.chance = perBurrow(FancyConfig.get().mythErudite ? e[5] : e[4], e[3]);
         long c = coins(e[0]);
         d.rank = c > 0 ? (c >= 500_000 ? 2 : c >= 25_000 ? 1 : 0) : e[0].startsWith("Myth the") ? 3 : e[0].startsWith("Braided") ? 2 : 1;
         return d;

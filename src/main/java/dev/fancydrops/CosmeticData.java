@@ -96,7 +96,6 @@ final class CosmeticData {
         Boolean c = UCACHE.get(d.id()); if (c != null) return c;
         boolean v = unlockedNow(d); UCACHE.put(d.id(), v); return v;
     }
-    static void forget() { UCACHE.clear(); }
     private static boolean unlockedNow(Def d) {
         if (d == null) return false;
         Boolean f = force.get(d.id()); if (f != null) return f;
@@ -157,7 +156,6 @@ final class CosmeticData {
     /** Something you wear changed: chat lines already on screen are redone with the new look. */
     static void changed() { Cosmetics.historyDirty = true; UCACHE.clear(); }
     static String kindLabel(Kind k) { return k == Kind.SUFFIX ? "Suffix" : k == Kind.NAME ? "Name effect" : "Aura"; }
-    static int unlockedCount(Line l) { int n = 0; for (Def d : line(l)) if (unlocked(d)) n++; return n; }
 
     // ---- Admin Panel helpers
     /** How many players hold each set, and each single cosmetic, according to cosmetics.json. */
@@ -171,7 +169,6 @@ final class CosmeticData {
         }
         return m;
     }
-    static int countOf(String id) { return counts().getOrDefault("c:" + id, 0); }
     /** What a player is given right now, as a list of cosmetic ids (sets expanded). */
     static Set<String> heldBy(String code) {
         Set<String> o = new LinkedHashSet<>(); Set<String> g = grants.getOrDefault(code, Set.of());

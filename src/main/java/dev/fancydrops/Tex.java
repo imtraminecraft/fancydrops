@@ -25,30 +25,7 @@ final class Tex {
         return t;
     }
 
-    /** The red inside of the cube once it is split. */
-    static int[] flesh(int n) {
-        int[] t = new int[n * n];
-        for (int y = 0; y < n; y++) for (int x = 0; x < n; x++) {
-            float v = h(x, y + 99);
-            int c = v < 0.25f ? 0xFF8E1B2B : v < 0.7f ? 0xFFC42B3F : 0xFFE0475A;
-            if ((x + y / 2) % 5 == 0 && v > 0.4f) c = 0xFFF0B0B0;     // fat streaks
-            t[y * n + x] = c;
-        }
-        return t;
-    }
 
-    static int[] wood(int n) {
-        int[] t = new int[n * n];
-        for (int y = 0; y < n; y++) for (int x = 0; x < n; x++) {
-            int plank = (x / 6) % 2;
-            float v = h(x / 2, y + plank * 17);
-            int c = plank == 0 ? 0xFFA9743D : 0xFF98652F;
-            if (v > 0.8f) c = Canvas.shade(c, 0.82f);
-            if (x % 6 == 0) c = Canvas.shade(c, 0.68f);                     // plank seams
-            t[y * n + x] = c;
-        }
-        return t;
-    }
 
     static int[] steel(int n) {
         int[] t = new int[n * n];
@@ -64,22 +41,6 @@ final class Tex {
 
     static int[] solid(int n, int c) { int[] t = new int[n * n]; java.util.Arrays.fill(t, c); return t; }
 
-    /** Cracks grow across the cube as it is chopped; level 0..1. */
-    static int[] cracked(int[] src, int n, float level, int seed) {
-        if (level <= 0f) return src;
-        int[] t = src.clone();
-        int lines = 1 + (int) (level * 2.2f);
-        for (int l = 0; l < lines; l++) {
-            int x = n / 2 + (int) ((h(seed, l) - 0.5f) * n * 0.6f);
-            int len = (int) (n * (0.35f + 0.65f * level));
-            for (int y = 0; y < len; y++) {
-                x += h(l, y + seed) < 0.33f ? -1 : h(l, y + seed) > 0.66f ? 1 : 0;
-                int xx = Math.max(0, Math.min(n - 1, x));
-                t[y * n + xx] = 0xFF1A0A10;
-            }
-        }
-        return t;
-    }
     private Tex() {}
 
     // ---- Minecraft-style block textures for the floor each slayer fights on (16x16)

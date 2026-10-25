@@ -1,3 +1,13 @@
+## 0.4.8
+- Added: each creature (Minos Hunter and the rest) is listed under Mythological Mobs in the sidebar and opens on its own
+- Fixed: the curved corners of the bars now match the bar opacity (the scene is cut by the same curve)
+- Changed: the RNG scene is much lighter on frames (fewer rays, rings, stars and confetti, drawn in bands)
+- Added: a stronger start for RNG (lightning bolts into the circle, ground rings, energy gathering, a violet charge)
+- Changed: "Call" is now "Lightning", with a lightning icon
+- Changed: Mythos Fragment and Myth the Fish use their real head art
+- Changed: the construction page is a night site with a skyline, a builder and a crane raising a brick house, then a loose load and a collapse
+- Removed: unused code (WipMock, old bulldozer/crane, unused Tex textures, dead stats and cosmetic helpers)
+
 ## 0.4.7
 - Changed: Stats page has room again (the Mythological list keeps its normal size)
 - Changed: the Treasure hub tile just says how many drops. The Spade, Pet and Erudite settings moved to the main Mythological Ritual page, and every drop chance follows them

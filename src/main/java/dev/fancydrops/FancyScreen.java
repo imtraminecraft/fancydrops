@@ -54,7 +54,7 @@ public class FancyScreen extends Screen {
     private static final String[] PEST_SLOT_NAMES = {"Suck", "Pop", "Shoot", "Linger", "End"};
     private static final String[] PEST_SLOT_SUBS = {"The vacuum sucks up the pest", "The pest pops", "The drop shoots out", "The glow after it", "The scene fades out"};
     private static final String[] SLOT_NAMES = {"Chop", "Split", "Reveal", "Linger", "End"};
-    private static final String[] MYTH_SLOT_NAMES = {"Call", "Shatter", "Reveal", "Linger", "End"};
+    private static final String[] MYTH_SLOT_NAMES = {"Lightning", "Shatter", "Reveal", "Linger", "End"};
     private static final String[] TREAS_SLOT_NAMES = {"Dig", "Open", "Reveal", "Linger", "End"};
     private static final String[] TREAS_SLOT_SUBS = {"Every shovel dig", "The chest bursts open", "The drop springs out", "The glow after it", "The scene fades out"};
     private static final String[] MYTH_SLOT_SUBS = {"Every beat that calls the creature", "The creature shatters", "The drop appears", "The glow after it", "The scene fades out"};
@@ -256,7 +256,7 @@ public class FancyScreen extends Screen {
         }
     }
 
-    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13, SHOWBAR = 14, MOCK = 15, UPDATE = 16;
+    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13, SHOWBAR = 14, UPDATE = 16;
     private class Row {
         String fkey;                                                      // set on folding rows: lets the Show > All tile open or close them all
 
@@ -1298,7 +1298,6 @@ public class FancyScreen extends Screen {
         g.disableScissor();
         if (intro < 1f) { int al = Math.round((1f - intro) * 150); pill(g, tr.x, tr.y, tr.w, tr.h, Gfx.argb(al, 0x0C0E14)); pill(g, x, y, w, h, Gfx.argb(al, 0x0C0E14)); }
     }
-    private boolean inAuraPanel(double mx, double my) { return auraBox[0] >= 0 && mx >= auraBox[0] && mx < auraBox[2] && my >= auraBox[1] && my < auraBox[3]; }
 
     // ---- Chat > the typing preview
     private static final java.util.Map<String, Long> PREV_AT = new java.util.HashMap<>();
@@ -1537,13 +1536,14 @@ public class FancyScreen extends Screen {
         if (updCheck != null && mx >= updCheck[0] && mx < updCheck[0] + updCheck[2] && my >= updCheck[1] && my < updCheck[1] + updCheck[3]) { if (!UpdateCheck.busy()) UpdateCheck.check(true); return true; }
         return false;
     }
-    private boolean mockOn() { for (Row r : rows) if (r.kind == MOCK) return true; return false; }
     /** The building site: a fixed, tidy scene on the ground line. Nothing is interactive. */
     private void site(GuiGraphicsExtractor g, Row r, float sec, int mx, int my, int pillX, int pillY, int pillW) {
         int gy = r.y + r.h - 12, pl = pillX - r.x, pr = pl + pillW;
         Gfx.push(g); Gfx.translate(g, r.x + 8, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
         Gfx.push(g); Gfx.translate(g, r.x + r.w - 30, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
+        skyline(g, r, sec, gy, pl, pr);
         g.fill(r.x + 6, gy, r.x + r.w - 6, gy + 1, 0x33FFFFFF);                                    // the ground line everything stands on
+        g.fill(r.x + 6, gy + 1, r.x + r.w - 6, gy + 3, 0xFF211C10);
         int laneL = 12, laneR = pl - 18;
         if (laneR - laneL >= 84) build(g, r, sec, gy, laneL, laneR);                               // a little wall goes up brick by brick... then it all comes down
         int rx = r.w - 44;                                                                          // right: the crane, then a pallet with a crate, then a cone
@@ -1553,93 +1553,127 @@ public class FancyScreen extends Screen {
         if (rx - 12 > pr + 12) { Gfx.push(g); Gfx.translate(g, r.x + rx - 13, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); }
     }
 
-    /** The construction loop: a crane lays a wall one brick at a time (slow), swings, bumps it, and the whole wall collapses; then it starts over. */
+    /** The construction loop: a worker and a crane raise a little brick house, slowly. The last load swings loose, the house cracks and falls, the worker shrugs, and it starts again. */
     private static void build(GuiGraphicsExtractor g, Row r, float sec, int gy, int laneL, int laneR) {
-        final float CYC = 20f, PER = 0.5f; final int COLS = 4, ROWS = 6, N = COLS * ROWS;
-        float ph = sec % CYC, buildEnd = N * PER;                                                 // 12 s of building
-        int bw = 11, bh = 5, wx = r.x + laneL + 38 + Math.max(0, (laneR - laneL - 38 - COLS * bw) / 2), mastX = r.x + laneL + 4, top = gy - 62;
-        // the crane: mast, jib out over the wall
-        g.fill(mastX, top, mastX + 3, gy, 0xFFE0A020); g.fill(mastX - 3, gy - 3, mastX + 6, gy, 0xFF6B5410);
-        for (int yy = top + 3; yy < gy - 4; yy += 5) g.fill(mastX, yy, mastX + 3, yy + 1, 0xFF8A6410);
-        int hookX0 = wx + COLS * bw / 2;
-        g.fill(mastX - 4, top - 1, hookX0 + 8, top + 1, 0xFFE0A020); g.fill(mastX - 1, top - 4, mastX + 4, top - 1, 0xFF5A5A66);
-        boolean acc = ph >= buildEnd + 0.8f;                                                       // after the last brick: the accident
-        float swing = ph < buildEnd ? 0f : Math.min(1f, (ph - buildEnd) / 0.8f);
-        // bricks
+        final float CYC = 23f, PER = 0.45f; final int COLS = 4, WALL = 24, N = WALL + 3;
+        float ph = sec % CYC, buildEnd = N * PER, hit = buildEnd + 2.0f, fallT = buildEnd + 2.6f;
+        final int bw = 11, bh = 5, roofY = gy - bh * 6;
+        int wx = r.x + laneL + 36 + Math.max(0, (laneR - laneL - 36 - COLS * bw) / 2), mastX = r.x + laneL + 4, top = gy - 64, hookX0 = wx + COLS * bw / 2;
+        // the crane: lattice mast, jib, counterweight and a blinking beacon
+        g.fill(mastX, top, mastX + 4, gy, 0xFFE0A020); g.fill(mastX - 3, gy - 3, mastX + 7, gy, 0xFF6B5410);
+        for (int yy = top + 3; yy < gy - 4; yy += 5) { g.fill(mastX, yy, mastX + 4, yy + 1, 0xFF8A6410); g.fill(mastX + 1, yy + 1, mastX + 3, yy + 3, 0xFFB07818); }
+        g.fill(mastX - 8, top - 1, hookX0 + 10, top + 2, 0xFFE0A020); g.fill(mastX - 8, top + 2, hookX0 + 10, top + 3, 0xFF8A6410); g.fill(mastX - 8, top + 3, mastX - 2, top + 8, 0xFF5A5A66);
+        g.fill(mastX - 1, top - 5, mastX + 5, top - 1, 0xFFD6A020); g.fill(mastX + 1, top - 8, mastX + 3, top - 5, 0xFF5A5A66);
+        boolean blink = (int) (sec * 2.2f) % 2 == 0; g.fill(mastX + 1, top - 10, mastX + 3, top - 8, blink ? 0xFFFF4A3A : 0xFF5A1812);
+        if (blink) g.fill(mastX - 1, top - 12, mastX + 5, top - 6, 0x22FF4A3A);
+        // the house, brick by brick
+        boolean tremble = ph >= buildEnd + 0.9f && ph < fallT;
         for (int i = 0; i < N; i++) {
-            int row = i / COLS, col = i % COLS; float placed = i * PER, local = ph - placed;
-            int bx = wx + col * bw + (row % 2 == 1 ? 3 : 0) - (row % 2 == 1 && col == COLS - 1 ? 3 : 0), by = gy - bh * (row + 1);
-            float h = ((i * 2654435761L) & 0xFFFF) / 65536f;
-            if (ph >= buildEnd + 2.6f) {                                                            // the collapse: every brick falls its own way
-                float tc = ph - (buildEnd + 2.6f) - h * 0.25f; if (tc < 0) tc = 0;
-                float fall = 0.5f * 150f * tc * tc, vx = (h - 0.45f) * 46f;
-                int rest = gy - bh - (i % 3 == 0 ? bh : 0) * (h > 0.6f ? 1 : 0);
-                int yy = (int) Math.min(rest, by + fall), xx = Math.round(bx + vx * Math.min(tc, 0.7f));
-                xx = Math.max(r.x + 8, Math.min(r.x + laneR + 14, xx));
-                if (ph < buildEnd + 6.2f) brick(g, xx, yy, bw, bh, 0);
-                else if (ph < buildEnd + 6.8f) brick(g, xx, yy, bw, bh, Math.round(255 * (ph - (buildEnd + 6.2f)) / 0.6f));
+            float placed = i * PER, local = ph - placed; if (local < 0 && ph < fallT) continue;
+            boolean roof = i >= WALL; int row = roof ? 6 + (i - WALL) : i / COLS, col = i % COLS;
+            int w = roof ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw, h = roof ? bh : bh;
+            int bx = roof ? wx + (COLS * bw - w) / 2 : wx + col * bw + (row % 2 == 1 ? 3 : 0) - (row % 2 == 1 && col == COLS - 1 ? 3 : 0), by = gy - bh * (row + 1);
+            float hh = ((i * 2654435761L) & 0xFFFF) / 65536f;
+            if (ph >= fallT) {                                                                         // the collapse: every piece falls its own way and bounces
+                float tc = Math.max(0f, ph - fallT - hh * 0.25f), fall = 0.5f * 150f * tc * tc, vx = (hh - 0.45f) * 46f;
+                int rest = gy - bh - ((i % 3 == 0 && hh > 0.5f) ? bh : 0); float tHit = (float) Math.sqrt(2.0 * Math.max(1, rest - by) / 150.0);
+                float bnc = tc > tHit ? 5f * hh * Math.max(0f, (float) Math.sin((tc - tHit) * 11f)) * (float) Math.exp(-(tc - tHit) * 5f) : 0f;
+                int yy = Math.round(Math.min(rest, by + fall) - bnc), xx = Math.max(r.x + laneL + 10, Math.min(r.x + laneR + 10, Math.round(bx + vx * Math.min(tc, 0.7f))));
+                if (ph < buildEnd + 6.2f) brick(g, xx, yy, w, h, 0, roof);
+                else if (ph < buildEnd + 6.9f) brick(g, xx, yy, w, h, Math.round(255 * (ph - (buildEnd + 6.2f)) / 0.7f), roof);
                 continue;
             }
-            if (local < 0) continue;
-            int off = 0;
-            if (acc) off = (int) Math.round(Math.sin(ph * 50f) * Math.min(2.0, (ph - buildEnd - 0.8f) * 6.0));
-            if (local < PER * 0.65f) {                                                              // still being lowered by the hook
-                float u = local / (PER * 0.65f); u = u * u; int yy = Math.round(top + 6 + (by - top - 6) * u);
-                brick(g, Math.round((hookX0 - bw / 2) + (bx - (hookX0 - bw / 2)) * u), yy, bw, bh, 0);
-                if (u < 1f) { g.fill(hookX0, top + 1, hookX0 + 1, yy, 0xFFB0B0B8); }
-            } else brick(g, bx + off, by, bw, bh, 0);
+            int off = tremble ? (int) Math.round(Math.sin(ph * 60f) * Math.min(2.0, (ph - buildEnd - 0.9f) * 3.0)) : 0;
+            if (local < PER * 0.6f) {                                                                  // still hanging from the hook, being lowered
+                float u = local / (PER * 0.6f); u = u * u; int yy = Math.round(top + 8 + (by - top - 8) * u);
+                int sx = Math.round((hookX0 - w / 2) + (bx - (hookX0 - w / 2)) * u);
+                g.fill(hookX0, top + 3, hookX0 + 1, yy, 0xFFB0B0B8); brick(g, sx, yy, w, h, 0, roof);
+            } else brick(g, bx + off, by, w, h, 0, roof);
         }
-        // the hook while the wall is going up and during the accident
-        if (ph < buildEnd) {
-            g.fill(hookX0, top + 1, hookX0 + 1, top + 6, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 6, hookX0 + 4, top + 8, 0xFF8A8A94);                 // the hook picks up the next brick
-        } else if (ph < buildEnd + 2.6f) {
-            float t = ph - buildEnd, sw = (float) Math.sin(t * 5.5f) * Math.min(1f, t / 1.2f) * (t < 1.8f ? 1f : Math.max(0f, 1f - (t - 1.8f) / 0.8f));
-            int hx = hookX0 + Math.round(sw * 34), hy = top + 24 + Math.round(Math.abs(sw) * 4);                 // the load swings out of control
-            g.fill(hookX0, top + 1, hx, top + 2, 0xFFB0B0B8); g.fill(hx, top + 1, hx + 1, hy, 0xFFB0B0B8); brick(g, hx - bw / 2, hy, bw, bh, 0);
-            if (t > 1.6f && t < 2.6f) {                                                             // the crack
-                int cx2 = wx + COLS * bw / 2, cy2 = gy - bh * ROWS / 2; int cr = Gfx.argb(255, 0x1A0E08);
-                g.fill(cx2, cy2 - 8, cx2 + 1, cy2 - 3, cr); g.fill(cx2 + 1, cy2 - 3, cx2 + 2, cy2 + 1, cr); g.fill(cx2, cy2 + 1, cx2 + 1, cy2 + 6, cr); g.fill(cx2 - 1, cy2 + 6, cx2, cy2 + 9, cr);
-                int ey = gy - bh * ROWS - 14 - Math.round((float) Math.abs(Math.sin(t * 14f)) * 3);
-                g.fill(wx + COLS * bw / 2 - 1, ey, wx + COLS * bw / 2 + 1, ey + 6, 0xFFE5484D); g.fill(wx + COLS * bw / 2 - 1, ey + 8, wx + COLS * bw / 2 + 1, ey + 10, 0xFFE5484D);
+        if (ph < fallT) {                                                                              // door and window appear as the walls rise
+            int done = Math.min(WALL, (int) (ph / PER)), d0 = tremble ? (int) Math.round(Math.sin(ph * 60f) * 1.5) : 0;
+            if (done >= 2 * COLS) { g.fill(wx + 4 + d0, gy - 11, wx + 12 + d0, gy, 0xFF4A2C14); g.fill(wx + 5 + d0, gy - 10, wx + 11 + d0, gy - 1, 0xFF6A4020); g.fill(wx + 10 + d0, gy - 6, wx + 11 + d0, gy - 5, 0xFFFFD84A); }
+            if (done >= 4 * COLS) { g.fill(wx + 27 + d0, gy - 22, wx + 37 + d0, gy - 14, 0xFF3A2410); g.fill(wx + 28 + d0, gy - 21, wx + 36 + d0, gy - 15, ph > buildEnd ? 0xFFFFE08A : 0xFF7ACBF0); g.fill(wx + 31 + d0, gy - 21, wx + 32 + d0, gy - 15, 0xFF3A2410); }
+        }
+        // the hook and the load
+        if (ph < buildEnd) { g.fill(hookX0, top + 3, hookX0 + 1, top + 8, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 8, hookX0 + 4, top + 10, 0xFF8A8A94); }
+        else if (ph < fallT) {
+            float t = ph - buildEnd, sw = (float) Math.sin(t * 5.5f) * Math.min(1f, t / 1.1f) * (t < 1.6f ? 1f : Math.max(0f, 1f - (t - 1.6f) / 0.4f));
+            int hx = hookX0 + Math.round(sw * 36), hy = top + 26 + Math.round(Math.abs(sw) * 5);
+            g.fill(hookX0, top + 3, hx + 1, top + 4, 0xFFB0B0B8); g.fill(hx, top + 3, hx + 1, hy, 0xFFB0B0B8); brick(g, hx - 6, hy, 12, bh + 1, 0, true);
+            if (t >= 1.5f) {                                                                           // the bump: a crack, sparks, a flash
+                int cx2 = wx + COLS * bw / 2, cy2 = gy - bh * 3, cr = 0xFF1A0E08; float ft = t - 1.5f;
+                g.fill(cx2, cy2 - 12, cx2 + 1, cy2 - 6, cr); g.fill(cx2 + 1, cy2 - 6, cx2 + 2, cy2 - 1, cr); g.fill(cx2, cy2 - 1, cx2 + 1, cy2 + 5, cr); g.fill(cx2 - 1, cy2 + 5, cx2, cy2 + 10, cr); g.fill(cx2 + 1, cy2 + 10, cx2 + 2, cy2 + 14, cr);
+                if (ft < 0.25f) g.fill(wx - 6, roofY - 12, wx + COLS * bw + 6, gy, Gfx.argb(Math.round(70 * (1f - ft / 0.25f)), 0xFFFFFF));
+                for (int sp = 0; sp < 8 && ft < 0.6f; sp++) { double an = sp * 0.8 + 0.3; float rr = 3 + ft * 40 * (0.6f + 0.4f * ((sp * 37) % 5) / 4f); g.fill(cx2 + (int) (Math.cos(an) * rr), cy2 + (int) (Math.sin(an) * rr * 0.8), cx2 + (int) (Math.cos(an) * rr) + 2, cy2 + (int) (Math.sin(an) * rr * 0.8) + 2, Gfx.argb(Math.round(255 * (1f - ft / 0.6f)), sp % 2 == 0 ? 0xFFE066 : 0xFFFFFF)); }
             }
-        } else {
-            g.fill(hookX0, top + 1, hookX0 + 1, top + 26, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 26, hookX0 + 4, top + 29, 0xFF8A8A94);       // an empty hook waits
-        }
-        // dust while it falls
-        float dt2 = ph - (buildEnd + 2.6f);
-        if (dt2 > 0.25f && dt2 < 2.4f) for (int i = 0; i < 9; i++) {
-            float u = (dt2 - 0.25f) / 2.15f, hx2 = ((i * 7919) % 100) / 100f; int dx = wx + Math.round(hx2 * (COLS * bw + 24)) - 12 + Math.round((hx2 - 0.5f) * 24 * u), dy = gy - 2 - Math.round(u * (6 + (i % 4) * 4)), sz = 3 + Math.round(u * 4);
-            g.fill(dx, dy - sz, dx + sz, dy, Gfx.argb(Math.round(110 * (1f - u)), 0xC8C0B0));
+        } else { g.fill(hookX0, top + 3, hookX0 + 1, top + 30, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 30, hookX0 + 4, top + 33, 0xFF8A8A94); }
+        // the worker: hammers while it builds, panics at the bump, runs off when it falls, comes back and shrugs
+        float t2 = ph - buildEnd; int wk; int pose;
+        int homeX = r.x + laneL + 22, farX = wx - 12;
+        if (ph < buildEnd) { wk = farX; pose = 1; }
+        else if (t2 < 2.8f) { wk = farX; pose = t2 > 1.4f ? 2 : 0; }
+        else if (t2 < 4.6f) { wk = Math.round(farX + (homeX - farX) * Math.min(1f, (t2 - 2.8f) / 1.6f)); pose = 4; }
+        else if (t2 < 7.4f) { wk = homeX; pose = 0; }
+        else if (t2 < 9.2f) { wk = Math.round(homeX + (farX - homeX) * (t2 - 7.4f) / 1.8f); pose = 4; }
+        else { wk = farX; pose = t2 < 10.8f ? 3 : 0; }
+        worker(g, wk, gy, pose, sec);
+        if (pose == 2 && t2 < 2.6f) glyph(g, wk + 1, gy - 26, '!', 0xFFE5484D);
+        if (pose == 3) glyph(g, wk + 1, gy - 26, '?', 0xFFFFC857);
+        // dust and smoke while it falls
+        float dt2 = ph - fallT;
+        if (dt2 > 0.2f && dt2 < 3.0f) for (int i = 0; i < 12; i++) {
+            float u = (dt2 - 0.2f) / 2.8f, hx2 = ((i * 7919) % 100) / 100f; int dx = wx + Math.round(hx2 * (COLS * bw + 30)) - 15 + Math.round((hx2 - 0.5f) * 30 * u), dy = gy - 2 - Math.round(u * (8 + (i % 4) * 6)), sz = 3 + Math.round(u * 5);
+            g.fill(dx, dy - sz, dx + sz, dy, Gfx.argb(Math.round(120 * (1f - u)), i % 3 == 0 ? 0xE0D6C0 : 0xA89E8C));
         }
     }
-    private static void brick(GuiGraphicsExtractor g, int x, int y, int w, int h, int fade) {
-        int a = 255 - Math.max(0, Math.min(255, fade)) ; if (a <= 0) return;
-        g.fill(x, y, x + w, y + h, Gfx.argb(a, 0xB5532E)); g.fill(x, y, x + w, y + 1, Gfx.argb(a, 0xD9703E)); g.fill(x + w - 1, y, x + w, y + h, Gfx.argb(a, 0x7A3418)); g.fill(x, y + h - 1, x + w, y + h, Gfx.argb(a, 0x7A3418));
+    private static void brick(GuiGraphicsExtractor g, int x, int y, int w, int h, int fade, boolean roof) {
+        int a = 255 - Math.max(0, Math.min(255, fade)); if (a <= 0) return;
+        int base = roof ? 0x9A3030 : 0xB5532E, lite = roof ? 0xC84848 : 0xD9703E, dark = roof ? 0x5A1818 : 0x7A3418;
+        g.fill(x, y, x + w, y + h, Gfx.argb(a, base)); g.fill(x, y, x + w, y + 1, Gfx.argb(a, lite)); g.fill(x + w - 1, y, x + w, y + h, Gfx.argb(a, dark)); g.fill(x, y + h - 1, x + w, y + h, Gfx.argb(a, dark));
+        if (!roof && w > 8) g.fill(x + w / 2, y + 1, x + w / 2 + 1, y + h - 1, Gfx.argb(a / 2, dark));
+    }
+    /** A tiny builder in a hard hat: pose 0 stands, 1 hammers, 2 panics, 3 shrugs, 4 runs. */
+    private static void worker(GuiGraphicsExtractor g, int x, int gy, int pose, float sec) {
+        int run = pose == 4 ? ((int) (sec * 10f)) % 2 : 0, bob = pose == 2 ? ((int) (sec * 12f)) % 2 : 0, y = gy - 20 - bob;
+        g.fill(x + 1, y, x + 7, y + 2, 0xFFFFD020); g.fill(x, y + 2, x + 8, y + 3, 0xFFE0B010); g.fill(x + 3, y - 1, x + 5, y, 0xFFFFE860);               // hard hat
+        g.fill(x + 2, y + 3, x + 6, y + 7, 0xFFE8B98A); g.fill(x + 3, y + 4, x + 4, y + 5, 0xFF2A1A10); g.fill(x + 5, y + 4, x + 6, y + 5, 0xFF2A1A10);     // face
+        g.fill(x + 1, y + 7, x + 7, y + 13, 0xFFF08A1C); g.fill(x + 1, y + 10, x + 7, y + 11, 0xFFF4F4C8); g.fill(x + 3, y + 7, x + 5, y + 13, 0xFFD87010);       // vest
+        g.fill(x + 1 + run, y + 13, x + 4, y + 20, 0xFF2E4A8A); g.fill(x + 4, y + 13, x + 7 - run, y + 20, 0xFF263E78); g.fill(x + run, y + 19, x + 4, y + 20, 0xFF3A2A1A); g.fill(x + 4, y + 19, x + 8 - run, y + 20, 0xFF3A2A1A);
+        switch (pose) {
+            case 1 -> { int sw = ((int) (sec * 4f)) % 2; g.fill(x + 7, y + 8 - sw * 4, x + 9, y + 11 - sw * 2, 0xFFE8B98A); g.fill(x + 8, y + 3 - sw * 4, x + 12, y + 6 - sw * 4, 0xFF8A8A94); g.fill(x + 9, y + 5 - sw * 4, x + 10, y + 10 - sw * 2, 0xFF8A5A2C); }   // hammer
+            case 2 -> { g.fill(x - 1, y + 3, x + 1, y + 9, 0xFFE8B98A); g.fill(x + 7, y + 3, x + 9, y + 9, 0xFFE8B98A); }
+            case 3 -> { g.fill(x - 1, y + 7, x + 1, y + 10, 0xFFE8B98A); g.fill(x + 7, y + 7, x + 9, y + 10, 0xFFE8B98A); }
+            default -> { g.fill(x, y + 8, x + 1, y + 13, 0xFFE8B98A); g.fill(x + 7, y + 8, x + 8, y + 13, 0xFFE8B98A); }
+        }
+    }
+    /** A speech bubble with "!" or "?" drawn in pixels. */
+    private static void glyph(GuiGraphicsExtractor g, int x, int y, char c, int col) {
+        g.fill(x - 2, y - 2, x + 7, y + 11, 0xFFF4F4F4); g.fill(x + 1, y + 11, x + 3, y + 13, 0xFFF4F4F4);
+        if (c == '!') { g.fill(x + 2, y, x + 4, y + 6, col); g.fill(x + 2, y + 8, x + 4, y + 10, col); }
+        else { g.fill(x, y, x + 5, y + 2, col); g.fill(x + 4, y + 2, x + 6, y + 5, col); g.fill(x + 2, y + 4, x + 5, y + 6, col); g.fill(x + 2, y + 6, x + 4, y + 7, col); g.fill(x + 2, y + 8, x + 4, y + 10, col); }
+    }
+    /** The skyline behind the site: dark blocks with a few lit windows and stars above, left and right of the "Coming Soon" tag. */
+    private static void skyline(GuiGraphicsExtractor g, Row r, float sec, int gy, int pl, int pr) {
+        for (int i = 0; i < 22; i++) {                                                                  // stars
+            float h1 = ((i * 2654435761L) & 0xFFFF) / 65536f, h2 = ((i * 40503L + 7) & 0xFFFF) / 65536f; int sx = r.x + 8 + Math.round(h1 * (r.w - 16)), sy = r.y + 12 + Math.round(h2 * 40);
+            if (sx > pl - 6 && sx < pr + 6 && sy > r.y + 50) continue; float tw = 0.4f + 0.6f * (float) Math.abs(Math.sin(sec * (0.8f + h1) + i));
+            g.fill(sx, sy, sx + 1, sy + 1, Gfx.argb(Math.round(150 * tw), 0xFFF2C0));
+        }
+        int x = r.x + 6, n = 0;
+        while (x < r.x + r.w - 12) {
+            int w = 12 + (n * 7) % 11, h = 16 + (n * 13) % 22; n++;
+            if (x + w > pl - 4 && x < pr + 4) { x += w + 2; continue; }
+            g.fill(x, gy - h, x + w, gy, 0xFF1F1B12); g.fill(x, gy - h, x + w, gy - h + 1, 0xFF2C2618);
+            for (int wy = gy - h + 4; wy < gy - 4; wy += 6) for (int wx2 = x + 2; wx2 < x + w - 3; wx2 += 4) {
+                int k = (wx2 * 31 + wy * 17 + n) % 7; boolean on = k < 2 && (int) (sec * 0.3f + k + wy) % 3 != 0;
+                if (on) g.fill(wx2, wy, wx2 + 2, wy + 2, 0xFF6A5A28);
+            }
+            x += w + 2;
+        }
     }
 
-    private static void crane(GuiGraphicsExtractor g, int x, int y, int w, int h, float sec) {
-        int mx = x + w - 5, top = y + 2;
-        g.fill(mx, top, mx + 3, y + h, 0xFFE0A020); g.fill(mx - 3, y + h - 3, mx + 6, y + h, 0xFF6B5410);
-        for (int yy = top + 3; yy < y + h - 4; yy += 5) g.fill(mx, yy, mx + 3, yy + 1, 0xFF8A6410);
-        g.fill(x, top - 1, mx + 6, top + 1, 0xFFE0A020); g.fill(mx + 3, top - 3, mx + 6, top, 0xFF5A5A66);
-        float sw = (float) Math.sin(sec * 1.2f); int hx = x + 6 + Math.round(sw * 2), hl = 16 + Math.round((float) Math.sin(sec * 0.9f) * 4);
-        g.fill(hx, top + 1, hx + 1, top + 1 + hl, 0xFFB0B0B8); g.fill(hx - 4, top + 1 + hl, hx + 6, top + 4 + hl, 0xFFB5532E); g.fill(hx - 4, top + 1 + hl, hx + 6, top + 2 + hl, 0xFFD9703E);
-    }
 
-    private static void bulldozer(GuiGraphicsExtractor g, int x, int y, int dir, float sec) {
-        int W = 24; int shake = ((int) (sec * 14f)) % 2;
-        java.util.function.IntBinaryOperator fx = (ox, w) -> dir > 0 ? x + ox : x + W - ox - w;
-        int by = y + shake;
-        g.fill(fx.applyAsInt(1, 20), y + 11, fx.applyAsInt(1, 20) + 20, y + 15, 0xFF2A2A30);                   // tracks
-        for (int k = 0; k < 5; k++) { int tx = fx.applyAsInt(2 + k * 4 + ((int) (sec * 8f)) % 4 * dir, 2); g.fill(Math.max(Math.min(tx, x + 22), x), y + 12, Math.max(Math.min(tx, x + 22), x) + 1, y + 14, 0xFF5A5A66); }
-        g.fill(fx.applyAsInt(3, 16), by + 5, fx.applyAsInt(3, 16) + 16, by + 11, 0xFFF2B400);                  // body
-        g.fill(fx.applyAsInt(3, 16), by + 5, fx.applyAsInt(3, 16) + 16, by + 6, 0xFFFFD84A);
-        g.fill(fx.applyAsInt(9, 8), by, fx.applyAsInt(9, 8) + 8, by + 6, 0xFFF2B400);                          // cab
-        g.fill(fx.applyAsInt(11, 4), by + 1, fx.applyAsInt(11, 4) + 4, by + 4, 0xFF7ACBF0);
-        g.fill(fx.applyAsInt(3, 2), by - 3, fx.applyAsInt(3, 2) + 2, by + 5, 0xFF3A3A3A);                       // exhaust
-        g.fill(fx.applyAsInt(21, 3), by + 3 + shake, fx.applyAsInt(21, 3) + 3, by + 13, 0xFF8A8A94);            // blade
-        g.fill(fx.applyAsInt(19, 3), by + 8, fx.applyAsInt(19, 3) + 3, by + 9, 0xFF5A5A66);
-    }
 
     private void tabIcon(GuiGraphicsExtractor g, Tab t, int x, int y, long now, boolean lively) {
         switch (t) {
@@ -1729,7 +1763,7 @@ public class FancyScreen extends Screen {
                     FancyConfig.DropCfg dc = ev == 3 ? MythData.cfg(c, s, d) : c.drop(s.id, d.name);
                     if (!(sc.enabled && sc.announce && dc.announce)) continue;
                     Row r = row(2, d.icon, d.name, d.chance.isEmpty() ? "chance unknown" : d.chance, s.color());
-                    r.iconId = s == TreasureData.SOURCE ? null : d.id; r.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds); r.cell = CELL;
+                    r.iconId = s == TreasureData.SOURCE && !TreasureData.headArt(d.id) ? null : d.id; r.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds); r.cell = CELL;
                     r.ctls.add(new Btn("Stop", 0xFF8A3030, () -> dc.announce = false));
                     g.on().add(r);
                 }
@@ -1769,7 +1803,7 @@ public class FancyScreen extends Screen {
     private Row dropRow(SlayerData.Slayer s, SlayerData.Drop d, FancyConfig c) {
         FancyConfig.DropCfg dc = MythData.ALL.contains(s) ? MythData.cfg(c, s, d) : c.drop(s.id, d.name);
         Row dr = row(2, d.icon, d.name, d.chance.isEmpty() ? "chance unknown" : d.chance, s.color());
-        dr.iconId = s == TreasureData.SOURCE ? null : d.id; dr.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds);       // treasure drops use their own pictures (the plain item or one of ours), never the downloaded art
+        dr.iconId = s == TreasureData.SOURCE && !TreasureData.headArt(d.id) ? null : d.id; dr.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds);       // treasure drops use their own pictures (the plain item or one of ours), never the downloaded art
         dr.cell = CELL;
         dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (FarmData.ALL.contains(s)) DropListener.playFarmDrop(s, d); else if (MythData.ALL.contains(s)) DropListener.playMythDrop(s, d); else if (s == TreasureData.SOURCE) DropListener.playTreasureDrop(d); else DropListener.playDrop(s, d, "+250%"); })));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
@@ -1895,13 +1929,17 @@ public class FancyScreen extends Screen {
             srcList.clear();
             Row head = row(0, "fd:myth_mobs", "Mythological Mobs", MythData.spawnable(c.mythPet).size() + " of " + MythData.ALL.size() + " creatures  \u00B7  " + total + " drops", mcol);
             head.kind = HERO; head.h = 84; head.noSearch = true; rows.add(head);
-            Row back = row(0, "fd:back", "Mythological", "Back to the Mythological page", mcol);
-            back.noSearch = true; back.click = () -> { mythPage = -1; dropSrc = null; scroll = 0; tabChanged = System.currentTimeMillis(); };
+            boolean one = dropSrc != null && dropSrc.startsWith("m:");
+            Row back = row(0, "fd:back", one ? "Mythological Mobs" : "Mythological", one ? "Back to all the creatures" : "Back to the Mythological page", mcol);
+            back.noSearch = true; back.click = () -> { if (one) dropSrc = null; else { mythPage = -1; dropSrc = null; } scroll = 0; tabChanged = System.currentTimeMillis(); };
             rows.add(back);
         }
+        String only = !searching && dropSrc != null && dropSrc.startsWith("m:") ? dropSrc.substring(2) : null;
         for (SlayerData.Slayer s : MythData.spawnable(c.mythPet)) {
+            if (only != null && !s.id.equals(only)) continue;
             Row src = fold("myth_" + s.id, "fd:myth_" + s.id, s.boss, s.drops.size() + (s.drops.size() == 1 ? " drop" : " drops"), s.color());
             src.indent = 1; rows.add(src);
+            if (only != null) src.open = true;
             if (!src.open) continue;
             FancyConfig.SlayerCfg sc = c.slayer(s.id);
             Row cols = section(""); cols.dropCols = true; cols.indent = 2; cols.h = 14; rows.add(cols);
@@ -2125,10 +2163,6 @@ public class FancyScreen extends Screen {
                             Row ir = dropRow(ExperimentData.slayer(), xd, c); ir.indent = 2; ir.accent = gcol[gi]; ir.sub = e[3] + "  ·  " + e[4] + "  ·  " + e[1] + " XP"; ir.subColor = Ui.odds(e[3]); rows.add(ir);
                         }
                     }
-                } else if (cat == 5 || cat == 6) {
-                    boolean mine = cat == 5;
-                    Row head = row(0, mine ? "fd:mining" : "fd:fishing", mine ? "Mining" : "Fishing", "", Ui.ACCENT);
-                    head.kind = MOCK; head.h = 186; head.noSearch = true; rows.add(head);
                 } else {
                     int total = 0; for (SlayerData.Slayer s : MythData.spawnable(c.mythPet)) total += s.drops.size();
                     int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))], mcol = pc == 0xFFFFFFFF ? 0xFF55D8FF : pc;
@@ -2156,6 +2190,7 @@ public class FancyScreen extends Screen {
                     int pcm = PET_COLS[Math.max(0, Math.min(5, c.mythPet))], mc2 = pcm == 0xFFFFFFFF ? 0xFF55D8FF : pcm;
                     srcList.clear();
                     srcList.add(new String[]{"@mobs", "Mythological Mobs", "fd:myth_mobs", String.valueOf(mc2)});
+                    if (mythPage == 0) for (SlayerData.Slayer ms : MythData.spawnable(c.mythPet)) srcList.add(new String[]{"m:" + ms.id, ms.boss, "fd:myth_" + ms.id, String.valueOf(ms.color()), "1"});     // each creature, under Mythological Mobs
                     srcList.add(new String[]{"@treasure", "Treasure", "fd:myth_treasure", String.valueOf(TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))])});
                 }
                 buildAll = false;
@@ -2347,7 +2382,6 @@ public class FancyScreen extends Screen {
     private static double valueOf(List<ProfitTracker.Item> l) { double v = 0; for (ProfitTracker.Item it : l) v += ProfitTracker.value(it); return v; }
     private static String coinsText(double v) { return PriceService.fmt(v) + " coins"; }
 
-    private void goStats(int sub) { subSel[Tab.STATS.ordinal()] = sub; scroll = 0; tabChanged = System.currentTimeMillis(); }
 
     private static long resetArm;                                   // when "Reset All" was first clicked (a second click within 3 s confirms)
 
@@ -2630,7 +2664,6 @@ public class FancyScreen extends Screen {
         return top + Math.max(0, (eHt() - 38 - 30 - grp) / 2);
     }
     private int[] eSliderBox(int i) { if (editor == 3 && ePage == 2) return new int[]{eRx(), eY() + 108 + i * 36, eRw(), 14}; return editor == 2 ? new int[]{eX() + 10, eY() + 38 + previewH(ePrevW()) + 34 + i * 29, ePrevW(), 14} : new int[]{eRx(), eY() + 70 + i * 34, eRw(), 14}; }
-    private int eRest() { return eY() + 200; }                                                  // where the effect groups end on the right
     private int[] eSegBox(int i) { int w = (eRw() - 4) / 2; return new int[]{eRx() + i * (w + 4), eY() + 76, w, 16}; }
     private int[] eTogBox(int i) { int w = (eRw() - 4) / 2; return new int[]{eRx() + (i % 2) * (w + 4), eY() + 112 + (i / 2) * 19, w, 16}; }
     // every Changes menu has the same right-hand side: page tabs on top, the controls of that page below
@@ -3250,55 +3283,6 @@ public class FancyScreen extends Screen {
         if (items.isEmpty()) rows.add(row(0, "fd:nothing", "Nothing To Show :(", "Drops you get will be listed here with what they're worth", Ui.SUB));
     }
 
-    private void statsSlayers(List<Row> rows, FancyConfig c, long now) {
-        String id = c.profitHudSlayer == null || c.profitHudSlayer.isEmpty() ? ProfitTracker.ALL : c.profitHudSlayer;
-        boolean every = id.equals(ProfitTracker.ALL);
-        List<String> ids = new ArrayList<>(); ids.add(ProfitTracker.ALL);
-        for (SlayerData.Slayer sl : SlayerData.ALL) ids.add(sl.id);
-        ProfitTracker.Stat ss = ProfitTracker.session(id), os = ProfitTracker.overall(id);
-        SlayerData.Slayer sel = slayerById(id);
-        int col = sel == null ? STAT_COL[0] : sel.color();
-        String cur = ProfitTracker.current();
-        List<ProfitTracker.Item> so = catItems(os, 0), ssn = catItems(ss, 0);
-        double ov = valueOf(so) - os.costs, sv = valueOf(ssn) - ss.costs;
-        Row hero = row(0, sel == null ? "fd:slayers" : bossIcon(sel), sel == null ? "All slayers" : sel.boss, coinsText(ov) + " all time  ·  " + os.kills + " kills  ·  " + amountOf(so) + " drops", col);
-        hero.kind = HERO; hero.h = 84; hero.noSearch = true; rows.add(hero);
-
-        Row pick = row(0, sel == null ? "fd:slayers" : bossIcon(sel), "Slayer", cur == null ? "Which slayer these numbers are for" : "Which slayer these numbers are for  ·  you're on " + slayerName(cur), col);
-        Dd pdd = new Dd(() -> ProfitTracker.label(id), "dd_profit", 124);
-        pick.ctls.add(pdd); rows.add(pick);
-        if (open.contains("dd_profit") && !searching) {
-            List<String> labels = new ArrayList<>();
-            for (String pid : ids) labels.add(ProfitTracker.label(pid));
-            rows.add(miniList(pick, pdd, labels, every ? 0 : ids.indexOf(id), i -> { c.profitHudSlayer = ids.get(i); open.remove("dd_profit"); }));
-        }
-        long mins = ProfitTracker.activeMs(id, now) / 60_000;
-        statsProfit(rows, ov, sv, ProfitTracker.perHour(id, now), "Slayer drops at today's prices" + (ss.costs > 0 ? ", minus " + PriceService.fmt(ss.costs) + " for quests" : "") + (mins > 0 ? "  ·  " + mins + " min of slaying" : ""), col);
-
-        rows.add(section("Kills"));
-        Row kl = row(0, "fd:slayers", "Kills", "Bosses killed this session  ·  " + os.kills + " in total", col);
-        kl.ctls.add(new Val(() -> ss.kills + " this session", 120)); rows.add(kl);
-        Row dr = row(0, "fd:dice", "Drops", "Tracked drops this session  ·  " + amountOf(so) + " in total", col);
-        dr.ctls.add(new Val(() -> amountOf(ssn) + " this session", 120)); rows.add(dr);
-        if (os.kills > 0 && !so.isEmpty()) {
-            Row ev = row(0, "fd:rng", "Coins per kill", "Average over every kill you've done", col);
-            double per = ov / os.kills;
-            ev.ctls.add(new Val(() -> PriceService.fmt(per), 120)); rows.add(ev);
-        }
-        if (every) {
-            rows.add(section("By slayer"));
-            for (SlayerData.Slayer sl : SlayerData.ALL) {
-                ProfitTracker.Stat st = ProfitTracker.overall(sl.id), sst = ProfitTracker.session(sl.id);
-                Row r = row(0, bossIcon(sl), sl.boss, st.kills + " kills  ·  " + sst.kills + " this session  ·  " + amountOf(catItems(st, 0)) + " drops", sl.color());
-                double v = ProfitTracker.coins(st);
-                r.ctls.add(new Val(() -> coinsText(v), 120));
-                r.click = () -> c.profitHudSlayer = sl.id;
-                rows.add(r);
-            }
-        }
-        rows.add(section("Drops"));
-        statsDropList(rows, os, ss, 0);
-    }
 
     private void statsCategory(List<Row> rows, int cat, long now) {
         ProfitTracker.Stat ss = ProfitTracker.session(ProfitTracker.ALL), os = ProfitTracker.overall(ProfitTracker.ALL);
@@ -3364,7 +3348,6 @@ public class FancyScreen extends Screen {
         return all;
     }
     private static FancyConfig.DropCfg cfgOf(SlayerData.Slayer s, SlayerData.Drop d, FancyConfig c) { return MythData.ALL.contains(s) ? MythData.cfg(c, s, d) : c.drop(s.id, d.name); }
-    private static boolean anyAnimate(SlayerData.Slayer s, FancyConfig c) { for (SlayerData.Drop d : s.drops) if (cfgOf(s, d, c).animate) return true; return false; }
     private static boolean anyAnnounce(SlayerData.Slayer s, FancyConfig c) { for (SlayerData.Drop d : s.drops) if (cfgOf(s, d, c).announce) return true; return false; }
     private static void setEvery(FancyConfig.SlayerCfg sc, SlayerData.Slayer s, FancyConfig c, Boolean animate, Boolean announce) {
         sc.enabled = true; sc.animate = true; sc.announce = true;      // per-drop switches decide; the slayer-level ones stay out of the way
@@ -3656,9 +3639,9 @@ public class FancyScreen extends Screen {
                 g.enableScissor(px + 8, srcBox(0)[1], px + sw - 6, srcBox(0)[1] + srcExtra());
                 for (int j = 0; j < srcList.size(); j++) {
                     String[] e = srcList.get(j); int[] b = srcBox(j);
-                    boolean act = e[0].startsWith("@") ? (tab != Tab.DROPS ? (e[0].equals("@mobs") ? soundMyth == 0 : soundMyth == 1) : e[0].equals("@mobs") ? mythPage == 0 : mythPage == 1) : e[0].equals(dropSrc), hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
+                    boolean act = e[0].startsWith("@") ? (tab != Tab.DROPS ? (e[0].equals("@mobs") ? soundMyth == 0 : soundMyth == 1) : e[0].equals("@mobs") ? mythPage == 0 && dropSrc == null : mythPage == 1) : e[0].equals(dropSrc), hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
                     float hv = anim("src|" + j, hov && !act ? 1f : 0f, 48f);
-                    int col = Integer.parseInt(e[3]);
+                    int col = Integer.parseInt(e[3]); if (e.length > 4) b[0] += 8;
                     if (act) { pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.ROW, Ui.ACCENT, 0.22f)); g.fill(b[0], b[1] + 2, b[0] + 2, b[3] - 2, Ui.ACCENT); }
                     else if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
                     int availW = b[2] - b[0] - 8, lw = Gfx.w(font, e[1]); float fit = lw > availW ? Math.max(0.55f, availW / (float) lw) : 1f;
@@ -3737,7 +3720,7 @@ public class FancyScreen extends Screen {
         float rowAge = !animOn ? 9f : (now - Math.max(tabChanged, born + 140L)) / 1000f;          // rows rise into place one after the other, whenever a page opens
         int[] rowOff = new int[rows.size()]; int rn = 0;
         for (Row r : rows) { int off = rowAge >= 0.9f ? 0 : Math.round((1f - ease((rowAge - Math.min(rn, 14) * 0.032f) / 0.26f)) * 14f); rowOff[rn++] = off; r.y += off; }
-        WipMock.reset(); updCheck = updGet = null;
+        updCheck = updGet = null;
         for (Row r : rows) {
             if (r.y + r.h < lt || r.y > lb) continue;
             if (r.kind == SECTION) { drawSection(g, r); continue; }
@@ -3783,7 +3766,6 @@ public class FancyScreen extends Screen {
             if (r.pickLabels != null) { popup = r; continue; }
             if (r.kind == SHOWBAR) { drawShowBar(g, r, mx, my); continue; }
             if (r.kind == UPDATE) { drawUpdate(g, r, mx, my); continue; }
-            if (r.kind == MOCK) { WipMock.draw(g, font, r.x, r.y, r.w, r.h, r.title.startsWith("Mining") ? 0 : 1, mx, my, r.accent); continue; }
             if (r.kind == NOTE) { int ny = r.y + 4; for (String ln : wrap(r.title, cw - 20)) { Gfx.text(g, font, ln, r.x + 10, ny, r.subColor); ny += 11; } continue; }
             boolean hov = !r.locked && mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h && my >= lt && my < lb;
             float hv = anim("row|" + tab + r.indent + r.title, hov && r.field == null && (r.click != null || !r.ctls.isEmpty()) ? 1f : 0f, 48f);
@@ -4015,7 +3997,6 @@ public class FancyScreen extends Screen {
         if (editor != 0) { editorClick(event.x(), event.y(), event.button()); return true; }
         if (event.button() == 0 && phClick(event.x(), event.y())) return true;
         if (event.button() == 0 && updClick(event.x(), event.y())) return true;
-        if (event.button() == 0 && event.y() >= lt && event.y() < lb && tab != null && mockOn() && WipMock.click((int) event.x(), (int) event.y())) return true;                       // pick up something on a building site
         if (event.button() == 0 && totalH > lb - lt && event.x() >= cx + cw && event.x() < cx + cw + 12 && event.y() >= lt && event.y() < lb) { dragScroll = true; scrollTo(event.y()); return true; }          // the bar on the right can be grabbed
         {   // an open drop-down list sits on top of everything, so it gets the click before the boxes underneath it
             double px0 = event.x(), py0 = event.y();

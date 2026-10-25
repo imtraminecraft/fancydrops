@@ -197,7 +197,6 @@ final class SkinMock {
             {0, 1, 0, -hw, hh, -hd, 2 * hw, 0, 0, 0, 0, 2 * hd, u + d, v, w, d},
             {0, -1, 0, -hw, -hh, hd, 2 * hw, 0, 0, 0, 0, -2 * hd, u + d + w, v, w, d}};
     }
-    private static boolean inQuad(double px, double py, double[] x, double[] y) { return tri(px, py, x[0], y[0], x[1], y[1], x[2], y[2]) || tri(px, py, x[0], y[0], x[2], y[2], x[3], y[3]); }
     private static boolean tri(double px, double py, double ax, double ay, double bx, double by, double cx, double cy) {
         double d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
         if (Math.abs(d) < 1e-9) return false;

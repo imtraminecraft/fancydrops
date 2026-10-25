@@ -149,7 +149,6 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
     // ------------------------------------------------------------------ commands
 
-    private static final String[] ON_OFF = {"on", "off"};
 
     private static void registerCommands(com.mojang.brigadier.CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(buildRoot("fancydrops"));

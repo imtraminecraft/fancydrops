@@ -466,12 +466,6 @@ public final class AnimationManager {
     static int mfColor(String mf) { return mf != null && mf.startsWith("OB:") ? 0xFFFFFF55 : Ui.MAGIC_FIND; }      // Overbloom is yellow, Magic Find aqua
 
     static final net.minecraft.network.chat.FontDescription EMOJI = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("fancydrops", "emoji"));
-    /** For the animations: the number and our little Magic Find / Overbloom icon instead of the words. */
-    static String mfAnim(String mf) {
-        if (mf == null) return "";
-        if (mf.startsWith("OB:")) return mf.substring(3).replaceFirst("^\\+", "") + " \ue031";
-        return mf.replaceFirst("^\\+", "").replaceFirst("%$", "") + " \ue030";
-    }
     /** "+250%" becomes "250 ✯ Magic Find". */
     static String mfText(String mf) {
         if (mf == null) return "";
@@ -754,7 +748,7 @@ public final class AnimationManager {
             int side = Math.round(barFull * sideK());
             bars(g, W, H, barFull, side, p.rarity | 0xFF000000, p.rarity | 0xFF000000);
             g.enableScissor(side, barFull, W - side, H - barFull);
-            if (sceneOn && !textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), ga)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), ga);
+            if (sceneOn && !textOnly && !blitRounded(g, W, H, side, barFull, L.ox(), L.oy(), L.sw(), L.sh(), ga)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), ga);
             if (sceneOn && bigMyth(p)) mythRngFx(g, p, t, L.ox(), L.oy(), L.cell(), ga, side, barFull, W - side, H - barFull);
             g.disableScissor();
             barText(g, font, cat == 4 ? PREVIEW_ANIM_EXP : farm ? PREVIEW_ANIM_FARM : PREVIEW_ANIM, c, tal, W, H, barFull);
@@ -779,6 +773,32 @@ public final class AnimationManager {
                 if (al != 0) cv.px[i] = ((int) (al * f) << 24) | (p & 0xFFFFFF);
             }
         }
+    }
+
+    /** Radius of the window's rounded corners in pixels (0 = square). Shared by the bars and by the scene, so both cut the same curve. */
+    private static int curveR(int W, int H, int bar, int side) {
+        int r = Math.round(bar * Math.max(0, Math.min(100, FancyConfig.get().barCurve)) / 100f);
+        if (r > 1) r = Math.min(r, Math.min((W - 2 * side) / 2, (H - 2 * bar) / 2));
+        return r > 1 ? r : 0;
+    }
+
+    /** Draws the scene inside the bars' window. With curved corners the scene is cut by the same curve, so the translucent bar corners lie over the world exactly like the straight bars do. */
+    private static boolean blitRounded(GuiGraphicsExtractor g, int W, int H, int side, int bar, int dx, int dy, int zw, int zh, float ga) {
+        int r = curveR(W, H, bar, side);
+        if (r == 0) return SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga);
+        int x0 = side, x1 = W - side, y0 = bar, y1 = H - bar, steps = Math.min(r, 10);
+        g.enableScissor(x0, y0 + r, x1, y1 - r);
+        boolean ok = SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga);
+        g.disableScissor();
+        if (!ok) return false;
+        for (int st = 0; st < steps; st++) {
+            int ya = r * st / steps, yb = r * (st + 1) / steps;
+            double mid = (ya + yb) / 2.0, inset = r - Math.sqrt(Math.max(0.0, (double) r * r - (r - mid) * (r - mid)));
+            int in = (int) Math.round(inset);
+            g.enableScissor(x0 + in, y0 + ya, x1 - in, y0 + yb); SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga); g.disableScissor();
+            g.enableScissor(x0 + in, y1 - yb, x1 - in, y1 - ya); SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga); g.disableScissor();
+        }
+        return true;
     }
 
     /** The pillar bars are a little thinner than the top and bottom ones. */
@@ -806,9 +826,8 @@ public final class AnimationManager {
         g.fill(0, 0, W, bar, f); g.fill(0, H - bar, W, H, f);
         g.fill(0, bar, side, H - bar, f); g.fill(W - side, bar, W, H - bar, f);
         FancyConfig fc = FancyConfig.get();
-        int r = Math.round(bar * Math.max(0, Math.min(100, fc.barCurve)) / 100f);   // rounded window: the four inner corners are carved
-        if (r > 1) r = Math.min(r, Math.min((W - 2 * side) / 2, (H - 2 * bar) / 2));
-        int cr = r > 1 ? r : 0;
+        int r = curveR(W, H, bar, side);                                           // rounded window: the four inner corners are carved
+        int cr = r;
         int a0 = f >>> 24, rgb = f & 0xFFFFFF, n = fc.barSoft ? Math.max(2, Math.min(6, bar / 3)) : 0;
         if (n > 0) {                                                               // the bars melt into the scene: a few fainter strips along the inner edge
             for (int k = 0; k < n; k++) {
@@ -910,7 +929,7 @@ public final class AnimationManager {
         int zw = Math.round(Scene.W * cellF * zoom), zh = Math.round(Scene.H * cellF * zoom);
         int dx = sceneX + Math.round(a.sx * cellF) - (zw - Math.round(Scene.W * cellF)) / 2, dy = sceneY + Math.round(a.sy * cellF) - (zh - Math.round(Scene.H * cellF)) / 2;
         if (framed) g.enableScissor(sideFull, barFull, W - sideFull, H - barFull);          // a zoomed scene never spills into the bars
-        if (!SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga)) OUT.flush(g::fill, sceneX + Math.round(a.sx * cellF), sceneY + Math.round(a.sy * cellF), Math.max(1, Math.round(cellF)), ga);
+        if (!(framed ? blitRounded(g, W, H, sideFull, barFull, dx, dy, zw, zh, ga) : SceneTexture.draw(g, OUT, dx, dy, zw, zh, ga))) OUT.flush(g::fill, sceneX + Math.round(a.sx * cellF), sceneY + Math.round(a.sy * cellF), Math.max(1, Math.round(cellF)), ga);
         if (framed) g.disableScissor();
         }
         revealT = t - reveal; waveIn = clamp((t - reveal) / 0.6f); waveOut = clamp((t - (len - 1.0f * a.speed)) / (0.7f * a.speed)); waveT = t; bounceT = t - (reveal + 0.6f);
@@ -986,8 +1005,8 @@ public final class AnimationManager {
             }
             if (since < 0.7f) {                                               // a burst of rays shooting out of the cut
                 float f = since / 0.7f, r0 = W * 0.04f + W * 0.30f * easeIO(f), r1 = r0 + W * 0.14f * (1f - f) + 6f;
-                for (int i = 0; i < 28; i++) {
-                    float ang = (float) (i * Math.PI * 2 / 28 + Tex.h(i, 9) * 0.2f);
+                for (int i = 0; i < 16; i++) {
+                    float ang = (float) (i * Math.PI * 2 / 16 + Tex.h(i, 9) * 0.2f);
                     Gfx.push(g); Gfx.translate(g, sx0, sy0); Gfx.rotate(g, ang);
                     g.fill((int) r0, -1, (int) r1, 1, Gfx.argb((int) (190 * (1f - f) * cin), i % 3 == 0 ? 0xFFFFFF : rc));
                     Gfx.pop(g);
@@ -1003,8 +1022,8 @@ public final class AnimationManager {
             }
             if (since < 1.0f) {                                               // a shockwave ring rolls out from the drop
                 float f = since / 1.0f, rad = W * 0.04f + W * 0.42f * (1f - (1f - f) * (1f - f));
-                for (int i = 0; i < 72; i++) {
-                    float ang = (float) (i * Math.PI * 2 / 72);
+                for (int i = 0; i < 36; i++) {
+                    float ang = (float) (i * Math.PI * 2 / 36);
                     int px = Math.round(sx0 + (float) Math.cos(ang) * rad), py = Math.round(sy0 + (float) Math.sin(ang) * rad * 0.55f);
                     g.fill(px - 1, py - 1, px + 1, py + 1, Gfx.argb((int) (170 * (1f - f) * cin), i % 2 == 0 ? 0xFFFFFF : rc));
                 }
@@ -1076,32 +1095,55 @@ public final class AnimationManager {
         float u = Math.max(0.5f, cell), ts = Scene.splitTime(p);
         int W = x1 - x0, H = y1 - y0;
         float sky = clamp(t / 0.5f);
-        for (int i = 0; i < 40; i++) {                                                                       // twinkling stars across the sky
+        for (int i = 0; i < 24; i++) {                                                                       // twinkling stars across the sky
             int x = x0 + (int) (Tex.h(i, 81) * W), y = y0 + (int) (Tex.h(i, 82) * H * 0.7f); float tw = 0.5f + 0.5f * (float) Math.sin(t * 3 + i * 1.7f);
             g.fill(x, y, x + (i % 5 == 0 ? 2 : 1), y + (i % 5 == 0 ? 2 : 1), Gfx.argb((int) (200 * sky * tw * k), i % 4 == 0 ? 0xFFE8A0 : 0xFFFFFF));
         }
         for (int q = 0; q < 3; q++) { float a2 = t - Scene.impact(p, q); if (a2 >= 0f && a2 < 0.12f) g.fill(x0, y0, x1, y1, Gfx.argb((int) (80 * (1f - a2 / 0.12f) * k), 0xDCE8FF)); }      // a flash on each strike
+        int cxs = ox + Math.round(56 * cell), cys = oy + Math.round(46 * cell), dt0 = Math.max(1, Math.round(u * 0.8f));
+        for (int q = 0; q < p.chops && q < 8; q++) {                                                          // the call: every strike drops a lightning bolt into the circle and sends a ring across the ground
+            float d = t - Scene.impact(p, q); if (d < 0f || d > 0.5f) continue;
+            if (d < 0.2f) {
+                float f = 1f - d / 0.2f; int bx = cxs + Math.round((Tex.h(q, 131) - 0.5f) * W * 0.3f), prevX = bx, segs = 9;
+                for (int sg = 0; sg < segs; sg++) {
+                    int ya = y0 + (cys - y0) * sg / segs, yb = y0 + (cys - y0) * (sg + 1) / segs, nx = sg == segs - 1 ? cxs : bx + Math.round((cxs - bx) * (sg + 1f) / segs + (Tex.h(q * 9 + sg, 132) - 0.5f) * 26 * u);
+                    int lo = Math.min(prevX, nx) - 1, hi = Math.max(prevX, nx) + 2;
+                    g.fill(lo - 2, ya, hi + 2, yb, Gfx.argb((int) (46 * f * k), 0xB8A8FF));
+                    g.fill(lo, ya, hi, yb, Gfx.argb((int) (230 * f * k), 0xFFFFFF)); prevX = nx;
+                }
+            }
+            float rf = d / 0.5f, rr = (8 + 70 * rf) * u;
+            for (int i = 0; i < 28; i++) { double an = i * Math.PI * 2 / 28; int sx = (int) (cxs + Math.cos(an) * rr), sy = (int) (cys + 14 * u + Math.sin(an) * rr * 0.3);
+                if (sx >= x0 && sx < x1 && sy >= y0 && sy < y1) g.fill(sx, sy, sx + dt0 + 1, sy + dt0, Gfx.argb((int) (190 * (1f - rf) * k), 0xCFC4FF)); }
+        }
+        if (t < ts) {                                                                                         // energy gathers into the circle until it shatters
+            float ch = clamp(t / Math.max(0.2f, ts));
+            for (int i = 0; i < 22; i++) {
+                float life = (t * 0.9f + Tex.h(i, 140)) % 1f, rad = (70 * (1f - life) + 4) * u * (0.5f + 0.5f * Tex.h(i, 141)), an = Tex.h(i, 142) * 6.2832f + life * 5f;
+                int sx = Math.round(cxs + (float) Math.cos(an) * rad), sy = Math.round(cys + (float) Math.sin(an) * rad * 0.6f);
+                if (sx >= x0 && sx < x1 && sy >= y0 && sy < y1) g.fill(sx, sy, sx + dt0 + 1, sy + dt0 + 1, Gfx.argb((int) (220 * life * ch * k), i % 3 == 0 ? 0xFFFFFF : 0xB8A8FF));
+            }
+            g.fill(x0, y0, x1, y1, Gfx.argb((int) (36 * ch * ch * k * (0.6f + 0.4f * (float) Math.sin(t * 16))), 0x6A4CFF));       // the screen throbs violet as it charges
+        }
         float a = t - ts; if (a < 0f) return;
         float fin = clamp(1f - (1f - clamp(a / 0.4f)) * (1f - clamp(a / 0.4f)));
         int ix = ox + Math.round(56 * cell), iy = oy + Math.round(46 * cell);
         if (a < 0.22f) g.fill(x0, y0, x1, y1, Gfx.argb((int) (150 * (1f - a / 0.22f) * k), 0xFFF6D8));            // the reveal flash
         float pil = clamp(a / 0.25f) * (0.8f + 0.2f * (float) Math.sin(t * 9)) * k;                           // a pillar of light through the drop
-        for (int y = y0; y < iy; y += 2) { float fall = 1f - (iy - y) / (float) Math.max(1, iy - y0) * 0.75f; int w = Math.round((1 + 3 * fall) * u);
-            g.fill(ix - w, y, ix + w + 1, y + 2, Gfx.argb((int) (44 * pil * fall), 0xFFF0B0)); g.fill(ix - 1, y, ix + 1, y + 2, Gfx.argb((int) (90 * pil * fall), 0xFFFFFF)); }
+        int PB = 10;                                                                                           // the pillar in a few soft bands (a fill each), brighter near the drop
+        for (int bnd = 0; bnd < PB; bnd++) { int ya = y0 + (iy - y0) * bnd / PB, yb = y0 + (iy - y0) * (bnd + 1) / PB; float fall = 1f - (1f - (bnd + 0.5f) / PB) * 0.75f; int w = Math.round((1 + 3 * fall) * u);
+            g.fill(ix - w, ya, ix + w + 1, yb, Gfx.argb((int) (44 * pil * fall), 0xFFF0B0)); g.fill(ix - 1, ya, ix + 1, yb, Gfx.argb((int) (90 * pil * fall), 0xFFFFFF)); }
         int dot = Math.max(1, Math.round(u * 0.8f));
         if (a < 1.0f) { float sw = clamp(a / 1.0f), e = 1f - (1f - sw) * (1f - sw) * (1f - sw), rad = (6 + 130 * e) * u;      // two shockwave rings
-            for (int w = 0; w < 2; w++) for (int i = 0; i < 220; i++) { double an = i * Math.PI * 2 / 220; float rr = rad - w * 3 * u;
+            for (int w = 0; w < 2; w++) for (int i = 0; i < 64; i++) { double an = i * Math.PI * 2 / 64; float rr = rad - w * 3 * u;
                 int sx = (int) (ix + Math.cos(an) * rr), sy = (int) (iy + Math.sin(an) * rr * 0.62);
                 if (sx < x0 || sx >= x1 || sy < y0 || sy >= y1) continue;
-                g.fill(sx, sy, sx + dot, sy + dot, Gfx.argb((int) (230 * (1f - sw) * (w == 0 ? 1f : 0.6f) * k), w == 0 ? 0xFFFFFF : 0xFFD764)); } }
-        int reach = (int) Math.hypot(W, H);                                                                    // god rays, fading with distance
-        for (int r = 0; r < 10; r++) {
-            double an = r * Math.PI / 5 + t * 0.5;
-            for (int d = (int) (14 * u); d < reach; d += 6) {
-                int sx = (int) (ix + Math.cos(an) * d), sy = (int) (iy + Math.sin(an) * d);
-                if (sx < x0 || sx >= x1 || sy < y0 || sy >= y1) break;
-                g.fill(sx, sy, sx + 3, sy + 2, Gfx.argb((int) (40 * fin * k * (1f - d / (float) reach)), 0xFFE8A0));
-            }
+                g.fill(sx, sy, sx + dot + 1, sy + dot + 1, Gfx.argb((int) (230 * (1f - sw) * (w == 0 ? 1f : 0.6f) * k), w == 0 ? 0xFFFFFF : 0xFFD764)); } }
+        int reach = (int) Math.hypot(W, H);                                                                    // god rays: a rotated bar in four fading pieces each
+        for (int r = 0; r < 8; r++) {
+            Gfx.push(g); Gfx.translate(g, ix, iy); Gfx.rotate(g, (float) (r * Math.PI / 4 + t * 0.5));
+            for (int sg = 0; sg < 4; sg++) { int d0 = (int) (14 * u) + sg * reach / 4, d1 = d0 + reach / 4; g.fill(d0, -1, d1, 2, Gfx.argb((int) (36 * fin * k * (1f - sg / 4f)), 0xFFE8A0)); }
+            Gfx.pop(g);
         }
         for (int i = 0; i < 26 && a < 1.8f; i++) {                                                            // sparks thrown out of the drop, pulled down by gravity
             float sp = (30 + Tex.h(i, 120) * 60) * u, an = Tex.h(i, 121) * 6.2832f, life = a * (0.8f + Tex.h(i, 122) * 0.6f);
@@ -1120,7 +1162,7 @@ public final class AnimationManager {
     private static void epicFront(GuiGraphicsExtractor g, Anim a, float since, int W, int H, float cx, float cy, float k) {
         if (k <= 0.02f) return;
         int rc = a.p.rarity & 0xFFFFFF;
-        for (int i = 0; i < (a.p.style == 1 ? 34 : 110); i++) {
+        for (int i = 0; i < (a.p.style == 1 ? 24 : 64); i++) {
             float life = since - 0.05f - Tex.h(i, 41) * 0.25f;
             if (life < 0f || life > 3.4f) continue;
             float ang = (float) (Tex.h(i, 42) * Math.PI * 2), sp = W * (0.22f + 0.5f * Tex.h(i, 43)), grav = H * 0.95f;

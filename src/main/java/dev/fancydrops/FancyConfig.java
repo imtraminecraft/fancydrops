@@ -37,7 +37,7 @@ public class FancyConfig {
     public int formatVer;                 // 2 = the message formats were reset to the {source} ones
     public String formatDye, formatFarm, formatMyth, formatExp;      // the message for Dye and Farming drops (null = Dye follows the Slayers one; Farming has its own default)
     public String format = DEFAULT_FORMAT;   // placeholders: {item} {drop} {price} {mf} {slayer}
-    public boolean announceUnknown = true, animateUnknown = true;
+    public boolean animateUnknown = true;
     public boolean showPrice = true, sound = true;
     public boolean showPriceSource = true;    // "at Bazaar" / "at Auction House" after the price, like the reference video's "at George"
     public int volume = 100;                  // 0..100 %, master volume of every FancyDrops sound (/fancydrops volume)
@@ -245,8 +245,6 @@ public class FancyConfig {
         chopsEpic = Math.max(chopsCool + 1, Math.min(20, chopsEpic));
     }
 
-    /** The sliders show 0-110%; these turn them into the real multipliers (100% of Animation size = 40% of the frame, 50% of Text size = x0.8). */
-    public float sceneK() { return scale * 0.4f; }
     public float textK() { return 0.6f + 0.4f * textScale; }
     public float itemK() { return itemScale; }
 
