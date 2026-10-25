@@ -318,5 +318,85 @@
         "stream": false
       }
     ]
+  },
+  "myth_bolt": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_bolt",
+        "stream": false
+      }
+    ]
+  },
+  "myth_shatter": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_shatter",
+        "stream": false
+      }
+    ]
+  },
+  "myth_reveal": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_reveal",
+        "stream": false
+      }
+    ]
+  },
+  "myth_reveal_big": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_reveal_big",
+        "stream": false
+      }
+    ]
+  },
+  "myth_glow": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_glow",
+        "stream": false
+      }
+    ]
+  },
+  "myth_glow_big": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_glow_big",
+        "stream": false
+      }
+    ]
+  },
+  "myth_end": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_end",
+        "stream": false
+      }
+    ]
+  },
+  "myth_dig": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_dig",
+        "stream": false
+      }
+    ]
+  },
+  "myth_chest": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_chest",
+        "stream": false
+      }
+    ]
+  },
+  "myth_fizzle": {
+    "sounds": [
+      {
+        "name": "fancydrops:myth_fizzle",
+        "stream": false
+      }
+    ]
   }
 }

@@ -88,6 +88,19 @@ public final class SoundFx {
     public static final Fx RUSTLE = reg("rustle", "Rustle", SoundEvents.CROP_BREAK, 0.85f);
     public static final Fx VACUUM = reg("vacuum", "Vacuum", SoundEvents.PLAYER_ATTACK_SWEEP, 0.85f);
     public static final Fx SQUEAK = reg("squeak", "Squeak", SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, 0.85f);
+    // the Mythological bank, written new for the ritual scenes: every one fades to silence by itself. "_big" twins play in the RNG scene.
+    static {
+        reg("myth_bolt", "Bolt", SoundEvents.LIGHTNING_BOLT_IMPACT, 0.8f);
+        reg("myth_shatter", "Shatter", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
+        reg("myth_reveal", "Reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
+        reg("myth_reveal_big", "Reveal (big)", SoundEvents.BEACON_ACTIVATE, 0.9f);
+        reg("myth_glow", "Glow", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
+        reg("myth_glow_big", "Glow (big)", SoundEvents.BEACON_AMBIENT, 0.7f);
+        reg("myth_end", "Farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
+        reg("myth_dig", "Dig", SoundEvents.CROP_BREAK, 0.9f);
+        reg("myth_chest", "Chest", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
+        reg("myth_fizzle", "Fizzle", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
+    }
 
     // Minecraft's own sounds, picked to work as a set: bright notes for the stepping slices, a solid hit, a reward, a long glow, a soft close
     static {
@@ -159,12 +172,12 @@ public final class SoundFx {
             {"nothing", "drip", "thump", "lift", "hum", "sigh"},
             {"dye", "plop", "burst", "cascade", "ripple", "dusk"},
             {"farm", "reap", "rustle", "sprout", "breeze", "settle"},
-            {"mytho", "arc", "thump", "halo", "storm", "dusk"},
+            {"mytho", "myth_bolt", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
             {"exp", "page", "glow", "halo", "chant", "dusk"},
             {"helios", "beam", "flare", "sprout", "breeze", "settle"},
-            {"mythnothing", "arc", "sigh", NONE, NONE, "dusk"},
+            {"mythnothing", "myth_bolt", "myth_fizzle", NONE, NONE, NONE},
             {"pest", "vacuum", "squeak", "sprout", "breeze", "settle"},
-            {"treasure", "thump", "rustle", "halo", "ember", "dusk"}};
+            {"treasure", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
@@ -210,6 +223,12 @@ public final class SoundFx {
 
     /** Plays the sound chosen for a slot. */
     public static void playSlot(String scene, String slot, float pitch) { play(byName(chosen(scene, slot)), pitch, 1f); }
+    /** The sound for a slot; in a big scene a sound with a "_big" twin plays the twin. One place decides it for playing, the sound waves and the timeline. */
+    public static String pick(String scene, String slot, boolean big) {
+        String n = chosen(scene, slot);
+        return big && n != null && ALL.containsKey(n + "_big") && isMc(n) != true ? n + "_big" : n;
+    }
+    public static void playSlot(String scene, String slot, float pitch, boolean big) { play(byName(pick(scene, slot, big)), pitch, 1f); }
 
     public static void play(Fx fx, float pitch, float gain) {
         if (fx == null) return;
@@ -269,12 +288,13 @@ public final class SoundFx {
     }
 
     /** Plays a sound even if sounds are muted (menu / soundtest) - at the chosen volume, minimum 40%. */
-    public static void preview(Fx fx) {
+    public static void preview(Fx fx) { preview(fx, 1f); }
+    public static void preview(Fx fx, float pitch) {
         if (fx == null) return;
         FancyConfig c = FancyConfig.get();
         float vol = Math.max(0.4f, Math.min(1f, c.volume / 100f));
         SoundEvent e = fx.custom != null && c.customSounds ? fx.custom : fx.vanilla;
-        var inst = SimpleSoundInstance.forUI(e, 1f, Math.min(1f, vol * fx.baseVolume));
+        var inst = SimpleSoundInstance.forUI(e, pitch, Math.min(1f, vol * fx.baseVolume));
         if (PREVIEWS.size() > 40) PREVIEWS.remove(0);
         PREVIEWS.add(inst);
         Minecraft.getInstance().getSoundManager().play(inst);

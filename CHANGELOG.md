@@ -3,6 +3,11 @@
 - RNG dice icon is now a real 3D die that tumbles, hops and settles.
 - 3D head icons have depth: brighter top, darker side, a dark outline.
 - Removed "above the action bar" from the animation descriptions (you choose the position).
+- Items now move like a dropped item: a slow, steady turn that eases in, glides and settles facing front, with a soft bob.
+- New Mythological sounds (Bolt, Shatter, Reveal, Glow, Farewell, Dig, Chest, Fizzle, plus bigger twins for RNG). Each fades to silence by itself and the last one is timed to finish with the words.
+- Sounds follow the whole animation (words included), in the real scene, the previews and the Sounds page. The Sounds page plays the same pitches as the real scene.
+- /fd simulate, the Play buttons, the menu and the previews all start drops through the same two functions (creature and treasure). Simulated treasure now follows the drop's own Off / Normal / RNG state.
+- Construction page: the worker tosses each brick up to the wall from a pile instead of the crane lowering it.
 
 ## 0.4.11
 - Fixed: Mythological items (Normal and RNG) stay on screen as long as the words, instead of leaving first. The picture, item and bars fade out together with the text

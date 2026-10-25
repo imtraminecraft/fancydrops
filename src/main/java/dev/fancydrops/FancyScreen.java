@@ -675,8 +675,9 @@ public class FancyScreen extends Screen {
         for (int i = 0; i < n; i++) { te[i] = st[2 + i]; slot[i] = 0; }
         te[n] = st[2 + n]; slot[n] = 1; te[n + 1] = st[3 + n]; slot[n + 1] = 2; te[n + 2] = st[4 + n]; slot[n + 2] = 3; te[n + 3] = st[5 + n]; slot[n + 3] = 4;
         float span = total;
+        boolean bigKey = key.equals("mythrng") || key.equals("treasurerng");
         for (int i = 0; i < ne; i++) {
-            nm[i] = SoundFx.chosen(SoundFx.SCENES[sc], SoundFx.SLOTS[slot[i]]);
+            nm[i] = SoundFx.pick(SoundFx.SCENES[sc], SoundFx.SLOTS[slot[i]], bigKey);
             du[i] = SoundFx.NONE.equals(nm[i]) ? 0f : SoundFx.duration(nm[i]);
         }
         long loopMs = Math.round((span + 0.5f) * 1000f);
@@ -688,16 +689,16 @@ public class FancyScreen extends Screen {
         if (!fresh && !wavePaused) {                                                              // the playhead just passed a sound: play it
             if (waveWasPaused) {                                                                  // resumed: sounds that were mid-play start again, so they carry on
                 for (int i = 0; i < ne; i++) if (du[i] > 0f && te[i] <= t && t < te[i] + du[i] && t < span) {
-                    SoundFx.Fx fx = SoundFx.byName(SoundFx.chosen(SoundFx.SCENES[sc], SoundFx.SLOTS[slot[i]]));
-                    if (fx != null) SoundFx.preview(fx);
+                    SoundFx.Fx fx = SoundFx.byName(nm[i]);
+                    if (fx != null) SoundFx.preview(fx, AnimationManager.soundPitch(key, slot[i], i));
                 }
             }
             if (t < waveT) SoundFx.stopPreviews();                                                // looped round: cut the tail of the last run
             float from = t >= waveT ? waveT : -1f;
             for (int i = 0; i < ne; i++) if (te[i] > from && te[i] <= t) {
                 pulseAt[slot[i]] = now;
-                SoundFx.Fx fx = SoundFx.byName(SoundFx.chosen(SoundFx.SCENES[sc], SoundFx.SLOTS[slot[i]]));
-                if (fx != null) SoundFx.preview(fx);
+                SoundFx.Fx fx = SoundFx.byName(nm[i]);
+                if (fx != null) SoundFx.preview(fx, AnimationManager.soundPitch(key, slot[i], i));
             }
         }
         waveT = t; waveNow = now; waveKey = key; waveWasPaused = wavePaused;
@@ -1592,10 +1593,13 @@ public class FancyScreen extends Screen {
         g.fill(mastX - 1, top - 5, mastX + 5, top - 1, 0xFFD6A020); g.fill(mastX + 1, top - 8, mastX + 3, top - 5, 0xFF5A5A66);
         boolean blink = (int) (sec * 2.2f) % 2 == 0; g.fill(mastX + 1, top - 10, mastX + 3, top - 8, blink ? 0xFFFF4A3A : 0xFF5A1812);
         if (blink) g.fill(mastX - 1, top - 12, mastX + 5, top - 6, 0x22FF4A3A);
+        int farX = wx - 14, homeX = r.x + laneL + 22, wkX = ph < buildEnd + 2.8f ? farX : -9999;            // where the worker stands while the house goes up
         // the house, brick by brick
         boolean tremble = ph >= buildEnd + 0.9f && ph < fallT;
         for (int i = 0; i < N; i++) {
-            float placed = i * PER, local = ph - placed; if (local < 0 && ph < fallT) continue;
+            float placed = i * PER, local = ph - placed;
+            if (local < 0 && ph < fallT) { if (local > -PER * 0.5f && ph < buildEnd) brick(g, wkX + 7, gy - 18 + Math.round(local / PER * 6f), i >= WALL ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw, bh, 0, i >= WALL); continue; }   // the next brick waits in his hand
+
             boolean roof = i >= WALL; int row = roof ? 6 + (i - WALL) : i / COLS, col = i % COLS;
             int w = roof ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw, h = roof ? bh : bh;
             int bx = roof ? wx + (COLS * bw - w) / 2 : wx + col * bw + (row % 2 == 1 ? 3 : 0) - (row % 2 == 1 && col == COLS - 1 ? 3 : 0), by = gy - bh * (row + 1);
@@ -1610,9 +1614,10 @@ public class FancyScreen extends Screen {
                 continue;
             }
             int off = tremble ? (int) Math.round(Math.sin(ph * 60f) * Math.min(2.0, (ph - buildEnd - 0.9f) * 3.0)) : 0;
-            if (local < PER * 0.6f) {                                                                  // still hanging from the hook, being lowered
-                float u = local / (PER * 0.6f); u = u * u; int yy = Math.round(top + 8 + (by - top - 8) * u);
-                int sx = Math.round((hookX0 - w / 2) + (bx - (hookX0 - w / 2)) * u);
+            float fl = PER * 1.25f;
+            if (local < fl) {                                                                          // thrown up by the worker: a lob from his hand to its place
+                float u = local / fl, ue = u * (2f - u);
+                int sx0 = wkX + 8 - w / 2, sy0 = gy - 17, sx = Math.round(sx0 + (bx - sx0) * ue), yy = Math.round(sy0 + (by - sy0) * ue - 15f * 4f * u * (1f - u));
                 brick(g, sx, yy, w, h, 0, roof);
             } else brick(g, bx + off, by, w, h, 0, roof);
         }
@@ -1636,14 +1641,15 @@ public class FancyScreen extends Screen {
         } else { g.fill(hookX0, top + 3, hookX0 + 1, top + 30, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 30, hookX0 + 4, top + 33, 0xFF8A8A94); }
         // the worker: hammers while it builds, panics at the bump, runs off when it falls, comes back and shrugs
         float t2 = ph - buildEnd; int wk; int pose;
-        int homeX = r.x + laneL + 22, farX = wx - 12;
-        if (ph < buildEnd) { wk = farX; pose = 1; }
+        float arm = 0f;
+        if (ph < buildEnd) { wk = farX; pose = 5; float cyc = (ph % PER) / PER; arm = cyc < 0.45f ? cyc / 0.45f : 0f; }       // bends to the pile, then swings the brick up
         else if (t2 < 2.8f) { wk = farX; pose = t2 > 1.4f ? 2 : 0; }
         else if (t2 < 4.6f) { wk = Math.round(farX + (homeX - farX) * Math.min(1f, (t2 - 2.8f) / 1.6f)); pose = 4; }
         else if (t2 < 7.4f) { wk = homeX; pose = 0; }
         else if (t2 < 9.2f) { wk = Math.round(homeX + (farX - homeX) * (t2 - 7.4f) / 1.8f); pose = 4; }
         else { wk = farX; pose = t2 < 10.8f ? 3 : 0; }
-        worker(g, wk, gy, pose, sec);
+        if (ph < buildEnd) for (int b2 = 0; b2 < 3; b2++) { brick(g, farX - 16 + (b2 % 2) * 3, gy - 5 * (b2 + 1), 10, 5, 0, false); }   // the pile he takes from
+        worker(g, wk, gy, pose, sec, arm);
         if (pose == 2 && t2 < 2.6f) glyph(g, wk + 1, gy - 26, '!', 0xFFE5484D);
         if (pose == 3) glyph(g, wk + 1, gy - 26, '?', 0xFFFFC857);
         // dust and smoke while it falls
@@ -1660,7 +1666,7 @@ public class FancyScreen extends Screen {
         if (!roof && w > 8) g.fill(x + w / 2, y + 1, x + w / 2 + 1, y + h - 1, Gfx.argb(a / 2, dark));
     }
     /** A tiny builder in a hard hat: pose 0 stands, 1 hammers, 2 panics, 3 shrugs, 4 runs. */
-    private static void worker(GuiGraphicsExtractor g, int x, int gy, int pose, float sec) {
+    private static void worker(GuiGraphicsExtractor g, int x, int gy, int pose, float sec, float arm) {
         int run = pose == 4 ? ((int) (sec * 10f)) % 2 : 0, bob = pose == 2 ? ((int) (sec * 12f)) % 2 : 0, y = gy - 20 - bob;
         g.fill(x + 1, y, x + 7, y + 2, 0xFFFFD020); g.fill(x, y + 2, x + 8, y + 3, 0xFFE0B010); g.fill(x + 3, y - 1, x + 5, y, 0xFFFFE860);               // hard hat
         g.fill(x + 2, y + 3, x + 6, y + 7, 0xFFE8B98A); g.fill(x + 3, y + 4, x + 4, y + 5, 0xFF2A1A10); g.fill(x + 5, y + 4, x + 6, y + 5, 0xFF2A1A10);     // face
@@ -1668,6 +1674,7 @@ public class FancyScreen extends Screen {
         g.fill(x + 1 + run, y + 13, x + 4, y + 20, 0xFF2E4A8A); g.fill(x + 4, y + 13, x + 7 - run, y + 20, 0xFF263E78); g.fill(x + run, y + 19, x + 4, y + 20, 0xFF3A2A1A); g.fill(x + 4, y + 19, x + 8 - run, y + 20, 0xFF3A2A1A);
         switch (pose) {
             case 1 -> { int sw = ((int) (sec * 4f)) % 2; g.fill(x + 7, y + 8 - sw * 4, x + 9, y + 11 - sw * 2, 0xFFE8B98A); g.fill(x + 8, y + 3 - sw * 4, x + 12, y + 6 - sw * 4, 0xFF8A8A94); g.fill(x + 9, y + 5 - sw * 4, x + 10, y + 10 - sw * 2, 0xFF8A5A2C); }   // hammer
+            case 5 -> { int up = Math.round(arm * 9f); g.fill(x + 7, y + 12 - up, x + 9, y + 14 - up + (up > 4 ? 0 : 0), 0xFFE8B98A); g.fill(x + 7, y + 8 + (up > 0 ? 0 : 3) - Math.min(up, 8) / 2, x + 8, y + 13 - up / 2, 0xFFE8B98A); g.fill(x, y + 8 + Math.round((1f - arm) * 3f), x + 1, y + 13, 0xFFE8B98A); }
             case 2 -> { g.fill(x - 1, y + 3, x + 1, y + 9, 0xFFE8B98A); g.fill(x + 7, y + 3, x + 9, y + 9, 0xFFE8B98A); }
             case 3 -> { g.fill(x - 1, y + 7, x + 1, y + 10, 0xFFE8B98A); g.fill(x + 7, y + 7, x + 9, y + 10, 0xFFE8B98A); }
             default -> { g.fill(x, y + 8, x + 1, y + 13, 0xFFE8B98A); g.fill(x + 7, y + 8, x + 8, y + 13, 0xFFE8B98A); }

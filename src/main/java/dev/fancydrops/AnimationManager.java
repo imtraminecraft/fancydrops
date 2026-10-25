@@ -664,29 +664,40 @@ public final class AnimationManager {
      * placed so that it finishes with the scene (plus a short tail), and the linger sound so that it finishes just before it. Nothing is cut off, whatever length
      * the animation has. totalR = real length of the scene, tsR = real time of the reveal.
      */
-    static float[] slotStarts(String scene, float tsR, float totalR) {
+    static float[] slotStarts(String scene, float tsR, float totalR, boolean bigS) {
         float endAt = totalR + 0.35f;
-        float dEnd = slotLen(scene, "end"), dLing = slotLen(scene, "linger");
+        float dEnd = slotLen(scene, "end", bigS), dLing = slotLen(scene, "linger", bigS);
         float endStart = Math.max(tsR + 0.6f, endAt - dEnd);
         float lo = tsR + 0.35f, hi = Math.max(lo, endStart - 0.2f - dLing);
         float lingerStart = Math.max(tsR + 0.2f, Math.min(lo + (hi - lo) * 0.4f, endAt - dLing));
         return new float[]{tsR, tsR + 0.15f, lingerStart, endStart};
     }
-    private static float slotLen(String scene, String slot) { String n = SoundFx.chosen(scene, slot); return n == null || SoundFx.NONE.equals(n) ? 0f : SoundFx.duration(n); }
+    private static float slotLen(String scene, String slot, boolean bigS) { String n = SoundFx.pick(scene, slot, bigS); return n == null || SoundFx.NONE.equals(n) ? 0f : SoundFx.duration(n); }
 
     public static float[] soundTimes(String key, FancyConfig c) {
         Scene.Params p = previewForKey(key, c);
         float natural = naturalScene(p, p.farm);
         float secs = timing(p, p.farm, lenKey(key), c)[2], k = secs / Math.max(0.1f, natural);
+        boolean bigS = bigSounds(p);
+        if (Scene.normalMyth(p) || bigMyth(p)) secs += textExtra(p);                         // the sounds follow the whole animation, words included: the same length the real one plays
         int n = Math.max(0, Math.min(p.chops, 20));
         float[] r = new float[n + 6];
         r[0] = secs; r[1] = n;
         for (int i = 0; i < n; i++) r[2 + i] = Scene.impact(p, i) * k;
         float ts = Scene.splitTime(p);
-        float[] st = slotStarts(SoundFx.SCENES[sceneIndex(key)], ts * k, secs);
+        float[] st = slotStarts(SoundFx.SCENES[sceneIndex(key)], ts * k, secs, bigS);
         r[0] = secs + 0.4f;                                                                // the time line: the scene plus the short tail of the last sound
         r[2 + n] = st[0]; r[3 + n] = st[1]; r[4 + n] = st[2]; r[5 + n] = st[3];
         return r;
+    }
+
+    /** The big (RNG) Mythological scenes play the "_big" twins of the sounds and sit a little lower. One rule for the real scene, the previews and the Sounds page. */
+    static boolean bigSounds(Scene.Params p) { return p.myth && p.tier == 2 && p.hasItem; }
+    /** The pitch a sound plays at: chops climb a scale, the split of a bigger scene sits lower. Used by the real scene and by the Sounds page, so they sound alike. */
+    public static float soundPitch(String key, int slot, int chop) {
+        if (slot == 0) return chopPitch(chop);
+        if (slot == 1) { int tier = switch (key) { case "rng", "dye", "helios", "mythrng", "treasurerng", "exprng" -> 2; case "rare" -> 1; default -> 0; }; return tier == 2 ? 0.82f : tier == 1 ? 0.92f : 1f; }
+        return 1f;
     }
 
     /** >= 0: the preview shows this moment (real seconds) instead of looping on its own; the Sounds tab uses it to keep the scene and the sound waves in step. */
@@ -948,7 +959,7 @@ public final class AnimationManager {
             else text(g, font, L, a.item, c, al);
         }
 
-        sounds(a, t, ts, sLen);
+        sounds(a, t, ts, Scene.normalMyth(a.p) || bigMyth(a.p) ? len : sLen);                // myth: the sounds run as long as the words
     }
 
     private static float easeIO(float x) { x = clamp(x); return x * x * (3 - 2 * x); }
@@ -1217,19 +1228,20 @@ public final class AnimationManager {
     private static void sounds(Anim a, float t, float ts, float len) {
         boolean[] d = a.done;
         String sc = a.scene();
+        boolean bigS = bigSounds(a.p);
         for (int k = 0; k < a.p.chops && k < 20; k++) {
             if (!d[k] && t >= Scene.impact(a.p, k)) {
                 d[k] = true;
-                SoundFx.playSlot(sc, "chop", chopPitch(k));                                              // every slice steps up a musical scale, so the slices play a little tune
+                SoundFx.playSlot(sc, "chop", chopPitch(k), bigS);                                          // every slice steps up a musical scale, so the slices play a little tune
             }
         }
-        float big = a.tier == 2 ? 0.82f : a.tier == 1 ? 0.92f : 1f;                           // same sounds in every scene, a bit deeper when bigger
-        float sp = Math.max(0.1f, a.speed), tr = t / sp, tsR = ts / sp, totalR = len / sp;       // sounds are placed in real seconds, backwards from the end of the scene
-        float[] st = slotStarts(sc, tsR, totalR);
-        if (!d[20] && tr >= st[0]) { d[20] = true; SoundFx.playSlot(sc, "split", big); }
-        if (!d[21] && tr >= st[1]) { d[21] = true; SoundFx.playSlot(sc, "reveal", 1f); }
-        if (!d[23] && tr >= st[2]) { d[23] = true; SoundFx.playSlot(sc, "linger", 1f); }        // the long glow between the reveal and the end
-        if (!d[22] && tr >= st[3]) { d[22] = true; SoundFx.playSlot(sc, "end", 1f); }          // ends together with the scene
+        float pitch = a.tier == 2 ? 0.82f : a.tier == 1 ? 0.92f : 1f;                          // same sounds in every scene, a bit deeper when bigger
+        float sp = Math.max(0.1f, a.speed), tr = t / sp, tsR = ts / sp, totalR = len / sp;       // sounds are placed in real seconds, backwards from the end of the animation
+        float[] st = slotStarts(sc, tsR, totalR, bigS);
+        if (!d[20] && tr >= st[0]) { d[20] = true; SoundFx.playSlot(sc, "split", pitch, bigS); }
+        if (!d[21] && tr >= st[1]) { d[21] = true; SoundFx.playSlot(sc, "reveal", 1f, bigS); }
+        if (!d[23] && tr >= st[2]) { d[23] = true; SoundFx.playSlot(sc, "linger", 1f, bigS); }        // the long glow between the reveal and the end
+        if (!d[22] && tr >= st[3]) { d[22] = true; SoundFx.playSlot(sc, "end", 1f, bigS); }          // ends together with the scene
     }
 
     private AnimationManager() {}

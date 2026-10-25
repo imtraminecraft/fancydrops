@@ -114,3 +114,4 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - The item stays up as long as the words. Its spin is sized to that time and ends facing front.
 
 - Chat preview height is measured at the dock's real width. Dice icon is a per-pixel rotating cube. Descriptions never mention a screen position (the player picks it).
+- Items turn slowly and steadily like a dropped item and end facing front. The Mythological sound bank (`myth_*`) is the default; `_big` twins play in RNG. Sounds are timed to the whole animation (words included) from one function used by the real scene, previews and the Sounds page. `/fd simulate`, Play buttons and menu use `launchMyth` / `launchTreasure`.

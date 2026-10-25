@@ -597,7 +597,7 @@ public final class DropListener {
 
     private static Item treasureItem(SlayerData.Drop dr) {
         Item it = new Item();
-        it.slayer = TreasureData.SOURCE; it.name = dr.name; it.id = dr.id; it.icon = dr.icon; it.chance = dr.chance; it.sim = false; it.rank = Math.max(0, dr.rank);
+        it.slayer = TreasureData.SOURCE; it.name = dr.name; it.id = dr.id; it.icon = dr.icon; it.chance = dr.chance; it.sim = false; it.rank = Math.max(0, dr.rank); it.stateKey = dr.name;
         long coins = TreasureData.coins(dr.name);
         if (coins > 0) { it.price = coins; it.source = ""; }                                  // coins: the coins are the price, always the exact number
         return it;
@@ -630,27 +630,30 @@ public final class DropListener {
         SlayerData.Drop dr = null;
         for (SlayerData.Drop d : TreasureData.drops(FancyConfig.get().mythSpade)) if (d.name.equals(rng ? "Myth the Fish" : "Griffin Feather")) dr = d;
         if (dr == null) return;
-        Item it = treasureItem(dr);
+        launchTreasure(dr, rng ? 2 : 0, true);
+    }
+
+    /** The one way a Mythological treasure drop reaches the screen: the Play buttons, the previews' Play, the menu and /fd simulate all end here (tier -1 = the drop's own Off / Normal / RNG state). */
+    static void launchTreasure(SlayerData.Drop dr, int tier, boolean sim) {
+        Item it = treasureItem(dr); it.sim = sim;
         if (TreasureData.coins(dr.name) == 0) previewPrice(it); else ItemIcons.prefetch(it.id);
-        Anim a = new Anim(TreasureData.SOURCE, it, rng ? 2 : 0, null); a.myth = true;
+        Anim a = new Anim(TreasureData.SOURCE, it, tier, null); a.myth = true;
+        AnimationManager.play(a);
+    }
+    /** The one way a Mythological creature drop reaches the screen (see launchTreasure). */
+    static void launchMyth(SlayerData.Slayer src, SlayerData.Drop dr, String mf, int tier, boolean sim) {
+        Item it = mythItem(src, dr, mf, sim); previewPrice(it);
+        Anim a = new Anim(src, it, tier, null); a.myth = true;
         AnimationManager.play(a);
     }
 
     /** Menu "play" button of a treasure drop. */
-    public static void playTreasureDrop(SlayerData.Drop dr) {
-        Item it = treasureItem(dr);
-        if (TreasureData.coins(dr.name) == 0) previewPrice(it); else ItemIcons.prefetch(it.id);
-        Anim a = new Anim(TreasureData.SOURCE, it, -1, null); a.myth = true;
-        AnimationManager.play(a);
-    }
+    public static void playTreasureDrop(SlayerData.Drop dr) { launchTreasure(dr, -1, true); }
 
     /** Menu "play" button of a Mythological drop. */
     public static void playMythDrop(SlayerData.Slayer src, SlayerData.Drop dr) {
         if (MythData.isDye(dr)) { SlayerData.Drop dd = new SlayerData.Drop(); dd.name = dr.name; dd.id = dr.id; dd.icon = DyeData.icon(dr.name); dd.odds = "RNGesus Incarnate"; dd.chance = dr.chance; playDrop(SlayerData.OTHER, dd, "+250%"); return; }
-        Item it = mythItem(src, dr, "+250%", true);
-        previewPrice(it);
-        Anim a = new Anim(src, it, -1, null); a.myth = true;
-        AnimationManager.play(a);
+        launchMyth(src, dr, "+250%", -1, true);
     }
 
     /** A ritual that dropped nothing: the circle goes dark. */
@@ -667,10 +670,7 @@ public final class DropListener {
         if (s.drops.isEmpty()) return;
         SlayerData.Drop dr = s.drops.get(0);
         for (SlayerData.Drop x : s.drops) if (x.pct != null) { dr = x; break; }          // the creature's signature drop
-        Item it = mythItem(s, dr, "+250%", true);
-        previewPrice(it);
-        Anim a = new Anim(s, it, rng ? 2 : 0, null); a.myth = true;
-        AnimationManager.play(a);
+        launchMyth(s, dr, "+250%", rng ? 2 : 0, true);
     }
 
     /** An Experimentation Table drop: the book scene (RNG items flip more). */
@@ -776,7 +776,7 @@ public final class DropListener {
         List<SlayerData.Drop> picks = name.isBlank() ? List.of(pool.get(new Random().nextInt(pool.size()))) : pickDrops(pool, name, 2, from == null ? "a mythological drop" : "a " + from.boss + " drop", reply);
         if (picks == null) return;
         reply.accept("Simulating " + String.join(" + ", picks.stream().map(d -> d.name).toList()) + (from == null ? "" : " from " + from.boss) + " at " + mf + " Magic Find");
-        if (picks.size() == 1 && from == null) { playMyth(new ChatParser.Drop("RARE", picks.get(0).name, 1, "+" + mf + "%", true)); return; }
+        if (picks.size() == 1 && from == null) { if (!playMyth(new ChatParser.Drop("RARE", picks.get(0).name, 1, "+" + mf + "%", true))) reply.accept("Its animation is off. Turn it on in Animations."); return; }
         SlayerData.Slayer src = from != null ? from : MythData.sourceOf(picks.get(0).name);
         if (src == null) return;
         Item a = mythItem(src, picks.get(0), "+" + mf + "%", true); previewPrice(a);
@@ -793,10 +793,7 @@ public final class DropListener {
         List<SlayerData.Drop> picks = name.isBlank() ? List.of(pool.get(new Random().nextInt(pool.size()))) : pickDrops(pool, name, 1, "a treasure drop", reply);
         if (picks == null || picks.isEmpty()) return;
         reply.accept("Simulating " + picks.get(0).name + " from a burrow");
-        Item it = treasureItem(picks.get(0)); it.sim = true;
-        if (TreasureData.coins(it.name) == 0) previewPrice(it); else ItemIcons.prefetch(it.id);
-        Anim a = new Anim(TreasureData.SOURCE, it, -1, null); a.myth = true;
-        AnimationManager.play(a);
+        launchTreasure(picks.get(0), -1, true);
     }
 
     /** Plays one of the four scenes: tier 0 / 1 / 2 with a sample drop, or the "nothing" scene. */

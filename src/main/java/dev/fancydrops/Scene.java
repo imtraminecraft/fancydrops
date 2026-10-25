@@ -734,7 +734,7 @@ final class Scene {
         double size = (side != 0 ? (epic ? 26 : cool ? 23 : 21) : (epic ? 31 : cool ? 26 : 22)) * Math.max(0.01, e) * popK
                 * FancyConfig.get().itemK() * (skull ? 0.72 : 1.0);
         double dx = side * TWIN_DX * easeOut(uu);
-        double yy = itemY(uu) + (ic.itemBob ? 1.6 * ic.itemBobAmp : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) + (side != 0 ? 14 * Math.sin(Math.min(1f, Math.max(0f, uu)) * Math.PI) : 0);     // twin: each item flies out in an arc
+        double yy = itemY(uu) + (ic.itemBob ? 2.4 * ic.itemBobAmp * cl((us - 0.4f) / 0.8f) : 0.0) * Math.sin(us * 2.0 + (side > 0 ? 1.7 : 0)) + (side != 0 ? 14 * Math.sin(Math.min(1f, Math.max(0f, uu)) * Math.PI) : 0);     // twin: each item flies out in an arc
         double spin = turnAngle(p, ts, us, epic ? spinK : 1f, ic.itemSpin) * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side);
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
@@ -794,12 +794,13 @@ final class Scene {
         }
     }
 
-    /** How far the drop has turned: a fast spin that slows down smoothly (the number of turns follows how long the item is on screen) and stops exactly facing front when the scene ends. */
+    /** How far the drop has turned, like an item lying in the world: a slow, steady turn that eases in, glides, and settles facing front exactly when the item leaves. */
     private static float turnAngle(Params p, float ts, float us, float spinK, float itemSpin) {
         if (spinK <= 0.01f) return 0f;
         float life = Math.max(1.5f, length(p) + p.hold - ts - 0.27f);                                  // seconds the item is on screen
-        int turns = Math.max(2, Math.round(life * 0.7f * Math.max(0.4f, Math.min(2f, spinK)) * Math.max(0.3f, itemSpin)));
-        float u = cl(us / (life * 0.8f)), e = 1f - (1f - u) * (1f - u) * (1f - u) * (1f - u);        // ease-out: whirls first, then glides to a stop
+        int turns = Math.max(1, Math.round(life * 0.26f * Math.max(0.4f, Math.min(2f, spinK)) * Math.max(0.3f, itemSpin)));
+        float u = cl(us / life), sm = u * u * u * (u * (u * 6f - 15f) + 10f);
+        float e = u * 0.62f + sm * 0.38f;                                                              // mostly even, soft at both ends: no whirl, no jerk
         return (float) (turns * 2 * Math.PI * e);
     }
 
