@@ -585,6 +585,20 @@ final class Ritual {
     /** The scene is drawn 25% smaller than before: that is the new 100% of the Size slider. */
     static final float SMALLER = 0.6f;
 
+    /** The scene canvas alone (320x180 ARGB) at time t: what AnimFrames writes out as pictures. */
+    static int[] snapshot(Anim a, float t) {
+        FancyConfig c = FancyConfig.get(); FancyConfig.AnimCfg cfg = a.cfg(); Item it = a.item;
+        boolean tre = a.group.equals("treasure"); kind = Math.max(0, a.kind); int type = a.type;
+        boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
+        float S = Math.max(3.6f, cfg.secs), csz = Math.max(0.5f, Math.min(1.5f, cfg.size)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
+        int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
+        if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
+        float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
+        if (rng && cfg.bars) icy = Math.max(barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
+        paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
+        return cv.px.clone();
+    }
+
     /** Draws one animation at time t (seconds) in a W x H screen: the scene, the bars, the item and the words. */
     static void draw(GuiGraphicsExtractor g, Font font, Anim a, float t, int W, int H) {
         FancyConfig c = FancyConfig.get();
@@ -620,7 +634,9 @@ final class Ritual {
                 g.fill(0, 0, W, H, Gfx.argb(Math.round(110 * barSlide), 0x04050E));
                 for (int i = 0; i < 7; i++) { int in = Math.round(W * 0.05f * i), inY = Math.round(H * 0.05f * i); int al = Math.round(26 * barSlide); g.fill(0, 0, W, inY + 1, Gfx.argb(al, 0x000000)); g.fill(0, H - inY - 1, W, H, Gfx.argb(al, 0x000000)); g.fill(0, 0, in + 1, H, Gfx.argb(al, 0x000000)); g.fill(W - in - 1, 0, W, H, Gfx.argb(al, 0x000000)); }
             }
-            paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
+            int[] edited = AnimFrames.override(a, t);                                         // a frame you edited in config/fancydrops/art/animations replaces the drawn one
+            if (edited != null && edited.length == cv.px.length) System.arraycopy(edited, 0, cv.px, 0, edited.length);
+            else paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
             SceneTexture.upload(cv);
             if (!SceneTexture.draw(g, cv, sx, sy, W, H, 1f)) { int cell = Math.max(1, Math.round((float) W / CW)); cv.flush((x0, y0, x1, y1, col) -> g.fill(x0 + sx, y0 + sy, x1 + sx, y1 + sy, col), 0, 0, cell, 1f); }
             if (rng && p > 0 && p < 0.45f) g.fill(0, 0, W, H, Gfx.argb(Math.round(235 * (1f - p / 0.45f) * (1f - p / 0.45f)), 0xFFFFFF));                  // the flash

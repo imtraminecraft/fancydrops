@@ -184,3 +184,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.4.28
 - Page headers show the title only: no line of words under it.
 - Item changes sliders (spin, glow, float) and toggles must change what the animation draws; the Item preview uses a 3D head so spin shows. Bar "See-through" 0% is solid. Animation Size is 50-150%.
+
+## Standing requirements added in 0.4.29
+- The back button lives in the page header (under the title), never as a row in the list.
+- A button inside a search result must work like on its own page: it moves to that page and clears the search.
+- Heads are traced off the render thread. Animation frames are real PNGs in art/animations; an edited frame replaces the drawn one.

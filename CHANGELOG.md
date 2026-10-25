@@ -1,3 +1,12 @@
+## 0.4.29
+- Less lag: the 3D heads are now ray-traced on a background thread (96 steps a turn), so a page of spinning heads no longer stalls the game.
+- Animation frames: every scene is written to `config/fancydrops/art/animations` as PNG frames the first time the menu opens. Edit a frame and the mod plays yours.
+- Search: buttons inside a search result (the category tiles) now open their page and close the search, instead of doing nothing.
+- The back button moved up into the page header.
+- Sounds timeline: block text is coloured, and a lane with no sound picked says "none for this animation".
+- New short texts for Drop Library, Mythological, Mythological Mobs ("x Mobs • x Drops listed") and Treasure.
+- Settings: the Layout tiles are tall enough for their two lines.
+
 ## 0.4.28
 - Item changes: Spin speed, Spin the other way and Glow now work (the preview shows a 3D head, so you can see them). Glow is a soft light behind the item.
 - Bar changes: the opacity slider is now "See-through" (0% solid, higher lets the picture show). Side pillars are back (off by default).

@@ -116,6 +116,7 @@ public final class AnimationManager {
     // ------------------------------------------------------------------ the menu preview
 
     private static Item SAMPLE;
+    static Item sampleItem() { return sample(); }
     private static Item sample() {
         if (SAMPLE == null) {
             Item it = new Item(); it.name = "Daedalus Stick"; it.id = "DAEDALUS_STICK"; it.icon = "stick"; it.rank = 2; it.price = 21_000_000; it.priceSource = "Auction House"; it.mf = "+250%"; it.chance = "1 in 1,800"; it.odds = "1 in 1,800";

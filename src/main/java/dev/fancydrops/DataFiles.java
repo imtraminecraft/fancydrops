@@ -25,7 +25,6 @@ public final class DataFiles {
                 Path oi = dir().resolve("icons"), ot = dir().resolve("textures");
                 if (Files.isDirectory(oi)) try (var st = Files.list(oi)) { for (Path f : (Iterable<Path>) st::iterator) { if (Files.isRegularFile(f)) Files.move(f, root.resolve("icons").resolve(f.getFileName()), java.nio.file.StandardCopyOption.REPLACE_EXISTING); } }
                 if (Files.isDirectory(ot)) try (var st = Files.list(ot)) { for (Path f : (Iterable<Path>) st::iterator) { if (Files.isRegularFile(f)) Files.move(f, root.resolve(f.getFileName().toString().endsWith("_head.png") ? "heads" : "items").resolve(f.getFileName()), java.nio.file.StandardCopyOption.REPLACE_EXISTING); } }
-                Files.writeString(root.resolve("animations").resolve("README.txt"), "The animation scenes (the ritual circle, the creatures, the digger, the lightning) are drawn in code: Ritual.java in the mod's source (art/animations).\nTiming, size and position are in the Animations page of the menu.\n");
             }
             Files.createDirectories(p);
         } catch (Exception ignored) {}

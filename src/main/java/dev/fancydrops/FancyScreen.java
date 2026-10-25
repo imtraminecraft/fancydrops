@@ -218,6 +218,7 @@ public class FancyScreen extends Screen {
         int subW;                      // wrapped description width (0 = default)
         int subColor = Ui.SUB;
         List<Ctl> ctls = new ArrayList<>();
+        Runnable backGo; String backLabel;      // a back button: it moves up into the page header instead of taking a row
         Runnable click;                // clicking the row body
         boolean arrow, open;
         EditBox field; String fieldBtn; int btnX0, btnX1; boolean phBtns;
@@ -242,6 +243,7 @@ public class FancyScreen extends Screen {
     private void scrollTo(double my) { int viewH = lb - lt, bh = Math.max(16, viewH * viewH / Math.max(1, totalH)); float f = (float) ((my - lt - bh / 2.0) / Math.max(1, viewH - bh)); scroll = Math.max(0, Math.min(totalH - viewH, Math.round(f * (totalH - viewH)))); }
     private static String query = "";
     private boolean searching;
+    private Runnable hdrBack; private String hdrBackLabel = ""; private int[] hdrBackBox;
     private EditBox searchField;
     private static final Identifier ICON = Identifier.fromNamespaceAndPath("fancydrops", "textures/gui/icon.png");
     private final List<Row> rows = new ArrayList<>();
@@ -604,23 +606,24 @@ public class FancyScreen extends Screen {
             int[] b = {x + 4, y + rulerH + 1 + k * lh, w - 8, lh - 2}; chipBox[k] = b;
             boolean hv = in(mx, my, b); float pulse = Math.max(0f, 1f - (now - pulseAt[k]) / 600f);
             String nm = SoundFx.chosen(key, SoundFx.SLOTS[k]); float dur = Math.max(0.12f, SoundFx.duration(nm));
+            boolean none = SoundFx.byName(nm) == null;                                       // no sound picked: no block, the lane says so
             boolean any = false;
-            for (float ct : tm[k]) if (pt >= ct && pt < ct + dur) any = true;
+            if (!none) for (float ct : tm[k]) if (pt >= ct && pt < ct + dur) any = true;
             pill(g, b[0], b[1], b[2], b[3], Canvas.mix(hv ? Ui.ROW_HOVER : Ui.ROW, SLOT_COL[k], 0.10f + 0.30f * pulse + (any ? 0.22f : 0f)));
             g.fill(b[0], b[1] + 2, b[0] + 2, b[1] + b[3] - 2, SLOT_COL[k]);
             for (int sec = 1; sec < (int) secs + 1; sec++) { int gx = tx0 + Math.round(sec / secs * tw); if (gx < tx1) g.fill(gx, b[1] + 1, gx + 1, b[1] + b[3] - 1, 0x16FFFFFF); }        // a faint line for every second, so the blocks can be read against the ruler
             Gfx.push(g); Gfx.translate(g, b[0] + 6, b[1] + Math.max(1, (b[3] - 11) / 2)); Gfx.scale(g, 0.7f); Icons.draw(g, SLOT_ICON[k], 0, 0, hv || any ? now : 2400L); Gfx.pop(g);
             Gfx.text(g, font, SLOT_NAMES[k], b[0] + 22, b[1] + (b[3] - 8) / 2, any ? 0xFFFFFFFF : Ui.TEXT);
             boolean first = true;
-            for (float ct : tm[k]) {
+            if (!none) for (float ct : tm[k]) {
                 int bx0 = tx0 + Math.round(ct / secs * tw), bx1 = Math.max(bx0 + 3, Math.min(tx1, tx0 + Math.round((ct + dur) / secs * tw)));
                 boolean on = pt >= ct && pt < ct + dur;
-                pill(g, bx0, b[1] + 2, bx1 - bx0, b[3] - 4, Canvas.mix(Canvas.mix(Ui.PANEL2, SLOT_COL[k], on ? 0.95f : 0.62f), 0xFFFFFFFF, on ? 0.25f : 0f));
+                pill(g, bx0, b[1] + 2, bx1 - bx0, b[3] - 4, Canvas.mix(Canvas.mix(Ui.PANEL2, SLOT_COL[k], on ? 0.62f : 0.38f), 0xFFFFFFFF, on ? 0.12f : 0f));
                 g.fill(bx0 + 1, b[1] + 3, bx1 - 1, b[1] + 4, 0x40FFFFFF); g.fill(bx0, b[1] + 3, bx0 + 1, b[1] + b[3] - 3, Canvas.mix(SLOT_COL[k], 0xFFFFFFFF, 0.5f));          // a lit top and a bright start edge
-                if (first) { String lab = SoundFx.label(nm); int room = bx1 - bx0 - 4; String fit = Gfx.fit(font, lab, Math.max(0, room)); if (room > 14 && !fit.isEmpty()) small(g, fit, bx0 + 3, b[1] + (b[3] - 6) / 2, 0xFF10121A, 0.75f); }
+                if (first) { String lab = SoundFx.label(nm); int room = bx1 - bx0 - 4; String fit = Gfx.fit(font, lab, Math.max(0, room)); if (room > 14 && !fit.isEmpty()) small(g, fit, bx0 + 3, b[1] + (b[3] - 6) / 2, Canvas.mix(SLOT_COL[k], 0xFFFFFFFF, on ? 0.9f : 0.55f), 0.75f); }
                 first = false;
             }
-            if (tm[k].length == 0) small(g, "none for this animation", tx0 + 3, b[1] + (b[3] - 6) / 2, Ui.DIM, 0.75f);
+            if (none || tm[k].length == 0) small(g, "none for this animation", tx0 + 3, b[1] + (b[3] - 6) / 2, Ui.DIM, 0.75f);
         }
         if (pt >= 0f) {                                                                         // the playhead and the clock
             int px2 = tx0 + Math.round(Math.min(pt, secs) / secs * tw);
@@ -2285,7 +2288,7 @@ public class FancyScreen extends Screen {
 
     private void resourcesPage() {
         Row bk = row(0, ":back:", "Home", "Back to the home page", Ui.ACCENT); bk.noSearch = true;
-        bk.click = () -> openPage(-1, null, null); rows.add(bk);
+        bk.backGo = () -> openPage(-1, null, null); bk.backLabel = "Home"; rows.add(bk);
         Row hero = row(0, ":res_heart:", "Resources used", "FancyDrops stands on the work of these projects and communities. Thank you!", Ui.ACCENT);
         hero.kind = HERO; hero.h = 84; hero.noSearch = true; rows.add(hero);
         rows.add(section("Credits"));
@@ -2373,7 +2376,7 @@ public class FancyScreen extends Screen {
         Row wp = row(0, icon, title, sub, Ui.DIM); wp.kind = PANEL; wp.h = 150; wp.noSearch = true; rows.add(wp);
     }
     private Row backRow(String title, String sub, int accent, Runnable go) {
-        Row b = row(0, ":back:", title, sub, accent); b.noSearch = true; b.click = go; return b;
+        Row b = row(0, ":back:", title, sub, accent); b.noSearch = true; b.backGo = go; b.backLabel = title; return b;
     }
     private static String srcName(DropData.Source s) { return s.boss == null || s.boss.isEmpty() ? s.name : s.boss; }
     /** The tiles of every category: each opens its sub page. */
@@ -2451,7 +2454,13 @@ public class FancyScreen extends Screen {
                     buildTab(t); filterSub();
                     Row head = section(t.label + (k >= 0 ? "  >  " + sn[k] : "")); head.noSearch = true;
                     pages.add(head);
-                    for (Row r : rows) { pages.add(r); if (r.kind == NORMAL) shown.add(r.title); }
+                    final Tab tt = t; final int kk = k;
+                    Runnable go = () -> { tab = tt; subSel[tt.ordinal()] = kk; dropSrc = null; dropSrcName = null; query = ""; searchField.setValue(""); scroll = 0; };      // a button inside a search result first moves to the page it belongs to, then does its job
+                    for (Row r : rows) {
+                        if (r.arrow && r.click != null) { Runnable o = r.click; r.click = () -> { go.run(); o.run(); }; }
+                        if (r.pSet != null && r.pSel != null && r.pSel.getAsInt() < 0) { IntConsumer o = r.pSet; r.pSet = i -> { go.run(); o.accept(i); }; }
+                        pages.add(r); if (r.kind == NORMAL) shown.add(r.title);
+                    }
                     pageCount++;
                 }
             }
@@ -2479,6 +2488,9 @@ public class FancyScreen extends Screen {
             if (pages.isEmpty() && res.isEmpty() && !cosHint()) rows.add(note("Nothing matches. Try a drop name, a category, or a setting like \"volume\".", 0xFF9AA6FF));
             searching = false;
         }
+        hdrBack = null; hdrBackLabel = "";                              // the back button sits in the header, not in the list
+        if (query.isBlank()) for (Row r : rows) if (r.backGo != null) { hdrBack = r.backGo; hdrBackLabel = r.backLabel; break; }
+        rows.removeIf(r -> r.backGo != null);
         for (Row r : rows) {                                           // a description too long for its row wraps onto more lines instead of scrolling
             if (r.kind != NORMAL || r.sub.isEmpty() || r.wrapSub || r.field != null || r.pickLabels != null) continue;
             int avail = cw - r.indent * 12 - 8 - (r.arrow ? 14 : 0) - 14 - 32;
@@ -2491,9 +2503,9 @@ public class FancyScreen extends Screen {
         if (landing() && query.isBlank()) {                                // main pages never scroll: the tiles get a little shorter until everything fits
             int viewH = lb - lt;
             if (totalH > viewH) { rows.removeIf(r -> r.kind == TEXT); relayout(); }          // the page title above already says it
-            for (int pass = 0; pass < 14 && totalH > viewH; pass++) {
+            for (int pass = 0; pass < 26 && totalH > viewH; pass++) {
                 boolean ch = false;
-                for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 40 : 27)) { r.pTh -= 2; fit(r); ch = true; }
+                for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 40 : r.pSubs != null ? 31 : 27)) { r.pTh -= 1; fit(r); ch = true; }
                 if (!ch) break;
                 relayout();
             }
@@ -2545,7 +2557,7 @@ public class FancyScreen extends Screen {
             return;
         }
         if (landing()) {
-            rows.add(hero(":dropped:", "Drop Library", "Every drop, sorted by where it comes from. Open a category, pick a creature or a chest, then choose the animation each drop plays and whether it is announced in chat.", Ui.ACCENT));
+            rows.add(hero(":dropped:", "Drop Library", "Every drop, sorted by where it comes from. Open a category and choose the animation each drop plays and whether it is announced in chat.", Ui.ACCENT));
             rows.add(catTiles());
             return;
         }
@@ -2566,15 +2578,14 @@ public class FancyScreen extends Screen {
         if (open == null && grp.id().equals("treasure")) open = srcs.get(0);       // the burrow is one page: it opens straight away
         if (open == null) { dropsGroup(cat, grp, srcs, c); return; }
         boolean single = grp.id().equals("treasure");
-        if (single) { rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null))); rows.add(hero(grp.icon(), grp.name(), grp.blurb(), grp.color())); treasureSettings(rows, c); }
+        if (single) { rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null))); int tot = 0; for (DropData.Source ts : srcs) tot += ts.drops.size(); rows.add(hero(grp.icon(), grp.name(), tot + (tot == 1 ? " Drop" : " Drops") + " listed", grp.color())); treasureSettings(rows, c); }
         final Categories.Group fg = grp;
         dropsSource(cat, fg, open, c, single);
     }
 
     /** The hub of a category: one tile per group (Mythological Mobs, Treasure). */
     private void dropsCategory(Categories.Cat cat, FancyConfig c) {
-        int total = 0; for (DropData.Source s : cat.sources()) total += s.drops.size();
-        rows.add(hero(cat.icon(), cat.name(), cat.blurb() + "  " + total + " drops.", cat.color()));
+        rows.add(hero(cat.icon(), cat.name(), cat.blurb(), cat.color()));
         rows.add(section("Pages"));
         int n = cat.groups().size(); String[] lb = new String[n], sb = new String[n]; int[] co = new int[n]; String[] ic = new String[n];
         for (int i = 0; i < n; i++) {
@@ -2588,7 +2599,7 @@ public class FancyScreen extends Screen {
     private void dropsGroup(Categories.Cat cat, Categories.Group grp, List<DropData.Source> srcs, FancyConfig c) {
         rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null)));
         int total = 0; for (DropData.Source s : srcs) total += s.drops.size();
-        rows.add(hero(grp.icon(), grp.name(), grp.blurb() + "  " + srcs.size() + " creatures, " + total + " drops.", grp.color()));
+        rows.add(hero(grp.icon(), grp.name(), srcs.size() + (srcs.size() == 1 ? " Mob" : " Mobs") + " \u2022 " + total + (total == 1 ? " Drop" : " Drops") + " listed", grp.color()));
         mythSettings(rows, c);
         rows.add(section("Creatures"));
         int n = srcs.size(); String[] lb = new String[n], sb = new String[n], mi = new String[n]; int[] co = new int[n];
@@ -3018,6 +3029,7 @@ public class FancyScreen extends Screen {
 
     private boolean dirty = true; private long lastSig, lastBuild;
     @Override public void extractRenderState(GuiGraphicsExtractor g, int mx0, int my0, float delta) {
+        AnimFrames.tick();                                                                      // the first time the menu opens, the animation frames are written to config/fancydrops/art/animations
         Gfx.uiFont = 0;                                             // the menu font setting is gone: one font
         final int mx = editor != 0 ? -9999 : mx0, my = editor != 0 ? -9999 : my0;       // an open editor sits on top: nothing behind it lights up
         formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false);
@@ -3231,7 +3243,15 @@ public class FancyScreen extends Screen {
             if (on && !STILL) { int sw = b[0] + 2 + (int) (((now % 2600L) / 2600f) * (w - 4)); g.enableScissor(b[0] + 1, b[1] + 1, b[2] - 1, b[3] - 1); for (int i = 0; i < 6; i++) g.fill(sw + i, b[1] + 1, sw + i + 1, b[3] - 1, Gfx.argb(Math.round(26 * (1f - Math.abs(i - 3) / 3f)), 0xFFFFFF)); g.disableScissor(); }
         }
         // page header
-        Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 15, Ui.TEXT);                      // the title alone: no line of words under it
+        Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, hdrBack != null ? py + 9 : py + 15, Ui.TEXT);                      // the title alone: no line of words under it
+        hdrBackBox = null;
+        if (hdrBack != null) {                                                                           // the back button, right under the title
+            String bt = "Back to " + hdrBackLabel; int bw = Math.min(cw - 140, 22 + Gfx.w(font, bt)); hdrBackBox = new int[]{cx - 2, py + 21, bw, 15};
+            boolean bh = in(mx, my, hdrBackBox);
+            pill(g, hdrBackBox[0], hdrBackBox[1], bw, 15, bh ? Ui.ROW_HOVER : Ui.ROW);
+            Gfx.push(g); Gfx.translate(g, hdrBackBox[0] + 3, hdrBackBox[1] + 2); Gfx.scale(g, 0.7f); Icons.draw(g, ":back:", 0, 0, bh ? now : 2400L); Gfx.pop(g);
+            Gfx.text(g, font, Gfx.fit(font, bt, bw - 18), hdrBackBox[0] + 16, hdrBackBox[1] + 4, bh ? Ui.TEXT : Ui.SUB);
+        }
         if (tab == Tab.COSMETICS && query.isBlank()) {                                                   // x / total owned: small, under the search box, the bar fills once
             int own = 0; for (CosmeticData.Def d : CosmeticData.ALL) if (CosmeticData.unlocked(d)) own++;
             int tot = CosmeticData.ALL.size(); String ot = own + " / " + tot; int tw = Gfx.w(font, ot), bx1 = cx + cw - 2, bw = 78, bx0 = bx1 - bw;
@@ -3525,6 +3545,7 @@ public class FancyScreen extends Screen {
             if (!sc.secretFound) { sc.secretFound = true; FancyConfig.save(); toast("You found it!\nThe Secret cosmetic is yours.", 0xFFC08BFF); }
             return true;
         }
+        if (button == 0 && hdrBack != null && hdrBackBox != null && !cosWin() && in(mx, my, hdrBackBox)) { hdrBack.run(); return true; }
         if (button == 0 && in(mx, my, mainClose()) && cosWin()) { closeCos(); return true; }
         if (button == 0 && in(mx, my, mainClose())) { if (FancyConfig.get().menuAnimated) { if (closeAt == 0L) closeAt = System.currentTimeMillis(); } else onClose(); return true; }
         if (button == 0 && tab == Tab.SOUNDS) for (int k = 0; k < 5; k++) {                                // the five sound chips under the waves: click one to hear it

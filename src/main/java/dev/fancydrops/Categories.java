@@ -42,7 +42,7 @@ final class Categories {
     private static final List<Type> MYTH_TYPES = List.of(NO_DROPS, NORMAL, RNG);
 
     static final List<Cat> ALL = List.of(
-        new Cat("mythological", "Mythological", ":mytho:", 0xFF55D8FF, false, "The creatures you call and the treasure you dig up.", List.of(
+        new Cat("mythological", "Mythological", ":mytho:", 0xFF55D8FF, false, "Mythological Ritual is an event that occurs with the Mythological Ritual perk.", List.of(
             new Group("myth", "Mythological Mobs", ":mytho:", 0xFF55D8FF, "What plays when a ritual creature dies.", MYTH_TYPES),
             new Group("treasure", "Treasure", ":treasure:", 0xFFFFD25A, "What plays when a burrow holds treasure.", MYTH_TYPES))),
         new Cat("slayers", "Slayers", ":slayers:", 0xFFFF5A5A, true, "Slayer bosses and their drops.", List.of()),

@@ -13,4 +13,4 @@ In the game's config folder: `config/fancydrops/art/`
 - `icons/<name>.png`: 16 px wide, 256 px tall (16 frames stacked). A 16x16 file is a still icon. Saved files reload within a second.
 - `heads/<ITEM_ID>_head.png`: a 64x64 or 64x32 skin, shown as the 3D head.
 - `items/<ITEM_ID>.png`: a flat item picture (any size, scaled to 16x16).
-- `animations/`: a note only. The scenes are code.
+- `animations/`: every scene as 320x180 PNG frames (8 per second), one folder per scene (`myth_rng_minotaur`, `treasure_normal`...). Written the first time the menu opens. Edit a frame and save: the mod plays your frame (frames you did not change are still drawn by the code). Delete `exported_v1.txt` to write them again.

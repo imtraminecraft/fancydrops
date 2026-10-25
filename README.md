@@ -25,3 +25,6 @@ Open `config/fancydrops/art/items` and `art/heads`. Each item has `<ID>.png` (fl
 
 ## Editing icons
 `config/fancydrops/icons/<name>.png`: 16 px wide, 128 tall (8 frames stacked). Save the file and the game reloads it within a second.
+
+## Animation frames
+Open `config/fancydrops/art/animations`. Every scene is there as PNG frames (320x180, 8 per second). Edit a frame, save, and the mod plays it. Items, bars and words are drawn on top.
