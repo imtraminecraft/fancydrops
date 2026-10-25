@@ -186,7 +186,7 @@ public final class DropListener {
     static String adv(String m) { String t = ADV + m; return t.length() > 250 ? t.substring(0, 250) : t; }
 
     /** The category (Categories.Cat id) a drop's chat message follows. */
-    static String catOf(Item it) { return "mythological"; }
+    static String catOf(Item it) { return it.source == TreasureData.SOURCE ? "treasure" : "mythological"; }
 
     static String message(Item it, double price, String mf, String fmt) {
         FancyConfig c = FancyConfig.get();

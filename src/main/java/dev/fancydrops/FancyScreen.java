@@ -2268,9 +2268,11 @@ public class FancyScreen extends Screen {
     private Categories.Cat curCat() { return Categories.ALL.get(Math.max(0, Math.min(Categories.ALL.size() - 1, curSub()))); }
     /** The animation group whose editor is open on Animations / Sounds (null = none). */
     private Categories.Group curGroup() {
-        if (landing() || (tab != Tab.ANIMATIONS && tab != Tab.SOUNDS) || dropSrc == null) return null;
+        if (landing() || (tab != Tab.ANIMATIONS && tab != Tab.SOUNDS)) return null;
         Categories.Cat cat = curCat();
         if (cat.wip()) return null;
+        if (cat.groups().size() == 1) return cat.groups().get(0);                 // one animation group: its editor opens straight away
+        if (dropSrc == null) return null;
         for (Categories.Group gr : cat.groups()) if (gr.id().equals(dropSrc)) return gr;
         return null;
     }
@@ -2453,9 +2455,11 @@ public class FancyScreen extends Screen {
         Categories.Cat cat = curCat();
         if (cat.wip()) { wipPanel(cat.icon(), cat.name() + " drops", cat.blurb()); return; }
         List<DropData.Source> srcs = cat.sources();
-        for (DropData.Source s : srcs) srcList.add(new String[]{s.id, srcName(s), s.icon, String.valueOf(s.color())});
-        DropData.Source open = null; for (DropData.Source s : srcs) if (s.id.equals(dropSrc)) open = s;
-        if (open == null) dropsCategory(cat, srcs, c); else dropsSource(cat, open, c);
+        boolean single = srcs.size() == 1;                                    // one source (Treasure): its page opens straight away
+        if (!single) for (DropData.Source s : srcs) srcList.add(new String[]{s.id, srcName(s), s.icon, String.valueOf(s.color())});
+        DropData.Source open = single ? srcs.get(0) : null; if (!single) for (DropData.Source s : srcs) if (s.id.equals(dropSrc)) open = s;
+        if (open == null) dropsCategory(cat, srcs, c);
+        else { if (single) { rows.add(hero(cat.icon(), cat.name(), cat.blurb(), cat.color())); treasureSettings(rows, c); } dropsSource(cat, open, c, single); }
     }
 
     private void dropsCategory(Categories.Cat cat, List<DropData.Source> srcs, FancyConfig c) {
@@ -2468,10 +2472,10 @@ public class FancyScreen extends Screen {
         rows.add(picker("", "", lb, sb, new String[n], co, null, 3, () -> -1, i -> openPage(curSub(), srcs.get(i).id, lb[i])));
     }
 
-    private void dropsSource(Categories.Cat cat, DropData.Source s, FancyConfig c) {
+    private void dropsSource(Categories.Cat cat, DropData.Source s, FancyConfig c, boolean single) {
         String nm = srcName(s);
         FancyConfig.SourceCfg sc = c.source(s.id);
-        rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null)));
+        if (!single) rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null)));
         Row head = row(0, s.icon, nm, s.drops.size() + " drops  ·  switch off to ignore this page completely", s.color());
         head.ctls.add(sw(() -> sc.enabled, v -> sc.enabled = v)); head.click = () -> sc.enabled = !sc.enabled;
         rows.add(head);
@@ -2508,7 +2512,7 @@ public class FancyScreen extends Screen {
         if (searching || landing()) { animationsLanding(c); return; }
         Categories.Cat cat = curCat();
         if (cat.wip()) { wipPanel(cat.icon(), cat.name() + " animations", cat.blurb()); return; }
-        for (Categories.Group gr : cat.groups()) srcList.add(new String[]{gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())});
+        if (cat.groups().size() > 1) for (Categories.Group gr0 : cat.groups()) srcList.add(new String[]{gr0.id(), gr0.name(), gr0.icon(), String.valueOf(gr0.color())});
         Categories.Group gr = curGroup();
         if (gr == null) { groupTiles(cat, "Open one to edit its animations."); return; }
         animationEditor(cat, gr, c);
@@ -2580,7 +2584,7 @@ public class FancyScreen extends Screen {
         if (searching || landing()) { soundsLanding(c); return; }
         Categories.Cat cat = curCat();
         if (cat.wip()) { wipPanel(cat.icon(), cat.name() + " sounds", cat.blurb()); return; }
-        for (Categories.Group gr : cat.groups()) srcList.add(new String[]{gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())});
+        if (cat.groups().size() > 1) for (Categories.Group gr0 : cat.groups()) srcList.add(new String[]{gr0.id(), gr0.name(), gr0.icon(), String.valueOf(gr0.color())});
         Categories.Group gr = curGroup();
         if (gr == null) { groupTiles(cat, "Open one to edit its sounds."); return; }
         soundEditor(cat, gr, c);
@@ -2752,12 +2756,16 @@ public class FancyScreen extends Screen {
 
     private void mythSettings(List<Row> rows, FancyConfig c) {
         rows.add(section("Settings"));
-        int sp = Math.max(0, Math.min(2, c.mythSpade)), col = TreasureData.COLS[sp];
         int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))];
         Row pet = row(0, String.format(":griffin:#%06X", pc & 0xFFFFFF), "Griffin pet", "Chances for this pet  \u00B7  Mythic is best  \u00B7  creatures it can't call are hidden", pc);
         Dd petDd = new Dd(() -> MythData.PETS[c.mythPet], "dd_pet", 90); petDd.col = () -> pc;
         pet.ctls.add(petDd); rows.add(pet);
         if (open.contains("dd_pet") && !searching) { Row pl = miniList(pet, petDd, java.util.Arrays.asList(MythData.PETS), c.mythPet, i -> { c.mythPet = i; MythData.applyPet(i); open.remove("dd_pet"); }); pl.pickCols = PET_COLS; rows.add(pl); }
+    }
+    /** Treasure page: the spade you dig with and the Erudite reforge decide what a burrow can hold. */
+    private void treasureSettings(List<Row> rows, FancyConfig c) {
+        rows.add(section("Settings"));
+        int sp = Math.max(0, Math.min(2, c.mythSpade)), col = TreasureData.COLS[sp];
         Row pick = row(0, "fd:griffin#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  \u00B7  25% of burrows are treasure", col);
         Dd dd = new Dd(() -> TreasureData.SPADES[Math.max(0, Math.min(2, c.mythSpade))], "dd_spade", 100); dd.col = () -> col;
         pick.ctls.add(dd); rows.add(pick);
