@@ -171,9 +171,10 @@ final class Ritual {
         if (tt <= 0f) return;
         float e = tt * tt;
         float w = lerp(1f, 7f * sz, e);                                                  // the pillar
-        for (int y = 0; y < gy; y += 1) {
-            float f = 1f - y / (float) gy;
-            for (int x = (int) -w; x <= w; x++) cv.set(Math.round(cx + x), y, A(a * (0.10f + 0.30f * e) * (1f - Math.abs(x) / (w + 1f)) * (0.5f + 0.5f * f), mixc(rgb, WHITE, 0.4f)));
+        float top = Math.max(0f, gy - (40f + 50f * e) * sz);                                   // the pillar is short: it fades out well below the top of the screen
+        for (int y = (int) top; y < gy; y += 1) {
+            float f = 1f - (y - top) / Math.max(1f, gy - top);
+            for (int x = (int) -w; x <= w; x++) cv.set(Math.round(cx + x), y, A(a * (0.10f + 0.30f * e) * (1f - Math.abs(x) / (w + 1f)) * (0.5f + 0.5f * (1f - f)) * (1f - f * f), mixc(rgb, WHITE, 0.4f)));
         }
         for (int i = 0; i < 40; i++) {
             float an = rnd(i * 5) * 6.28f + tt * 2.8f, dist = 0.5f + 0.9f * rnd(i * 9 + 2), k = cl(tt * 1.15f - rnd(i) * 0.15f), q = 1f - k * k;
@@ -578,7 +579,7 @@ final class Ritual {
     /** Seconds from the pivot (the moment the drop appears) to the end. */
     static final float TAIL = 3.2f;
     /** The scene is drawn 25% smaller than before: that is the new 100% of the Size slider. */
-    static final float SMALLER = 0.75f;
+    static final float SMALLER = 0.6f;
 
     /** Draws one animation at time t (seconds) in a W x H screen: the scene, the bars, the item and the words. */
     static void draw(GuiGraphicsExtractor g, Font font, Anim a, float t, int W, int H) {

@@ -2571,7 +2571,7 @@ public class FancyScreen extends Screen {
     private void dropsSource(Categories.Cat cat, Categories.Group grp, DropData.Source s, FancyConfig c, boolean single) {
         String nm = srcName(s);
         FancyConfig.SourceCfg sc = c.source(s.id);
-        if (!single) { rows.add(backRow(grp.name(), "Back to all the " + grp.name(), grp.color(), () -> openPage(curSub(), grp.id(), grp.name()))); rows.add(hero(s.icon, nm, s.drops.size() + " drops", s.color())); }
+        if (!single) { rows.add(backRow(grp.name(), "Back to all the " + grp.name(), grp.color(), () -> openPage(curSub(), grp.id(), grp.name()))); rows.add(hero(grp.id().equals("myth") ? ":mob_" + s.id + ":" : s.icon, nm, s.drops.size() + " drops", s.color())); }
         Row cols = section(""); cols.dropCols = true; cols.h = 14; rows.add(cols);
         AnimAll aa = new AnimAll(); List<FancyConfig.DropCfg> all = new ArrayList<>();
         for (DropData.Drop d : s.drops) { FancyConfig.DropCfg dc = c.drop(s.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); aa.cfgs.add(dc); all.add(dc); }

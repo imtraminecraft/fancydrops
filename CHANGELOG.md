@@ -1,3 +1,7 @@
+## 0.4.19
+- Animations are smaller again: 100% is now 0.6 of the old base size (about 1/3 of the screen width), and the pillar of light stops well below the top of the screen.
+- The creature page header shows the creature's own head, not its first drop.
+
 ## 0.4.18
 - Main pages (Animations, Sounds and the other landing pages) never scroll: their tiles shrink a little until everything fits.
 - Every item picture is loaded once when the menu opens, so all of them are in `config/fancydrops/textures/` (before, only the ones you had looked at).

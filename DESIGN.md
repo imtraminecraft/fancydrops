@@ -163,3 +163,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## 0.4.18
 - Main (landing) pages must never scroll: build() shrinks tile heights, then hides the intro text, then clips.
+
+## 0.4.19
+- Animation 100% = Ritual.SMALLER 0.6 (about a third of the screen width). The inhale pillar is short.
