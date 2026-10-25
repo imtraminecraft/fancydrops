@@ -921,7 +921,7 @@ public class FancyScreen extends Screen {
                 sets = true;
                 List<CosmeticData.Def> ms = CosmeticData.members(sd);
                 boolean owned = CosmeticData.unlocked(ms.get(0)), wearing = CosmeticData.wearingSet(sd);
-                lb[k] = sd.name(); sb[k] = !owned ? "Locked" : wearing ? "Wearing" : "Wear set"; ic[k] = sd.suffix() != null ? Cosmetics.token(sd.suffix()) : ":emblem:#" + String.format("%06X", sd.color() & 0xFFFFFF); cl[k] = sd.color(); bg[k] = sd.color(); rar[k] = sd.rarity(); lk[k] = !owned; eq[k] = owned && wearing; fxs[k] = sd.fx(); sids[k] = sd.id();
+                lb[k] = sd.name(); sb[k] = !owned ? "Locked" : wearing ? "Wearing" : "Wear set"; ic[k] = sd.suffix() != null ? ":emblem_special:#" + String.format("%06X", sd.color() & 0xFFFFFF) : ":emblem:#" + String.format("%06X", sd.color() & 0xFFFFFF); cl[k] = sd.color(); bg[k] = sd.color(); rar[k] = sd.rarity(); lk[k] = !owned; eq[k] = owned && wearing; fxs[k] = sd.fx(); sids[k] = sd.id();
                 tp[k] = tipLines(sd.name(), "Set", sd.rarity(), owned, "Items " + CosmeticData.owned(sd) + " / " + ms.size(), sd.how());
             } else {
                 CosmeticData.Def d = (CosmeticData.Def) it; boolean open2 = CosmeticData.unlocked(d);
@@ -2459,6 +2459,7 @@ public class FancyScreen extends Screen {
             if (avail > 70 && Gfx.w(font, r.sub) > avail) { r.wrapSub = true; r.subW = avail; r.h = Math.max(r.h, 19 + 11 * wrap(r.sub, avail).size()); }
         }
         for (Row r : rows) if (r.kind == HERO) r.h = Math.max(r.h, 76 + 11 * wrap(r.sub, cw - 60).size());      // the words always fit inside the card
+        if (landing() && query.isBlank()) scroll = 0;
         relayout();
         if (landing() && query.isBlank()) {                                // main pages never scroll: the tiles get a little shorter until everything fits
             int viewH = lb - lt;
@@ -2921,7 +2922,17 @@ public class FancyScreen extends Screen {
 
     private static final int SUBH = 17;
     /** Sub page row height: shrinks a little when the open page has so many that they would run off the bottom of the menu. */
-    private int subH() { return SUBH; }                         // never squished: a long list scrolls with the sidebar
+    private float sq = 1f;                                      // the sidebar squeeze (0.7 .. 1): when the tabs and their sub pages are too tall, every row gets a little shorter instead of scrolling
+    private int tp() { return Math.round(24 * sq); }
+    private int subH() { return Math.max(12, Math.round(SUBH * sq)); }
+    private int srcH() { return Math.max(10, Math.round(SRCH * sq)); }
+    private int tabBoxH() { return Math.min(22, tp() - 1); }
+    private void squeezeSide() {
+        if (!query.isBlank()) { sq = 1f; return; }
+        float nat = 6 * 24 + 4 + SRCH * srcList.size() * srcExp + (tab == Tab.GENERAL ? 0 : subExp * SUBH * subs().length), avail = sideBottom() - (py + 70) - 4;
+        float want = nat <= 0 ? 1f : Math.max(0.7f, Math.min(1f, avail / nat));
+        sq = want;
+    }
     private static String jumpTo;                                 // a row title to scroll to after the next build
     private static final int[] subSel = new int[Tab.values().length];
     static { java.util.Arrays.fill(subSel, -1); }   // the chosen sub page of every tab
@@ -2937,21 +2948,21 @@ public class FancyScreen extends Screen {
 
     private int sideScroll;                                   // the sidebar scrolls when the tabs and sub pages are taller than the menu
     private boolean srcTab() { return tab == Tab.DROPS || tab == Tab.SOUNDS || tab == Tab.ANIMATIONS; }
-    private int srcExtra() { return srcTab() ? Math.round(srcExp * SRCH * srcList.size()) : 0; }
+    private int srcExtra() { return srcTab() ? Math.round(srcExp * srcH() * srcList.size()) : 0; }
     private static final int SRCH = 14;
     /** The pinned Settings block at the bottom of the sidebar: a line, then the Settings tab (its pages open upwards). */
     private int pinTop() { return py + ph - 29 - (tab == Tab.GENERAL ? Math.round(subExp * SUBH * subs().length) + 2 : 0); }
     private int sideBottom() { return query.isBlank() ? pinTop() - 2 : py + ph - 4; }
-    private int sideMax() { if (!query.isBlank()) return Math.max(0, searchSideH - (ph - 70 - 8)); return Math.max(0, 6 * 24 + 4 + srcExtra() + (tab == Tab.GENERAL ? 0 : Math.round(subExp * subH() * subs().length)) - (sideBottom() - (py + 70) - 4)); }
+    private int sideMax() { if (!query.isBlank()) return Math.max(0, searchSideH - (ph - 70 - 8)); return Math.max(0, 6 * tp() + 4 + srcExtra() + (tab == Tab.GENERAL ? 0 : Math.round(subExp * subH() * subs().length)) - (sideBottom() - (py + 70) - 4)); }
     private boolean inSide(double mx, double my) { return !cosWin() && mx >= px && mx < px + sw && my >= py + 42 && my < py + ph - 4; }
     private int[] tabBox(int i) {
         Tab ti = Tab.values()[i];
         if (ti == Tab.GENERAL) return new int[]{px + 8, py + ph - 26, px + sw - 6, py + ph - 4};
-        int y = (ti == Tab.COSMETICS ? -1000 : py + 70 - sideScroll + vi(i) * 24) + (tab != Tab.GENERAL && i > tab.ordinal() ? Math.round(subExp * subH() * subs().length) + srcExtra() : 0);
-        return new int[]{px + 8, y, px + sw - 6, y + 22};
+        int y = (ti == Tab.COSMETICS ? -1000 : py + 70 - sideScroll + vi(i) * tp()) + (tab != Tab.GENERAL && i > tab.ordinal() ? Math.round(subExp * subH() * subs().length) + srcExtra() : 0);
+        return new int[]{px + 8, y, px + sw - 6, y + tabBoxH()};
     }
-    private int[] srcBox(int j) { int[] b = subBox(curSub()); int y = b[1] + subH() + j * SRCH; return new int[]{px + 26, y, px + sw - 6, y + SRCH - 1}; }
-    private int[] subBox(int k) { if (tab == Tab.GENERAL) { int y = py + ph - 27 - subs().length * SUBH + k * SUBH; return new int[]{px + 16, y, px + sw - 6, y + SUBH - 1}; } int y = tabBox(tab.ordinal())[1] + 25 + k * subH() + (srcTab() && k > curSub() ? srcExtra() : 0); return new int[]{px + 16, y, px + sw - 6, y + subH() - 1}; }
+    private int[] srcBox(int j) { int[] b = subBox(curSub()); int y = b[1] + subH() + j * srcH(); return new int[]{px + 26, y, px + sw - 6, y + srcH() - 1}; }
+    private int[] subBox(int k) { if (tab == Tab.GENERAL) { int y = py + ph - 27 - subs().length * SUBH + k * SUBH; return new int[]{px + 16, y, px + sw - 6, y + SUBH - 1}; } int y = tabBox(tab.ordinal())[1] + tabBoxH() + 3 + k * subH() + (srcTab() && k > curSub() ? srcExtra() : 0); return new int[]{px + 16, y, px + sw - 6, y + subH() - 1}; }
 
     /** Keeps only the rows under the chosen sub heading (the headings themselves become the sidebar list). */
     private void filterSub() {
@@ -3073,11 +3084,12 @@ public class FancyScreen extends Screen {
         tabAcc = Canvas.mix(tabAcc == 0 ? tabCol(tab) : tabAcc, tabCol(tab), animOn ? 0.2f : 1f);
         subExp = anim("subExp", subs().length > 0 && query.isBlank() ? 1f : 0f, 40f);
         srcExp = anim("srcExp", srcTab() && !onLanding() && !srcList.isEmpty() && query.isBlank() ? 1f : 0f, 30f);
+        squeezeSide(); int toff = (tabBoxH() - 22) / 2;
         String[] sn = subs();
         for (int pass = 0; pass < 2; pass++) {                                     // pass 0: the scrolling list. pass 1: Settings, pinned under a line at the bottom
         if (pass == 0) g.enableScissor(px + 4, py + 42, px + sw, sideBottom()); else g.enableScissor(px + 4, pinTop() - 1, px + sw, py + ph - 4);
-        pill(g, px + 8, sy, sw - 14, 22, Ui.ROW);
-        g.fill(px + 8, sy + 3, px + 10, sy + 19, tabAcc);
+        pill(g, px + 8, sy, sw - 14, tabBoxH(), Ui.ROW);
+        g.fill(px + 8, sy + 2, px + 10, sy + tabBoxH() - 2, tabAcc);
         for (int i = 0; i < Tab.values().length; i++) {
             Tab t = Tab.values()[i]; if (t == Tab.COSMETICS || (t == Tab.GENERAL) != (pass == 1)) continue; int[] b = tabBox(i);
             boolean act = t == tab, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
@@ -3086,9 +3098,9 @@ public class FancyScreen extends Screen {
             Gfx.push(g); Gfx.translate(g, Math.round((1f - tin) * -22f + hv * 2f), 0);
             if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
             int dx = 0;
-            iconBack(g, b[0] + 14 + dx, b[1] + 11, 9, act, tabCol(t));
-            tabIcon(g, t, b[0] + 6 + dx, b[1] + 3, act && cfg.menuIcons ? now : 2400L, act);   // only the open page's icon moves
-            Gfx.text(g, font, t.label, b[0] + 28 + dx, b[1] + 7, act ? Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.35f) : Canvas.mix(Canvas.mix(0xFF8A8A96, tabCol(t), 0.45f), 0xFFFFFFFF, hv * 0.4f));
+            iconBack(g, b[0] + 14 + dx, b[1] + 11 + toff, 9, act, tabCol(t));
+            tabIcon(g, t, b[0] + 6 + dx, b[1] + 3 + toff, act && cfg.menuIcons ? now : 2400L, act);   // only the open page's icon moves
+            Gfx.text(g, font, t.label, b[0] + 28 + dx, b[1] + 7 + toff, act ? Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.35f) : Canvas.mix(Canvas.mix(0xFF8A8A96, tabCol(t), 0.45f), 0xFFFFFFFF, hv * 0.4f));
             if (t == Tab.STATS) { Gfx.push(g); Gfx.translate(g, b[2] - 20, b[1] + 8); Gfx.scale(g, 0.75f); Gfx.text(g, font, "WIP", 0, 0, 0xFFB08A20); Gfx.pop(g); }
             Gfx.pop(g);
         }

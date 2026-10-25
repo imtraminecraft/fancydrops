@@ -1,3 +1,8 @@
+## 0.4.21
+- The sidebar no longer scrolls: when a page's sub pages make it too tall, every row gets a little shorter until it fits (Chat and Stats stay visible).
+- Main pages (Animations, Sounds...) no longer end up shifted or cut off after scrolling.
+- New set emblems: a clean symmetric shield with a centred star, plus a separate Special emblem with a four-point sparkle.
+
 ## 0.4.20
 - Editable icons: every `:name:` icon is saved once to `config/fancydrops/icons/<name>.png` (16 px wide, 128 tall = the 8 animation frames stacked). Edit and save a file and the game updates it within a second. A 16 x 16 file makes a still icon.
 

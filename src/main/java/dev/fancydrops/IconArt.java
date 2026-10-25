@@ -312,14 +312,29 @@ final class IconArt {
                 if (roll >= 1f) { glint(13, 3, 2, 0xFFFFFF, 1f - (f - 0.5f) * 2f); px(2, 2, 0xFFE27A); }
                 else { pxa(1, 15, 0xB8C0D4, 0.6f); pxa(0, 14, 0xB8C0D4, 0.35f); }
             }
-            case "emblem" -> {                                                               // a set badge: a shield with a star, in the set's colour
-                int col = tint != 0 ? tint : 0xB48CFF;
-                poly(new float[]{2, 14, 14, 8, 2}, new float[]{2, 2, 9, 15, 9}, col);
-                poly(new float[]{3.5f, 12.5f, 12.5f, 8, 3.5f}, new float[]{3.5f, 3.5f, 8.5f, 13, 8.5f}, dark(col, 0.35f));
-                float r = 0.8f + 0.2f * t;
-                for (int i = 0; i < 5; i++) { float a1 = -1.57f + i * 1.2566f, a2 = a1 + 0.6283f; ln(8, 8, 8 + (float) Math.cos(a1) * 3.7f * r, 8 + (float) Math.sin(a1) * 3.7f * r, 0xFFFFFF); ln(8, 8, 8 + (float) Math.cos(a2) * 1.8f, 8 + (float) Math.sin(a2) * 1.8f, lite(col, 0.6f)); }
-                outline();
-                glint(4, 3, 1, 0xFFFFFF, 0.4f + 0.6f * t);
+            case "emblem", "emblem_special" -> {                                             // a set badge: a heraldic shield (13 wide, centred on column 8) with a star, in the set's colour
+                boolean sp = n.equals("emblem_special");
+                int col = tint != 0 ? tint : sp ? 0xB48CFF : 0x55D8FF;
+                int[][] span = {{2, 14}, {2, 14}, {2, 14}, {2, 14}, {2, 14}, {2, 14}, {2, 14}, {3, 13}, {3, 13}, {4, 12}, {5, 11}, {6, 10}, {7, 9}, {8, 8}};       // columns of each row, y = 1 .. 14
+                for (int r = 0; r < span.length; r++) for (int x = span[r][0]; x <= span[r][1]; x++) {
+                    boolean edge = r == 0 || x == span[r][0] || x == span[r][1] || r == span.length - 1 || (r + 1 < span.length && (x < span[r + 1][0] || x > span[r + 1][1]));
+                    boolean hi = !edge && (r == 1 || x == span[r][0] + 1) && r < 10;
+                    px(x, 1 + r, edge ? dark(col, 0.55f) : hi ? lite(col, 0.45f) : mix(dark(col, 0.45f), col, r < 7 ? 0.25f : 0.1f));
+                }
+                for (int x = 3; x <= 13; x++) px(x, 2, lite(col, 0.55f));
+                if (!sp) {
+                    String[] star = {"...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", ".#...#."};       // a 5 point star, 7 x 7, its middle on column 8
+                    float k = 0.55f + 0.45f * t;
+                    for (int y = 0; y < 7; y++) for (int x = 0; x < 7; x++) if (star[y].charAt(x) == '#') px(5 + x, 4 + y, mix(0xFFE9A0, 0xFFFFFF, k));
+                    glint(5, 4, 1, 0xFFFFFF, 0.3f + 0.7f * t);
+                } else {                                                                      // Special: a four-point sparkle with two little twinkles
+                    float k = 0.5f + 0.5f * t;
+                    for (int d = -4; d <= 4; d++) { int w = 4 - Math.abs(d); px(8 + d, 7, mix(0xFFF3C8, 0xFFFFFF, k)); px(8, 7 + d, mix(0xFFF3C8, 0xFFFFFF, k)); }
+                    for (int d = -1; d <= 1; d++) { px(8 + d, 6, 0xFFFFFF); px(8 + d, 8, 0xFFFFFF); px(7, 7 + d, 0xFFFFFF); px(9, 7 + d, 0xFFFFFF); }
+                    px(8, 7, 0xFFFFFF);
+                    int tw = (int) (f * 8) % 4; px(5, 4, tw == 0 ? 0xFFFFFF : lite(col, 0.4f)); px(11, 10, tw == 2 ? 0xFFFFFF : lite(col, 0.4f)); px(11, 4, tw == 1 ? 0xFFFFFF : lite(col, 0.3f)); px(5, 10, tw == 3 ? 0xFFFFFF : lite(col, 0.3f));
+                    glow(8, 7, 7, 0xB48CFF, 0.18f * t);
+                }
             }
             case "snd_beat" -> {                                                             // Beat: a drum being hit, rings leaving it
                 bev(2, 8, 12, 6, 0xB5532E); rect(2, 8, 12, 2, 0xF0D8A8); rect(3, 10, 1, 4, 0xE8C080); rect(8, 10, 1, 4, 0xE8C080); rect(12, 10, 1, 4, 0xE8C080);

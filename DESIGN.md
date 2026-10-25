@@ -169,3 +169,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## 0.4.20
 - Icons are overridable at runtime from config/fancydrops/icons/<name>.png (Icons.scanOverrides, hot reload). Add new names to Icons.EXPORT.
+
+## 0.4.21
+- The sidebar squeezes (FancyScreen.sq, 0.7 to 1) instead of scrolling. Emblems: `emblem` (tinted shield + star) and `emblem_special`.
