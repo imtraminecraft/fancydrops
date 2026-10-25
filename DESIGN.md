@@ -51,3 +51,10 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Scenes must be properly animated, never bland: real motion, particles, light, a distinct idea per category.
 - Normal and No Drops scenes are wide banners (not square), sitting right above the SkyBlock action bar with only a small gap. Not floating in the middle of the screen.
 - The text keeps the earlier look (name, price, magic find lines); make it cooler where possible.
+
+## Mythological Rituals Normal scenes (author feedback, Oct 25)
+- Work on ONE part at a time (Mythological Mobs + Treasure first). Do not mock up other categories until asked.
+- Built like the old Farming scene: no box. Ground patch with shadow, glows, strikes, soil glow, column of light, rings, grains of light, item springs out. Small and translucent, not square.
+- Items can be 3D (blocks like gold blocks): show those rotating in 3D, flat icons stay flat.
+- Mobs: a ritual circle, three lightning strikes, the minotaur is summoned, struck, shatters, item springs out. Treasure: a digger with a shovel digs three times, a chest is found and opens.
+- Chat alert (to do when we reach the Chat page): lay the message out like the author's reference video: a centred block, "RARE DROP!" header in gold, the item name in its rarity colour, a small odds/source line, the price in gold, and the price source in dim grey. Every line must be customisable.
