@@ -1442,24 +1442,6 @@ public class FancyScreen extends Screen {
     }
 
     // ------------------------------------------------------------------ the building site behind pages that are not built yet
-    private static final class SiteItem { int kind, w, h; float x, y, vy, dir = 1f; }
-    private static boolean siteMovable(int kind) { return kind != 1 && kind != 5 && kind != 6; }      // the crane, the cones and the hard hats are fixed
-    private final java.util.List<SiteItem> siteItems = new java.util.ArrayList<>();
-    private int siteW = -1, siteDrag = -1; private float siteOffX, siteOffY, siteStartX, siteStartY;
-    private final int[] sitePanel = new int[4]; private long siteSeen, siteLast;
-    private int[] sitePill = {0, 0, 0, 0};
-
-    private SiteItem siteMake(int kind, float x) {
-        SiteItem s = new SiteItem(); s.kind = kind; s.x = x;
-        switch (kind) { case 0 -> { s.w = 24; s.h = 15; } case 1 -> { s.w = 28; s.h = 52; } case 2 -> { s.w = 12; s.h = 15; } case 3 -> { s.w = 8; s.h = 9; } case 4 -> { s.w = 12; s.h = 10; } case 5 -> { s.w = 13; s.h = 14; } case 7 -> { s.w = 14; s.h = 12; } case 8 -> { s.w = 18; s.h = 11; } case 9 -> { s.w = 20; s.h = 6; } case 10 -> { s.w = 22; s.h = 9; } case 11 -> { s.w = 16; s.h = 8; } case 12 -> { s.w = 10; s.h = 7; } case 13 -> { s.w = 16; s.h = 16; } default -> { s.w = 19; s.h = 18; } }
-        return s;
-    }
-    private static boolean siteHit(SiteItem a, SiteItem b, float ax, float ay) { return ax < b.x + b.w && ax + a.w > b.x && ay < b.y + b.h && ay + a.h > b.y; }
-    private boolean siteFree(SiteItem a, float ax, float ay, int pw, int ph) {
-        if (ax < 3 || ay < 14 || ax + a.w > pw - 3 || ay + a.h > ph - 10) return false;
-        for (SiteItem b : siteItems) if (b != a && b.kind != 6 && a.kind != 6 && siteHit(a, b, ax, ay)) return false;
-        return !(ax < sitePill[0] + sitePill[2] && ax + a.w > sitePill[0] && ay < sitePill[1] + sitePill[3] && ay + a.h > sitePill[1] && a.kind != 6);
-    }
     private int[] updCheck, updGet;
     /** The Home page's update tracker: one fixed layout, so nothing jumps when the wording changes. */
     private void drawUpdate(GuiGraphicsExtractor g, Row r, int mx, int my) {
@@ -1498,104 +1480,23 @@ public class FancyScreen extends Screen {
         return false;
     }
     private boolean mockOn() { for (Row r : rows) if (r.kind == MOCK) return true; return false; }
-    private void siteInit(Row r) {
-        siteItems.clear(); siteW = r.w; int gy = r.h - 13;
-        float xl = 8, xr = r.w - 44, mid = r.w * 0.5f;
-        int[] left = {5, 2, 3, 0, 7, 8, 10, 12}, right = {5, 9, 11, 0, 13, 3, 7};
-        for (int kd : left) { SiteItem q = siteMake(kd, xl); if (xl + q.w > mid - 4) continue; q.y = gy - q.h; if (kd == 0) q.dir = 1; siteItems.add(q); xl += q.w + (kd == 0 ? 30 : 5); }
-        for (int kd : right) { SiteItem q = siteMake(kd, 0); if (xr - q.w < mid + 4) continue; xr -= q.w; q.x = xr; q.y = gy - q.h; if (kd == 0) q.dir = -1; siteItems.add(q); xr -= (kd == 0 ? 30 : 5); }
-        for (SiteItem q : new java.util.ArrayList<>(siteItems)) {                                // a few things start in the air and fall onto the piles
-            if (q.kind == 2) { SiteItem t = siteMake(2, q.x); t.y = 22; siteItems.add(t); }
-            if (q.kind == 9) { SiteItem t = siteMake(12, q.x + 5); t.y = 18; siteItems.add(t); }
-            if (q.kind == 7) { SiteItem t = siteMake(3, q.x + 3); t.y = 26; siteItems.add(t); }
-        }
-        SiteItem cr = siteMake(1, r.w - 38); cr.y = gy - cr.h; siteItems.add(cr);
-        SiteItem h1 = siteMake(6, 8); h1.y = 14; siteItems.add(h1); SiteItem h2 = siteMake(6, r.w - 30); h2.y = 14; siteItems.add(h2);
-        for (int k = 0; k < siteItems.size(); k++) {                                            // anything that starts on top of something else slides away
-            SiteItem a = siteItems.get(k);
-            if (a.kind != 6 && a.y > 30 && !siteFree(a, a.x, a.y, r.w, r.h)) siteSettle(a, r.w, r.h);
-        }
-    }
-    /** Finds the nearest free spot for an item (sideways first, then up) so nothing ever overlaps. */
-    private void siteSettle(SiteItem a, int pw, int ph) {
-        float bx = a.x, by = a.y, best = Float.MAX_VALUE;
-        for (int dy = 0; dy <= 60; dy += 4) for (int dx = -90; dx <= 90; dx += 2) for (int sg = -1; sg <= 1; sg += 2) {
-            float nx = a.x + dx, ny = a.y - dy;
-            if (siteFree(a, nx, ny, pw, ph)) { float d = dx * dx + dy * dy * 1.6f; if (d < best) { best = d; bx = nx; by = ny; } }
-        }
-        if (best < Float.MAX_VALUE) { a.x = bx; a.y = by; } else { a.x = siteStartX; a.y = siteStartY; }
-    }
-
+    /** The building site: a fixed, tidy scene on the ground line. Nothing is interactive. */
     private void site(GuiGraphicsExtractor g, Row r, float sec, int mx, int my, int pillX, int pillY, int pillW) {
-        long nowMs = System.currentTimeMillis(); float dt = Math.min(0.1f, siteLast == 0 ? 0f : (nowMs - siteLast) / 1000f); siteLast = nowMs;
-        sitePanel[0] = r.x; sitePanel[1] = r.y; sitePanel[2] = r.w; sitePanel[3] = r.h; siteSeen = nowMs;
-        sitePill = new int[]{pillX - r.x, pillY - r.y, pillW, 16};
-        if (siteItems.isEmpty() || siteW != r.w) siteInit(r);
-        float floor = r.h - 13;
-        for (int k = 0; k < siteItems.size(); k++) {                                             // gravity: whatever is not held falls until something is under it
-            SiteItem a = siteItems.get(k); if (!siteMovable(a.kind) || k == siteDrag) continue;
-            a.vy = Math.min(320f, a.vy + 420f * dt); float ny = a.y + a.vy * dt, sup = floor;
-            for (SiteItem b : siteItems) if (b != a && b.kind != 6 && a.x < b.x + b.w && a.x + a.w > b.x && b.y >= a.y + a.h - 0.5f) sup = Math.min(sup, b.y);
-            if (a.x < sitePill[0] + sitePill[2] && a.x + a.w > sitePill[0] && sitePill[1] >= a.y + a.h - 0.5f) sup = Math.min(sup, sitePill[1]);
-            if (ny + a.h >= sup) { a.y = sup - a.h; a.vy = 0f; } else a.y = ny;
-        }
-        for (int k = 0; k < siteItems.size(); k++) {                                             // the bulldozers patrol (carrying what sits on them) and turn round before they would touch anything
-            SiteItem a = siteItems.get(k); if (a.kind != 0 || k == siteDrag) continue;
-            float nx = a.x + a.dir * 16f * dt;
-            if (siteFree(a, nx, a.y, r.w, r.h)) {
-                for (SiteItem b : siteItems) if (b != a && siteMovable(b.kind) && Math.abs(b.y + b.h - a.y) < 0.6f && b.x < a.x + a.w && b.x + b.w > a.x) b.x += nx - a.x;
-                a.x = nx;
-            } else a.dir = -a.dir;
-        }
-        for (int k = 0; k < siteItems.size(); k++) {
-            SiteItem a = siteItems.get(k); int ax = r.x + Math.round(a.x), ay = r.y + Math.round(a.y);
-            boolean grab = k == siteDrag, hov = siteDrag < 0 && mx >= ax && mx < ax + a.w && my >= ay && my < ay + a.h;
-            if (grab) { g.fill(ax + 1, ay + a.h + 1, ax + a.w - 1, ay + a.h + 3, 0x66000000); ay -= 2; }
-            switch (a.kind) {
-                case 0 -> { bulldozer(g, ax, ay, a.dir > 0 ? 1 : -1, sec); if (!grab) for (int j = 0; j < 3; j++) { float u = (sec * 1.6f + j * 0.33f) % 1f; int dx = a.dir > 0 ? ax - 2 - Math.round(u * 7) : ax + a.w + 1 + Math.round(u * 7), dy = ay + a.h - 3 - Math.round(u * 6); g.fill(dx, dy, dx + 2, dy + 2, Gfx.argb(Math.round(110 * (1f - u)), 0xB59A6A)); } }
-                case 1 -> crane(g, ax, ay, a.w, a.h, sec);
-                case 2 -> { for (int j = 0; j < 3; j++) { g.fill(ax, ay + a.h - 5 - j * 5, ax + a.w, ay + a.h - 1 - j * 5, 0xFFB5532E); g.fill(ax, ay + a.h - 5 - j * 5, ax + a.w, ay + a.h - 4 - j * 5, 0xFFD9703E); g.fill(ax + 6, ay + a.h - 5 - j * 5, ax + 7, ay + a.h - 1 - j * 5, 0xFF7A3418); } }
-                case 3 -> { g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); }
-                case 4 -> { g.fill(ax, ay, ax + 12, ay + 4, 0xFFF2F2F2); for (int j = 0; j < 12; j += 4) g.fill(ax + j, ay, ax + j + 2, ay + 4, 0xFFE06A20); g.fill(ax + 1, ay + 4, ax + 3, ay + 10, 0xFF6A6A74); g.fill(ax + 9, ay + 4, ax + 11, ay + 10, 0xFF6A6A74); }
-                case 5 -> { Gfx.push(g); Gfx.translate(g, ax - 1, ay - 1); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); }
-                case 7 -> { g.fill(ax + 2, ay, ax + 12, ay + 1, 0xFF8A8A94); g.fill(ax + 1, ay + 1, ax + 13, ay + 3, 0xFF9A9AA6); g.fill(ax, ay + 3, ax + 14, ay + 10, 0xFF7C7C88); g.fill(ax + 1, ay + 10, ax + 13, ay + 12, 0xFF5E5E6A); g.fill(ax + 3, ay + 2, ax + 6, ay + 4, 0xFFB4B4C0); g.fill(ax + 8, ay + 5, ax + 9, ay + 9, 0xFF50505C); }
-                case 8 -> { g.fill(ax + 2, ay + 1, ax + 14, ay + 2, 0xFFFFC857); g.fill(ax + 3, ay + 2, ax + 13, ay + 6, 0xFFD08A10); g.fill(ax + 4, ay, ax + 12, ay + 1, 0xFFD9C27A); g.fill(ax + 14, ay + 6, ax + 18, ay + 11, 0xFF2A2A30); g.fill(ax + 15, ay + 7, ax + 17, ay + 10, 0xFF8A8A94); g.fill(ax + 4, ay + 6, ax + 5, ay + 11, 0xFF6A6A74); g.fill(ax, ay + 3, ax + 4, ay + 4, 0xFF7A4A24); g.fill(ax + 13, ay + 2, ax + 15, ay + 6, 0xFFB07408); }
-                case 9 -> { g.fill(ax, ay, ax + 20, ay + 2, 0xFFC8964E); g.fill(ax, ay + 2, ax + 20, ay + 4, 0xFFB0803E); g.fill(ax, ay + 4, ax + 20, ay + 6, 0xFFC8964E); g.fill(ax + 4, ay, ax + 7, ay + 1, 0xFF8A5E28); g.fill(ax + 12, ay + 2, ax + 16, ay + 3, 0xFF8A5E28); g.fill(ax + 8, ay + 4, ax + 11, ay + 5, 0xFF8A5E28); g.fill(ax, ay, ax + 1, ay + 6, 0xFFE0B878); }
-                case 10 -> { for (int j = 0; j < 9; j++) { int hw = Math.min(11, 2 + j * 3 / 2 + 1); g.fill(ax + 11 - hw, ay + j, ax + 11 + hw, ay + j + 1, j < 3 ? 0xFFEAD592 : 0xFFD9BE70); } g.fill(ax + 8, ay + 4, ax + 9, ay + 5, 0xFFB89A50); g.fill(ax + 14, ay + 6, ax + 15, ay + 7, 0xFFB89A50); }
-                case 11 -> { for (int j = 0; j < 3; j++) { int px2 = j == 2 ? ax + 4 : ax + j * 8, py2 = j == 2 ? ay : ay + 4; g.fill(px2, py2, px2 + 8, py2 + 4, 0xFF3F8FD0); g.fill(px2, py2, px2 + 8, py2 + 1, 0xFF7CC0F0); g.fill(px2, py2, px2 + 1, py2 + 4, 0xFF24547E); g.fill(px2 + 7, py2, px2 + 8, py2 + 4, 0xFF24547E); } }
-                case 12 -> { g.fill(ax, ay + 1, ax + 10, ay + 7, 0xFFD03A30); g.fill(ax, ay + 1, ax + 10, ay + 2, 0xFFFF6A5A); g.fill(ax + 3, ay, ax + 7, ay + 1, 0xFF3A3A44); g.fill(ax + 4, ay + 3, ax + 6, ay + 5, 0xFFFFD84A); }
-                case 13 -> { int ph2 = (int) (sec * 6f); g.fill(ax + 2, ay + 1, ax + 12, ay + 10, 0xFFE0802A); for (int j = 0; j < 3; j++) { int ly = ay + 2 + (ph2 + j * 3) % 8; g.fill(ax + 2, ly, ax + 12, ly + 1, 0xFFFFB060); } g.fill(ax + 9, ay, ax + 13, ay + 2, 0xFF9A5A1A); g.fill(ax + 5, ay + 10, ax + 9, ay + 14, 0xFF5A5A66); g.fill(ax + 1, ay + 13, ax + 5, ay + 16, 0xFF2A2A30); g.fill(ax + 10, ay + 13, ax + 14, ay + 16, 0xFF2A2A30); g.fill(ax + 14, ay + 8, ax + 16, ay + 14, 0xFF7A4A24); }
-                default -> { Gfx.push(g); Gfx.translate(g, ax - 1, ay - 1); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g); }
-            }
-            if (hov || grab) rout(g, ax - 1, ay - 1, a.w + 2, a.h + 2, Gfx.argb(grab ? 200 : 90, 0xFFC857));
-        }
-        for (int k = 0; k < 3; k++) {                                                            // welding sparks drifting up
-            float u = (sec * 0.9f + k * 0.31f) % 1f; int sx = r.x + 30 + k * 40, sy = r.y + r.h - 22 - Math.round(u * 24);
-            g.fill(sx, sy, sx + 2, sy + 2, Gfx.argb(Math.round(220 * (1f - u)), k % 2 == 0 ? 0xFFC857 : 0xFF8A2E));
-        }
-    }
-
-    private boolean siteGrab(double mx, double my) {
-        if (System.currentTimeMillis() - siteSeen > 120) return false;
-        for (int k = siteItems.size() - 1; k >= 0; k--) {
-            SiteItem a = siteItems.get(k); if (!siteMovable(a.kind)) continue; double ax = sitePanel[0] + a.x, ay = sitePanel[1] + a.y;
-            if (mx >= ax && mx < ax + a.w && my >= ay && my < ay + a.h) { siteDrag = k; siteOffX = (float) (mx - ax); siteOffY = (float) (my - ay); siteStartX = a.x; siteStartY = a.y; a.vy = 0f; return true; }
-        }
-        return false;
-    }
-    private void siteMove(double mx, double my) {
-        if (siteDrag < 0 || siteDrag >= siteItems.size()) return;
-        SiteItem a = siteItems.get(siteDrag);
-        a.x = Math.max(3, Math.min(sitePanel[2] - 3 - a.w, (float) (mx - sitePanel[0]) - siteOffX)); a.y = Math.max(14, Math.min(sitePanel[3] - 10 - a.h, (float) (my - sitePanel[1]) - siteOffY));
-    }
-    private void siteDrop() {
-        if (siteDrag < 0 || siteDrag >= siteItems.size()) { siteDrag = -1; return; }
-        SiteItem a = siteItems.get(siteDrag); siteDrag = -1;
-        a.vy = 0f;
-        if (!siteFree(a, a.x, a.y, sitePanel[2], sitePanel[3])) {                                    // dropped inside something: lifted out of it, then it falls back down
-            boolean ok = false; for (int up = 2; up <= 90 && !ok; up += 2) if (siteFree(a, a.x, a.y - up, sitePanel[2], sitePanel[3])) { a.y -= up; ok = true; }
-            if (!ok) siteSettle(a, sitePanel[2], sitePanel[3]);
-        }
+        int gy = r.y + r.h - 12, pl = pillX - r.x, pr = pl + pillW;
+        Gfx.push(g); Gfx.translate(g, r.x + 8, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
+        Gfx.push(g); Gfx.translate(g, r.x + r.w - 30, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
+        g.fill(r.x + 6, gy, r.x + r.w - 6, gy + 1, 0x33FFFFFF);                                    // the ground line everything stands on
+        int lx = 12;                                                                                // left: cone, barrel, bricks, then the bulldozer's lane
+        if (lx + 12 < pl - 70) { Gfx.push(g); Gfx.translate(g, r.x + lx - 1, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); lx += 18; }
+        if (lx + 8 < pl - 70) { int ax = r.x + lx, ay = gy - 9; g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); lx += 16; }
+        if (lx + 12 < pl - 70) { int ax = r.x + lx; for (int j = 0; j < 3; j++) { int by = gy - 5 - j * 5; g.fill(ax, by, ax + 12, by + 4, 0xFFB5532E); g.fill(ax, by, ax + 12, by + 1, 0xFFD9703E); g.fill(ax + 6, by, ax + 7, by + 4, 0xFF7A3418); } lx += 20; }
+        int lo = lx + 6, hi = pl - 34;                                                              // one bulldozer pacing slowly between the props and the sign
+        if (hi - lo > 12) { float u = 0.5f + 0.5f * (float) Math.sin(sec * 0.35f); int dir = Math.cos(sec * 0.35f) >= 0 ? 1 : -1; bulldozer(g, r.x + lo + Math.round((hi - lo) * u), gy - 15, dir, sec); }
+        int rx = r.w - 44;                                                                          // right: the crane, then a pallet with a crate, then a cone
+        crane(g, r.x + rx, gy - 52, 28, 52, sec);
+        rx -= 4;
+        if (rx - 20 > pr + 12) { rx -= 20; int ax = r.x + rx, ay = gy - 6; g.fill(ax, ay, ax + 20, ay + 2, 0xFFC8964E); g.fill(ax, ay + 2, ax + 20, ay + 4, 0xFFB0803E); g.fill(ax, ay + 4, ax + 20, ay + 6, 0xFFC8964E); g.fill(ax + 4, ay - 7, ax + 14, ay, 0xFFD03A30); g.fill(ax + 4, ay - 7, ax + 14, ay - 6, 0xFFFF6A5A); g.fill(ax + 8, ay - 5, ax + 10, ay - 3, 0xFFFFD84A); rx -= 8; }
+        if (rx - 12 > pr + 12) { Gfx.push(g); Gfx.translate(g, r.x + rx - 13, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, "fd:cone", 0, 0, 2400L); Gfx.pop(g); }
     }
 
     private static void crane(GuiGraphicsExtractor g, int x, int y, int w, int h, float sec) {
@@ -3670,10 +3571,6 @@ public class FancyScreen extends Screen {
                 if (r.kind == HERO) { int shw = 10 - Math.abs(bob) * 2; g.fill(mid - shw, r.y + 49, mid + shw, r.y + 51, 0x30000000); }   // its shadow breathes with it
                 if (r.kind == PANEL) {
                     tape(g, r.x + 3, r.y + 3, r.w - 6, STILL ? 0 : (int) ((nw / 60L) % 16)); tape(g, r.x + 3, r.y + r.h - 9, r.w - 6, STILL ? 0 : 16 - (int) ((nw / 60L) % 16));
-                    for (int k = 0; k < 6; k++) {                                       // welding sparks drifting up from the ground
-                        float ph = ((sec * 0.7f + k * 0.37f) % 1f); int sx2 = mid - 40 + k * 16 + (int) (Math.sin(k * 5.1) * 6), sy2 = r.y + r.h - 16 - Math.round(ph * 34);
-                        g.fill(sx2, sy2, sx2 + 2, sy2 + 2, Gfx.argb(Math.round(220 * (1f - ph)), k % 2 == 0 ? 0xFFC857 : 0xFF8A2E));
-                    }
                 } else for (int i = 0; i < 5; i++) {                                    // sparkles orbiting the icon
                     double an = sec * 1.3 + i * Math.PI * 2 / 5; int sx2 = mid + (int) (Math.cos(an) * 30), sy2 = cyi + (int) (Math.sin(an) * 12);
                     int al = 120 + (int) (120 * Math.sin(sec * 5 + i)); g.fill(sx2, sy2, sx2 + 2, sy2 + 2, Gfx.argb(Math.max(0, Math.min(255, al)), i % 2 == 0 ? 0xFFC857 : 0x9DB2CC));
@@ -3933,7 +3830,6 @@ public class FancyScreen extends Screen {
         }
         if (editor != 0) { editorClick(event.x(), event.y(), event.button()); return true; }
         if (event.button() == 0 && updClick(event.x(), event.y())) return true;
-        if (event.button() == 0 && siteGrab(event.x(), event.y())) return true;
         if (event.button() == 0 && event.y() >= lt && event.y() < lb && tab != null && mockOn() && WipMock.click((int) event.x(), (int) event.y())) return true;                       // pick up something on a building site
         if (event.button() == 0 && totalH > lb - lt && event.x() >= cx + cw && event.x() < cx + cw + 12 && event.y() >= lt && event.y() < lb) { dragScroll = true; scrollTo(event.y()); return true; }          // the bar on the right can be grabbed
         {   // an open drop-down list sits on top of everything, so it gets the click before the boxes underneath it
@@ -4047,7 +3943,6 @@ public class FancyScreen extends Screen {
 
     @Override public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) { dirty = true;
         if (editor != 0) { if (eDrag != 0) eSet(event.x(), event.y()); return true; }
-        if (siteDrag >= 0) { siteMove(event.x(), event.y()); return true; }
         if (dragScroll) { scrollTo(event.y()); return true; }
         if (dragFarm) { farmDrag(event.x(), event.y(), false); return true; }
         if (dragCtl != null) return dragCtl.drag(event.x());
@@ -4055,7 +3950,7 @@ public class FancyScreen extends Screen {
     }
 
     @Override public boolean mouseReleased(MouseButtonEvent event) { dirty = true;
-        eDrag = 0; siteDrop();
+        eDrag = 0;
         dragCtl = null; dragFarm = false; dragScroll = false;
         return super.mouseReleased(event);
     }

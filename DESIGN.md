@@ -45,4 +45,4 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
   - **Treasure**: the spade picker, the Erudite reforge and the treasure drops with their chances.
 - Redo all icons for Mythological, and make sure each one is correct.
 - Redo the Mythological scenes. Mobs keep the lightning idea. Treasure shows someone digging with a shovel until the treasure is found. As cool as possible within the rules above.
-- Categories that are not finished show the construction-site WIP scene: nothing is interactive, no items. A crane builds something, it explodes, and it starts again.
+- Categories that are not finished keep the "Coming Soon" construction-site page (hazard tape, hard hats, crane, bulldozer). The author wants it kept but tidy: fixed layout on one ground line, few props, nothing overlapping, nothing interactive. (A crane-builds-then-explodes scene was an earlier idea; the author later said to keep this page.)
