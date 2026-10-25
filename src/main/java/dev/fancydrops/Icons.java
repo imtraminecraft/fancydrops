@@ -27,6 +27,7 @@ final class Icons {
         String name = nameOf(key); int tint = 0;
         int hash = name.indexOf('#');
         if (hash >= 0) { try { tint = 0xFF000000 | Integer.parseInt(name.substring(hash + 1), 16); } catch (Exception ignored) { } name = name.substring(0, hash); }
+        if (name.equals("coin")) { ItemIcons.draw(g, "@COIN", null, x + 8, y + 8, 1f); return; }       // the Hypixel coin head, never a drawn disc
         if (name.equals("sparkle") || Cosmetics.byId(name) != null) { Cosmetics.drawIcon(g, name, x, y, now); return; }      // the one suffix we have: shaded, six frames
         int frame = now == 2400L ? 0 : (int) ((now / FRAME_MS) % IconArt.FRAMES);
         int[] px = frameOf(name, tint & 0xFFFFFF, frame);

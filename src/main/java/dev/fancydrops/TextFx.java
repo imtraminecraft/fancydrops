@@ -42,6 +42,8 @@ final class TextFx {
     }
 
     /** The looping words start again from the first letter (an effect was hovered or pressed). */
+    /** Seconds into the looping words of the Text editor (0..period). */
+    static float loopClock(float period) { return ((System.currentTimeMillis() - textT0) / 1000f) % period; }
     static void restartText() { textT0 = System.currentTimeMillis(); }
 
     static void outlined(GuiGraphicsExtractor g, Font font, Component text, int x, int y, int color) {

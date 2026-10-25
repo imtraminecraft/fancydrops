@@ -1,3 +1,16 @@
+## 0.4.15
+- Mythological is one sub page again: Drop Library > Mythological opens two sub-sub pages, **Mythological Mobs** (the Griffin pet and the creatures) and **Treasure** (spade, Erudite, treasure drops). The "Diana's Mythological Ritual:" and "Chances for this pet" texts are gone.
+- Drop Library: the "switch off to ignore this page" row is gone. Every drop starts Normal (chat alert off); rare drops start RNG (chat alert on). Choosing Normal turns the chat alert off at once, RNG turns it on (also on the "All drops" button).
+- Animations are 25% smaller: that is the new 100%. The Size slider goes 50% to 120%. Default length is 7 s; the item and the words stay visible about 1.5 s longer.
+- Skulls turn smoothly now: a real 3D head block, ray-traced at 64 x 64 with soft edges, 144 steps per turn. Wiki pictures are averaged down instead of dropped to 16 pixels. The Coins icon is the Hypixel coin head (the wiki "Coins" page, then NEU), with the drawn coin only as an offline fallback.
+- The Bar, Text and Item Changes previews work again (the bars preview holds the scene after the drop appears, the text preview loops the words on their own clock, the item preview holds the scene while the item keeps bobbing).
+- Chat: Test is on the main Chat page. The placeholder buttons sit right beside the Message format field. "Also post in public chat" lights Public in the channel picker and shows in the Announcing line. Chat Enabled lists every sub page and creature with a switch for each drop.
+- Animations and Chat > Message & Channel fit without scrolling. The category tiles are tall tiles with the whole name (no more "Mythologic"), and the WIP tag is a small corner tag.
+- Every on/off is the yellow and grey ON/OFF button.
+- Sounds: Back works again, Play plays only the sounds at their real times, and the live preview shows a time ruler with a lane for every sound, a block as long as the sound, a moving playhead and the clock. Five new sound icons (Beat, Burst, Reveal, Linger, End).
+- New icons: clapperboard with a swinging striped clapper, digging spade, iron sword (Spade picker), thin sword (Slayers), a farmer hoeing (Farming), the enchanting-table book flipping (Experiments), a pickaxe cracking a rock (Mining), a paint drop splashing into a puddle (Dyes), a die rolling a 6 (RNG), a loot bag (Normal), a bookshelf (Drop Library), set emblems (the Cosmetics tiles that showed "?").
+- Settings: Menu Font is gone. With Animated menu off, everything moves no more except icons. Sliders no longer glide in from another page's knob, and the Cosmetics speed, amount and size sliders put 100% in the middle.
+
 ## 0.4.14
 - New Mythological animations, all three types, 5 to 7 seconds. The first part is the same for No Drops, Normal and RNG; the last 2.5 seconds are each their own.
   - Mobs: a ritual circle draws itself, three lightning strikes crack the ground, a minotaur is summoned, then the power is drawn in.

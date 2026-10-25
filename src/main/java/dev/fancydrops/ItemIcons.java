@@ -67,19 +67,18 @@ public final class ItemIcons {
 
     private static void load(String id, Icon ic) {
         if (isBook(id)) {                                          // every enchanted book / bundle: a proper book, never a head or a wiki render
-            Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = bookSprite();
+            Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = bookSprite();
             ic.data = b; ic.ready = true; return;
         }
         if ("GRIFFIN_FEATHER".equals(id) || "BRAIDED_GRIFFIN_FEATHER".equals(id)) {             // a real feather, never the Griffin pet the wiki page shows first
-            Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = b; ic.ready = true; return;
+            Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = b; ic.ready = true; return;
         }
-        if ("@COIN".equals(id)) { Cached b = new Cached(); b.wikiVersion = 11; b.wikiPixels = coinSprite(); ic.data = b; ic.ready = true; return; }
         Cached c = new Cached();
         try {
             Path cf = cacheFile(id);
             if (Files.exists(cf)) {
                 Cached old = GSON.fromJson(Files.readString(cf), Cached.class);
-                if (old != null && old.wikiVersion >= 11 && (old.wikiPixels != null || old.face != null) && (old.heads != null || !skullFlag(id))) { ic.data = old; ic.ready = true; return; }
+                if (old != null && old.wikiVersion >= 12 && (old.wikiPixels != null || old.face != null) && (old.heads != null || (!skullFlag(id) && !"@COIN".equals(id)))) { ic.data = old; ic.ready = true; return; }
             }
         } catch (Exception ignored) {}
 
@@ -87,7 +86,7 @@ public final class ItemIcons {
             try { c.wikiPixels = fetchWikiPixels(page); if (c.wikiPixels != null) break; } catch (Exception ignored) {}
         }
         if (c.wikiPixels == null) try { c.wikiPixels = fetchWikiPixels(searchWiki(wikiPageName(id))); } catch (Exception ignored) {}   // a search can land on the wrong page (a pest for a crop), so farming items go without
-        c.wikiVersion = 11;
+        c.wikiVersion = 12;
         for (String cand : neuIds(id)) {
             if (c.heads != null) break;
             try {
@@ -104,6 +103,7 @@ public final class ItemIcons {
                 if (skullFlag(id)) log(id + ": NEU '" + cand + "' failed: " + e);        // the next candidate id, the Hypixel item list, or finally the wiki PNG / gem; the log says why a head did not load
             }
         }
+        if (c.heads == null && c.wikiPixels == null && "@COIN".equals(id)) c.wikiPixels = coinSprite();      // offline: the drawn coin until the real head arrives
         if (c.heads == null) {                       // second source: Hypixel's own item list knows every skull's skin
             try {
                 String skin = apiSkin(id);
@@ -111,7 +111,7 @@ public final class ItemIcons {
                 else if (skullFlag(id)) log(id + ": no skin in NEU repo or Hypixel item list (list " + (API_ID == null ? "NOT loaded" : "loaded, " + API_ID.size() + " skins") + ")");
             } catch (Exception e) { log(id + ": head failed: " + e); }
         }
-        if (c.heads != null || !skullFlag(id)) try {             // a skull that could not be found is not cached, so it is tried again next time
+        if (c.heads != null || (!skullFlag(id) && !"@COIN".equals(id))) try {             // a skull that could not be found is not cached, so it is tried again next time
             Path cf = cacheFile(id);
             Files.createDirectories(cf.getParent());
             Files.writeString(cf, GSON.toJson(c));
@@ -215,6 +215,7 @@ public final class ItemIcons {
     }
 
     private static boolean skullFlag(String id) {
+        if ("@COIN".equals(id)) { Icon ic = CACHE.get(id); return ic != null && ic.data != null && ic.data.heads != null; }       // the Hypixel coin is a head once it has loaded (the drawn coin stays flat)
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).endsWith("_DYE")) return true;          // every SkyBlock dye is a player head
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).startsWith("DYE_")) return true;
         if (TreasureData.headArt(id)) return true;
@@ -225,6 +226,7 @@ public final class ItemIcons {
     /** Ids to try in the NEU item repo: the drop's id, with ";1" for runes, and the one built from its display name. */
     private static java.util.List<String> neuIds(String id) {
         java.util.LinkedHashSet<String> l = new java.util.LinkedHashSet<>();
+        if ("@COIN".equals(id)) { l.add("SKYBLOCK_COIN"); l.add("COINS"); l.add("COIN"); l.add("COIN_TALISMAN"); return new java.util.ArrayList<>(l); }
         l.add(id);
         if (!id.contains(";") && id.endsWith("_RUNE")) l.add(id + ";1");
         if (id.endsWith(";1") && id.endsWith("_RUNE;1") == false) l.add(id.replace(";1", "_RUNE;1"));
@@ -279,6 +281,7 @@ public final class ItemIcons {
         if ("MYTHOLOGICAL_RITUAL".equals(id)) return "Mythological Ritual";
         for (DropData.Source slayer : MythData.ALL) for (DropData.Drop drop : slayer.drops)
             if (drop.id.equalsIgnoreCase(id)) return drop.name;
+        if ("@COIN".equals(id)) return "Coins";
         return id.replace('_', ' ');
     }
 
@@ -364,6 +367,12 @@ public final class ItemIcons {
         throw new java.io.IOException("No Wiki PNG found for " + pageName);
     }
 
+    private static java.awt.image.BufferedImage toBuffered(java.awt.Image im) {
+        int w = im.getWidth(null), h = im.getHeight(null);
+        var b = new java.awt.image.BufferedImage(Math.max(1, w), Math.max(1, h), java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        var gg = b.createGraphics(); gg.drawImage(im, 0, 0, null); gg.dispose(); return b;
+    }
+
     private static int[] downloadWikiPixels(String imageUrl) throws Exception {
         HttpResponse<byte[]> r = HTTP.send(HttpRequest.newBuilder(URI.create(imageUrl)).timeout(Duration.ofSeconds(20))
                 .header("User-Agent", "FancyDrops/1.0.1 (SkyBlock item icon lookup)").GET().build(), HttpResponse.BodyHandlers.ofByteArray());
@@ -372,7 +381,9 @@ public final class ItemIcons {
         if (img == null) throw new java.io.IOException("Unsupported Wiki image");
         var scaled = new java.awt.image.BufferedImage(16, 16, java.awt.image.BufferedImage.TYPE_INT_ARGB);
         var graphics = scaled.createGraphics();
-        graphics.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        boolean big = Math.max(img.getWidth(), img.getHeight()) > 32;                      // a big picture is averaged down, a small one stays crisp
+        graphics.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, big ? java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR : java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        if (big) { java.awt.Image sm = img.getScaledInstance(Math.max(16, img.getWidth() / 2), -1, java.awt.Image.SCALE_AREA_AVERAGING); img = toBuffered(sm); }
         // Preserve transparent backgrounds; keep the complete image centred in a square instead of stretching it.
         double factor = Math.min(16.0 / img.getWidth(), 16.0 / img.getHeight());
         int w = Math.max(1, (int)Math.round(img.getWidth() * factor));
@@ -529,8 +540,11 @@ public final class ItemIcons {
         if (d != null && (d.heads != null || (d.iso != null && skullFlag(id))) && !Icons.STILL_ICONS) {                       // a skull turns and bobs like an item dropped in the world
             if (d.faces6 == null) d.faces6 = d.heads != null ? d.heads : isoHead(d.wikiPixels);
             if (d.faces6 != null) {
+                long tm = System.currentTimeMillis(); float ph0 = (id.hashCode() & 255) / 255f, ang = (float) ((tm / 1000.0 * 0.9 + ph0 * 6.28) % (Math.PI * 2));
+                Gfx.scale(g, scale);
+                if (SkullSpin.draw(g, id, d.faces6, ang, Math.max(0f, Math.min(1f, drawAlpha)))) { Gfx.pop(g); return; }     // smooth 64x64 ray-traced block
+                Gfx.pop(g); Gfx.push(g); Gfx.translate(g, cx, cy);                                                           // no texture: the old 16x16 sprite below
                 if (d.spin == null) d.spin = new int[SPIN_FRAMES][];
-                long tm = System.currentTimeMillis(); float ph0 = (id.hashCode() & 255) / 255f, ang = (float) ((tm / 1000.0 * 1.15 + ph0 * 6.28) % (Math.PI * 2));
                 int fr = Math.round(ang / (float) (Math.PI * 2) * SPIN_FRAMES) % SPIN_FRAMES;
                 if (d.spin[fr] == null) d.spin[fr] = spinCube(d.faces6, fr * (float) (Math.PI * 2) / SPIN_FRAMES);
                 bobY = Math.round((float) Math.sin(tm / 380.0 + ph0 * 6.28) * 1.2f);

@@ -72,16 +72,42 @@ public final class AnimationManager {
         draw(g, mc.font, cur, t, g.guiWidth(), g.guiHeight());
     }
 
-    /** The sounds of the timeline: a beat for every strike or dig, the burst when the animation pivots, then the reveal, the linger and the end. */
-    private static void cues(Anim a, float prev, float t) {
-        float S = Math.max(3.6f, a.secs()), O = S - 2.5f; boolean big = a.type == RNG, tre = a.group.equals("treasure"), nod = a.type == NO_DROPS;
-        String scene = a.key();
+    /** The moments (seconds) each sound slot (chop, split, reveal, linger, end) plays in a scene of this length. */
+    static float[][] cueTimes(String scene, float secs) {
+        float S = Math.max(3.6f, secs), O = S - Ritual.TAIL; boolean tre = scene.startsWith("treasure"), nod = scene.endsWith("nodrops");
         float[] beats = tre ? new float[]{0.215f * O, 0.505f * O, 0.795f * O} : new float[]{0.34f * O, 0.58f * O, 0.80f * O};
-        for (int k = 0; k < 3; k++) if (prev < beats[k] && t >= beats[k]) SoundFx.playSlot(scene, "chop", 0.9f + 0.12f * k, big);
-        if (prev < O && t >= O) SoundFx.playSlot(scene, "split", nod ? 0.8f : 1f, big);
-        if (!nod && prev < O + 0.25f && t >= O + 0.25f) SoundFx.playSlot(scene, "reveal", 1f, big);
-        if (prev < O + 1.0f && t >= O + 1.0f) SoundFx.playSlot(scene, "linger", nod ? 0.85f : 1f, big);
-        if (prev < S - 1.4f && t >= S - 1.4f) SoundFx.playSlot(scene, "end", 1f, big);
+        return new float[][]{beats, {O}, nod ? new float[0] : new float[]{O + 0.25f}, {O + 1.0f}, {S - 1.4f}};
+    }
+
+    /** The sounds of the timeline: a beat for every strike or dig, the burst when the animation pivots, then the reveal, the linger and the end. */
+    private static void cues(Anim a, float prev, float t) { cues(a.key(), a.secs(), prev, t); }
+    private static void cues(String scene, float secs, float prev, float t) {
+        boolean big = scene.endsWith("rng"), nod = scene.endsWith("nodrops");
+        float[][] tm = cueTimes(scene, secs);
+        for (int k = 0; k < tm[0].length; k++) if (prev < tm[0][k] && t >= tm[0][k]) SoundFx.playSlot(scene, "chop", 0.9f + 0.12f * k, big);
+        if (prev < tm[1][0] && t >= tm[1][0]) SoundFx.playSlot(scene, "split", nod ? 0.8f : 1f, big);
+        if (tm[2].length > 0 && prev < tm[2][0] && t >= tm[2][0]) SoundFx.playSlot(scene, "reveal", 1f, big);
+        if (prev < tm[3][0] && t >= tm[3][0]) SoundFx.playSlot(scene, "linger", nod ? 0.85f : 1f, big);
+        if (prev < tm[4][0] && t >= tm[4][0]) SoundFx.playSlot(scene, "end", 1f, big);
+    }
+
+    // ---- the Play button of the Sounds page: just the sounds, in time, no picture
+    private static String sndKey; private static long sndT0; private static float sndLast; private static boolean sndOn;
+    /** Plays the sounds of a scene ("myth.rng") on their real timeline. */
+    public static void playSoundsOnly(String key) { SoundFx.stopPreviews(); sndKey = key; sndT0 = System.currentTimeMillis(); sndLast = -1f; sndOn = true; }
+    /** Call every frame while the menu is open: fires the due sounds of a sounds-only playback. */
+    public static void tickSounds() {
+        if (!sndOn) return;
+        float t = (System.currentTimeMillis() - sndT0) / 1000f, secs = FancyConfig.get().anim(sndKey).secs;
+        cues(sndKey, secs, sndLast, t); sndLast = t;
+        if (t > Math.max(3.6f, secs) + 0.4f) sndOn = false;
+    }
+    /** Seconds into the playback of this scene (a sounds-only playback or the real animation), or -1 when nothing of it is playing. */
+    public static float playingT(String key) {
+        long now = System.currentTimeMillis();
+        if (sndOn && key.equals(sndKey)) return (now - sndT0) / 1000f;
+        if (cur != null && key.equals(cur.key())) return (now - cur.start) / 1000f;
+        return -1f;
     }
 
     /** Draws one animation at time t (seconds) inside a W x H screen. */
@@ -110,8 +136,11 @@ public final class AnimationManager {
         if (!key.equals(previewKey)) { previewKey = key; previewT0 = now; }
         float secs = a.secs();
         float t = syncSec >= 0 ? syncSec : ((now - previewT0) / 1000f) % (secs + 1f);
-        if (TextFx.freezeT >= 0) t = TextFx.freezeT;
-        if (t > secs) return;
+        float pivot = Math.max(3.6f, secs) - Ritual.TAIL;
+        if (TextFx.freezeT >= 0) t = pivot + TextFx.freezeT;                       // held that many seconds after the drop appears
+        else if (TextFx.itemOnly) t = pivot + 1.6f;                                // the Item editor shows the scene held, with the item living on its own clock
+        else if (TextFx.textOnly) t = pivot + 1.6f;                                // the Text editor draws the words alone (they loop on the text clock)
+        if (t > secs + 0.01f) return;
         draw(g, Minecraft.getInstance().font, a, t, W, H);
     }
 

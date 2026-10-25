@@ -330,10 +330,11 @@ final class Ritual {
     /** The canvas of the scene at time t: the opening, then the pivot of the type. Everything except the item and the words. */
     static void paint(float t, boolean tre, int type, float S, float sz, float isc, int rc, float icy, int blade, boolean itemBob, float bobAmp) {
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float O = S - 2.5f, p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
+        float O = S - TAIL, p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
         int energy = tre ? GOLD : CYAN;
         float bg = 1f - sm((p - 0.5f) / 0.9f);                                             // the background fades while the words show
-        float itemA = sm(p / 0.22f) * (1f - sm((t - (S - 1.4f)) / 1.2f));                  // the item fades slowly at the end
+        float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
+        float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene                  // the item fades slowly at the end
         cv.clear();
         float inh = cl((t - 0.78f * O) / (0.22f * O));                                     // the last stretch of the opening: power drawn in
         float op = Math.min(t, O);
@@ -430,6 +431,11 @@ final class Ritual {
         return lerp(gy - 4, icy, rise) + (bob ? (float) Math.sin(t * 2.2f) * 1.8f * sz * amp * sm((p - 0.8f) / 0.6f) : 0f);
     }
 
+    /** Seconds from the pivot (the moment the drop appears) to the end. */
+    static final float TAIL = 3.2f;
+    /** The scene is drawn 25% smaller than before: that is the new 100% of the Size slider. */
+    static final float SMALLER = 0.75f;
+
     /** Draws one animation at time t (seconds) in a W x H screen: the scene, the bars, the item and the words. */
     static void draw(GuiGraphicsExtractor g, Font font, Anim a, float t, int W, int H) {
         FancyConfig c = FancyConfig.get();
@@ -438,8 +444,8 @@ final class Ritual {
         boolean tre = a.group.equals("treasure");
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float S = Math.max(3.6f, cfg.secs), O = S - 2.5f, p = t - O;
-        float sz = Math.max(0.5f, Math.min(2f, cfg.size)), isc = Math.max(0.4f, c.itemScale);
+        float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;
+        float csz = Math.max(0.5f, Math.min(1.2f, cfg.size)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         boolean barsOn = rng && cfg.bars, blurOn = rng && cfg.blur;
@@ -450,8 +456,9 @@ final class Ritual {
         float icy = CH * POS[Math.max(0, Math.min(2, cfg.pos))];
         if (barsOn) icy = Math.max(barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
         float u = (float) H / CH;                                                          // gui units per canvas unit
-        float itemA = sm(p / 0.22f) * (1f - sm((t - (S - 1.4f)) / 1.2f));
-        float textT = t - (O + 0.45f), textOut = sm((t - (S - 0.9f)) / 0.85f);              // the words leave 0.5 s after the item
+        float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
+        float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene
+        float textT = t - (O + 0.45f), textOut = sm((t - (S - 0.6f)) / 0.5f);               // the words leave after the item
         float barSlide = Math.min(sm((t - (O - 0.8f)) / 0.6f), 1f - sm((t - (S - 0.5f)) / 0.45f));
         float shake = rng && p > 0 && p < 0.5f ? (1f - p / 0.5f) * 3f : 0f;
         int sx = Math.round((rnd((int) (t * 60)) - 0.5f) * 2f * shake * u), sy = Math.round((rnd((int) (t * 60) + 77) - 0.5f) * 2f * shake * u);
@@ -482,18 +489,19 @@ final class Ritual {
         if (it != null && p >= 0f && !nod) {
             float grow = 0.25f + 0.75f * eob(p / 0.7f);
             float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f);
-            float gcx = CW / 2f * W / CW + sx, gcy = itemY(t, p, icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
-            ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA));
-            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; }
+            float gcx = CW / 2f * W / CW + sx, gcy = itemY(tb, p, icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
+            ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA)); boolean still0 = Icons.STILL_ICONS; Icons.STILL_ICONS = false;                 // the dropped item always turns, whatever the menu says
+            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; }
         }
 
         // ---- the words: below the animation (top and center), above it (bottom); never over the bars
         if (!TextFx.itemOnly && (textT > 0f || TextFx.textOnly)) {
-            float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * sz;
+            float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * (0.8f + 0.2f * csz);
             float th = TextFx.blockHeight(it, sc, c);
             float top = cfg.pos == 2 ? (icy - hi - 14 * sz) * u - th : (icy + hi + 26 * sz) * u;
             if (barsOn) { float bhg = barH * u; top = Math.max(bhg + 6, Math.min(H - bhg - th - 6, top)); }
-            TextFx.revealT = TextFx.textOnly ? Math.max(textT, 0f) : textT; TextFx.waveT = t; TextFx.waveOut = textOut; TextFx.lineDelay = 0f;
+            float tl = TextFx.textOnly ? TextFx.loopClock(4.6f) : 0f;                                    // the Text editor replays the words on their own clock
+            TextFx.revealT = TextFx.textOnly ? tl : textT; TextFx.waveT = TextFx.textOnly ? tl : t; TextFx.waveOut = TextFx.textOnly ? sm((tl - 3.9f) / 0.6f) : textOut; TextFx.lineDelay = 0f;
             TextFx.block(g, font, W / 2, Math.round(top), sc, it, c, 255);
         }
     }

@@ -18,9 +18,9 @@ public class FancyConfig {
     public static class SourceCfg { public boolean enabled = true; public Map<String, DropCfg> drops = new LinkedHashMap<>(); }
     /** The settings of one animation (key like "myth.rng"): how long, where, how big, and for RNG the bars and the blur. */
     public static class AnimCfg {
-        public float secs = 6f;          // 5..7
+        public float secs = 7f;          // 5..7
         public int pos = 1;              // 0 Top Center, 1 Center, 2 Bottom Center
-        public float size = 1f;          // 0.5 .. 2
+        public float size = 1f;          // 0.5 .. 1.2 (100% is the scene drawn 25% smaller than it used to be)
         public boolean bars = true, blur = true;   // RNG only
     }
 
@@ -88,8 +88,14 @@ public class FancyConfig {
     public Map<String, SourceCfg> sources = new LinkedHashMap<>();
     public SourceCfg source(String id) { return sources.computeIfAbsent(id, k -> new SourceCfg()); }
     public DropCfg drop(String sourceId, String name) { return source(sourceId).drops.computeIfAbsent(name, k -> new DropCfg()); }
-    /** A drop that was never touched starts from its rarity: rare drops (rank 2 and up) get a chat alert, the rest stay quiet. */
-    public static void initDrop(DropCfg dc, int rank) { if (dc.init) return; dc.init = true; dc.announce = rank >= 2; }
+    /** A drop that was never touched starts Normal (chat off); rare drops (rank 2 and up) start RNG (chat on). */
+    public static void initDrop(DropCfg dc, int rank) {
+        if (dc.anim == 0) dc.anim = rank >= 2 ? 2 : 1;                       // first start: every drop is Normal, rare drops are RNG (the old "Auto" is gone)
+        if (dc.init) return;
+        dc.init = true; dc.announce = dc.anim == 2;                         // Normal = chat alert off, RNG = on
+    }
+    /** Picks an animation state for a drop. The chat alert follows at once: Normal turns it off, RNG turns it on. */
+    public static void setAnim(DropCfg dc, int v) { dc.anim = v; if (v == 1) dc.announce = false; else if (v == 2) dc.announce = true; }
     public int mythPet = 5;                  // Mythological: the Griffin pet rarity drop chances are shown for (0 Common .. 5 Mythic)
     public int mythSpade = 2;                // Mythological treasure: the spade the chances are shown for (0 Ancestral, 1 Archaic, 2 Deific)
     public boolean mythErudite = false;      // ... with the Erudite reforge (2 more burrows in a chain)
@@ -145,7 +151,7 @@ public class FancyConfig {
         c.barPx = Math.max(5, Math.min(15, c.barPx));
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
-        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 5f, 7f); a.size = clamp(a.size, 0.5f, 2f); a.pos = Math.max(0, Math.min(2, a.pos)); }
+        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 5f, 7f); a.size = clamp(a.size, 0.5f, 1.2f); a.pos = Math.max(0, Math.min(2, a.pos)); }
     }
     private static float clamp(float v, float lo, float hi) { return Math.max(lo, Math.min(hi, v)); }
 
