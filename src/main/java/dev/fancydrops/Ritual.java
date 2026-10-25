@@ -84,7 +84,7 @@ final class Ritual {
             line(x0, y0, x1, y1, mixc(rgb, WHITE, 0.7f), a);
             return;
         }
-        float dx = x1 - x0, dy = y1 - y0, len = (float) Math.max(1e-3, Math.hypot(dx, dy));
+        float dx = x1 - x0, dy = y1 - y0, len = (float) Math.max(1e-3, Math.sqrt(dx * dx + dy * dy));
         float off = (rnd(seed * 31 + depth * 7) - 0.5f) * len * 0.42f;
         float mx = (x0 + x1) / 2 - dy / len * off, my = (y0 + y1) / 2 + dx / len * off;
         bolt(x0, y0, mx, my, seed * 2 + 1, rgb, a, depth - 1, branches);
@@ -203,7 +203,7 @@ final class Ritual {
                 float flick = 0.88f + 0.12f * (float) Math.sin(t * 9f + y * 0.3f);
                 if (body) cv.set(x, y, A(a * 0.92f, mixc(0x070A14, rim, 0.06f))); else cv.set(x, y, A(a * 0.85f * flick, rim));
             } else if (h < 0.55f && (x + y) % 2 == 0) {                                   // breaking: every other pixel is a shard
-                float dx = x - cx, dy = y - cy0, len = (float) Math.max(1, Math.hypot(dx, dy));
+                float dx = x - cx, dy = y - cy0, len = (float) Math.max(1, Math.sqrt(dx * dx + dy * dy));
                 float sp0 = crumble ? 4f + 10f * h : 30f + 80f * rnd(x * 3 + y * 17);
                 float px = x + (crumble ? (rnd(x + y) - 0.5f) * 8f * breakT : dx / len * sp0 * breakT);
                 float py = y + (crumble ? 16f * breakT * (0.4f + h) : dy / len * sp0 * breakT * 0.8f - 10f * breakT) + (crumble ? 0f : 70f * breakT * breakT);

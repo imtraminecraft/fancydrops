@@ -1664,7 +1664,7 @@ public class FancyScreen extends Screen {
     private String pageTitle() {
         String[] n = subs();
         if (!query.isBlank()) return "Search";
-        if (n.length == 0 || onLanding()) return tab.label;
+        if (n.length == 0 || onLanding()) return (dropSrc != null && dropSrc.startsWith("@") && dropSrcName != null && query.isBlank()) ? tab.label + "  >  " + dropSrcName : tab.label;
         boolean deep = (tab == Tab.DROPS || tab == Tab.ANIMATIONS || tab == Tab.SOUNDS) && dropSrc != null && dropSrcName != null;
         return tab.label + "  >  " + n[curSub()] + (deep ? "  >  " + dropSrcName : "");
     }
@@ -2457,7 +2457,7 @@ public class FancyScreen extends Screen {
                     final Tab tt = t; final int kk = k;
                     Runnable go = () -> { tab = tt; subSel[tt.ordinal()] = kk; dropSrc = null; dropSrcName = null; query = ""; searchField.setValue(""); scroll = 0; };      // a button inside a search result first moves to the page it belongs to, then does its job
                     for (Row r : rows) {
-                        if (r.arrow && r.click != null) { Runnable o = r.click; r.click = () -> { go.run(); o.run(); }; }
+                        if (r.click != null && r.fkey == null) { Runnable o = r.click; r.click = () -> { go.run(); o.run(); }; }
                         if (r.pSet != null && r.pSel != null && r.pSel.getAsInt() < 0) { IntConsumer o = r.pSet; r.pSet = i -> { go.run(); o.accept(i); }; }
                         pages.add(r); if (r.kind == NORMAL) shown.add(r.title);
                     }
@@ -2506,7 +2506,7 @@ public class FancyScreen extends Screen {
             for (int round = 0; round < 2; round++) {                      // first the tiles get shorter; only when that is not enough does the page's own description go
                 for (int pass = 0; pass < 26 && totalH > viewH; pass++) {
                     boolean ch = false;
-                    for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 40 : r.pSubs != null ? 31 : 27)) { r.pTh -= 1; fit(r); ch = true; }
+                    for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 44 : r.pSubs != null ? 31 : 27)) { r.pTh -= 1; fit(r); ch = true; }
                     if (!ch) break;
                     relayout();
                 }
@@ -2653,16 +2653,24 @@ public class FancyScreen extends Screen {
     }
 
     private void animationsLanding(FancyConfig c) {
+        if (searching || "@changes".equals(dropSrc)) { animationChanges(c); return; }                  // (search also looks inside it)
         rows.add(textRow(":animations:", "Animations", "Set the looks every animation shares, then open a category."));
+        int fxOn = 0; for (int i = 0; i < FX_N; i++) if (c.fx(i)) fxOn++;
+        Row ac = row(0, ":bars:", "Animation Changes", "Bars, text, item, position and size  \u00B7  " + fxOn + " text effects on", Ui.ACCENT);
+        ac.click = () -> openPage(-1, "@changes", "Animation Changes"); rows.add(ac);
+        rows.add(section("Categories"));
+        rows.add(catTiles());
+    }
+
+    /** The sub page of the Animations main page: the look every animation shares (bars, text, item, position) and how big they are. */
+    private void animationChanges(FancyConfig c) {
+        rows.add(backRow("Animations", "Back to the Animations page", Ui.ACCENT, () -> openPage(-1, null, null)));
         int fxOn = 0; for (int i = 0; i < FX_N; i++) if (c.fx(i)) fxOn++;
         String[] lb = {"Bar Changes", "Text Changes", "Item Changes", "Position Changes"};
         String[] sb = {c.barPx + " px tall", fxOn + " effects on", "Size " + Math.round(c.itemScale * 100) + "%", POS_NAMES[c.animPos] + "  \u00B7  words " + (c.textAbove() ? "above" : "below")};
-        Row ch = picker("Animation Changes", "The look every animation shares", lb, sb, new String[]{":bars:", ":text:", ":size:", ":dock_top:"}, new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFFFFC857, 0xFF56D8FF}, null, 2, () -> -1, i -> openEditor(i + 1));
-        rows.add(ch);
+        rows.add(picker("Animation Changes", "The look every animation shares", lb, sb, new String[]{":bars:", ":text:", ":size:", ":dock_top:"}, new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFFFFC857, 0xFF56D8FF}, null, 2, () -> -1, i -> openEditor(i + 1)));
         Row sz = row(0, ":size:", "Animation size", "How big every animation is", Ui.ACCENT);
         sz.ctls.add(new Slider(0.5, 1.5, 0.05, () -> c.animScale, v -> c.animScale = (float) v, () -> Math.round(50 + 50 * c.animScale) + "%").live()); rows.add(sz);
-        rows.add(section("Categories"));
-        rows.add(catTiles());
     }
 
     /** The tiles of a category's animation groups ("Mythological Mobs", "Treasure"): each opens its editor. */
@@ -2720,14 +2728,22 @@ public class FancyScreen extends Screen {
     }
 
     private void soundsLanding(FancyConfig c) {
+        if (searching || "@settings".equals(dropSrc)) { soundSettings(c); return; }
         rows.add(textRow(":sounds:", "Sounds", "Edit each sound based on what you want."));
+        Row ss = row(0, ":sounds:", "Sound Settings", (c.sound ? "On" : "Off") + "  \u00B7  volume " + c.volume + "%  \u00B7  " + (c.customSounds ? "FancyDrops sounds" : "Minecraft sounds"), Ui.ACCENT);
+        ss.click = () -> openPage(-1, "@settings", "Sound Settings"); rows.add(ss);
+        rows.add(section("Categories"));
+        rows.add(catTiles());
+    }
+
+    /** The sub page of the Sounds main page: the master switch, the volume and which sound set plays. */
+    private void soundSettings(FancyConfig c) {
+        rows.add(backRow("Sounds", "Back to the Sounds page", Ui.ACCENT, () -> openPage(-1, null, null)));
         rows.add(section("Sound"));
         rows.add(toggle(":sounds:", "Sounds", "Master switch (also /fd mute)", () -> c.sound, v -> { c.sound = v; SoundFx.stopPreviews(); waveKey = null; }));
         Row vo = row(0, ":bell:", "Volume", "Applies to every FancyDrops sound", Ui.ACCENT);
         vo.ctls.add(new Slider(0, 100, 1, () -> c.volume, v -> c.volume = (int) Math.round(v), () -> c.volume + "%").typed(1)); rows.add(vo);
         rows.add(toggle(":disc:", "FancyDrops sound set", "Off plays Minecraft's own sounds instead, picked separately", () -> c.customSounds, v -> { c.customSounds = v; SoundFx.stopPreviews(); waveKey = null; }));
-        rows.add(section("Categories"));
-        rows.add(catTiles());
     }
 
     private void soundEditor(Categories.Cat cat, Categories.Group gr, FancyConfig c) {

@@ -195,3 +195,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Item Changes is a single page. Floating off hides Float height. Bar pillars are as thick as the bars.
 - Every sub page has a header back button to its main page; every tab with sub pages has a main page (Settings too).
 - Exported icon and animation PNGs never overwrite a file the author edited, but refresh when untouched (original.txt lists what the mod wrote).
+
+## Standing requirements added in 0.4.31
+- Animations and Sounds main pages show their description, one row that opens the shared settings (Animation Changes / Sound Settings) and the category tiles. The settings live on their own sub page so the main page never scrolls.

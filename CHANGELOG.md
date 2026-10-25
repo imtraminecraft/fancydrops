@@ -1,3 +1,8 @@
+## 0.4.31
+- Animations and Sounds main pages: the description is back and nothing scrolls. Animation Changes (with the size slider) and Sound Settings (switch, volume, sound set) each open as their own sub page, with a back button.
+- The category tiles no longer get squeezed until their words overlap.
+- Less lag in the scene drawing (glows and the creature's break-up used a slow square root).
+
 ## 0.4.30
 - Animations: one Animation size slider under Animation Changes (75% to 125%, the old 50% is now 75%). The Size row is gone from every category.
 - Position Changes: the Above/Below buttons now match what you click (they were swapped).

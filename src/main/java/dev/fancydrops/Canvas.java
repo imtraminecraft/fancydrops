@@ -69,7 +69,7 @@ final class Canvas {
     void glow(float cx, float cy, float r, int rgb, float strength) {
         int x0 = (int) Math.floor(cx - r), x1 = (int) Math.ceil(cx + r), y0 = (int) Math.floor(cy - r), y1 = (int) Math.ceil(cy + r);
         for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) {
-            float d = (float) Math.hypot(x + 0.5f - cx, y + 0.5f - cy) / r;
+            float ddx = x + 0.5f - cx, ddy = y + 0.5f - cy, d = (float) Math.sqrt(ddx * ddx + ddy * ddy) / r;
             if (d >= 1f) continue;
             float f = (1f - d) * (1f - d);
             int a = (int) (255 * strength * f);
