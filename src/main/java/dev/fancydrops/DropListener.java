@@ -610,11 +610,14 @@ public final class DropListener {
         FancyConfig c = FancyConfig.get();
         SlayerData.Drop dr = TreasureData.find(m.group(1).trim(), c.mythSpade);
         if (dr == null) return false;
-        FancyConfig.DropCfg dc = c.drop(TreasureData.SOURCE.id, dr.name);
+        String cfgName = dr.name; long cn = TreasureData.coins(dr.name);
+        if (cn > 0) { boolean listed = false; for (SlayerData.Drop x : TreasureData.drops(c.mythSpade)) if (x.name.equalsIgnoreCase(dr.name)) listed = true; if (!listed) { String nn = TreasureData.nearestCoins(cn, c.mythSpade); if (nn != null) cfgName = nn; } }
+        FancyConfig.DropCfg dc = c.drop(TreasureData.SOURCE.id, cfgName);
         boolean animate = c.masterAnimate && dc.animate, announce = c.masterAnnounce && dc.announce;
         dlog("treasure: " + dr.name + "  animate=" + animate + " announce=" + announce);
         if (!animate) return false;
         Item it = treasureItem(dr);
+        it.stateKey = cfgName;
         it.announce = announce;
         if (TreasureData.coins(dr.name) == 0) previewPrice(it); else ItemIcons.prefetch(it.id);
         Anim a = new Anim(TreasureData.SOURCE, it, -1, null); a.myth = true;

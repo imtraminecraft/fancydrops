@@ -73,18 +73,44 @@ public class FancyScreen extends Screen {
         boolean drag(double mx) { return false; }
     }
 
-    /** Drop Library: Auto (by price) / RNG (always the big scene) / Off (never) for one item, saved by its name. */
-    private class RngBtn extends Ctl {
-        final String item;
-        RngBtn(String item) { this.item = item; }
-        int width() { return 34; }
+    /** The three animation states of a drop. */
+    static final String[] STATE_L = {"Off", "Normal", "RNG"};
+    static final int[] STATE_C = {0xFF4A4F60, 0xFF4A6CF0, 0xFF8A3FD0};
+    static int stateOf(FancyConfig.DropCfg dc, String item) { return !dc.animate ? 0 : FancyConfig.get().rngOf(item) == 1 ? 2 : 1; }
+    /** Normal turns Chat Alert off, RNG turns it on; the player can flip it by hand afterwards. */
+    static void applyState(FancyConfig.DropCfg dc, String item, int st) {
+        FancyConfig c = FancyConfig.get();
+        if (st == 0) { dc.animate = false; c.setRng(item, 0); }
+        else if (st == 1) { dc.animate = true; c.setRng(item, 0); dc.announce = false; }
+        else { dc.animate = true; c.setRng(item, 1); dc.announce = true; }
+    }
+    /** Drop Library: Off / Normal / RNG for one item, saved by its name. */
+    private class StateBtn extends Ctl {
+        final FancyConfig.DropCfg dc; final String item;
+        StateBtn(FancyConfig.DropCfg dc, String item) { this.dc = dc; this.item = item; }
+        int width() { return 44; }
         void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {
-            int v = FancyConfig.get().rngOf(item), ty = y + (h - 14) / 2;
-            int col = v == 1 ? 0xFF8A3FD0 : v == 2 ? 0xFF4A4F60 : 0xFF2A3350;
+            int v = stateOf(dc, item), ty = y + (h - 14) / 2, col = STATE_C[v];
             pill(g, x0, ty, x1 - x0, 14, hover ? Canvas.mix(col, 0xFFFFFFFF, 0.18f) : col);
-            Gfx.textCentered(g, font, v == 1 ? "RNG" : v == 2 ? "Off" : "Auto", (x0 + x1) / 2, ty + 3, v == 0 ? Ui.SUB : 0xFFFFFFFF);
+            Gfx.textCentered(g, font, STATE_L[v], (x0 + x1) / 2, ty + 3, v == 0 ? Ui.SUB : 0xFFFFFFFF);
         }
-        boolean click(double mx, int button) { FancyConfig c = FancyConfig.get(); int v = c.rngOf(item); c.setRng(item, button == 1 ? (v + 2) % 3 : (v + 1) % 3); FancyConfig.save(); return true; }
+        boolean click(double mx, int button) { int v = stateOf(dc, item); applyState(dc, item, button == 1 ? (v + 2) % 3 : (v + 1) % 3); FancyConfig.save(); return true; }
+    }
+    /** The switch-all row: shows the state every drop shares ("Mixed" when they differ) and sets them all. */
+    private class StateAll extends Ctl {
+        final List<String> names = new ArrayList<>(); final List<FancyConfig.DropCfg> cfgs = new ArrayList<>();
+        int width() { return 44; }
+        int common() { int v = -1; for (int i = 0; i < cfgs.size(); i++) { int s2 = stateOf(cfgs.get(i), names.get(i)); if (v == -1) v = s2; else if (v != s2) return -1; } return v; }
+        void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {
+            int v = common(), ty = y + (h - 14) / 2, col = v < 0 ? 0xFF2A3350 : STATE_C[v];
+            pill(g, x0, ty, x1 - x0, 14, hover ? Canvas.mix(col, 0xFFFFFFFF, 0.18f) : col);
+            Gfx.textCentered(g, font, v < 0 ? "Mixed" : STATE_L[v], (x0 + x1) / 2, ty + 3, v <= 0 ? Ui.SUB : 0xFFFFFFFF);
+        }
+        boolean click(double mx, int button) {
+            int v = common(), nx = v < 0 ? 1 : button == 1 ? (v + 2) % 3 : (v + 1) % 3;
+            for (int i = 0; i < cfgs.size(); i++) applyState(cfgs.get(i), names.get(i), nx);
+            FancyConfig.save(); return true;
+        }
     }
 
     private class Switch extends Ctl {
@@ -246,7 +272,7 @@ public class FancyScreen extends Screen {
         Runnable click;                // clicking the row body
         boolean arrow, open;
         EditBox field; String fieldBtn; int btnX0, btnX1;
-        boolean dropCols;              // section header that labels the Play / Animate / Announce columns
+        boolean dropCols;              // section header that labels the Animation / Preview / Chat Alert columns
         int cell;                      // > 0: every control sits centred in its own column of this width
         String[] pLabels, pIcons, pSubs; int pTh = 27, pColsForce, pTop = 22; int[] pColors; boolean[] pWip; int pCols; IntSupplier pSel; IntConsumer pSet; java.util.function.IntPredicate pOn; boolean[] pLock; String[] pTips, pFx, pIds, pSetId; int[] pRar, pBg; Runnable[] pAct; boolean pFontTiles;      // PICKER rows: the tiles (pOn: which are switched on, pLock: which are locked)
         boolean locked;               // greyed out, not clickable (coming soon)
@@ -556,9 +582,6 @@ public class FancyScreen extends Screen {
             switch (key) {
                 case "default", "rare", "rng" -> { int n = clampN(sliceOf(c, key.equals("default") ? 0 : key.equals("rare") ? 1 : 2)); d.add(new String[]{"Slices", n + ""}); d.add(new String[]{"Style", STYLE_NAMES[Math.floorMod(c.slayerStyle, STYLE_NAMES.length)]}); }
                 case "dye" -> d.add(new String[]{"Splat", "1, in the dye's colour"});
-                case "myth" -> d.add(new String[]{"Strikes", Math.max(1, Math.min(10, c.mythStrikes)) + ""});
-                case "mythrng" -> d.add(new String[]{"Strikes", Math.max(1, Math.min(10, c.mythStrikesRng)) + ""});
-                case "mythnothing" -> d.add(new String[]{"Strikes", Math.max(1, Math.min(10, c.mythStrikes)) + ""});
                 case "exp" -> d.add(new String[]{"Flips", Math.max(1, Math.min(12, c.expFlips)) + ""});
                 case "exprng" -> d.add(new String[]{"Flips", Math.max(1, Math.min(12, c.expFlipsRng)) + ""});
                 case "nothing" -> d.add(new String[]{"Style", STYLE_NAMES[Math.floorMod(c.slayerStyle, STYLE_NAMES.length)]});
@@ -1638,9 +1661,8 @@ public class FancyScreen extends Screen {
             dd.name = d.name(); dd.id = d.id(); dd.icon = DyeData.icon(d.name()); dd.odds = "RNGesus Incarnate"; dd.chance = d.src();
             DropListener.playDrop(own == null ? SlayerData.OTHER : own, dd, "+250%");
         })));
-        dr.ctls.add(tog(() -> dc.animate, v -> dc.animate = v, 0xFF4A6CF0));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
-        dr.ctls.add(0, new RngBtn(d.name()));
+        dr.ctls.add(0, new StateBtn(dc, d.name()));
         dr.dcfg = dc;
         return dr;
     }
@@ -1653,19 +1675,20 @@ public class FancyScreen extends Screen {
         dr.iconId = d.id; dr.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds);
         dr.cell = CELL;
         dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (FarmData.ALL.contains(s)) DropListener.playFarmDrop(s, d); else if (MythData.ALL.contains(s)) DropListener.playMythDrop(s, d); else if (s == TreasureData.SOURCE) DropListener.playTreasureDrop(d); else DropListener.playDrop(s, d, "+250%"); })));
-        dr.ctls.add(tog(() -> dc.animate, v -> dc.animate = v, 0xFF4A6CF0));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
-        dr.ctls.add(0, new RngBtn(d.name));
+        dr.ctls.add(0, new StateBtn(dc, d.name));
         dr.dcfg = dc;
         return dr;
     }
 
     /** The Drop Library "Show" tiles: picks which drops stay in the list. */
-    private static boolean dropKeep(FancyConfig.DropCfg d) {
-        return dropShow < 0 || (dropShow == 0 ? (d.animate || d.announce) : dropShow == 1 ? d.animate : dropShow == 2 ? d.announce : (!d.animate && !d.announce));
+    private static boolean dropKeep(Row r) {
+        FancyConfig.DropCfg d = r.dcfg; if (dropShow < 0 || d == null) return true;
+        int st = stateOf(d, r.title);
+        return dropShow == 0 ? (st != 0 || d.announce) : dropShow == 1 ? st == 1 : dropShow == 2 ? st == 2 : (st == 0 || !d.announce);
     }
-    private static final String[] SHOW_L = {"Enabled", "Animated", "Chat Alert", "Disabled"}, SHOW_I = {"fd:dropped", "fd:animations", "fd:chat", "fd:nothing"};
-    private static final int[] SHOW_C = {0xFF6C86FF, 0xFFFF72C6, 0xFF7BE05A, 0xFFE5484D};
+    private static final String[] SHOW_L = {"Enabled", "Normal", "RNG", "Disabled"}, SHOW_I = {"fd:dropped", "fd:animations", "fd:rng", "fd:nothing"};
+    private static final int[] SHOW_C = {0xFF62E6A8, 0xFF4A6CF0, 0xFF8A3FD0, 0xFFE5484D};
     private boolean showBarOn() { return tab == Tab.DROPS && !onLanding() && query.isBlank() && ORD[Math.max(0, Math.min(CATS.length - 1, curSub()))] <= 4; }
     /** The Show filter lives in a strip above the menu (like the community buttons), and only while the Drop Library is open. */
     private Row showRow;
@@ -1714,13 +1737,13 @@ public class FancyScreen extends Screen {
             Row back = row(0, "fd:back", pg, "Back to the " + pg + " page", f.accent);
             back.noSearch = true; back.click = () -> { dropSrc = null; scroll = dropBackScroll; tabChanged = System.currentTimeMillis(); };
             rows.add(back);
-            boolean any = false; for (Row r : segs.get(open)) if (r.dcfg != null && dropKeep(r.dcfg)) { any = true; break; }
-            if (any) for (Row r : segs.get(open)) { if (r.dcfg != null && !dropKeep(r.dcfg)) continue; rows.add(r); }
+            boolean any = false; for (Row r : segs.get(open)) if (r.dcfg != null && dropKeep(r)) { any = true; break; }
+            if (any) for (Row r : segs.get(open)) { if (r.dcfg != null && !dropKeep(r)) continue; rows.add(r); }
         } else if (dropShow >= 0) {                                               // a Show filter is on: every matching drop of the page, in one scrollable list
             rows.addAll(head); if (showBarOn()) rows.add(showBarRow());
             for (int i = 0; i < folds.size(); i++) {
                 List<Row> keep = new ArrayList<>(); Row cols = null;
-                for (Row r : segs.get(i)) { if (r.dcfg != null && dropKeep(r.dcfg)) keep.add(r); else if (r.dropCols) cols = r; }
+                for (Row r : segs.get(i)) { if (r.dcfg != null && dropKeep(r)) keep.add(r); else if (r.dropCols) cols = r; }
                 if (keep.isEmpty()) continue;
                 Row hs = section(folds.get(i).title + "  \u00B7  " + keep.size()); hs.indent = 1; hs.noSearch = true; rows.add(hs);
                 if (cols != null) rows.add(cols);
@@ -1768,20 +1791,60 @@ public class FancyScreen extends Screen {
     private Row toggle(String icon, String title, String sub, BooleanSupplier g, Consumer<Boolean> s) {
         Row r = row(0, icon, title, sub, Ui.ACCENT); r.ctls.add(sw(g, s)); r.click = () -> s.accept(!g.getAsBoolean()); return r;
     }
+    private static int mythPage = -1;                                     // Drop Library > Mythological: -1 the hub, 0 Mythological Mobs, 1 Treasure
+    /** Mythological > Mythological Mobs: the Griffin pet picker and one source per creature. */
+    private void mythMobs(List<Row> rows, FancyConfig c, int total, int mcol) {
+        if (!searching) {
+            srcList.clear();
+            Row head = row(0, "fd:myth_mobs", "Mythological Mobs", MythData.spawnable(c.mythPet).size() + " of " + MythData.ALL.size() + " creatures  \u00B7  " + total + " drops", mcol);
+            head.kind = HERO; head.h = 84; head.noSearch = true; rows.add(head);
+            Row back = row(0, "fd:back", "Mythological", "Back to the Mythological page", mcol);
+            back.noSearch = true; back.click = () -> { mythPage = -1; dropSrc = null; scroll = 0; tabChanged = System.currentTimeMillis(); };
+            rows.add(back);
+        }
+        int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))];
+        Row pet = row(0, String.format("fd:griffin#%06X", pc & 0xFFFFFF), "Griffin pet", "Chances for this pet  \u00B7  Mythic is best  \u00B7  creatures it can't call are hidden", pc);
+        Dd petDd = new Dd(() -> MythData.PETS[c.mythPet], "dd_pet", 90); petDd.col = () -> pc;
+        pet.ctls.add(petDd); rows.add(pet);
+        if (open.contains("dd_pet") && !searching) { Row pl = miniList(pet, petDd, java.util.Arrays.asList(MythData.PETS), c.mythPet, i -> { c.mythPet = i; MythData.applyPet(i); open.remove("dd_pet"); }); pl.pickCols = PET_COLS; rows.add(pl); }
+        for (SlayerData.Slayer s : MythData.spawnable(c.mythPet)) {
+            Row src = fold("myth_" + s.id, "fd:myth_" + s.id, s.boss, s.drops.size() + (s.drops.size() == 1 ? " drop" : " drops"), s.color());
+            src.indent = 1; rows.add(src);
+            if (!src.open) continue;
+            FancyConfig.SlayerCfg sc = c.slayer(s.id);
+            Row cols = section(""); cols.dropCols = true; cols.indent = 2; cols.h = 14; rows.add(cols);
+            rows.add(masterRow(sc, s, c));
+            for (SlayerData.Drop d : s.drops) rows.add(dropRow(s, d, c));
+        }
+    }
     /** Mythological Ritual > Treasure: what a burrow can hold, for the spade you dig with. */
     private void treasureRows(List<Row> rows, FancyConfig c) {
         int sp = Math.max(0, Math.min(2, c.mythSpade)), col = TreasureData.COLS[sp];
         String[][] list = TreasureData.DROPS[sp];
-        Row f = fold("myth_treasure", "fd:griffin#" + String.format("%06X", col & 0xFFFFFF), "Treasure", list.length + " drops  ·  " + TreasureData.SPADES[sp], col);
-        f.indent = 1; rows.add(f);
-        if (!f.open) return;
-        Row pick = row(2, "fd:griffin#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  ·  25% of burrows are treasure", col);
+        if (searching) {
+            Row f = fold("myth_treasure", "fd:myth_treasure", "Treasure", list.length + " drops  \u00B7  " + TreasureData.SPADES[sp], col);
+            f.indent = 1; rows.add(f);
+        } else {
+            Row head = row(0, "fd:myth_treasure", "Treasure", list.length + " drops  \u00B7  " + TreasureData.SPADES[sp], col);
+            head.kind = HERO; head.h = 84; head.noSearch = true; rows.add(head);
+            if (showBarOn()) rows.add(showBarRow());
+            Row back = row(0, "fd:back", "Mythological", "Back to the Mythological page", col);
+            back.noSearch = true; back.click = () -> { mythPage = -1; dropSrc = null; scroll = 0; tabChanged = System.currentTimeMillis(); };
+            rows.add(back);
+        }
+        Row pick = row(2, "fd:griffin#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  \u00B7  25% of burrows are treasure", col);
         Dd dd = new Dd(() -> TreasureData.SPADES[Math.max(0, Math.min(2, c.mythSpade))], "dd_spade", 100); dd.col = () -> col;
         pick.ctls.add(dd); rows.add(pick);
         if (open.contains("dd_spade") && !searching) { Row pl = miniList(pick, dd, java.util.Arrays.asList(TreasureData.SPADES), sp, i -> { c.mythSpade = i; open.remove("dd_spade"); }); pl.pickCols = TreasureData.COLS; rows.add(pl); }
         Row er = row(2, "fd:cos_aura", "Erudite reforge", "From Daedalus' Notes. Two more burrows in a chain", Ui.ACCENT);
         er.ctls.add(sw(() -> c.mythErudite, v -> c.mythErudite = v)); er.click = () -> c.mythErudite = !c.mythErudite; rows.add(er);
-        for (SlayerData.Drop d : TreasureData.drops(sp)) { Row r = dropRow(TreasureData.SOURCE, d, c); r.subColor = Ui.SUB; rows.add(r); }
+        Row cols = section(""); cols.dropCols = true; cols.indent = 2; cols.h = 14; rows.add(cols);
+        SlayerData.Slayer gs = new SlayerData.Slayer();                                                  // the spade's drops as one little source: the switch-all row
+        gs.id = TreasureData.SOURCE.id; gs.name = "Treasure"; gs.boss = "Treasure"; gs.icon = TreasureData.SOURCE.icon; gs.color = String.format("#%06X", col & 0xFFFFFF);
+        gs.drops.addAll(TreasureData.drops(sp));
+        rows.add(masterRow(c.slayer(gs.id), gs, c));
+        boolean any = false;
+        for (SlayerData.Drop d : TreasureData.drops(sp)) { Row r = dropRow(TreasureData.SOURCE, d, c); r.subColor = Ui.SUB; if (searching || dropKeep(r)) { rows.add(r); any = true; } }
         rows.add(note("The chance is per burrow you dig. Creature burrows are the other 75%.", Ui.DIM));
     }
 
@@ -1878,7 +1941,9 @@ public class FancyScreen extends Screen {
             case DROPS -> {
                 buildAll = true; srcList.clear();
                 int cat = searching ? 0 : ORD[Math.max(0, Math.min(CATS.length - 1, subSel[Tab.DROPS.ordinal()]))];
-                if (cat == 0) {
+                if (!searching && cat != 3 && cat < 5) {
+                    wipPanel(CATS[cat], "drops");
+                } else if (cat == 0) {
                     int total = 0; for (SlayerData.Slayer s : SlayerData.ALL) total += nonDye(s).size();
                     Row head = row(0, "fd:slayers", "Slayers", SlayerData.ALL.size() + " bosses  ·  " + total + " drops", Ui.ACCENT);
                     head.kind = HERO; head.h = 84; head.noSearch = true; rows.add(head);
@@ -1964,23 +2029,23 @@ public class FancyScreen extends Screen {
                     head.kind = MOCK; head.h = 186; head.noSearch = true; rows.add(head);
                 } else {
                     int total = 0; for (SlayerData.Slayer s : MythData.spawnable(c.mythPet)) total += s.drops.size();
-                    Row head = row(0, "fd:mytho", "Mythological Ritual", MythData.spawnable(c.mythPet).size() + " of " + MythData.ALL.size() + " creatures  ·  " + total + " drops", PET_COLS[Math.max(0, Math.min(5, c.mythPet))] == 0xFFFFFFFF ? 0xFF55D8FF : PET_COLS[Math.max(0, Math.min(5, c.mythPet))]);
-                    head.kind = HERO; head.h = 84; head.noSearch = true; rows.add(head);
-                    int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))];
-                    Row pet = row(0, String.format("fd:griffin#%06X", pc & 0xFFFFFF), "Griffin pet", "Chances for this pet  ·  Mythic is best  ·  creatures it can't call are hidden", pc);
-                    Dd petDd = new Dd(() -> MythData.PETS[c.mythPet], "dd_pet", 90); petDd.col = () -> pc;
-                    pet.ctls.add(petDd); rows.add(pet);
-                    if (open.contains("dd_pet") && !searching) { Row pl = miniList(pet, petDd, java.util.Arrays.asList(MythData.PETS), c.mythPet, i -> { c.mythPet = i; MythData.applyPet(i); open.remove("dd_pet"); }); pl.pickCols = PET_COLS; rows.add(pl); }
-                    for (SlayerData.Slayer s : MythData.spawnable(c.mythPet)) {
-                        Row src = fold("myth_" + s.id, "fd:myth_" + s.id, s.boss, s.drops.size() + (s.drops.size() == 1 ? " drop" : " drops"), s.color());
-                        src.indent = 1; rows.add(src);
-                        if (!src.open) continue;
-                        FancyConfig.SlayerCfg sc = c.slayer(s.id);
-                        Row cols = section(""); cols.dropCols = true; cols.indent = 2; cols.h = 14; rows.add(cols);
-                        rows.add(masterRow(sc, s, c));
-                        for (SlayerData.Drop d : s.drops) rows.add(dropRow(s, d, c));
+                    int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))], mcol = pc == 0xFFFFFFFF ? 0xFF55D8FF : pc;
+                    srcList.clear();
+                    if (searching) { mythMobs(rows, c, total, mcol); treasureRows(rows, c); }
+                    else if (mythPage == 0) mythMobs(rows, c, total, mcol);
+                    else if (mythPage == 1) {
+                        srcList.add(new String[]{"@mobs", "Mythological Mobs", "fd:myth_mobs", String.valueOf(mcol)});
+                        treasureRows(rows, c);
+                    } else {
+                        Row head = row(0, "fd:mytho", "Mythological Ritual", "Creatures and treasure from the Diana event", mcol);
+                        head.kind = HERO; head.h = 84; head.noSearch = true; rows.add(head);
+                        int tc = TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))];
+                        String[] lb = {"Mythological Mobs", "Treasure"}, ls = {MythData.spawnable(c.mythPet).size() + " creatures  \u00B7  " + total + " drops", TreasureData.drops(Math.max(0, Math.min(2, c.mythSpade))).size() + " drops  \u00B7  spade and Erudite"}, li = {"fd:myth_mobs", "fd:myth_treasure"};
+                        int[] lc = {mcol, tc};
+                        srcList.add(new String[]{"@mobs", lb[0], li[0], String.valueOf(lc[0])}); srcList.add(new String[]{"@treasure", lb[1], li[1], String.valueOf(lc[1])});
+                        rows.add(picker("", "", lb, ls, li, lc, new boolean[2], 2, () -> -1, q -> { mythPage = q; dropSrc = null; scroll = 0; tabChanged = System.currentTimeMillis(); }));
+                        buildAll = false; break;
                     }
-                    treasureRows(rows, c);
                 }
                 dropFinish(rows, cat);
                 buildAll = false;
@@ -1999,7 +2064,8 @@ public class FancyScreen extends Screen {
                         String nm = CATS[cat].toLowerCase(Locale.ROOT);
                         Row wp = row(0, cat == 5 ? "fd:mining" : "fd:fishing", CATS[cat] + " animations", "", Ui.ACCENT);
                         wp.kind = MOCK; wp.h = 186; wp.noSearch = true; rows.add(wp);
-                    } else animCategory(rows, c, cat, all);
+                    } else if (cat != 3) { if (!all) wipPanel(CATS[cat], "animations"); }
+                    else animCategory(rows, c, cat, all);
                 }
                 if (all) animChanges(rows, c);
             }
@@ -2009,13 +2075,11 @@ public class FancyScreen extends Screen {
                     Row back = row(0, "fd:sounds", "Sounds", "Back to the volume and all the animation sounds", Ui.ACCENT);
                     back.noSearch = true; back.click = () -> { subSel[Tab.SOUNDS.ordinal()] = -1; waveKey = null; SoundFx.stopPreviews(); scroll = 0; tabChanged = System.currentTimeMillis(); };
                     rows.add(back);
-                    if (curSub() >= 5) {
-                        int wc = ORD[Math.min(6, curSub())]; String nm = CATS[wc].toLowerCase(Locale.ROOT);
-                        Row wp = row(0, wc == 5 ? "fd:mining" : "fd:fishing", CATS[wc] + " sounds", "Coming soon: sounds for " + nm + " drops.", Ui.DIM);
-                        wp.kind = PANEL; wp.h = 130; wp.noSearch = true; rows.add(wp); break;
+                    if (ORD[Math.max(0, Math.min(6, curSub()))] != 3) {
+                        wipPanel(CATS[ORD[Math.max(0, Math.min(6, curSub()))]], "sounds"); break;
                     }
                     if (!c.sound) { rows.add(note("Sounds are off. Turn them on from the Sounds page.", Ui.DIM)); break; }
-                    soundCat = ORD[Math.max(0, Math.min(4, curSub()))];
+                    soundCat = 3;
                     soundsPage(rows, c);
                 }
             }
@@ -2033,12 +2097,7 @@ public class FancyScreen extends Screen {
                 for (int i = 0; i < nev; i++) { evL[i] = CHAT_EVENTS[ORD[i]]; evI[i] = PICK_ICONS[ORD[i]]; evC[i] = PICK_COLS[ORD[i]]; evWip[i] = isWip(evL[i]); }
                 rows.add(picker("Message for", "Every drop page has its own message", evL, evI, evC, evWip, () -> ordPos(chatEv),
                     i -> { chatEv = ORD[i]; if (ORD[i] <= 4) formatField.setValue(c.formatFor(ORD[i])); }));
-                if (chatEv >= 5) {                                                 // Mining and Fishing: not built yet, so the whole editor sits behind a WIP overlay
-                    boolean mine = chatEv == 5;
-                    Row wp = row(0, mine ? "fd:mining" : "fd:fishing", CHAT_EVENTS[chatEv] + " messages", "Coming soon with the " + (mine ? "mining" : "fishing") + " drops.", Ui.DIM);
-                    wp.kind = PANEL; wp.h = 150; wp.noSearch = true; rows.add(wp);
-                    break;
-                }
+                if (chatEv != 3) { wipPanel(catNameOf(chatEv), "messages"); break; }      // only Mythological is rebuilt, the rest wait behind the construction site
                 boolean xtra = c.alsoAll && !c.channel.equals("ALL");
                 if (formatError != null) { /* shown under the format box below */ }
                 else {
@@ -2239,9 +2298,9 @@ public class FancyScreen extends Screen {
         {{"Farming Drop", "farm", "5", "fd:farm", "A scythe cuts a row of crops and the last one opens. For crops and feasts.", "Farming"},
          {"Pest Drop", "pest", "10", "fd:pest", "A vacuum sucks up the pest, it pops, and the drop shoots out of the nozzle.", "Pest"},
          {"Ray of Helios", "helios", "8", "fd:sun", "A longer sunrise, only for the Ray of Helios.", "Helios"}},
-        {{"Nothing Happens", "mythnothing", "9", "fd:nothing", "When a ritual drops nothing: the circle goes dark.", "Nothing"},
-         {"Mythological Drop", "myth", "6", "fd:mytho", "Golden lightning lights a rune circle, which lifts the drop out in laurel.", "Normal"},
-         {"RNG Drop", "mythrng", "6", "fd:rng", "For RNG drops: a bigger last bolt, god rays, rune halos and griffin feathers.", "RNG"}},
+        {{"No Drops", "mythnothing", "9", "fd:nothing", "Small, above the action bar. One weak strike, a pale minotaur crumbles and the circle goes dark.", "No Drops"},
+         {"Normal", "myth", "6", "fd:mytho", "Small, above the action bar. Three strikes call up a minotaur, it shatters and the drop springs out. Treasure digs it up instead.", "Normal"},
+         {"RNG", "mythrng", "6", "fd:rng", "The big scene. Black bars, the whole screen hidden: bigger bolts, god rays, rune halos and griffin feathers.", "RNG"}},
         {{"Experiment Drop", "exp", "7", "fd:experiments", "The table's book opens, the view zooms in, the pages flip and the drop bursts out.", "Normal"},
          {"RNG Drop", "exprng", "7", "fd:rng", "For RNG items: the book flips more and faster, then god rays and a laurel crown the drop.", "RNG"}}};
 
@@ -2255,9 +2314,9 @@ public class FancyScreen extends Screen {
             case "farm" -> { o[0] = "Farming Drop (Rain)"; o[4] = "A rain cloud waters the field, the crops burst into sparkles and the last one opens."; }
             case "pest" -> { o[0] = "Pest Drop (Rain)"; o[4] = "A downpour floods the pest away and the drop rises out of the puddle."; }
             case "helios" -> { o[0] = "Ray of Helios (Rain)"; o[4] = "A sunrise over a sun shower, only for the Ray of Helios."; }
-            case "mythnothing" -> { o[4] = "When a ritual drops nothing: the comets fade and the circle goes dark."; }
-            case "myth" -> { o[0] = "Mythological Drop (Comets)"; o[4] = "Golden comets fall from a starry sky onto the rune circle, which lifts the drop out in laurel."; }
-            case "mythrng" -> { o[0] = "RNG Drop (Comets)"; o[4] = "For RNG drops: faster comets, a whitened sky, god rays, rune halos and griffin feathers."; }
+            case "mythnothing" -> { o[4] = "Small, above the action bar. The comets fade, a pale minotaur crumbles and the circle goes dark."; }
+            case "myth" -> { o[0] = "Normal (Comets)"; o[4] = "Small, above the action bar. Comets call up a minotaur, it shatters and the drop springs out. Treasure digs it up instead."; }
+            case "mythrng" -> { o[0] = "RNG (Comets)"; o[4] = "The big scene: faster comets, a whitened sky, god rays, rune halos and griffin feathers."; }
             case "exp" -> { o[0] = "Experiment Drop (Orb)"; o[4] = "A rune orb charges over the table, each flip lights a ring, then the drop bursts out."; }
             case "exprng" -> { o[0] = "RNG Drop (Orb)"; o[4] = "For RNG items: the orb pulses gold with every flip, then god rays and a laurel crown the drop."; }
             default -> { }
@@ -2267,7 +2326,7 @@ public class FancyScreen extends Screen {
 
     private static float secsOf(FancyConfig c, String key) {
         Float v = c.animSecs.get(key);
-        return Math.max(5f, Math.min(10f, v != null ? Math.max(v, c.textDelay(key) + 3.5f) : AnimationManager.naturalSecs(key, c)));
+        return Math.max(2f, Math.min(7f, v != null ? v : AnimationManager.naturalSecs(key, c)));
     }
 
     /** One Animations page: the preview, the animation type (a list when there is more than one), that type's settings and sounds, then the frame and text. */
@@ -2336,14 +2395,6 @@ public class FancyScreen extends Screen {
             if (open.contains(dk) && !searching) rows.add(miniList(cr, sd, counts, clampN(sliceOf(c, sc)) - 1, i -> { setSlice(c, sc, i + 1); c.fixChops(); open.remove(dk); }));
         } else if (key.equals("dye")) {
             // one splat in the dye's own colour: nothing to set here but the length
-        } else if (key.equals("myth") || key.equals("mythrng") || key.equals("mythnothing")) {
-            boolean r = key.equals("mythrng");
-            List<String> hits = new ArrayList<>(); for (int n = 1; n <= 10; n++) hits.add(n + (n == 1 ? " strike" : " strikes"));
-            Row cr = row(0, "fd:mytho", "Lightning strikes", "Bolts before the drop shows", col);
-            final String dk = "dd_strike" + key;
-            Dd sd = new Dd(() -> hits.get(Math.max(1, Math.min(10, r ? c.mythStrikesRng : c.mythStrikes)) - 1), dk, 90);
-            cr.ctls.add(sd); rows.add(cr);
-            if (open.contains(dk) && !searching) rows.add(miniList(cr, sd, hits, Math.max(1, Math.min(10, r ? c.mythStrikesRng : c.mythStrikes)) - 1, i -> { if (r) c.mythStrikesRng = i + 1; else c.mythStrikes = i + 1; open.remove(dk); }));
         } else if (key.equals("exp") || key.equals("exprng")) {
             boolean r = key.equals("exprng");
             List<String> flips = new ArrayList<>(); for (int n = 1; n <= 12; n++) flips.add(n + (n == 1 ? " flip" : " flips"));
@@ -2353,9 +2404,9 @@ public class FancyScreen extends Screen {
             cr.ctls.add(sd); rows.add(cr);
             if (open.contains(dk) && !searching) rows.add(miniList(cr, sd, flips, Math.max(1, Math.min(12, r ? c.expFlipsRng : c.expFlips)) - 1, i -> { if (r) c.expFlipsRng = i + 1; else c.expFlips = i + 1; open.remove(dk); }));
         }
-        Row dl = row(0, "fd:clock", "Animation length", "Total time, 5 to 10 s  ·  click the number to type", col);
+        Row dl = row(0, "fd:clock", "Animation length", "Total time, 2 to 7 s  ·  click the number to type", col);
         dl.ctls.add(new Btn("Default", Ui.ROW_HOVER, () -> c.animSecs.remove(key)));
-        dl.ctls.add(new Slider(5, 10, 0.1, () -> secsOf(c, key), v -> c.animSecs.put(key, (float) (Math.round(v * 10) / 10.0)), () -> String.format(java.util.Locale.ROOT, "%.1f s", secsOf(c, key))).typed(1));
+        dl.ctls.add(new Slider(2, 7, 0.1, () -> secsOf(c, key), v -> c.animSecs.put(key, (float) (Math.round(v * 10) / 10.0)), () -> String.format(java.util.Locale.ROOT, "%.1f s", secsOf(c, key))).typed(1));
         rows.add(dl);
         Row ss = row(0, "fd:sounds", "Sounds", "What every moment of this animation plays", col);
         ss.ctls.add(new Btn("Edit sounds", 0xFF3A4FA0, () -> {
@@ -3041,7 +3092,7 @@ public class FancyScreen extends Screen {
         }
         if (t == Tab.ANIMATIONS) animChanges(rows, FancyConfig.get());                        // the look every animation shares sits at the top of the main page
         if (t == Tab.SOUNDS && !soundMaster(rows, FancyConfig.get())) return;      // sounds off: only the switch
-        rows.add(picker(landingTitle(t), landingHint(t, names.length), lb, ls, li, lc, lw, 2, () -> -1, k -> { dropSrc = null; subSel[t.ordinal()] = k; scroll = 0; tabChanged = System.currentTimeMillis(); open.removeIf(o -> o.startsWith("dd_")); }));
+        rows.add(picker(landingTitle(t), landingHint(t, names.length), lb, ls, li, lc, lw, 2, () -> -1, k -> { dropSrc = null; mythPage = -1; subSel[t.ordinal()] = k; scroll = 0; tabChanged = System.currentTimeMillis(); open.removeIf(o -> o.startsWith("dd_")); }));
     }
 
     private static String landingTitle(Tab t) {
@@ -3196,9 +3247,12 @@ public class FancyScreen extends Screen {
 
     /** The "all at once" row on top of a boss / source: one switch for every Animate, one for every Announce, lined up with the columns below. */
     private Row masterRow(FancyConfig.SlayerCfg sc, SlayerData.Slayer s, FancyConfig c) {
-        Row all = row(2, "fd:switch", "Every " + s.boss + " drop", "Animation and chat switches for every drop below", s.color());
+        Row all = row(2, "fd:switch", "Every " + s.boss + " drop", "Animation state and chat alert for every drop below", s.color());
         all.cell = CELL;
-        all.ctls.add(tog(() -> anyAnimate(s, c), v -> setEvery(sc, s, c, v, null), 0xFF4A6CF0));
+        StateAll sa = new StateAll();
+        for (SlayerData.Drop d : s.drops) { sa.names.add(d.name); sa.cfgs.add(cfgOf(s, d, c)); }
+        all.ctls.add(sa);
+        all.ctls.add(new Ctl() { int width() { return 0; } void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {} });      // the Preview column stays empty
         all.ctls.add(tog(() -> anyAnnounce(s, c), v -> setEvery(sc, s, c, null, v), 0xFFD98A1F));
         return all;
     }
@@ -3238,7 +3292,12 @@ public class FancyScreen extends Screen {
     private static int ordPos(int cat) { for (int i = 0; i < ORD.length; i++) if (ORD[i] == cat) return i; return 0; }
     private static final String[] CATS = {"Slayers", "Dye", "Farming", "Mythological", "Experiments", "Mining", "Fishing"};
     /** Pages that are still being built show a WIP label in the sidebar. */
-    private static boolean isWip(String name) { return name.equals("Mining") || name.equals("Fishing"); }
+    private static boolean isWip(String name) { return !name.equals("Mythological"); }          // only Mythological is rebuilt so far; the rest wait behind the construction site
+    private static String catNameOf(int cat) { return CATS[Math.max(0, Math.min(CATS.length - 1, cat))]; }
+    private void wipPanel(String catName, String what) {
+        Row wp = row(0, catIcon(catName), catName + " " + what, "Being rebuilt. Back soon.", Ui.DIM);
+        wp.kind = PANEL; wp.h = 150; wp.noSearch = true; rows.add(wp);
+    }
     private static double pctOf(String chance) { var m = java.util.regex.Pattern.compile("\\(([0-9.]+)%\\)").matcher(chance); return m.find() ? Double.parseDouble(m.group(1)) : 0; }
     /** 0 Rare Items (the Extraordinary ones), 1 RNG Items (everything else that isn't a book), 2 Enchantment Books. */
     private static int expGroup(String[] e) {
@@ -3256,7 +3315,7 @@ public class FancyScreen extends Screen {
     private final List<int[]> prevBoxes = new ArrayList<>();           // {x, y, w, h, category} of every preview drawn this frame (for dragging a custom Farming spot)
     private boolean dragFarm;
     private static final String[] CHAT_EVENTS = {"Slayers", "Dye", "Farming", "Mythological", "Experiments", "Mining", "Fishing"};
-    private static int chatEv;                                    // Chat > Message format: which event's message is being edited
+    private static int chatEv = 3;                                    // Chat > Message format: which event's message is being edited
     private static int previewSel;                               // Settings > Scene Settings > Preview: the chosen Drop Library category
     private static String jumpTo;                                 // a row title to scroll to after the next build
     private static final int[] subSel = new int[Tab.values().length];
@@ -3748,7 +3807,7 @@ public class FancyScreen extends Screen {
         if (r.dropCols) {
             // labels over the Preview / Animation / Chat Alert columns of the drop rows below: same right-to-left columns, each CELL wide
             int edge = cx + cw - 8;
-            String[] labels = {"Chat Alert", "Animation", "Preview", "RNG"};
+            String[] labels = {"Chat Alert", "Preview", "Animation"};
             for (String label : labels) {
                 Gfx.textCentered(g, font, label, edge - CELL / 2, r.y + 3, Ui.DIM);
                 edge -= CELL;
@@ -3876,18 +3935,18 @@ public class FancyScreen extends Screen {
             if (i == Tab.COSMETICS.ordinal() || i == Tab.RESOURCES.ordinal()) continue;
             int[] b = tabBox(i);
             if (i != Tab.GENERAL.ordinal() && my >= sideBottom()) continue;
-            if (inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = null; if (tab != Tab.values()[i]) { tabChanged = System.currentTimeMillis(); } tab = Tab.values()[i]; subSel[tab.ordinal()] = -1; scroll = 0; open.removeIf(o -> o.startsWith("dd_")); return true; }
+            if (inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = null; mythPage = -1; if (tab != Tab.values()[i]) { tabChanged = System.currentTimeMillis(); } tab = Tab.values()[i]; subSel[tab.ordinal()] = -1; scroll = 0; open.removeIf(o -> o.startsWith("dd_")); return true; }
         }
         if (tab == Tab.DROPS && srcExp > 0.9f && query.isBlank()) {
             for (int j = 0; j < srcList.size(); j++) {
                 int[] b = srcBox(j);
-                if (my < sideBottom() && inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = srcList.get(j)[0]; scroll = 0; tabChanged = System.currentTimeMillis(); return true; }
+                if (my < sideBottom() && inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { String sk = srcList.get(j)[0]; if (sk.equals("@mobs")) { mythPage = 0; dropSrc = null; } else if (sk.equals("@treasure")) { mythPage = 1; dropSrc = null; } else dropSrc = sk; scroll = 0; tabChanged = System.currentTimeMillis(); return true; }
             }
         }
         if (subExp > 0.9f && query.isBlank()) {
             for (int k = 0; k < subs().length; k++) {
                 int[] b = subBox(k);
-                if ((tab == Tab.GENERAL || my < sideBottom()) && inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = null; waveKey = null; SoundFx.stopPreviews(); if (curSub() != k) tabChanged = System.currentTimeMillis(); subSel[tab.ordinal()] = k; scroll = 0; open.removeIf(o -> o.startsWith("dd_")); return true; }
+                if ((tab == Tab.GENERAL || my < sideBottom()) && inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = null; mythPage = -1; waveKey = null; SoundFx.stopPreviews(); if (curSub() != k) tabChanged = System.currentTimeMillis(); subSel[tab.ordinal()] = k; scroll = 0; open.removeIf(o -> o.startsWith("dd_")); return true; }
             }
         }
         if (popup != null) {

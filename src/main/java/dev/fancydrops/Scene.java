@@ -55,15 +55,17 @@ final class Scene {
     static float chopStart(Params p, int k) { return 0.7f + (k < 2 ? k * 0.42f : 0.84f + (k - 2) * interval(p.tier)); }
     static float chopIv(Params p, int k) { return k < 2 ? 0.42f : interval(p.tier); }
     /** A Mythological drop in the Normal state: the small, see-through scene (a ritual circle for a creature, a dig for a treasure) that plays 3 seconds. */
-    static boolean normalMyth(Params p) { return p.myth && p.tier != 2 && p.hasItem; }
+    /** The Mythological scenes built on the ritual circle / the dig: Normal, No Drops, and the RNG version (the same story, slower, with night, god rays and halos). */
+    static boolean sceneN(Params p) { return p.myth && (p.tier != 2 || p.hasItem); }
+    static boolean normalMyth(Params p) { return p.myth && p.tier != 2; }          // Normal and No Drops: the small scene above the action bar
     /** The rows of the 112 x 96 canvas the Normal Mythological scene really uses: the layout crops the empty rest so nothing floats above the action bar. */
     static final int CROP_T = 20, CROP_B = 80;
 
-    static float impact(Params p, int k) { return p.exp ? (p.tier == 2 ? 1.45f + 0.3f * k - 0.008f * k * k : 1.45f + 0.36f * k) : p.myth ? (normalMyth(p) ? 0.4f + 0.5f * k : 0.55f + 0.5f * k) : p.farm ? (p.pest ? 1.15f : p.helios ? 0.5f + 0.35f * k : 0.12f + 0.18f * k) : p.dye ? 0.75f : chopStart(p, k) + 0.8095f * chopIv(p, k); }   // dye: when each paint blob lands
-    static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? (normalMyth(p) ? (p.treasure ? 2.0f : 1.85f) : impact(p, Math.max(0, p.chops - 1)) + 0.6f) : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.pest ? 0.32f : p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
+    static float impact(Params p, int k) { return p.exp ? (p.tier == 2 ? 1.45f + 0.3f * k - 0.008f * k * k : 1.45f + 0.36f * k) : p.myth ? (sceneN(p) ? 0.4f + 0.5f * k : 0.55f + 0.5f * k) : p.farm ? (p.pest ? 1.15f : p.helios ? 0.5f + 0.35f * k : 0.12f + 0.18f * k) : p.dye ? 0.75f : chopStart(p, k) + 0.8095f * chopIv(p, k); }   // dye: when each paint blob lands
+    static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? (sceneN(p) ? (p.treasure ? 2.0f : 1.85f) : impact(p, Math.max(0, p.chops - 1)) + 0.6f) : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.pest ? 0.32f : p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
     /** 0 = plain sword (first two slices of every scene); 1 = dramatic (Rare Drop); 2 = super dramatic (RNG Drop). */
     static int drama(Params p, int k) { return k < 2 ? 0 : p.tier; }
-    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (normalMyth(p) ? 1.15f : p.tier == 2 ? 5.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
+    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (sceneN(p) ? 1.15f : p.tier == 2 ? 5.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
 
     private static float cl(float v) { return Math.max(0f, Math.min(1f, v)); }
     private static float easeOut(float x) { x = cl(x); return 1 - (1 - x) * (1 - x) * (1 - x); }
@@ -232,7 +234,7 @@ final class Scene {
         out.clear(); l3.clear(); MOB.clear(); SL.clear(); SW.clear(); IT.clear();
         if (p.exp) { drawExperiment(out, p, t); return; }
         if (p.farm) { drawFarm(out, p, t); return; }
-        if (normalMyth(p)) { if (p.treasure) drawTreasureN(out, p, t); else drawMobsN(out, p, t); return; }
+        if (sceneN(p)) { if (!p.hasItem) drawNothingN(out, p, t); else if (p.treasure) drawTreasureN(out, p, t); else drawMobsN(out, p, t); return; }
         if (p.myth) { drawMytho(out, p, t); return; }
         if (p.dye) { drawDye(out, p, t); return; }
         if (p.front == null) {
@@ -2185,6 +2187,7 @@ final class Scene {
         final boolean split = t >= TS;
         final int cx = 56, gy = 70;
         p.shakeX = 0; p.shakeY = 0;
+        if (p.tier == 2) rngBack(out, t);
         float inn = cl(t / 0.3f);
         out.glow(cx, gy - 20, 44, 0x9C90FF, 0.10f * inn);
         ell(out, cx, gy + 4, 42, 6, Canvas.rgb((int) (110 * inn), 0x07050C));
@@ -2202,7 +2205,7 @@ final class Scene {
         }
         // the minotaur: called up by strike 1, hit by 2 and 3, shattered at the reveal
         float s0 = impact(p, 0), em = easeOut((t - s0 - 0.05f) / 0.45f);
-        if (t > s0 && t < TS) {
+        if (p.mob == 3 && t > s0 && t < TS) {
             float shake = 0, flash = 0;
             for (int k = 1; k < 3; k++) { float a = t - impact(p, k); if (a >= 0f && a < 0.22f) { shake += (float) Math.sin(a * 100) * 1.5f * (1 - a / 0.22f); flash = Math.max(flash, 1 - a / 0.14f); } }
             flash = cl(flash);
@@ -2217,13 +2220,29 @@ final class Scene {
             }
             if (eyes) { out.glow(ox + 6, oy + 11, 6, 0xFF3C28, 0.35f); out.glow(ox + 26, oy + 11, 6, 0xFF3C28, 0.35f); }
         }
-        if (t >= TS && t < TS + 0.7f) {                                                                     // it breaks into pieces that fly apart
+        if (p.mob == 3 && t >= TS && t < TS + 0.7f) {                                                       // it breaks into pieces that fly apart
             float a = t - TS;
             for (int j = 0; j < 15; j++) for (int i = 0; i < 16; i++) {
                 char ch = minoAt(i, j); if (ch == '.') continue;
                 int n = i * 15 + j; float vx = (i - 8) * (2 + h(n, 1) * 5), vy = -12 - h(n, 3) * 30;
                 int px = Math.round(cx - 16 + i * 2 + vx * a), py = Math.round(gy - 26 + j * 2 + vy * a + 110 * a * a);
                 if (py < gy + 2) out.rect(px, py, px + 2, py + 2, Canvas.rgb((int) (255 * (1 - a / 0.7f)), minoCol(ch)));
+            }
+        }
+        if (p.mob != 3) {                                                                                   // every other creature: its own shape rises, flashes under the strikes and bursts into sparks
+            if (t > s0 && t < TS) {
+                float flash = 0f;
+                for (int k = 1; k < 3; k++) { float a = t - impact(p, k); if (a >= 0f && a < 0.22f) flash = Math.max(flash, 1 - a / 0.14f); }
+                silhouette(out, p.mob, cx, gy, easeOut((t - s0 - 0.05f) / 0.45f), t);
+                if (flash > 0f) out.glow(cx, gy - 22, 26, 0xFFFFFF, 0.55f * cl(flash));
+            }
+            if (t >= TS && t < TS + 0.6f) {
+                float a = t - TS;
+                for (int i = 0; i < 28; i++) {
+                    float vx = (h(i, 11) - 0.5f) * 70, vy = -10 - h(i, 12) * 40;
+                    int px = Math.round(cx + (h(i, 13) - 0.5f) * 20 + vx * a), py = Math.round(gy - 6 - h(i, 14) * 30 + vy * a + 90 * a * a);
+                    if (py < gy + 2) out.rect(px, py, px + 2, py + 2, Canvas.rgb((int) (255 * (1 - a / 0.6f)), i % 3 == 0 ? 0xFFFFFF : 0xFFE28A));
+                }
             }
         }
         for (int k = 0; k < 3; k++) {                                                                       // the three strikes
@@ -2235,7 +2254,85 @@ final class Scene {
         }
         if (t >= TS - 0.2f && t < TS) { float f = (t - (TS - 0.2f)) / 0.2f; out.glow(cx, gy - 2, 6 + 22 * f, 0xFFFFFF, 0.65f * f); }
         reveal(out, t, TS, cx, gy, 0xFFE28A);
+        if (p.tier == 2) rngFront(out, p, t, TS, cx, gy);
         if (split && p.hasItem && p.item != null) { twinPass(out, p, t, TS, us, false, false, 0, false); drawItem(out, p, t, TS, us); twinPass(out, p, t, TS, us, false, false, gy - 18, true); }
+    }
+
+    /** Mythological, No Drops: the circle charges, one weak strike calls up a pale minotaur, then it crumbles to ash, the circle flickers out and smoke drifts off. */
+    private static void drawNothingN(Canvas out, Params p, float t) {
+        final int cx = 56, gy = 70;
+        p.shakeX = 0; p.shakeY = 0;
+        float inn = cl(t / 0.3f), die = cl((t - 1.45f) / 0.55f);
+        out.glow(cx, gy - 14, 36, 0x5A5A7A, 0.10f * inn * (1f - die));
+        ell(out, cx, gy + 4, 42, 6, Canvas.rgb((int) (110 * inn), 0x07050C));
+        ell(out, cx, gy + 2, 40, 7, Canvas.rgb((int) (235 * inn), 0x1A1828));
+        ell(out, cx, gy + 1, 37, 6, Canvas.rgb((int) (235 * inn), 0x34304C));
+        float ring = cl((t - 0.05f) / 0.4f), flick = t > 1.1f ? 0.55f + 0.45f * (float) Math.sin(t * 38) : 1f, live = cl(ring * flick * (1f - die));
+        int rc = Canvas.mix(0xFFFFD764, 0xFF6A6A7A, die) & 0xFFFFFF;
+        for (int i = 0; i < 100; i++) {
+            double an = i * Math.PI * 2 / 100 + t * 0.6;
+            out.set((int) Math.round(cx + Math.cos(an) * 31 * ring), (int) Math.round(gy + 1 + Math.sin(an) * 4.5 * ring), Canvas.rgb((int) (230 * live), rc));
+        }
+        for (int i = 0; i < 8; i++) {
+            double an = i * Math.PI / 4 + t * 0.6; int gx = (int) Math.round(cx + Math.cos(an) * 25 * ring), gz = (int) Math.round(gy + 1 + Math.sin(an) * 3.4 * ring);
+            out.rect(gx, gz - 2, gx + 1, gz + 1, Canvas.rgb((int) (190 * live), 0xFFEB96));
+        }
+        float a0 = t - 0.5f;                                                                                // one weak strike
+        if (a0 >= 0f && a0 < 0.2f) { if (((int) (a0 * 40)) % 2 == 0) bolt(out, cx, t, 5); out.glow(cx, gy, 14, 0xAAC8FF, 0.4f * (1 - a0 / 0.2f)); }
+        float em = easeOut((t - 0.6f) / 0.5f);
+        if (t > 0.6f && t < 1.4f) {                                                                         // a pale minotaur, eyes going dim
+            int hh = Math.max(1, Math.round(15 * em)), ox = cx - 16, oy = gy - 26 + Math.round(8 * (1 - em)), al = (int) (150 * cl(em));
+            for (int j = 0; j < hh; j++) for (int i = 0; i < 16; i++) {
+                char ch = minoAt(i, 15 - hh + j); if (ch == '.') continue;
+                int col = Canvas.mix(minoCol(ch), 0xFF8A8A9A, 0.55f);
+                if (ch == 'e') col = t > 1.1f ? 0xFF3A3A44 : 0xFF804040;
+                out.rect(ox + i * 2, oy + j * 2, ox + i * 2 + 2, oy + j * 2 + 2, Canvas.rgb(al, col & 0xFFFFFF));
+            }
+        }
+        if (t >= 1.4f && t < 2.2f) {                                                                        // it crumbles and the ash falls
+            float a = t - 1.4f;
+            for (int j = 0; j < 15; j++) for (int i = 0; i < 16; i++) {
+                char ch = minoAt(i, j); if (ch == '.') continue;
+                int n = i * 15 + j; float vx = (h(n, 1) - 0.5f) * 10, fall = 6 + h(n, 3) * 40;
+                int px = Math.round(cx - 16 + i * 2 + vx * a), py = Math.round(gy - 26 + j * 2 + fall * a * a * 1.6f);
+                if (py < gy + 2) out.rect(px, py, px + 2, py + 2, Canvas.rgb((int) (140 * (1 - a / 0.8f)), Canvas.mix(minoCol(ch), 0xFF8A8A9A, 0.6f) & 0xFFFFFF));
+            }
+        }
+        for (int i = 0; i < 7; i++) {                                                                       // smoke drifting up off the dead circle
+            float life = t - 1.5f - h(i, 5) * 0.3f; if (life < 0f || life > 1.2f) continue;
+            int x = Math.round(cx + (h(i, 6) - 0.5f) * 40 + (float) Math.sin(life * 3 + i) * 3), y = Math.round(gy - life * 26);
+            out.rect(x, y, x + 3, y + 2, Canvas.rgb((int) (110 * (1 - life / 1.2f)), 0x8A8A9A));
+        }
+    }
+
+    /** RNG Mythological: a night sky behind the ritual (dark veil, twinkling stars, a violet glow). */
+    private static void rngBack(Canvas out, float t) {
+        float in = cl(t / 0.5f);
+        out.rect(0, 0, 112, 96, Canvas.rgb((int) (170 * in), 0x06050F));
+        for (int i = 0; i < 26; i++) {
+            int x = (int) (h(i, 81) * 112), y = (int) (h(i, 82) * 56); float tw = 0.5f + 0.5f * (float) Math.sin(t * 3 + i * 1.7f);
+            out.set(x, y, Canvas.rgb((int) (200 * in * tw), i % 4 == 0 ? 0xFFE8A0 : 0xFFFFFF));
+        }
+        out.glow(56, 62, 52, 0x6A5CFF, 0.10f * in);
+    }
+    /** RNG Mythological: a white flash on each strike, then god rays, rune halos and falling griffin feathers round the drop. */
+    private static void rngFront(Canvas out, Params p, float t, float ts, int cx, int gy) {
+        for (int k = 0; k < 3; k++) { float a = t - impact(p, k); if (a >= 0f && a < 0.12f) out.rect(0, 0, 112, 96, Canvas.rgb((int) (90 * (1f - a / 0.12f)), 0xDCE8FF)); }
+        float a = t - ts; if (a < 0f) return;
+        int ix = cx, iy = gy - 24; float fin = easeOut(a / 0.4f);
+        for (int i = 0; i < 10; i++) {
+            double an = i * Math.PI / 5 + t * 0.5;
+            float x1 = ix + (float) Math.cos(an) * 90, y1 = iy + (float) Math.sin(an) * 90;
+            lin(out, ix, iy, x1, y1, Canvas.rgb((int) (46 * fin), 0xFFE8A0)); lin(out, ix + 1, iy, x1 + 1, y1, Canvas.rgb((int) (30 * fin), 0xFFE8A0));
+        }
+        for (int r = 0; r < 3; r++) {
+            float life = ((a * 0.8f + r / 3f) % 1f), rad = 8 + 26 * life;
+            for (int i = 0; i < 64; i++) { double an = i * Math.PI * 2 / 64 + r; out.set((int) (ix + Math.cos(an) * rad), (int) (iy + Math.sin(an) * rad * 0.8), Canvas.rgb((int) (170 * (1f - life) * fin), r == 1 ? 0xFFFFFF : 0xFFD764)); }
+        }
+        for (int i = 0; i < 12; i++) {
+            float life = a + h(i, 90) * 1.5f; int x = Math.round(cx + (h(i, 91) - 0.5f) * 90 + (float) Math.sin(life * 2 + i) * 6), y = Math.round(-4 + (life % 2.4f) * 38);
+            out.rect(x, y, x + 2, y + 1, Canvas.rgb((int) (170 * fin), i % 2 == 0 ? 0xFFF3C0 : 0xFFFFFF));
+        }
     }
 
     private static void digger(Canvas out, int x, int y, int bob) {
@@ -2256,6 +2353,7 @@ final class Scene {
         final int gy = 70, hx = 56, pileX = 92;
         final float[] D = {0.34f, 0.89f, 1.44f};
         p.shakeX = 0; p.shakeY = 0;
+        if (p.tier == 2) rngBack(out, t);
         float inn = cl(t / 0.3f);
         out.glow(56, gy - 20, 44, 0xFFE9A0, 0.14f * inn);
         ell(out, 56, gy + 5, 48, 7, Canvas.rgb((int) (110 * inn), 0x07050C));
@@ -2298,6 +2396,7 @@ final class Scene {
         }
         if (t > D[2] + 0.3f && t < TS) { float f = cl((t - (D[2] + 0.3f)) / (TS - D[2] - 0.3f)); out.glow(hx, gy, 10 + 10 * f, 0xFFE278, 0.5f * f); if (((int) (t * 14)) % 2 == 0) { int gx = hx + (int) Math.round(Math.sin(t * 9) * 5); out.rect(gx, gy - 1 - Math.round(f * 3), gx + 2, gy - Math.round(f * 3), 0xFFFFFFFF); } }
         reveal(out, t, TS, hx, gy, 0xFFE28A);
+        if (p.tier == 2) rngFront(out, p, t, TS, hx, gy);
         if (split && p.hasItem && p.item != null) { twinPass(out, p, t, TS, us, false, false, 0, false); drawItem(out, p, t, TS, us); twinPass(out, p, t, TS, us, false, false, gy - 18, true); }
     }
     private Scene() {}

@@ -45,6 +45,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
   - **Treasure**: the spade picker, the Erudite reforge and the treasure drops with their chances.
 - Redo all icons for Mythological, and make sure each one is correct.
 - Redo the Mythological scenes. Mobs keep the lightning idea. Treasure shows someone digging with a shovel until the treasure is found. As cool as possible within the rules above.
+- ONLY Mythological is live. Slayers, Dye, Farming and Experiments are WIP like Mining and Fishing: a WIP label in the sidebar and the construction-site page in Drop Library, Animations, Sounds and Chat. Their code stays, it is just hidden until each one is rebuilt.
 - Categories that are not finished keep the "Coming Soon" construction-site page (hazard tape, hard hats, crane, bulldozer). The author wants it kept but tidy: fixed layout on one ground line, few props, nothing overlapping, nothing interactive. (A crane-builds-then-explodes scene was an earlier idea; the author later said to keep this page.)
 
 ## Animation look (author feedback, Oct 25)
@@ -58,3 +59,11 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Items can be 3D (blocks like gold blocks): show those rotating in 3D, flat icons stay flat.
 - Mobs: a ritual circle, three lightning strikes, the minotaur is summoned, struck, shatters, item springs out. Treasure: a digger with a shovel digs three times, a chest is found and opens.
 - Chat alert (to do when we reach the Chat page): lay the message out like the author's reference video: a centred block, "RARE DROP!" header in gold, the item name in its rarity colour, a small odds/source line, the price in gold, and the price source in dim grey. Every line must be customisable.
+
+## Mythological state (Oct 25, round 2)
+- Drop Library > Mythological opens a hub with two tiles: Mythological Mobs and Treasure. The sidebar lists them too.
+- Per-item controls (right to left): Chat Alert, Preview, Animation state (Off / Normal / RNG). The Show filter is Enabled / Normal / RNG / Disabled.
+- Normal = never the big scene. RNG = the big scene. There is no price-based auto escalation any more.
+- Scenes: Normal (small, above the action bar, 3 s, text 1.5 s longer), RNG (big, bars, HUD hidden, 5 s, same story with night sky, god rays, halos, feathers), No Drops (small, one weak strike, a pale minotaur crumbles). Animation length is 2 to 7 s.
+- Chat lines: `RARE DROP! You dug out a {Drop}!`, `{Random words} You dug out {amount} coins!` (any amount), `RARE DROP! {drop}` for creatures. A creature's drop plays that creature's own scene (the Minotaur has its pixel sprite, the others use their silhouettes).
+- Not triggerable yet: No Drops for a real Diana kill (no known chat line). Preview and `/fd` only.

@@ -52,6 +52,24 @@ final class Icons {
     private static final String[] A = {".XXX.", "X...X", "XXXXX", "X...X", "X...X"};
     private static final int[][] PIPS = {{4}, {0, 8}, {0, 4, 8}, {0, 2, 6, 8}, {0, 2, 4, 6, 8}, {0, 2, 3, 5, 6, 8}};
 
+    /** Draws a hand-pixeled 16 x 16 picture: each letter of the rows is looked up in keys, and only the letters in 'only' are drawn (so a part can move on its own). */
+    private static void px(GuiGraphicsExtractor g, int x, int y, String[] rows, String keys, int[] cols, String only, int dy) {
+        for (int j = 0; j < rows.length; j++) for (int i = 0; i < rows[j].length(); i++) {
+            char ch = rows[j].charAt(i); int k = keys.indexOf(ch);
+            if (k < 0 || only.indexOf(ch) < 0) continue;
+            g.fill(x + i, y + j + dy, x + i + 1, y + j + dy + 1, cols[k]);
+        }
+    }
+    private static final String[] MINO_ART = {
+        "hh............hh", "hH............Hh", ".hH...ffff...Hh.", ".hHffffffffffHh.", "..Hfffffffffff..", "..ffekffffkeff..", "..ffffddddffff..", "...fffsSSsfff...",
+        "...ffssssssff...", "....fsksskksf...", "....fssnnssf....", ".....ssnnnss....", ".....ssssss.....", "......dssd......", "................", "................"};
+    private static final String[] TREAS_ART = {
+        "................", "..........tt....", ".........tTt....", "........tTt.....", ".......bBt......", "......bB........", ".....bB.........", "....bB..yG......",
+        "...bB..gGGg.....", "..oooooggGoo....", ".ooOooooGooOo...", "oooOoooooooOooo.", "OoooOoooOoooOooO", "OOOoOOOOOOOoOOOO", "................", "................"};
+    private static final String ART_KEYS = "hHfdsSeknwgGoOtTbBy";
+    private static final int[] ART_COLS = {0xFFEEE4BE, 0xFFB0A070, 0xFF7A4A2C, 0xFF4A2A18, 0xFFCC9E6E, 0xFF966C46, 0xFFFF4632, 0xFF1E120C, 0xFFFFD24A, 0xFFFFFFFF,
+        0xFFFFC83C, 0xFFFFF096, 0xFF966234, 0xFF623E1E, 0xFFB0B0BE, 0xFF6E7080, 0xFF785434, 0xFF503620, 0xFFD6AA28};
+
     static boolean animated = true;
 
     /** Draws an icon. Every icon keeps its place and its size; it only glows, blinks and glints. "fd:name#RRGGBB" tints icons that take a colour. */
@@ -528,6 +546,22 @@ final class Icons {
                     r(g, x, y, f < 0.5f ? ix - 1 : ix + 4, iy - (tilt < 0 ? 1 : 0), 1, 3, 0xFFE06A1C); r(g, x, y, f < 0.5f ? ix + 3 : ix, iy, 1, 1, 0xFF22263A);
                     if (f < 0.2f || f > 0.8f) for (int i = 0; i < 5; i++) { float dd = f < 0.2f ? f : 1f - f; r(g, x, y, Math.round(fx + 2 + (i - 2) * (1f + dd * 8f)), Math.round(11f - (i % 2 == 0 ? 3f : 2f) * (1f - Math.abs(i - 2) / 3f) * dd * 6f), 1, 1, al(220, 0xFFFFFF)); }
                 }
+            }
+            case "myth_mobs" -> {                                                                       // a minotaur's head: the eyes burn now and then, it blinks, the nose ring glints
+                boolean flare = s % 2.6f < 0.3f, blink = s % 3.4f > 3.28f;
+                int[] c2 = ART_COLS.clone();
+                int eye = flare ? 0xFFFFFFFF : blink ? 0xFF7A4A2C : 0xFFFF4632;
+                c2[ART_KEYS.indexOf('e')] = eye;
+                px(g, x, y, MINO_ART, ART_KEYS, c2, "hHfdsSeknw", 1);
+                if (flare) { r(g, x, y, 2, 6, 1, 1, 0x66FF4632); r(g, x, y, 13, 6, 1, 1, 0x66FF4632); }
+                if (s % 2.2f < 0.18f) spark(g, x, y, 8, 12, 1, 0xFFFFF3A0);
+            }
+            case "myth_treasure" -> {                                                                   // a spade digs into a mound and a gold nugget glints in the soil
+                float u = (s % 1.8f) / 1.8f; int dip = u < 0.25f ? Math.round(u * 8f) : u < 0.5f ? Math.round((0.5f - u) * 8f) : 0;
+                px(g, x, y, TREAS_ART, ART_KEYS, ART_COLS, "tTbB", dip);
+                px(g, x, y, TREAS_ART, ART_KEYS, ART_COLS, "ogGyO", 0);
+                int a = (int) (255 * Math.max(0, Math.sin(u * Math.PI * 2)));
+                spark(g, x, y, 11, 8, 2, al(a, 0xFFFFFF)); spark(g, x, y, 4, 12, 1, al(255 - a, 0xFFFFE9A8));
             }
             case "mytho" -> {                                                                           // a laurel wreath with a golden lightning bolt inside
                 float pu = 0.5f + 0.5f * (float) Math.sin(s * 3f);

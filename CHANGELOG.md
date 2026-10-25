@@ -1,3 +1,13 @@
+## 0.4.3
+- Changed: only Mythological is live. Slayers, Dye, Farming and Experiments now show WIP and the construction site (Drop Library, Animations, Sounds, Chat)
+- Changed: Drop Library Show filter is Enabled / Normal / RNG / Disabled. Each drop has an Off / Normal / RNG button, a Preview button and a Chat Alert switch. Normal turns Chat Alert off, RNG turns it on
+- Changed: Mythological opens a hub with Mythological Mobs and Treasure pages (Griffin pet on Mobs, spade and Erudite on Treasure), with new icons
+- Added: RNG Mythological scene (bars, night sky, god rays, rune halos, feathers), 5 s by default, for the creature ritual and the dig
+- Added: No Drops scene (small, above the action bar)
+- Added: each creature's drop plays that creature's own scene
+- Added: coins from a dig show any exact amount ("You dug out 12,500,000 coins!")
+- Changed: animation length is 2 to 7 s
+
 ## 0.4.2
 - Changed: Mythological Mobs and Treasure Normal animations rebuilt. Small, translucent, pixel style, sitting right above the action bar (HUD stays visible)
 - Changed: Normal scene plays 3 s, fades out, and the words stay 1.5 s longer

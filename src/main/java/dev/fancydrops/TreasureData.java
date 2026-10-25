@@ -84,6 +84,18 @@ final class TreasureData {
     static SlayerData.Drop find(String name, int sp) {
         if (name == null) return null;
         for (int k = 0; k < 3; k++) for (String[] e : DROPS[(Math.max(0, Math.min(2, sp)) + k) % 3]) if (e[0].equalsIgnoreCase(name.trim())) return make(e);
+        long cn = coins(name);                                                                 // any other amount of coins ("12,500,000 coins"): built on the spot, the exact amount
+        if (cn > 0) return make(new String[]{String.format(java.util.Locale.ROOT, "%,d Coins", cn), "", cn >= 500_000 ? "gold_block" : cn >= 25_000 ? "gold_ingot" : "gold_nugget", "", "", ""});
         return null;
+    }
+    /** The listed coin drop whose amount is closest to this one: an unlisted amount follows that row's switches in the library. */
+    static String nearestCoins(long amount, int sp) {
+        String best = null; double bd = Double.MAX_VALUE;
+        for (String[] e : DROPS[Math.max(0, Math.min(2, sp))]) {
+            long c = coins(e[0]); if (c <= 0) continue;
+            double d = Math.abs(Math.log((double) Math.max(1, amount) / c));
+            if (d < bd) { bd = d; best = e[0]; }
+        }
+        return best;
     }
 }

@@ -20,7 +20,7 @@ public final class AnimationManager {
     /** Everything the text under the scene needs about one drop. */
     public static final class Item {
         public SlayerData.Slayer slayer = SlayerData.OTHER;
-        public String name = "", id = "", icon = "nether_star", odds = "", chance = "", mf;
+        public String name = "", id = "", icon = "nether_star", odds = "", chance = "", mf, stateKey;          // stateKey: the library row whose Off / Normal / RNG state this drop follows (an unlisted amount of coins follows the nearest listed one)
         public int rank, amount = 1;
         public boolean untradeable, announce, sim;       // sim: from /fd simulate - never counted in the profit tracker     // announce: send the party / co-op message when this drop's scene starts
         public volatile double price = -2;       // -2 = still loading, -1 = no price
@@ -103,9 +103,9 @@ public final class AnimationManager {
     public static int tierOf(Item it) {
         FancyConfig c = FancyConfig.get();
         if (it == null) return 0;
-        int pick = c.rngOf(it.name);                                                          // Drop Library > RNG button: 1 = always RNG for me, 2 = never
+        int pick = c.rngOf(it.stateKey != null ? it.stateKey : it.name);                                                          // Drop Library > Animation button: RNG (1) is the big scene, Normal is never the big scene
         if (pick == 1) return 2;
-        boolean never = pick == 2;
+        boolean never = true;
         if (!never && c.epicEffects && isDye(it)) return 2;   // every dye gets the big scene
         if (!never && c.epicEffects && !it.untradeable && it.price * Math.max(1, it.amount) >= c.epicThreshold) return 2;
         if (!never && it.slayer != null && "vampire".equals(it.slayer.id)) {                          // Riftstalker: blue chances play Rare Drop, purple chances play RNG Drop
@@ -224,12 +224,16 @@ public final class AnimationManager {
     }
     /** The whole animation in scene seconds, text included. */
     static final float SLOW = 1.3f;
-    static float naturalScene(Scene.Params p, boolean farm) { if (Scene.normalMyth(p)) return 3.0f; return farm || p.tier != 2 ? Scene.splitTime(p) + 2.0f : Scene.length(p) + 1.8f; }          // short and sweet like Farming; only an RNG drop gets the long scene with bars
+    static float naturalScene(Scene.Params p, boolean farm) { if (Scene.normalMyth(p)) return 3.0f; if (p.myth && p.tier == 2 && p.hasItem) return Scene.length(p); return farm || p.tier != 2 ? Scene.splitTime(p) + 2.0f : Scene.length(p) + 1.8f; }          // short and sweet like Farming; only an RNG drop gets the long scene with bars
     /** {scene seconds per real second, when the words start in scene seconds, total real seconds}. The animation plays first; title and info follow after the text delay. */
     static float[] timing(Scene.Params p, boolean farm0, String key, FancyConfig c) {
         if (Scene.normalMyth(p)) {                                                      // the small Mythological scene: 3 s by default, 2 to 7 s by choice, the words come in with the reveal
             Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 3.0f;
             return new float[]{3.0f / total, Scene.splitTime(p) + 0.35f, total};
+        }
+        if (p.myth && p.tier == 2 && p.hasItem) {                                       // the RNG ritual: 5 s by default, 2 to 7 s by choice, same story as Normal but slower and with the night sky
+            Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 5.0f;
+            return new float[]{Scene.length(p) / total, Scene.splitTime(p) + 0.35f, total};
         }
         boolean farm = farm0 || p.tier != 2;
         float natural = naturalScene(p, farm0), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
@@ -241,7 +245,8 @@ public final class AnimationManager {
     }
     /** How long an animation lasts by default, in real seconds, for the length slider. */
     public static float naturalSecs(String key, FancyConfig c) {
-        if (key.equals("myth")) return 3.0f;
+        if (key.equals("myth") || key.equals("mythnothing")) return 3.0f;
+        if (key.equals("mythrng")) return 5.0f;
         c.fixChops();
         int t = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
         Scene.Params p = new Scene.Params(t, !key.endsWith("nothing"));
@@ -268,7 +273,7 @@ public final class AnimationManager {
         p.style = c.slayerStyle;
         if (a.farm) { p.farm = true; p.chops = a.pest ? 1 : 3; p.helios = a.helios; p.pest = a.pest; p.alt = c.farmStyle == 1; }
         if (a.isExp()) { p.exp = true; p.chops = tier == 2 ? c.expFlipsRng : c.expFlips; p.alt = c.expStyle == 1; }
-        else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); p.alt = c.mythStyle == 1; p.treasure = a.slayer == TreasureData.SOURCE; if (Scene.normalMyth(p)) p.chops = 3; }
+        else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); p.alt = c.mythStyle == 1; p.treasure = a.slayer == TreasureData.SOURCE; if (Scene.sceneN(p)) p.chops = 3; }
         p.seed = Math.abs(a.slayer.id.hashCode() % 97);                                   // the mob's look stays the same
         p.cutSeed = java.util.concurrent.ThreadLocalRandom.current().nextInt(1, 100000);   // but the slashes are different every time
         p.theme = java.util.List.of("zombie", "spider", "wolf", "enderman", "blaze", "vampire").indexOf(a.slayer.id);
