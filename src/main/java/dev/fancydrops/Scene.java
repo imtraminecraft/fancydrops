@@ -31,6 +31,7 @@ final class Scene {
     }
 
     static final class Params {
+        float hold;                                             // extra scene seconds the picture stays after its own length, so the item lives as long as the words
         int tier, chops; boolean hasItem, reveal = true; int rarity = 0xFFFF55FF;
         Model item, item2; int rarity2 = 0xFFFF55FF; boolean twin;      // twin = two drops from one kill, shown together
         int base = 0xFF5E9E52, dark = 0xFF3D6B36, eye = 0xFF10200E;
@@ -734,15 +735,7 @@ final class Scene {
                 * FancyConfig.get().itemK() * (skull ? 0.72 : 1.0);
         double dx = side * TWIN_DX * easeOut(uu);
         double yy = itemY(uu) + (ic.itemBob ? 1.6 * ic.itemBobAmp : 0.0) * Math.sin(us * 2.6 + (side > 0 ? 1.7 : 0)) + (side != 0 ? 14 * Math.sin(Math.min(1f, Math.max(0f, uu)) * Math.PI) : 0);     // twin: each item flies out in an arc
-        double spin = epic ? rngAngle(us, spinK, ic.itemSpin) * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side) : 2.8 * us * ic.itemSpin * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side);
-        if (epic && skull && side == 0 && p.hasItem) {                                                   // the head turns, then eases round to face you before the scene ends
-            float len = length(p), st = len - 1.7f;
-            if (t > st) {
-                float rate = 3.3f * Math.min(1f, spinK) * Math.max(0.2f, ic.itemSpin), sgn = ic.itemSpinRev ? -1f : 1f;
-                float a0 = rngAngle(us - (t - st), spinK, ic.itemSpin), M = (float) (Math.ceil((a0 + rate) / (2 * Math.PI)) * 2 * Math.PI), f = easeIO((t - st) / 1.1f);
-                spin = (rngAngle(us, spinK, ic.itemSpin) * (1f - f) + M * f) * sgn;
-            }
-        }
+        double spin = turnAngle(p, ts, us, epic ? spinK : 1f, ic.itemSpin) * (ic.itemSpinRev ? -1 : 1) * (side == 0 ? 1 : -side);
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
         float pulseG = 0.75f + 0.25f * (float) Math.sin(us * 3.2);
@@ -776,9 +769,8 @@ final class Scene {
         float shine = (us * 0.7f) % 1.6f - 0.3f;                                                      // a bright band sweeps across now and then
         if (slab) slabItem(spr, sx, sy, k, ang, al, shine, style, us, col);
         else {
-        float flip = us < 0.8f ? (float) Math.cos(4 * Math.PI * (1 - Math.exp(-4.5 * us))) : 1f;      // two quick coin flips that settle
-        float sway = us < 0.8f ? 0f : 0.1f * (float) Math.sin((us - 0.8f) * 1.7f);
-        float xs = Math.max(0.06f, Math.abs(flip) * (1f - Math.abs(sway)));                        // after the flips it breathes gently, never a dead flat sprite
+        float flip = (float) Math.cos(ang);                                                            // the flat item turns like a coin on its edge, the same turn a head makes
+        float xs = Math.max(0.06f, Math.abs(flip));
         for (int y = 0; y < H; y++) {
             float v = (y - sy) / k + 8f;
             if (v < 0 || v >= 16) continue;
@@ -802,10 +794,13 @@ final class Scene {
         }
     }
 
-    /** How far an RNG drop has turned: a fast spin that settles into a steady turn, like a block on a stand. */
-    private static float rngAngle(float us, float spinK, float itemSpin) {
+    /** How far the drop has turned: a fast spin that slows down smoothly (the number of turns follows how long the item is on screen) and stops exactly facing front when the scene ends. */
+    private static float turnAngle(Params p, float ts, float us, float spinK, float itemSpin) {
         if (spinK <= 0.01f) return 0f;
-        return 7.5f * (1f - (float) Math.exp(-2.6 * us)) * Math.min(1f, spinK) + 3.3f * us * spinK * Math.max(0.2f, itemSpin);
+        float life = Math.max(1.5f, length(p) + p.hold - ts - 0.27f);                                  // seconds the item is on screen
+        int turns = Math.max(2, Math.round(life * 0.7f * Math.max(0.4f, Math.min(2f, spinK)) * Math.max(0.3f, itemSpin)));
+        float u = cl(us / (life * 0.8f)), e = 1f - (1f - u) * (1f - u) * (1f - u) * (1f - u);        // ease-out: whirls first, then glides to a stop
+        return (float) (turns * 2 * Math.PI * e);
     }
 
     /** A thick, turning item: the sprite is stacked in a few layers, so the side shows as it turns (the block in the lobby). */

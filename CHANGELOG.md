@@ -1,3 +1,7 @@
+## 0.4.11
+- Fixed: Mythological items (Normal and RNG) stay on screen as long as the words, instead of leaving first. The picture, item and bars fade out together with the text
+- Changed: the item spin is one smooth turn: it whirls, slows down and stops facing front exactly when the scene ends. The number of turns follows how long the item is on screen (and your spin settings). Flat items turn like a coin, heads like a block
+
 ## 0.4.10
 - Fixed: skull items (Mythos Fragment and the other heads) show their 3D head in lists, not the wiki picture
 - Fixed: clicking a creature under Mythological Mobs in the sidebar opens that creature, and the open page is highlighted

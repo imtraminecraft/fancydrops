@@ -719,17 +719,18 @@ public final class AnimationManager {
         Font font = Minecraft.getInstance().font;
         float sec = syncSec >= 0f ? syncSec * speed : ((System.currentTimeMillis() - previewT0) % 600_000L) / 1000f * speed;
         float ts = Scene.splitTime(p), len = tm == null ? Scene.length(p) + 0.4f : naturalScene(p, p.farm);
+        p.hold = tm == null ? 0f : holdOf(p, speed);
         float full = tm == null ? len : len + textExtra(p) * speed;                                  // like the real thing: the words stay 2 real seconds after the scene ends
         float t = syncSec >= 0f ? Math.min(sec, full - 0.02f) : sec % (full + (tm == null ? 0f : 0.6f * speed));       // then a short rest before it plays again
         if (t > full - 0.02f) t = full - 0.02f;
         float rv0 = tm == null ? ts + 0.15f : tm[1];
         if (freezeT >= 0f) { t = Math.min(len - 1.0f, rv0 + freezeT); sec = t; }                 // a still frame: the words are in, nothing moves
         else if (loopTxt) { t = Math.min(len - 1.0f, rv0 - 0.3f + ((System.currentTimeMillis() - textT0) % 4600L) / 1000f); sec = t; }       // the words play again and again
-        boolean sceneOn = tm == null || t < len || freezeT >= 0f || loopTxt;                      // after the scene ends only the words remain, as in the game
-        int frame = (int) (Math.min(t, len) * 30f);
+        boolean sceneOn = tm == null || t < len + p.hold || freezeT >= 0f || loopTxt;                      // after the scene ends only the words remain, as in the game
+        int frame = (int) (Math.min(t, len + p.hold) * 30f);
         if (frame != previewFrame) { previewFrame = frame; Scene.draw(OUT, L3, p, frame / 30f); if (cine || bigMyth(p)) feather(OUT); SceneTexture.upload(OUT); }
         float rv = tm == null ? ts + 0.15f : tm[1];
-        float ga = (tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f))) * sceneAlpha(p);            // the scene fades in and out like the real one
+        float ga = (tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((len + p.hold - t) / 0.5f))) * sceneAlpha(p);            // the scene fades in and out like the real one
         float gt = tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((full - t) / 0.5f));
         int tal = Math.round(255 * gt);
         revealT = t - rv; waveIn = clamp((t - rv) / 0.6f); waveOut = tm == null ? clamp((t - (len - 0.8f)) / 0.6f) : clamp((t - (full - 1.0f * speed)) / (0.7f * speed)); waveT = sec; bounceT = t - (rv + 0.6f);
@@ -861,6 +862,8 @@ public final class AnimationManager {
 
     /** The words stay this many real seconds after the scene is over. */
     private static final float TEXT_EXTRA = 2f;
+    /** Mythological scenes keep their picture (and the item) up for as long as the words, less a short tail, in scene seconds. */
+    static float holdOf(Scene.Params p, float speed) { return Scene.normalMyth(p) || bigMyth(p) ? Math.max(0f, (textExtra(p) - 0.35f) * speed) : 0f; }
     /** How long the words outlast the scene: 1.5 s for the small Mythological scene, 2 s for the rest. */
     private static float textExtra(Scene.Params p) { return Scene.sceneN(p) ? 2.6f : TEXT_EXTRA; }       // Mythological: the words come in with the reveal and stay long enough to read
     /** How see-through the small Mythological scene is (the Animations settings). */
@@ -896,8 +899,10 @@ public final class AnimationManager {
         }
         Anim a = cur;
         float t = (System.currentTimeMillis() - a.start) / 1000f * a.speed;                // a.speed stretches or squeezes the whole scene to the length the user chose
-        float sLen = naturalScene(a.p, a.farm);     // the scene (picture, bars, shake) ends here
-        float len = sLen + textExtra(a.p) * a.speed;    // the words stay on screen 2 real seconds longer than the scene
+        float nat = naturalScene(a.p, a.farm);
+        a.p.hold = holdOf(a.p, a.speed);
+        float sLen = nat + a.p.hold;                 // the scene (picture, item, bars) ends here: with the words, less a short tail
+        float len = nat + textExtra(a.p) * a.speed;    // the words stay on screen 2 real seconds longer than the scene
         if (t >= len) { cur = null; return; }          // the sounds are laid out to finish with the scene, so they ring out by themselves
         if (a.p.item == null && a.item != null) a.p.item = ItemIcons.model(a.item.id, a.slayer.color());   // art finished loading late
         if (a.p.twin && a.p.item2 == null && a.item2 != null) a.p.item2 = ItemIcons.model(a.item2.id, a.slayer.color());
