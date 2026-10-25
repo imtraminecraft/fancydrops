@@ -55,7 +55,12 @@ final class Icons {
             if (!exported) {
                 exported = true; java.nio.file.Files.createDirectories(dir);
                 for (String n : EXPORT) {
-                    java.nio.file.Path f = dir.resolve(n + ".png"); if (java.nio.file.Files.exists(f)) continue;
+                    java.nio.file.Path f = dir.resolve(n + ".png");
+                    if (java.nio.file.Files.exists(f)) {                                              // an old 8 frame export is moved to icons/old/ and made again with 12 frames
+                        var old = javax.imageio.ImageIO.read(f.toFile());
+                        if (old == null || old.getHeight() != 128) continue;
+                        java.nio.file.Files.createDirectories(dir.resolve("old")); java.nio.file.Files.move(f, dir.resolve("old").resolve(n + ".png"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                    }
                     var im = new java.awt.image.BufferedImage(16, 16 * IconArt.FRAMES, java.awt.image.BufferedImage.TYPE_INT_ARGB); boolean ok = true;
                     for (int fr = 0; fr < IconArt.FRAMES; fr++) { int[] px = IconArt.render(n, 0, fr); if (px == null) { ok = false; break; } im.setRGB(0, fr * 16, 16, 16, px, 0, 16); }
                     if (ok) javax.imageio.ImageIO.write(im, "png", f.toFile());
@@ -77,7 +82,7 @@ final class Icons {
         } catch (Exception ignored) {}
     }
 
-    private static final long FRAME_MS = 115L;                                          // eight frames, a bit under one second a loop
+    private static final long FRAME_MS = 90L;                                          // eight frames, a bit under one second a loop
     private static final java.util.Map<String, int[]> CACHE = new java.util.HashMap<>();
     private static final int[] NONE = new int[0];
     /** One frame of an icon, drawn once and kept (null = the name has no picture). */

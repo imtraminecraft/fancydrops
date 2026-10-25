@@ -2463,13 +2463,13 @@ public class FancyScreen extends Screen {
         relayout();
         if (landing() && query.isBlank()) {                                // main pages never scroll: the tiles get a little shorter until everything fits
             int viewH = lb - lt;
+            if (totalH > viewH) { for (Row r : rows) if (r.kind == TEXT) { r.h = 0; r.noSearch = true; } relayout(); }          // the page title above already says it
             for (int pass = 0; pass < 14 && totalH > viewH; pass++) {
                 boolean ch = false;
-                for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 32 : 24)) { r.pTh -= 2; fit(r); ch = true; }
+                for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 40 : 27)) { r.pTh -= 2; fit(r); ch = true; }
                 if (!ch) break;
                 relayout();
             }
-            if (totalH > viewH) { for (Row r : rows) if (r.kind == TEXT) { r.h = 0; r.noSearch = true; } relayout(); }
             if (totalH > viewH) totalH = viewH;                           // anything left over is clipped, never scrolled
             scroll = 0;
         }
@@ -2928,10 +2928,7 @@ public class FancyScreen extends Screen {
     private int srcH() { return Math.max(10, Math.round(SRCH * sq)); }
     private int tabBoxH() { return Math.min(22, tp() - 1); }
     private void squeezeSide() {
-        if (!query.isBlank()) { sq = 1f; return; }
-        float nat = 6 * 24 + 4 + SRCH * srcList.size() * srcExp + (tab == Tab.GENERAL ? 0 : subExp * SUBH * subs().length), avail = sideBottom() - (py + 70) - 4;
-        float want = nat <= 0 ? 1f : Math.max(0.7f, Math.min(1f, avail / nat));
-        sq = want;
+        sq = 1f;                                            // (the sidebar keeps its own scrolling; only the main pages must not scroll)
     }
     private static String jumpTo;                                 // a row title to scroll to after the next build
     private static final int[] subSel = new int[Tab.values().length];

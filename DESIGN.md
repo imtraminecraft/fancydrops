@@ -172,3 +172,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## 0.4.21
 - The sidebar squeezes (FancyScreen.sq, 0.7 to 1) instead of scrolling. Emblems: `emblem` (tinted shield + star) and `emblem_special`.
+
+## 0.4.22
+- Icons have 12 frames (IconArt.FRAMES). The sidebar is not squeezed (sq stays 1); main pages never scroll.

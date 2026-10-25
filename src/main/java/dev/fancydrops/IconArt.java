@@ -8,7 +8,7 @@ package dev.fancydrops;
 final class IconArt {
     private IconArt() {}
 
-    static final int FRAMES = 8;
+    static final int FRAMES = 12;
     private static Canvas c;
     private static final float TAU = 6.2832f;
 

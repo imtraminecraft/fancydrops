@@ -1,3 +1,8 @@
+## 0.4.22
+- The sidebar is back to how it was (it scrolls on its own). Only the main pages must not scroll.
+- Main pages that were too tall now hide the repeated title row first, then make tiles a little shorter (never below a size where their text fits).
+- Icon animations have 12 frames (was 8) at 90 ms each. Old 8-frame exports in `config/fancydrops/icons/` are moved to `icons/old/` and made again with 12 frames (192 px tall).
+
 ## 0.4.21
 - The sidebar no longer scrolls: when a page's sub pages make it too tall, every row gets a little shorter until it fits (Chat and Stats stay visible).
 - Main pages (Animations, Sounds...) no longer end up shifted or cut off after scrolling.
