@@ -1,10 +1,13 @@
+## 0.4.26
+- Fix: the art source files are back in the normal package folder, so the editor resolves `Icons` and the others again. `ART.md` lists which file draws what.
+
 ## 0.4.25
 - **Animation Changes** (was "Looks for every animation") now has four buttons: Bar, Text, Item and **Position Changes**. The separate Position row is gone. Position Changes shows a still picture of a screen (action bar, crosshair, the animation and its words) and has two settings: Animation Position (Top Center, Center, Above Action Bar) and Text Position (Above / Below). Top Center: words only below. Center: either. Above Action Bar: words only above.
 - Bar Changes previews only the bars. Item Changes previews only the floating item (bigger, no scene). Text Changes shows the words large, and the exit effects now play in the middle of the loop so you can see them.
 - Chat message limit is 65 letters; the {placeholders} do not count.
 - Griffin pet: the text says "Creatures it can't call are hidden" and the icon is the pet's own head. The community buttons (Discord, Patreon, GitHub) animate.
 - All 3D heads now turn in step.
-- All art gathered in `art/`: `icons/`, `animations/`, `heads/` in the source, and `config/fancydrops/art/{icons,heads,items,animations}` in the game. Older `icons/` and `textures/` folders are moved there on first run.
+- Art gathered in the game folder `config/fancydrops/art/{icons,heads,items,animations}`; `ART.md` lists which source file draws what. Older `icons/` and `textures/` folders are moved there on first run.
 - Removed unused code and files (Tex.java, active_on.png, several dead methods and fields).
 
 ## 0.4.24
