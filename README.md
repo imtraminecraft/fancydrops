@@ -22,3 +22,6 @@ Icons: `IconArt.java` (16x16, one `case` per `:name:`). Scene animations: `Ritua
 
 ## Replacing item textures
 Open `config/fancydrops/textures/`. Each item has `<ID>.png` (flat) or `<ID>_head.png` (a 64x64 skin for heads). Replace a file and re-open the game or the item.
+
+## Editing icons
+`config/fancydrops/icons/<name>.png`: 16 px wide, 128 tall (8 frames stacked). Save the file and the game reloads it within a second.

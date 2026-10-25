@@ -27,6 +27,9 @@ final class Icons {
         String name = nameOf(key); int tint = 0;
         int hash = name.indexOf('#');
         if (hash >= 0) { try { tint = 0xFF000000 | Integer.parseInt(name.substring(hash + 1), 16); } catch (Exception ignored) { } name = name.substring(0, hash); }
+        scanOverrides();
+        int[][] ov = OVR.get(name);
+        if (ov != null) { blit(g, ov[ov.length == 1 || now == 2400L ? 0 : (int) ((now / FRAME_MS) % ov.length)], x, y); return; }
         if (name.equals("coin")) { ItemIcons.draw(g, "@COIN", null, x + 8, y + 8, 1f); return; }       // the Hypixel coin head, never a drawn disc
         if (name.startsWith("mob_") && ItemIcons.hasPixels("MOB_" + name.substring(4))) { ItemIcons.draw(g, "MOB_" + name.substring(4), null, x + 8, y + 8, 1.15f); return; }      // the creature's own 3D head (the pixel icon shows until it has loaded)
         if (name.startsWith("mob_")) ItemIcons.prefetch("MOB_" + name.substring(4));
@@ -36,6 +39,42 @@ final class Icons {
         if (px != null) { blit(g, px, x, y); return; }
         if (credit(g, name, x, y, now)) return;
         placeholder(g, name, tint, x, y, now);
+    }
+
+    // ---- your own icons: config/fancydrops/icons/<name>.png. A 16 px wide picture; 16 tall = one still picture, 128 tall = the 8 animation frames stacked top to bottom.
+    //      Every icon is saved there once. Edit a file and save it: the game picks it up within a second, no restart.
+    private static final String[] EXPORT = {"anim_icons", "anim_menu", "animations", "back", "bars", "bazaar", "bell", "chan_coop", "chan_off", "chan_party", "chan_public", "chat", "clock", "cone", "cos_aura", "cos_name", "cos_suffix", "cosmetics", "cube", "dice", "disc", "discord", "dock_bottom", "dock_off", "dock_top", "dropped", "dye", "experiments", "fancydrops", "farm", "fishing", "format", "glass", "griffin", "hammer", "menu", "mining", "mytho", "nodrops", "normal", "note", "play", "refresh", "send", "settings", "size", "slayers", "snd_beat", "snd_burst", "snd_end", "snd_linger", "snd_reveal", "sounds", "speed", "stats", "switch", "sword", "text", "treasure", "updates"};
+    private static final java.util.Map<String, int[][]> OVR = new java.util.HashMap<>();
+    private static long ovrScan, ovrStamp; private static boolean exported;
+    static java.nio.file.Path iconDir() { return DataFiles.dir().resolve("icons"); }
+    private static void scanOverrides() {
+        long nw = System.currentTimeMillis();
+        if (nw - ovrScan < 1000L) return; ovrScan = nw;
+        try {
+            java.nio.file.Path dir = iconDir();
+            if (!exported) {
+                exported = true; java.nio.file.Files.createDirectories(dir);
+                for (String n : EXPORT) {
+                    java.nio.file.Path f = dir.resolve(n + ".png"); if (java.nio.file.Files.exists(f)) continue;
+                    var im = new java.awt.image.BufferedImage(16, 16 * IconArt.FRAMES, java.awt.image.BufferedImage.TYPE_INT_ARGB); boolean ok = true;
+                    for (int fr = 0; fr < IconArt.FRAMES; fr++) { int[] px = IconArt.render(n, 0, fr); if (px == null) { ok = false; break; } im.setRGB(0, fr * 16, 16, 16, px, 0, 16); }
+                    if (ok) javax.imageio.ImageIO.write(im, "png", f.toFile());
+                }
+            }
+            if (!java.nio.file.Files.isDirectory(dir)) return;
+            long stamp = 0; java.util.List<java.nio.file.Path> files = new java.util.ArrayList<>();
+            try (var st = java.nio.file.Files.list(dir)) { for (java.nio.file.Path f : (Iterable<java.nio.file.Path>) st::iterator) if (f.toString().toLowerCase(java.util.Locale.ROOT).endsWith(".png")) { files.add(f); stamp += java.nio.file.Files.getLastModifiedTime(f).toMillis() + java.nio.file.Files.size(f); } }
+            if (stamp == ovrStamp) return; ovrStamp = stamp;
+            OVR.clear(); CACHE.clear();
+            for (java.nio.file.Path f : files) {
+                try {
+                    var im = javax.imageio.ImageIO.read(f.toFile()); if (im == null || im.getWidth() != 16 || im.getHeight() % 16 != 0) continue;
+                    int n = im.getHeight() / 16; int[][] fr = new int[n][256];
+                    for (int i = 0; i < n; i++) im.getRGB(0, i * 16, 16, 16, fr[i], 0, 16);
+                    String nm = f.getFileName().toString(); OVR.put(nm.substring(0, nm.length() - 4), fr);
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
     }
 
     private static final long FRAME_MS = 115L;                                          // eight frames, a bit under one second a loop

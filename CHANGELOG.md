@@ -1,3 +1,6 @@
+## 0.4.20
+- Editable icons: every `:name:` icon is saved once to `config/fancydrops/icons/<name>.png` (16 px wide, 128 tall = the 8 animation frames stacked). Edit and save a file and the game updates it within a second. A 16 x 16 file makes a still icon.
+
 ## 0.4.19
 - Animations are smaller again: 100% is now 0.6 of the old base size (about 1/3 of the screen width), and the pillar of light stops well below the top of the screen.
 - The creature page header shows the creature's own head, not its first drop.

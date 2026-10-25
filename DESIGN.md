@@ -166,3 +166,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## 0.4.19
 - Animation 100% = Ritual.SMALLER 0.6 (about a third of the screen width). The inhale pillar is short.
+
+## 0.4.20
+- Icons are overridable at runtime from config/fancydrops/icons/<name>.png (Icons.scanOverrides, hot reload). Add new names to Icons.EXPORT.
