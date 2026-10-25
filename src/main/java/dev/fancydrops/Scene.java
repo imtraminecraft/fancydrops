@@ -803,7 +803,8 @@ final class Scene {
     private static void slabItem(int[] spr, float sx, float sy, float k, float ang, int al, float shine, int style, float us, int col) {
         float cs = (float) Math.cos(ang), sn = (float) Math.sin(ang);
         if (Math.abs(cs) < 0.06f) cs = cs < 0 ? -0.06f : 0.06f;
-        final int L = 5; final float thick = 2.4f;
+        final float thick = 2.4f;
+        final int L = Math.max(5, Math.min(26, (int) Math.ceil(thick * k * Math.abs(sn)) + 3));      // enough layers that no gap shows between them, whatever the turn
         float half = 8f * k;
         for (int li = 0; li < L; li++) {
             int j = cs >= 0 ? li : L - 1 - li;                                   // far layers first
@@ -825,10 +826,10 @@ final class Scene {
                         f = 0.8f + 0.2f * Math.abs(cs);
                         float d = (u + v) / 32f - shine;
                         if (Math.abs(d) < 0.06f) f += 0.55f * (1 - Math.abs(d) / 0.06f);
-                    } else if (face) f = 0.5f;
-                    else f = 0.62f + 0.12f * j;
+                    } else if (face) f = 0.74f;
+                    else f = 0.8f + 0.12f * (j / (float) (L - 1));
                     px = Canvas.shade(px, f);
-                    if (!near) px = Canvas.mix(px, 0xFF000000 | tint, face ? 0.18f : 0.38f);                 // the edge of the slab carries the drop's colour
+                    if (!near) px = Canvas.mix(px, 0xFF000000 | tint, face ? 0.1f : 0.22f);                 // the edge of the slab carries the drop's colour
                     IT.set(x, y, (px & 0xFFFFFF) | (al << 24));
                 }
             }
@@ -2308,7 +2309,6 @@ final class Scene {
     /** RNG Mythological: a night sky behind the ritual (dark veil, twinkling stars, a violet glow). */
     private static void rngBack(Canvas out, float t) {
         float in = cl(t / 0.5f);
-        out.rect(0, 0, 112, 96, Canvas.rgb((int) (170 * in), 0x06050F));
         for (int i = 0; i < 26; i++) {
             int x = (int) (h(i, 81) * 112), y = (int) (h(i, 82) * 56); float tw = 0.5f + 0.5f * (float) Math.sin(t * 3 + i * 1.7f);
             out.set(x, y, Canvas.rgb((int) (200 * in * tw), i % 4 == 0 ? 0xFFE8A0 : 0xFFFFFF));
@@ -2320,6 +2320,22 @@ final class Scene {
         for (int k = 0; k < 3; k++) { float a = t - impact(p, k); if (a >= 0f && a < 0.12f) out.rect(0, 0, 112, 96, Canvas.rgb((int) (90 * (1f - a / 0.12f)), 0xDCE8FF)); }
         float a = t - ts; if (a < 0f) return;
         int ix = cx, iy = gy - 24; float fin = easeOut(a / 0.4f);
+        if (a < 0.22f) out.rect(0, 0, 112, 96, Canvas.rgb((int) (150 * (1f - a / 0.22f)), 0xFFF6D8));                    // the reveal flash
+        float pil = cl(a / 0.25f) * (0.8f + 0.2f * (float) Math.sin(t * 9));                                             // a pillar of light through the drop
+        for (int q = 0; q < iy; q++) { float fall = 1f - q / (float) iy * 0.75f; int w = 1 + (int) (3 * fall);
+            out.rect(ix - w, q, ix + w + 1, q + 1, Canvas.rgb((int) (44 * pil * fall), 0xFFF0B0)); out.rect(ix, q, ix + 1, q + 1, Canvas.rgb((int) (90 * pil * fall), 0xFFFFFF)); }
+        if (a < 0.9f) { float sw = easeOut(a / 0.9f), rad = 6 + 84 * sw;                                                  // two shockwave rings
+            for (int w = 0; w < 2; w++) for (int i = 0; i < 160; i++) { double an = i * Math.PI * 2 / 160; float rr = rad - w * 3;
+                out.set((int) (ix + Math.cos(an) * rr), (int) (iy + Math.sin(an) * rr * 0.62), Canvas.rgb((int) (230 * (1f - sw) * (w == 0 ? 1f : 0.6f)), w == 0 ? 0xFFFFFF : 0xFFD764)); } }
+        for (int i = 0; i < 26 && a < 1.6f; i++) {                                                                       // sparks thrown out of the drop, pulled down by gravity
+            float sp = 26 + h(i, 120) * 46, an = h(i, 121) * 6.2832f, life = a * (0.8f + h(i, 122) * 0.6f);
+            int x = Math.round(ix + (float) Math.cos(an) * sp * life), y = Math.round(iy + (float) Math.sin(an) * sp * life * 0.8f + 38 * life * life);
+            out.rect(x, y, x + 2, y + 2, Canvas.rgb((int) (230 * (1f - a / 1.6f)), i % 3 == 0 ? 0xFFFFFF : i % 3 == 1 ? 0xFFD764 : 0xB8A8FF));
+        }
+        for (int i = 0; i < 12; i++) {                                                                                   // a rune ring turning on the floor
+            double an = i * Math.PI / 6 + t * 1.2; int rx = (int) (ix + Math.cos(an) * 34), ry = (int) (gy + 2 + Math.sin(an) * 7);
+            out.rect(rx - 1, ry, rx + 2, ry + 1, Canvas.rgb((int) (190 * fin), i % 2 == 0 ? 0xFFD764 : 0xFFFFFF));
+        }
         for (int i = 0; i < 10; i++) {
             double an = i * Math.PI / 5 + t * 0.5;
             float x1 = ix + (float) Math.cos(an) * 90, y1 = iy + (float) Math.sin(an) * 90;

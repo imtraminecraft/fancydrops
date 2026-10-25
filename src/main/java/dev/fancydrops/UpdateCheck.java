@@ -46,7 +46,7 @@ final class UpdateCheck {
                     if (o.has("draft") && o.get("draft").getAsBoolean()) continue;
                     String tag = o.has("tag_name") && !o.get("tag_name").isJsonNull() ? o.get("tag_name").getAsString() : "";
                     int[] v = parse(tag); if (v == null) continue;
-                    if (best == null || newer(v, best)) { best = v; bestTag = tag; bestName = best[0] + "." + best[1] + "." + best[2]; }
+                    best = v; bestTag = tag; bestName = best[0] + "." + best[1] + "." + best[2]; break;          // GitHub lists the newest release first: the version was restarted at 0.4.x, so the highest number is not the newest release
                 }
                 latest = bestTag; latestName = bestName; error = ""; state = best == null ? 3 : 2;
                 if (best == null) error = "No releases yet";

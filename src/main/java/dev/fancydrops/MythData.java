@@ -16,6 +16,7 @@ public final class MythData {
         try {
             ALL = sorted(new Gson().fromJson(DataFiles.read("mythological.json"), File.class).sources);
             applyPet(FancyConfig.get().mythPet);
+            initDefaults(FancyConfig.get()); TreasureData.initDefaults(FancyConfig.get());
         } catch (Exception e) {
             DataFiles.status = "mythological.json error: " + e.getMessage();
             try { ALL = sorted(new Gson().fromJson(DataFiles.bundled("mythological.json"), File.class).sources); } catch (Exception ignored) { ALL = List.of(); }
@@ -96,6 +97,11 @@ public final class MythData {
     public static boolean isDye(SlayerData.Drop d) { return d.name.toLowerCase(Locale.ROOT).endsWith(" dye"); }
     /** The on/off switches of a drop. The Mythological Dye shares them with the Dye page, so turning one off turns the other off too. */
     public static FancyConfig.DropCfg cfg(FancyConfig c, SlayerData.Slayer s, SlayerData.Drop d) { return isDye(d) ? c.drop("dyes", d.name) : c.drop(s.id, d.name); }
+
+    /** Every drop starts from its rarity default (see FancyConfig.initDrop), so the menu and the game agree before the library is ever opened. */
+    public static void initDefaults(FancyConfig c) {
+        for (SlayerData.Slayer s : ALL) for (SlayerData.Drop d : s.drops) if (!isDye(d)) FancyConfig.initDrop(cfg(c, s, d), d.rank);
+    }
 
     public static boolean hasId(String id) {
         for (SlayerData.Slayer s : ALL) for (SlayerData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id)) return true;

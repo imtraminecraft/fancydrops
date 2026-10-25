@@ -103,16 +103,10 @@ public final class AnimationManager {
     public static int tierOf(Item it) {
         FancyConfig c = FancyConfig.get();
         if (it == null) return 0;
-        int pick = c.rngOf(it.stateKey != null ? it.stateKey : it.name);                                                          // Drop Library > Animation button: RNG (1) is the big scene, Normal is never the big scene
+        int pick = c.rngOf(it.stateKey != null ? it.stateKey : it.name);                      // Drop Library > Animation button: 1 = RNG, 2 = Normal, none = by rarity
         if (pick == 1) return 2;
-        boolean never = true;
-        if (!never && c.epicEffects && isDye(it)) return 2;   // every dye gets the big scene
-        if (!never && c.epicEffects && !it.untradeable && it.price * Math.max(1, it.amount) >= c.epicThreshold) return 2;
-        if (!never && it.slayer != null && "vampire".equals(it.slayer.id)) {                          // Riftstalker: blue chances play Rare Drop, purple chances play RNG Drop
-            if ("Extraordinary".equals(it.odds)) return c.epicEffects ? 2 : 1;
-            if ("Rare".equals(it.odds)) return 1;
-        }
-        if (never && (isDye(it) || it.rank >= 3)) return 1;
+        if (pick == 0 && it.rank >= 2) return 2;                                              // rare drops play the RNG scene for you, unless you picked Normal
+        if (isDye(it) || it.rank >= 3) return 1;
         if (it.rank >= 2 || Ui.significant(it.odds)) return 1;
         return 0;
     }
@@ -200,9 +194,18 @@ public final class AnimationManager {
     public static boolean isPlaying() { return cur != null || !QUEUE.isEmpty(); }
     /** True while a scene plays that takes over the screen: Farming only shows its picture, so the hotbar and hearts stay. */
     public static boolean hidesHud() {
-        if (cur != null && !cur.farm) return true;
-        for (Anim a : QUEUE) if (!a.farm) return true;
+        if (cur != null && bigScene(cur)) return true;
+        for (Anim a : QUEUE) if (bigScene(a)) return true;
         return false;
+    }
+    /** The scenes that take the screen over (black bars, HUD away): an RNG Mythological drop, and every scene of the categories still being rebuilt except Farming. Normal and No Drops stay above the action bar with the HUD in place. */
+    private static boolean bigScene(Anim a) {
+        if (a.farm) return false;
+        if (a.isMyth()) {
+            int t = a.p != null ? a.p.tier : a.forcedTier >= 0 ? a.forcedTier : a.item != null ? tierOf(a.item) : 0;
+            return a.item != null && t == 2;
+        }
+        return true;
     }
 
     private static float clamp(float v) { return Math.max(0f, Math.min(1f, v)); }
@@ -329,6 +332,7 @@ public final class AnimationManager {
         float sweep = wi >= 1f && eShine ? ((waveT * 0.5f) % 2.2f) / 2.2f * (n + 12) - 6f : -99f;     // a bright band travelling along the letters
         boolean glitching = eGlitch && wi >= 1f && (waveT % 2.6f) < 0.22f;
         float breathe = ePulse && wi >= 1f ? 1f + 0.07f * (float) Math.sin(waveT * 3.2) : 1f;
+        if (breathe != 1f) { Gfx.translate(g, 0, 4); Gfx.scale(g, breathe); Gfx.translate(g, 0, -4); }          // Pulse: the whole line breathes together, round its middle
         for (int i = 0; i < parts.length; i += 2) {
             Component part = (Component) parts[i];
             for (char ch : part.getString().toCharArray()) {
@@ -340,7 +344,7 @@ public final class AnimationManager {
                 if (a > 0.02f && ch != ' ') {
                     float pop = ePop ? 1f + (1f - ain) * (1f - ain) * 1.9f : 1f;                    // starts big, snaps into place
                     float shine = clamp(1f - Math.abs(idx - sweep) / 3f);
-                    float s = pop * breathe * (eShrink ? 1f - aout : 1f - aout * 0.35f) * (1f + 0.1f * shine);
+                    float s = pop * (eShrink ? 1f - aout : 1f - aout * 0.35f) * (1f + 0.1f * shine);
                     int col = Canvas.mix((Integer) parts[i + 1], 0xFFFFFFFF, shine * 0.8f);
                     if (eRain) col = Canvas.mix(col, 0xFF000000 | (java.awt.Color.HSBtoRGB((waveT * 0.35f + idx * 0.07f) % 1f, 0.75f, 1f) & 0xFFFFFF), 0.7f);
                     if (eFire) { float fl = 0.5f + 0.5f * (float) Math.sin(waveT * 7.0 + idx * 0.9); col = Canvas.mix(col, Canvas.mix(0xFFFF4A1C, 0xFFFFD84A, fl), 0.78f); }
@@ -630,7 +634,7 @@ public final class AnimationManager {
             KEY_P.put(key, p);
         }
         c.fixChops();
-        p.alt = c.styleOf(cat) == 1 && cat >= 1;
+        p.alt = c.styleOf(cat) == 1 && cat >= 1 && cat != 3;
         switch (key) {
             case "dye" -> p.chops = 1;
             case "farm", "helios" -> p.chops = 3;
@@ -641,6 +645,7 @@ public final class AnimationManager {
             case "exprng" -> p.chops = Math.max(1, Math.min(12, c.expFlipsRng));
             default -> { p.chops = Math.max(1, Math.min(20, tier == 2 ? c.chopsEpic : tier == 1 ? c.chopsCool : c.chopsDefault)); p.style = c.slayerStyle; }
         }
+        if (p.myth && Scene.sceneN(p)) p.chops = 3;                                          // the same three beats as the real scene, so the sound waves line up
         return p;
     }
 

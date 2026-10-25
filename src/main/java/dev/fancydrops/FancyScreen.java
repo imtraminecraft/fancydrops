@@ -54,8 +54,8 @@ public class FancyScreen extends Screen {
     private static final String[] PEST_SLOT_NAMES = {"Suck", "Pop", "Shoot", "Linger", "End"};
     private static final String[] PEST_SLOT_SUBS = {"The vacuum sucks up the pest", "The pest pops", "The drop shoots out", "The glow after it", "The scene fades out"};
     private static final String[] SLOT_NAMES = {"Chop", "Split", "Reveal", "Linger", "End"};
-    private static final String[] MYTH_SLOT_NAMES = {"Lightning", "Eruption", "Reveal", "Linger", "End"};
-    private static final String[] MYTH_SLOT_SUBS = {"Every lightning strike on the rune circle", "The circle erupts in light", "The drop appears", "The glow after it", "The scene fades out"};
+    private static final String[] MYTH_SLOT_NAMES = {"Call", "Shatter", "Reveal", "Linger", "End"};
+    private static final String[] MYTH_SLOT_SUBS = {"Every beat that calls the creature or the dig", "The creature shatters or the mound opens", "The drop appears", "The glow after it", "The scene fades out"};
     private static final String[] DYE_SLOT_NAMES = {"Splash", "Burst", "Reveal", "Linger", "End"};
     private static final String[] DYE_SLOT_SUBS = {"Every paint splash landing", "The paint bursts open", "The dye appears", "The glow after it", "The scene fades out"};
     private static final String[] SLOT_SUBS = {"Every slice of the cleaver", "The cube splits open", "The drop appears", "The glow after it", "The scene fades out"};
@@ -76,31 +76,31 @@ public class FancyScreen extends Screen {
     /** The three animation states of a drop. */
     static final String[] STATE_L = {"Off", "Normal", "RNG"};
     static final int[] STATE_C = {0xFF4A4F60, 0xFF4A6CF0, 0xFF8A3FD0};
-    static int stateOf(FancyConfig.DropCfg dc, String item) { return !dc.animate ? 0 : FancyConfig.get().rngOf(item) == 1 ? 2 : 1; }
+    static int stateOf(FancyConfig.DropCfg dc, String item, int rank) { if (!dc.animate) return 0; int pick = FancyConfig.get().rngOf(item); return pick == 1 ? 2 : pick == 2 ? 1 : rank >= 2 ? 2 : 1; }          // no pick yet: rare drops (rank 2 and up) are RNG
     /** Normal turns Chat Alert off, RNG turns it on; the player can flip it by hand afterwards. */
     static void applyState(FancyConfig.DropCfg dc, String item, int st) {
         FancyConfig c = FancyConfig.get();
-        if (st == 0) { dc.animate = false; c.setRng(item, 0); }
-        else if (st == 1) { dc.animate = true; c.setRng(item, 0); dc.announce = false; }
+        if (st == 0) dc.animate = false;
+        else if (st == 1) { dc.animate = true; c.setRng(item, 2); dc.announce = false; }
         else { dc.animate = true; c.setRng(item, 1); dc.announce = true; }
     }
     /** Drop Library: Off / Normal / RNG for one item, saved by its name. */
     private class StateBtn extends Ctl {
-        final FancyConfig.DropCfg dc; final String item;
-        StateBtn(FancyConfig.DropCfg dc, String item) { this.dc = dc; this.item = item; }
+        final FancyConfig.DropCfg dc; final String item; final int rank;
+        StateBtn(FancyConfig.DropCfg dc, String item, int rank) { this.dc = dc; this.item = item; this.rank = rank; }
         int width() { return 44; }
         void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {
-            int v = stateOf(dc, item), ty = y + (h - 14) / 2, col = STATE_C[v];
+            int v = stateOf(dc, item, rank), ty = y + (h - 14) / 2, col = STATE_C[v];
             pill(g, x0, ty, x1 - x0, 14, hover ? Canvas.mix(col, 0xFFFFFFFF, 0.18f) : col);
             Gfx.textCentered(g, font, STATE_L[v], (x0 + x1) / 2, ty + 3, v == 0 ? Ui.SUB : 0xFFFFFFFF);
         }
-        boolean click(double mx, int button) { int v = stateOf(dc, item); applyState(dc, item, button == 1 ? (v + 2) % 3 : (v + 1) % 3); FancyConfig.save(); return true; }
+        boolean click(double mx, int button) { int v = stateOf(dc, item, rank); applyState(dc, item, button == 1 ? (v + 2) % 3 : (v + 1) % 3); FancyConfig.save(); return true; }
     }
     /** The switch-all row: shows the state every drop shares ("Mixed" when they differ) and sets them all. */
     private class StateAll extends Ctl {
-        final List<String> names = new ArrayList<>(); final List<FancyConfig.DropCfg> cfgs = new ArrayList<>();
+        final List<String> names = new ArrayList<>(); final List<Integer> ranks = new ArrayList<>(); final List<FancyConfig.DropCfg> cfgs = new ArrayList<>();
         int width() { return 44; }
-        int common() { int v = -1; for (int i = 0; i < cfgs.size(); i++) { int s2 = stateOf(cfgs.get(i), names.get(i)); if (v == -1) v = s2; else if (v != s2) return -1; } return v; }
+        int common() { int v = -1; for (int i = 0; i < cfgs.size(); i++) { int s2 = stateOf(cfgs.get(i), names.get(i), ranks.get(i)); if (v == -1) v = s2; else if (v != s2) return -1; } return v; }
         void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {
             int v = common(), ty = y + (h - 14) / 2, col = v < 0 ? 0xFF2A3350 : STATE_C[v];
             pill(g, x0, ty, x1 - x0, 14, hover ? Canvas.mix(col, 0xFFFFFFFF, 0.18f) : col);
@@ -272,6 +272,7 @@ public class FancyScreen extends Screen {
         Runnable click;                // clicking the row body
         boolean arrow, open;
         EditBox field; String fieldBtn; int btnX0, btnX1;
+        int dropRank;                  // a Drop Library row: the drop's rank (2 and up plays RNG unless you pick Normal)
         boolean dropCols;              // section header that labels the Animation / Preview / Chat Alert columns
         int cell;                      // > 0: every control sits centred in its own column of this width
         String[] pLabels, pIcons, pSubs; int pTh = 27, pColsForce, pTop = 22; int[] pColors; boolean[] pWip; int pCols; IntSupplier pSel; IntConsumer pSet; java.util.function.IntPredicate pOn; boolean[] pLock; String[] pTips, pFx, pIds, pSetId; int[] pRar, pBg; Runnable[] pAct; boolean pFontTiles;      // PICKER rows: the tiles (pOn: which are switched on, pLock: which are locked)
@@ -525,6 +526,7 @@ public class FancyScreen extends Screen {
     private boolean dockPossible() { return height >= 390 && FancyConfig.get().previewAt != 2; }
     private boolean dockWanted() {
         if (!dockPossible() || !query.isBlank()) return false;
+        if (tab == Tab.CHAT) return chatEv == 3 && formatError == null;        // the message preview sits above the menu
         if (tab == Tab.ANIMATIONS) return !onLanding();                      // only inside a scene page
         return tab == Tab.SOUNDS && FancyConfig.get().sound && !onLanding() && curSub() < 5;
     }
@@ -540,6 +542,7 @@ public class FancyScreen extends Screen {
         FancyConfig c = FancyConfig.get();
         boolean top = c.previewAt == 0, sounds = tab == Tab.SOUNDS;
         int x0 = px, w = pw, y0 = top ? py - DOCK_H - DOCK_GAP : py + ph + DOCK_GAP;
+        if (tab == Tab.CHAT) { drawChatDock(g, mx, my, x0, y0, w, top, intro); return; }
         int cat = Math.max(0, Math.min(CATS.length - 1, sounds ? soundCat : ORD[Math.min(CATS.length - 1, curSub())]));
         String key = null, tname = CATS[cat]; int sc = 0;
         if (cat < ATYPES.length) { String[] t = ATYPES[cat][Math.max(0, Math.min(ATYPES[cat].length - 1, animType[cat]))]; key = t[1]; tname = t[0]; sc = Integer.parseInt(t[2]); }
@@ -572,6 +575,27 @@ public class FancyScreen extends Screen {
         if (intro < 1f) pill(g, x0, y0, w, DOCK_H, Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
     }
 
+    /** Chat page: the message exactly as it will look, in its own panel above (or below) the menu. */
+    private void drawChatDock(GuiGraphicsExtractor g, int mx, int my, int x0, int y0, int w, boolean top, float intro) {
+        FancyConfig c = FancyConfig.get();
+        pill(g, x0, y0, w, DOCK_H, Ui.PANEL); rout(g, x0, y0, w, DOCK_H, Ui.BORDER);
+        g.fill(x0 + 6, y0 + 1, x0 + w - 6, y0 + 2, Gfx.argb(150, 0xFFC857));
+        Gfx.text(g, font, "Preview  \u00B7  " + catNameOf(chatEv), x0 + 10, y0 + 6, Ui.SUB);
+        String lab = top ? "\u25BC Move to bottom" : "\u25B2 Move to top";
+        int bwid = Gfx.w(font, lab) + 12, bx2 = x0 + w - bwid - 6, by2 = y0 + 3;
+        boolean hv = mx >= bx2 && mx < bx2 + bwid && my >= by2 && my < by2 + 13;
+        pill(g, bx2, by2, bwid, 13, hv ? Ui.ROW_HOVER : Ui.PANEL2); Gfx.text(g, font, lab, bx2 + 6, by2 + 3, hv ? Ui.TEXT : Ui.SUB);
+        dockBtn[0] = bx2; dockBtn[1] = by2; dockBtn[2] = bx2 + bwid; dockBtn[3] = by2 + 13;
+        boolean xtra = c.alsoAll && !c.channel.equals("ALL");
+        if (c.channel.equals("OFF")) { Gfx.text(g, font, "Announcing is off", x0 + 10, y0 + 30, Ui.DIM); }
+        else {
+            Row r = chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, DropListener.sample(c.formatFor(chatEv), chatEv), chatEv);
+            r.x = x0 + 8; r.y = y0 + 22; r.w = w - 16; r.h = Math.min(r.h, DOCK_H - 28);
+            drawChatPrev(g, r);
+        }
+        if (intro < 1f) pill(g, x0, y0, w, DOCK_H, Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
+    }
+
     /** Everything about the open animation, in two columns, plus its four sounds. */
     private void drawDetails(GuiGraphicsExtractor g, int x, int y, int w, int cat, String key, String tname, int sc, FancyConfig c) {
         List<String[]> d = new ArrayList<>();
@@ -587,7 +611,7 @@ public class FancyScreen extends Screen {
                 case "nothing" -> d.add(new String[]{"Style", STYLE_NAMES[Math.floorMod(c.slayerStyle, STYLE_NAMES.length)]});
                 default -> { }
             }
-            if (cat >= 1 && cat <= 4) d.add(new String[]{"Style", new String[][]{null, {"Splat", "Brush"}, {"Slash", "Rain"}, {"Lightning", "Comets"}, {"Book", "Orb"}}[cat][Math.max(0, Math.min(1, c.styleOf(cat)))]});
+            if (cat >= 1 && cat <= 4 && cat != 3) d.add(new String[]{"Style", new String[][]{null, {"Splat", "Brush"}, {"Slash", "Rain"}, {"Lightning", "Comets"}, {"Book", "Orb"}}[cat][Math.max(0, Math.min(1, c.styleOf(cat)))]});
             d.add(new String[]{"Position", AnimationManager.previewPosition(cat, c)});
             if (AnimationManager.textChoice(c, cat)) d.add(new String[]{"Text", AnimationManager.TEXT_POS_NAMES[Math.floorMod(c.textPos, 2)]});
             if (cat != 2) {
@@ -1585,9 +1609,9 @@ public class FancyScreen extends Screen {
         if (onLanding()) return tab.sub;
         String[][] t = {
             {tab.sub},
-            {"Pick what animates and announces", "Ritual creatures and their drops", "Every RNG dye, by rarity", "Crops, pests and feasts", "Experimentation Table drops", "Coming soon", "Coming soon"},
-            {"Boss scenes, sounds and looks", "Lightning scene, sounds and looks", "Paint scene, sounds and looks", "Scythe scene, sounds and looks", "Book scene, sounds and looks", "Coming soon", "Coming soon"},
-            {"Slayer sounds, moment by moment", "Ritual sounds, moment by moment", "Paint sounds, moment by moment", "Farming sounds, moment by moment", "Book sounds, moment by moment", "Coming soon", "Coming soon"}, {tab.sub},
+            {"Ritual creatures and their drops", "Pick what animates and announces", "Every RNG dye, by rarity", "Crops, pests and feasts", "Experimentation Table drops", "Coming soon", "Coming soon"},
+            {"Lightning scene, sounds and looks", "Boss scenes, sounds and looks", "Paint scene, sounds and looks", "Scythe scene, sounds and looks", "Book scene, sounds and looks", "Coming soon", "Coming soon"},
+            {"Ritual sounds, moment by moment", "Slayer sounds, moment by moment", "Paint sounds, moment by moment", "Farming sounds, moment by moment", "Book sounds, moment by moment", "Coming soon", "Coming soon"}, {tab.sub},
             {"How the menu looks", "Where prices come from", "Reload the drop data"},
             {"Profit, kills and drops", "Slayer profit and drops", "Mythological profit and drops", "Dye profit and drops", "Farming profit and drops", "Everything you dropped, newest first"},
             {tab.sub}, {tab.sub}};
@@ -1662,7 +1686,7 @@ public class FancyScreen extends Screen {
             DropListener.playDrop(own == null ? SlayerData.OTHER : own, dd, "+250%");
         })));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
-        dr.ctls.add(0, new StateBtn(dc, d.name()));
+        dr.ctls.add(0, new StateBtn(dc, d.name(), 0)); dr.dropRank = 0;
         dr.dcfg = dc;
         return dr;
     }
@@ -1676,7 +1700,7 @@ public class FancyScreen extends Screen {
         dr.cell = CELL;
         dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (FarmData.ALL.contains(s)) DropListener.playFarmDrop(s, d); else if (MythData.ALL.contains(s)) DropListener.playMythDrop(s, d); else if (s == TreasureData.SOURCE) DropListener.playTreasureDrop(d); else DropListener.playDrop(s, d, "+250%"); })));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
-        dr.ctls.add(0, new StateBtn(dc, d.name));
+        dr.ctls.add(0, new StateBtn(dc, d.name, d.rank)); dr.dropRank = d.rank;
         dr.dcfg = dc;
         return dr;
     }
@@ -1684,7 +1708,7 @@ public class FancyScreen extends Screen {
     /** The Drop Library "Show" tiles: picks which drops stay in the list. */
     private static boolean dropKeep(Row r) {
         FancyConfig.DropCfg d = r.dcfg; if (dropShow < 0 || d == null) return true;
-        int st = stateOf(d, r.title);
+        int st = stateOf(d, r.title, r.dropRank);
         return dropShow == 0 ? (st != 0 || d.announce) : dropShow == 1 ? st == 1 : dropShow == 2 ? st == 2 : (st == 0 || !d.announce);
     }
     private static final String[] SHOW_L = {"Enabled", "Normal", "RNG", "Disabled"}, SHOW_I = {"fd:dropped", "fd:animations", "fd:rng", "fd:nothing"};
@@ -2048,6 +2072,12 @@ public class FancyScreen extends Screen {
                     }
                 }
                 dropFinish(rows, cat);
+                if (cat == 3 && !searching) {                                  // Mythological always lists its pages in the sidebar (add future pages here)
+                    int pcm = PET_COLS[Math.max(0, Math.min(5, c.mythPet))], mc2 = pcm == 0xFFFFFFFF ? 0xFF55D8FF : pcm;
+                    srcList.clear();
+                    srcList.add(new String[]{"@mobs", "Mythological Mobs", "fd:myth_mobs", String.valueOf(mc2)});
+                    srcList.add(new String[]{"@treasure", "Treasure", "fd:myth_treasure", String.valueOf(TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))])});
+                }
                 buildAll = false;
             }
             case ANIMATIONS -> {
@@ -2100,7 +2130,7 @@ public class FancyScreen extends Screen {
                 if (chatEv != 3) { wipPanel(catNameOf(chatEv), "messages"); break; }      // only Mythological is rebuilt, the rest wait behind the construction site
                 boolean xtra = c.alsoAll && !c.channel.equals("ALL");
                 if (formatError != null) { /* shown under the format box below */ }
-                else {
+                else if (!dockPossible()) {                                        // a small window has no room above the menu: the preview stays in the list
                     rows.add(section("Preview"));
                     String samp = DropListener.sample(c.formatFor(chatEv), chatEv);
                     rows.add(chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, samp, chatEv));
@@ -2314,9 +2344,6 @@ public class FancyScreen extends Screen {
             case "farm" -> { o[0] = "Farming Drop (Rain)"; o[4] = "A rain cloud waters the field, the crops burst into sparkles and the last one opens."; }
             case "pest" -> { o[0] = "Pest Drop (Rain)"; o[4] = "A downpour floods the pest away and the drop rises out of the puddle."; }
             case "helios" -> { o[0] = "Ray of Helios (Rain)"; o[4] = "A sunrise over a sun shower, only for the Ray of Helios."; }
-            case "mythnothing" -> { o[4] = "Small, above the action bar. The comets fade, a pale minotaur crumbles and the circle goes dark."; }
-            case "myth" -> { o[0] = "Normal (Comets)"; o[4] = "Small, above the action bar. Comets call up a minotaur, it shatters and the drop springs out. Treasure digs it up instead."; }
-            case "mythrng" -> { o[0] = "RNG (Comets)"; o[4] = "The big scene: faster comets, a whitened sky, god rays, rune halos and griffin feathers."; }
             case "exp" -> { o[0] = "Experiment Drop (Orb)"; o[4] = "A rune orb charges over the table, each flip lights a ring, then the drop bursts out."; }
             case "exprng" -> { o[0] = "RNG Drop (Orb)"; o[4] = "For RNG items: the orb pulses gold with every flip, then god rays and a laurel crown the drop."; }
             default -> { }
@@ -2337,7 +2364,7 @@ public class FancyScreen extends Screen {
         if (cat == 0) {
             rows.add(picker("Animation style", "How the boss is cut", STYLE_NAMES, new String[]{"Slices the boss", "Cuts it with light"}, new String[]{"fd:slayers", "fd:spirit"}, new int[]{0xFF8FA8FF, 0xFFC77DFF}, null, 2, () -> Math.floorMod(c.slayerStyle, STYLE_NAMES.length), i -> c.slayerStyle = i));
             rows.add(toggle("fd:nothing", "Animate empty kills", "Play the empty scene when nothing drops", () -> c.animateNothing, v -> c.animateNothing = v));
-        } else if (cat >= 1 && cat <= 4) {
+        } else if (cat >= 1 && cat <= 4 && cat != 3) {
             String[][] sn = {null, {"Splat", "Brush"}, {"Slash", "Rain"}, {"Lightning", "Comets"}, {"Book", "Orb"}};
             String[][] sd = {null, {"A blob bursts open", "Brush strokes paint it"}, {"Crops are cut", "Rain wakes the crops"}, {"Bolts strike the circle", "Comets fall on it"}, {"The book flips", "A rune orb charges"}};
             String[][] si = {null, {"fd:st_splat", "fd:st_brush"}, {"fd:st_slash", "fd:st_rain"}, {"fd:st_bolt", "fd:st_comet"}, {"fd:st_book", "fd:st_orb"}};
@@ -2717,7 +2744,7 @@ public class FancyScreen extends Screen {
         int bw = ePrevW(), bh = previewH(bw), bx = ex + 10, by = eBy();
         hoverFx = -1;
         if (editor == 2 && ePage == 0) for (int i = 0; i < FX_N; i++) if (in(mx, my, eFxBox(i))) hoverFx = i;
-        Row syn = new Row(); syn.x = bx; syn.y = by; syn.w = bw; syn.pcat = 0; syn.pkey = "default"; syn.nolabel = true; syn.pbw = bw;
+        Row syn = new Row(); syn.x = bx; syn.y = by; syn.w = bw; syn.pcat = 3; syn.pkey = editor == 2 ? "myth" : "mythrng"; syn.nolabel = true;          // Mythological is the live category: bars and items show on its RNG scene, the words on its Normal one syn.pbw = bw;
         AnimationManager.itemOnly = editor == 3; AnimationManager.itemKey = editor == 3 && ePage == 2 ? RNG_KEYS[eRngSel] : null; AnimationManager.textOnly = editor == 2; AnimationManager.fxOnly = editor == 2 ? hoverFx : -1;
         if (hoverFx != lastHoverFx) { lastHoverFx = hoverFx; hoverFxAt = System.currentTimeMillis(); AnimationManager.restartText(); }
         AnimationManager.loopTxt = editor == 2; AnimationManager.freezeT = AnimationManager.loopTxt || editor == 3 ? -1f : 2.4f;
@@ -3061,14 +3088,14 @@ public class FancyScreen extends Screen {
     private static final String[][] LANDING = {
         {},
         {"fd:dropped", "Drop Library", "Every drop the mod knows about, grouped by where it comes from. Open a page to choose which drops get an animation and which get a chat alert.",
-            "fd:slayers|Slayers|Slayer boss drops", "fd:mytho|Mythological|Mob drops", "fd:dye|Dye|All dye drops", "fd:farm|Farming|Pest and crop drops", "fd:experiments|Experiments|Table drops", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
+            "fd:mytho|Mythological|Mobs and treasure", "fd:slayers|Slayers|Slayer boss drops", "fd:dye|Dye|All dye drops", "fd:farm|Farming|Pest and crop drops", "fd:experiments|Experiments|Table drops", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
         {"fd:animations", "Animations", "Pick the scene, sounds and look of the animation for each kind of drop, and try them out with the play buttons.",
-            "fd:slayers|Slayers|Nothing \u00B7 Default \u00B7 Rare \u00B7 RNG", "fd:mytho|Mythological|Nothing \u00B7 Ritual \u00B7 RNG", "fd:dye|Dye|Paint splat", "fd:farm|Farming|Scythe \u00B7 Helios", "fd:experiments|Experiments|Book \u00B7 RNG", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
+            "fd:mytho|Mythological|No Drops \u00B7 Normal \u00B7 RNG", "fd:slayers|Slayers|Nothing \u00B7 Default \u00B7 Rare \u00B7 RNG", "fd:dye|Dye|Paint splat", "fd:farm|Farming|Scythe \u00B7 Helios", "fd:experiments|Experiments|Book \u00B7 RNG", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
         {"fd:sounds", "Sounds", "Volume, and the sound of every moment of every animation, with a live wave preview.",
-            "fd:slayers|Slayers|Boss sounds", "fd:mytho|Mythological|Ritual sounds", "fd:dye|Dye|Paint sounds", "fd:farm|Farming|Scythe sounds", "fd:experiments|Experiments|Book sounds", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
+            "fd:mytho|Mythological|Ritual sounds", "fd:slayers|Slayers|Boss sounds", "fd:dye|Dye|Paint sounds", "fd:farm|Farming|Scythe sounds", "fd:experiments|Experiments|Book sounds", "fd:mining|Mining|Soon\u2122", "fd:fishing|Fishing|Soon\u2122"},
         {},
         {"fd:settings", "Settings", "How the menu looks, where prices come from and how drop data is loaded. Position, size and text for each animation now live under Animations.",
-            "fd:glass|Menu|Look and feel", "fd:coin|Prices|Bazaar and Auction House", "fd:refresh|Drop Data|Reload data"},
+            "fd:glass|Menu|Look and feel", "fd:cos_aura|Cosmetics|Names, auras, range", "fd:coin|Prices|Bazaar and Auction House", "fd:refresh|Drop Data|Reload data"},
         {"fd:stats", "Stats", "Your profit, kills and drops: totals, profit per hour, this session and what you've found in every category.",
             "fd:stats|Overview|Totals", "fd:slayers|Slayers|Per boss", "fd:mytho|Mythological|Found drops", "fd:dye|Dye|Found dyes", "fd:farm|Farming|Found drops", "fd:clock|History|This session"},
         {},
@@ -3250,7 +3277,7 @@ public class FancyScreen extends Screen {
         Row all = row(2, "fd:switch", "Every " + s.boss + " drop", "Animation state and chat alert for every drop below", s.color());
         all.cell = CELL;
         StateAll sa = new StateAll();
-        for (SlayerData.Drop d : s.drops) { sa.names.add(d.name); sa.cfgs.add(cfgOf(s, d, c)); }
+        for (SlayerData.Drop d : s.drops) { sa.names.add(d.name); sa.ranks.add(d.rank); sa.cfgs.add(cfgOf(s, d, c)); }
         all.ctls.add(sa);
         all.ctls.add(new Ctl() { int width() { return 0; } void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {} });      // the Preview column stays empty
         all.ctls.add(tog(() -> anyAnnounce(s, c), v -> setEvery(sc, s, c, null, v), 0xFFD98A1F));
@@ -3288,7 +3315,7 @@ public class FancyScreen extends Screen {
     // ------------------------------------------------------------------ render
 
     /** Menu order of the categories: Slayers, Mythological, Dye, Farming, Experiments, Mining, Fishing (the numbers inside the mod stay as they are). */
-    private static final int[] ORD = {0, 3, 1, 2, 4, 5, 6};
+    private static final int[] ORD = {3, 0, 1, 2, 4, 5, 6};
     private static int ordPos(int cat) { for (int i = 0; i < ORD.length; i++) if (ORD[i] == cat) return i; return 0; }
     private static final String[] CATS = {"Slayers", "Dye", "Farming", "Mythological", "Experiments", "Mining", "Fishing"};
     /** Pages that are still being built show a WIP label in the sidebar. */
@@ -3326,9 +3353,9 @@ public class FancyScreen extends Screen {
     private float subExp;                                         // 0..1: how far the current tab's list has opened in the sidebar
     private static final String[][] SUBS = {
         {},                                                        // Home
-        {"Slayers", "Mythological", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Drop Library
-        {"Slayers", "Mythological", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Animations
-        {"Slayers", "Mythological", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Sounds: the main page holds the volume, then one sound page per animation
+        {"Mythological", "Slayers", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Drop Library
+        {"Mythological", "Slayers", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Animations
+        {"Mythological", "Slayers", "Dye", "Farming", "Experiments", "Mining", "Fishing"},   // Sounds: the main page holds the volume, then one sound page per animation
         {},                                                        // Chat (one page)
         {"Menu", "Cosmetics", "Prices", "Drop Data"},     // Settings
         {"Overview", "Slayers", "Mythological", "Dye", "Farming", "History"},
@@ -3522,7 +3549,7 @@ public class FancyScreen extends Screen {
                 g.enableScissor(px + 8, srcBox(0)[1], px + sw - 6, srcBox(0)[1] + srcExtra());
                 for (int j = 0; j < srcList.size(); j++) {
                     String[] e = srcList.get(j); int[] b = srcBox(j);
-                    boolean act = e[0].equals(dropSrc), hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
+                    boolean act = e[0].startsWith("@") ? (e[0].equals("@mobs") ? mythPage == 0 : mythPage == 1) : e[0].equals(dropSrc), hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
                     float hv = anim("src|" + j, hov && !act ? 1f : 0f, 48f);
                     int col = Integer.parseInt(e[3]);
                     if (act) { pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.ROW, Ui.ACCENT, 0.22f)); g.fill(b[0], b[1] + 2, b[0] + 2, b[3] - 2, Ui.ACCENT); }

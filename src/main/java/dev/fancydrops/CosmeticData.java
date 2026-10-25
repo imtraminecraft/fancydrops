@@ -150,7 +150,7 @@ final class CosmeticData {
     static void toggleSet(SetDef s) {
         FancyConfig c = FancyConfig.get();
         boolean on = wearingSet(s);
-        c.suffix = on ? "" : s.suffix(); c.nameFx = on ? "" : s.fx(); if (s.aura() != null) c.aura = on ? "" : s.aura();
+        c.suffix = on ? "" : s.suffix(); c.nameFx = on ? "" : s.fx(); c.aura = on || s.aura() == null ? "" : s.aura();       // a set replaces what you wore: a set with no aura also turns the old aura off
         FancyConfig.save(); changed();
     }
     static boolean wearingSet(SetDef s) { FancyConfig c = FancyConfig.get(); return s.suffix().equals(c.suffix) && s.fx().equals(c.nameFx) && (s.aura() == null || s.aura().equals(c.aura)); }

@@ -1,3 +1,18 @@
+## 0.4.4
+- Fixed: Settings page crashed the game (a missing tile). Settings now has Menu, Cosmetics, Prices and Drop Data
+- Fixed: Chat Alert follows the state. Normal turns it off, RNG turns it on, and rare drops start as RNG
+- Fixed: HUD stays visible on Normal and No Drops. Only RNG hides it
+- Fixed: RNG scene had a dark square behind it, and the spinning 3D item showed gaps. Both gone
+- Fixed: Bar editor shows the bars again. Pulse text effect now pulses the whole line
+- Fixed: Treasure icons (coins show gold, Braided Griffin Feather shows string). Items with no art show the vanilla item
+- Fixed: Cosmetics sets replace each other. Picking Beta turns off Special's suffix, aura and name effect
+- Fixed: update checker offered v0.9.5 after the downgrade. It now takes the newest release
+- Changed: RNG scene is flashier: reveal flash, light pillar, shockwaves, sparks, rune ring
+- Changed: Mythological is first in Drop Library, Animations and Sounds, and its sidebar lists Mythological Mobs and Treasure
+- Changed: Chat preview sits in a panel above the menu
+- Changed: Sounds preview matches the live scene; slots are Call, Shatter, Reveal, Linger, End
+- Removed: the Comets animation style
+
 ## 0.4.3
 - Changed: only Mythological is live. Slayers, Dye, Farming and Experiments now show WIP and the construction site (Drop Library, Animations, Sounds, Chat)
 - Changed: Drop Library Show filter is Enabled / Normal / RNG / Disabled. Each drop has an Off / Normal / RNG button, a Preview button and a Chat Alert switch. Normal turns Chat Alert off, RNG turns it on

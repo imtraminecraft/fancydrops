@@ -10,7 +10,7 @@ import java.util.*;
 
 /** Player settings (toggled in /fancydrops). Saved to config/fancydrops.json. */
 public class FancyConfig {
-    public static class DropCfg { public boolean animate = true, announce = true; }
+    public static class DropCfg { public boolean animate = true, announce = true, init; }          // init: the rarity default (rare drops: RNG with Chat Alert on, the rest Normal with it off) has been applied
 
     public static class SlayerCfg {
         public boolean enabled = true, animate = true, announce = true;
@@ -152,7 +152,8 @@ public class FancyConfig {
     public String bazaarPrice = "BUY";  // BUY = instant buy, SELL = instant sell
     public String priceSource = "HYPIXEL_AUCTIONS"; // auction source: HYPIXEL_AUCTIONS or LOWEST_BIN_FEED
     public Map<String, SlayerCfg> slayers = new LinkedHashMap<>();
-    public Map<String, Integer> rngPick = new LinkedHashMap<>();                    // Drop Library: item name (lower case) -> 1 always plays the RNG scene, 2 never does; missing = by price
+    public int uiVer;                                                               // 2: the Off / Normal / RNG states, settings of the older drop switches are reset once
+    public Map<String, Integer> rngPick = new LinkedHashMap<>();                    // Drop Library: item name (lower case) -> 1 plays the RNG scene, 2 plays Normal; missing = by rarity (rank 2 and up: RNG)
     public int rngOf(String name) { if (rngPick == null || name == null) return 0; Integer v = rngPick.get(name.toLowerCase(java.util.Locale.ROOT)); return v == null ? 0 : v; }
     public void setRng(String name, int v) { if (rngPick == null) rngPick = new LinkedHashMap<>(); String k = name.toLowerCase(java.util.Locale.ROOT); if (v == 0) rngPick.remove(k); else rngPick.put(k, v); }
     public List<CustomDrop> custom = new ArrayList<>();
@@ -176,6 +177,7 @@ public class FancyConfig {
         if (instance.firstVersion == null || instance.firstVersion.isEmpty()) { instance.firstVersion = FancyDropsMod.VERSION; save(); }
         if (instance.nameFx == null) instance.nameFx = "";
         if (instance.aura == null) instance.aura = "";
+        if (instance.uiVer < 2) { instance.uiVer = 2; if (instance.slayers != null) for (SlayerCfg sc : instance.slayers.values()) sc.drops.clear(); if (instance.rngPick != null) instance.rngPick.clear(); save(); }          // the library works on states now: start every drop from its rarity default
         instance.fixChops();
         if (!instance.enabled) { instance.masterAnimate = false; instance.masterAnnounce = false; instance.enabled = true; }   // older configs had one master switch
         instance.scale = Math.max(0.5f, Math.min(1.1f, instance.scale));
@@ -206,7 +208,7 @@ public class FancyConfig {
         instance.farmScale = Math.max(0.5f, Math.min(1.1f, instance.farmScale <= 0 ? 1f : instance.farmScale));
         instance.slayerStyle = Math.max(0, Math.min(1, instance.slayerStyle));
         instance.dyeStyle = Math.max(0, Math.min(1, instance.dyeStyle)); instance.farmStyle = Math.max(0, Math.min(1, instance.farmStyle));
-        instance.mythStyle = Math.max(0, Math.min(1, instance.mythStyle)); instance.expStyle = Math.max(0, Math.min(1, instance.expStyle));
+        instance.mythStyle = 0; instance.expStyle = Math.max(0, Math.min(1, instance.expStyle));
         instance.menuTranslucency = Math.max(0, Math.min(70, instance.menuTranslucency));
         instance.previewAt = Math.max(0, Math.min(2, instance.previewAt));
         instance.posBars = Math.max(0, Math.min(2, instance.posBars)); instance.pos9 = Math.max(0, Math.min(8, instance.pos9)); instance.textPos = Math.max(0, Math.min(1, instance.textPos));
@@ -247,5 +249,7 @@ public class FancyConfig {
     public float itemK() { return itemScale; }
 
     public SlayerCfg slayer(String id) { return slayers.computeIfAbsent(id, k -> new SlayerCfg()); }
+    /** The rarity default of a drop that was never touched: rare (rank 2 and up) = RNG with Chat Alert on, the rest = Normal with Chat Alert off. */
+    public static void initDrop(DropCfg dc, int rank) { if (dc.init) return; dc.init = true; dc.animate = true; dc.announce = rank >= 2; }
     public DropCfg drop(String slayerId, String name) { return slayer(slayerId).drops.computeIfAbsent(name, k -> new DropCfg()); }
 }

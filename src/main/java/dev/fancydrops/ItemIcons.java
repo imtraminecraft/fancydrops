@@ -508,6 +508,9 @@ public final class ItemIcons {
                 int c = d.face[y * 8 + x];
                 if ((c >>> 24) != 0) g.fill(x - 4, y - 4, x - 3, y - 3, c);
             }
+        } else if (fallback != null && !fallback.isEmpty() && !Icons.has(fallback)) {      // no art (yet): the plain Minecraft item, never a grey square
+            Gfx.scale(g, scale);
+            Gfx.item(g, fallback, -8, -8);
         } else if (ic.ready) {                                        // no art found: a little gem, never a Steve head
             Gfx.scale(g, scale);
             int[] gem = gem(0xC9A227);
