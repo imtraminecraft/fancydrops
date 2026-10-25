@@ -123,6 +123,7 @@ public class FancyConfig {
     public java.util.Map<String, Float> textSecs = new java.util.HashMap<>();   // seconds after the animation starts until the title and info appear (3..10); missing = 4
     public float textDelay(String key) { return "farm".equals(key) || "helios".equals(key) || "pest".equals(key) ? 0f : Math.max(3f, Math.min(10f, textDelayAll)); }       // Farming's words follow the reveal by themselves
     public void setBarPx(int px) { barPx = Math.max(5, Math.min(15, px)); barHeight = Math.round(barPx * 100f / 96f); }
+    public float normalAlpha = 0.85f;             // how solid the small Mythological scene is (0.3 see-through .. 1 solid)
     public int mythSpade = 2;                     // Mythological treasure: the spade the chances are shown for (0 Ancestral, 1 Archaic, 2 Deific)
     public boolean mythErudite = false;           // ... with the Erudite reforge (2 more burrows in a chain)
     public int mythPet = 5;                       // Mythological: the Griffin pet rarity drop chances are shown for (0 Common .. 5 Mythic)

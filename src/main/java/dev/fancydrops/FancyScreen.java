@@ -1652,7 +1652,7 @@ public class FancyScreen extends Screen {
         Row dr = row(2, d.icon, d.name, d.chance.isEmpty() ? "chance unknown" : d.chance, s.color());
         dr.iconId = d.id; dr.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds);
         dr.cell = CELL;
-        dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (FarmData.ALL.contains(s)) DropListener.playFarmDrop(s, d); else if (MythData.ALL.contains(s)) DropListener.playMythDrop(s, d); else DropListener.playDrop(s, d, "+250%"); })));
+        dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (FarmData.ALL.contains(s)) DropListener.playFarmDrop(s, d); else if (MythData.ALL.contains(s)) DropListener.playMythDrop(s, d); else if (s == TreasureData.SOURCE) DropListener.playTreasureDrop(d); else DropListener.playDrop(s, d, "+250%"); })));
         dr.ctls.add(tog(() -> dc.animate, v -> dc.animate = v, 0xFF4A6CF0));
         dr.ctls.add(tog(() -> dc.announce, v -> dc.announce = v, 0xFFD98A1F));
         dr.ctls.add(0, new RngBtn(d.name));
@@ -1781,13 +1781,7 @@ public class FancyScreen extends Screen {
         if (open.contains("dd_spade") && !searching) { Row pl = miniList(pick, dd, java.util.Arrays.asList(TreasureData.SPADES), sp, i -> { c.mythSpade = i; open.remove("dd_spade"); }); pl.pickCols = TreasureData.COLS; rows.add(pl); }
         Row er = row(2, "fd:cos_aura", "Erudite reforge", "From Daedalus' Notes. Two more burrows in a chain", Ui.ACCENT);
         er.ctls.add(sw(() -> c.mythErudite, v -> c.mythErudite = v)); er.click = () -> c.mythErudite = !c.mythErudite; rows.add(er);
-        for (String[] e : list) {
-            Row r = row(2, e[2], e[0], e[3] + " of treasures", col);
-            if (!e[1].isEmpty()) r.iconId = e[1];
-            r.subColor = Ui.SUB; r.dcfg = new FancyConfig.DropCfg();
-            r.ctls.add(new Val(() -> "1 in " + (c.mythErudite ? e[5] : e[4]), 92));
-            rows.add(r);
-        }
+        for (SlayerData.Drop d : TreasureData.drops(sp)) { Row r = dropRow(TreasureData.SOURCE, d, c); r.subColor = Ui.SUB; rows.add(r); }
         rows.add(note("The chance is per burrow you dig. Creature burrows are the other 75%.", Ui.DIM));
     }
 

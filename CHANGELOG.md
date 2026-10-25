@@ -1,3 +1,10 @@
+## 0.4.2
+- Changed: Mythological Mobs and Treasure Normal animations rebuilt. Small, translucent, pixel style, sitting right above the action bar (HUD stays visible)
+- Changed: Normal scene plays 3 s, fades out, and the words stay 1.5 s longer
+- Changed: Treasure shows "1 in x | % chance", coins show the exact amount, spade line removed
+- Added: Treasure drops in the library have a Chat Alert and Animation toggle and a play button
+- Added: treasure chat line ("You dug out ...") now triggers the Treasure animation
+
 ## 0.4.1
 - Changed: version restarted at 0.4.1 for the full rework. The older entries below keep their original numbers
 

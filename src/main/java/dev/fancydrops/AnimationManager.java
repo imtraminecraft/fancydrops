@@ -45,7 +45,7 @@ public final class AnimationManager {
         float speed = 1f;                        // scene seconds per real second (the animation length setting)
         float textScene = -1f;                   // when the title and info start, in scene seconds (the text delay setting)
         Scene.Params p; int tier; long start; int frame = -1; float sx, sy;
-        boolean isMyth() { return myth || (slayer != null && MythData.ALL.contains(slayer)); }       // every drop of a Mythological creature gets the Mythological scene, whichever way it was started
+        boolean isMyth() { return myth || (slayer != null && (MythData.ALL.contains(slayer) || slayer == TreasureData.SOURCE)); }       // every drop of a Mythological creature gets the Mythological scene, whichever way it was started
         boolean isExp() { return exp || (slayer != null && slayer == ExperimentData.slayer()); }
         String scene() { return pest ? "pest" : helios ? "helios" : farm ? "farm" : item == null && !isExp() ? (isMyth() ? "mythnothing" : "nothing") : isExp() ? "exp" : isMyth() ? "mytho" : p != null && p.dye ? "dye" : SoundFx.SCENES[Math.max(0, Math.min(2, tier))]; }
         final boolean[] done = new boolean[24];
@@ -153,6 +153,16 @@ public final class AnimationManager {
             int sx = (W - sw) / 2, sy = pb == 0 ? bar + margin : pb == 2 ? H - bar - sh - margin : bar + (frameH - sh) / 2;
             return new Layout(W / 2, cell, tsc, lineH, sx, sy, sy, sw, sh, sx, sy, sx + sw, sy + sh);
         }
+        if (compact && !bars) {                                                              // the small Mythological scene: only the rows it draws, the words right under it, clear of the action bar
+            int mg2 = Math.round(0.03f * m), gap2 = Math.max(2, lineH / 4), pp = pos9Of(c, cat), col2 = pp % 3, row2 = pp / 3;
+            float cell2 = Math.max(0.2f, Math.min(Math.max(0.6f, c.sizeOf(cat)) * 0.46f * m / Scene.W, (W - 2 * mg2) / (float) Scene.W));
+            int sw2 = Math.round(Scene.W * cell2), sh2 = Math.round(Scene.H * cell2), vh = Math.round((Scene.CROP_B - Scene.CROP_T) * cell2);
+            int blockH = vh + gap2 + textH, lift2 = row2 == 2 ? Math.max(0, 80 - mg2) : 0;
+            int top = row2 == 0 ? mg2 : row2 == 1 ? (H - blockH) / 2 : H - mg2 - lift2 - blockH;
+            int half2 = Math.min((W - 2 * mg2) / 2, Math.max(sw2 / 2, Math.round(110 * tsc)));
+            int cx2 = col2 == 0 ? mg2 + half2 : col2 == 2 ? W - mg2 - half2 : W / 2;
+            return new Layout(cx2, cell2, tsc, lineH, cx2 - sw2 / 2, top - Math.round(Scene.CROP_T * cell2), top + vh + gap2, sw2, sh2, cx2 - half2, top, cx2 + half2, top + blockH);
+        }
         int mg = Math.round(0.03f * m), gap = Math.max(2, lineH / 4), p9 = farm ? Math.max(0, Math.min(9, c.farmPos)) : pos9Of(c, cat), col = p9 % 3, row = p9 / 3;
         boolean custom = farm && p9 == 9;
         if (custom) { col = 1; row = c.farmY < 0.5f ? 0 : 2; }
@@ -214,9 +224,13 @@ public final class AnimationManager {
     }
     /** The whole animation in scene seconds, text included. */
     static final float SLOW = 1.3f;
-    static float naturalScene(Scene.Params p, boolean farm) { return farm || p.tier != 2 ? Scene.splitTime(p) + 2.0f : Scene.length(p) + 1.8f; }          // short and sweet like Farming; only an RNG drop gets the long scene with bars
+    static float naturalScene(Scene.Params p, boolean farm) { if (Scene.normalMyth(p)) return 3.0f; return farm || p.tier != 2 ? Scene.splitTime(p) + 2.0f : Scene.length(p) + 1.8f; }          // short and sweet like Farming; only an RNG drop gets the long scene with bars
     /** {scene seconds per real second, when the words start in scene seconds, total real seconds}. The animation plays first; title and info follow after the text delay. */
     static float[] timing(Scene.Params p, boolean farm0, String key, FancyConfig c) {
+        if (Scene.normalMyth(p)) {                                                      // the small Mythological scene: 3 s by default, 2 to 7 s by choice, the words come in with the reveal
+            Float w = c.animSecs.get(key); float total = w != null ? Math.max(2f, Math.min(7f, w)) : 3.0f;
+            return new float[]{3.0f / total, Scene.splitTime(p) + 0.35f, total};
+        }
         boolean farm = farm0 || p.tier != 2;
         float natural = naturalScene(p, farm0), ts = Scene.splitTime(p), delay = farm ? 0f : c.textDelay(key);      // farming: the words follow the reveal by half a second
         Float want = c.animSecs.get(key);
@@ -227,6 +241,7 @@ public final class AnimationManager {
     }
     /** How long an animation lasts by default, in real seconds, for the length slider. */
     public static float naturalSecs(String key, FancyConfig c) {
+        if (key.equals("myth")) return 3.0f;
         c.fixChops();
         int t = switch (key) { case "rng", "dye", "helios", "mythrng", "exprng" -> 2; case "rare" -> 1; default -> 0; };
         Scene.Params p = new Scene.Params(t, !key.endsWith("nothing"));
@@ -253,7 +268,7 @@ public final class AnimationManager {
         p.style = c.slayerStyle;
         if (a.farm) { p.farm = true; p.chops = a.pest ? 1 : 3; p.helios = a.helios; p.pest = a.pest; p.alt = c.farmStyle == 1; }
         if (a.isExp()) { p.exp = true; p.chops = tier == 2 ? c.expFlipsRng : c.expFlips; p.alt = c.expStyle == 1; }
-        else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); p.alt = c.mythStyle == 1; }
+        else if (a.isMyth()) { p.myth = true; p.chops = tier == 2 ? c.mythStrikesRng : c.mythStrikes; p.mob = mobOf(a.slayer.id); p.alt = c.mythStyle == 1; p.treasure = a.slayer == TreasureData.SOURCE; if (Scene.normalMyth(p)) p.chops = 3; }
         p.seed = Math.abs(a.slayer.id.hashCode() % 97);                                   // the mob's look stays the same
         p.cutSeed = java.util.concurrent.ThreadLocalRandom.current().nextInt(1, 100000);   // but the slashes are different every time
         p.theme = java.util.List.of("zombie", "spider", "wolf", "enderman", "blaze", "vampire").indexOf(a.slayer.id);
@@ -689,7 +704,7 @@ public final class AnimationManager {
         Font font = Minecraft.getInstance().font;
         float sec = syncSec >= 0f ? syncSec * speed : ((System.currentTimeMillis() - previewT0) % 600_000L) / 1000f * speed;
         float ts = Scene.splitTime(p), len = tm == null ? Scene.length(p) + 0.4f : naturalScene(p, p.farm);
-        float full = tm == null ? len : len + TEXT_EXTRA * speed;                                  // like the real thing: the words stay 2 real seconds after the scene ends
+        float full = tm == null ? len : len + textExtra(p) * speed;                                  // like the real thing: the words stay 2 real seconds after the scene ends
         float t = syncSec >= 0f ? Math.min(sec, full - 0.02f) : sec % (full + (tm == null ? 0f : 0.6f * speed));       // then a short rest before it plays again
         if (t > full - 0.02f) t = full - 0.02f;
         float rv0 = tm == null ? ts + 0.15f : tm[1];
@@ -699,13 +714,15 @@ public final class AnimationManager {
         int frame = (int) (Math.min(t, len) * 30f);
         if (frame != previewFrame) { previewFrame = frame; Scene.draw(OUT, L3, p, frame / 30f); if (cine) feather(OUT); SceneTexture.upload(OUT); }
         float rv = tm == null ? ts + 0.15f : tm[1];
-        float ga = tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f));            // the scene fades in and out like the real one
+        float ga = (tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f))) * sceneAlpha(p);            // the scene fades in and out like the real one
         float gt = tm == null || freezeT >= 0f || loopTxt ? 1f : Math.min(clamp(t / 0.2f), clamp((full - t) / 0.5f));
         int tal = Math.round(255 * gt);
         revealT = t - rv; waveIn = clamp((t - rv) / 0.6f); waveOut = tm == null ? clamp((t - (len - 0.8f)) / 0.6f) : clamp((t - (full - 1.0f)) / 0.7f); waveT = sec; bounceT = t - (rv + 0.6f);
         int barFull = cine ? Math.round(H * c.barHeight / 100f) : 0;
         Item pi = cat == 4 ? PREVIEW_EXP : farm ? PREVIEW_FARM : PREVIEW;
-        Layout L = layout(W, H, c, cat == 2 ? farmRows(pi, c) : rows(pi, c), cat);
+        compact = Scene.normalMyth(p);
+        Layout L = layout(W, H, c, cat == 2 || compact ? farmRows(pi, c) : rows(pi, c), cat);
+        boolean wordsLikeFarm = cat == 2 || compact; compact = false;
         if (textOnly) {                                                                          // the Text Changes editor: just the words, big and centred, on nothing
             float lt = ((System.currentTimeMillis() - textT0) % 4600L) / 1000f;                  // the words come in, stay, and leave, again and again
             revealT = lt - 0.2f; waveIn = clamp(revealT / 0.6f); waveOut = clamp((lt - 3.5f) / 0.9f); waveT = lt;
@@ -722,7 +739,7 @@ public final class AnimationManager {
             return;
         }
         if (sceneOn && !textOnly && !SceneTexture.draw(g, OUT, L.ox(), L.oy(), L.sw(), L.sh(), ga)) OUT.flush(g::fill, L.ox(), L.oy(), Math.max(1, Math.round(L.cell())), ga);
-        if (cat == 2) farmText(g, font, L, pi, c, tal); else text(g, font, L, pi, c, tal);
+        if (wordsLikeFarm) farmText(g, font, L, pi, c, tal); else text(g, font, L, pi, c, tal);
     }
 
     /** Fades the scene's edges to see-through so it melts into the blurred world instead of sitting there as a hard box. */
@@ -801,6 +818,12 @@ public final class AnimationManager {
 
     /** The words stay this many real seconds after the scene is over. */
     private static final float TEXT_EXTRA = 2f;
+    /** How long the words outlast the scene: 1.5 s for the small Mythological scene, 2 s for the rest. */
+    private static float textExtra(Scene.Params p) { return Scene.normalMyth(p) ? 1.5f : TEXT_EXTRA; }
+    /** How see-through the small Mythological scene is (the Animations settings). */
+    private static float sceneAlpha(Scene.Params p) { return Scene.normalMyth(p) ? Math.max(0.3f, Math.min(1f, FancyConfig.get().normalAlpha)) : 1f; }
+    /** Set just before layout() by whoever draws: the small Mythological scene is cropped to what it uses and the words sit under it. */
+    static boolean compact = false;
 
     private static long errAt;
     public static void render(GuiGraphicsExtractor g) {
@@ -831,17 +854,19 @@ public final class AnimationManager {
         Anim a = cur;
         float t = (System.currentTimeMillis() - a.start) / 1000f * a.speed;                // a.speed stretches or squeezes the whole scene to the length the user chose
         float sLen = naturalScene(a.p, a.farm);     // the scene (picture, bars, shake) ends here
-        float len = sLen + TEXT_EXTRA * a.speed;    // the words stay on screen 2 real seconds longer than the scene
+        float len = sLen + textExtra(a.p) * a.speed;    // the words stay on screen 2 real seconds longer than the scene
         if (t >= len) { cur = null; return; }          // the sounds are laid out to finish with the scene, so they ring out by themselves
         if (a.p.item == null && a.item != null) a.p.item = ItemIcons.model(a.item.id, a.slayer.color());   // art finished loading late
         if (a.p.twin && a.p.item2 == null && a.item2 != null) a.p.item2 = ItemIcons.model(a.item2.id, a.slayer.color());
 
-        float ga = Math.min(clamp(t / 0.2f), clamp((sLen - t) / 0.5f)), gt = Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f));      // scene fade, words fade
+        float ga = Math.min(clamp(t / 0.2f), clamp((sLen - t) / 0.5f)) * sceneAlpha(a.p), gt = Math.min(clamp(t / 0.2f), clamp((len - t) / 0.5f));      // scene fade, words fade
         boolean cine = c.cine(catOf(a)) && !a.farm && a.tier == 2;                          // the black bars are for RNG drops only                              // bars are for Slayer and Dye scenes only
         float cin = cine ? easeIO(Math.min(clamp(t / 0.6f), clamp((sLen - t) / 0.6f))) : 0f;
         Font font = Minecraft.getInstance().font;
         rngBars = a.tier == 2;
-        Layout L = layout(g.guiWidth(), g.guiHeight(), c, catOf(a) == 2 ? farmRows(a.item, c) : rows(a, c), catOf(a));
+        compact = Scene.normalMyth(a.p);
+        Layout L = layout(g.guiWidth(), g.guiHeight(), c, catOf(a) == 2 || compact ? farmRows(a.item, c) : rows(a, c), catOf(a));
+        boolean wordsLikeFarm = catOf(a) == 2 || compact; compact = false;
         float ts = Scene.splitTime(a.p), reveal = a.textScene >= 0f ? a.textScene : ts + 0.27f;
         boolean epic = a.tier == 2;
         int W = g.guiWidth(), H = g.guiHeight(), barFull = Math.round(H * c.barHeight / 100f);
@@ -870,7 +895,7 @@ public final class AnimationManager {
             int al = (int) (255 * gt);
             if (framed) { twinCell = L.cell(); barText(g, font, a, c, al, W, H, barFull); }
             else if (a.item2 != null) twinText(g, font, L, a.item, a.item2, c, al);
-            else if (catOf(a) == 2) farmText(g, font, L, a.item, c, al);
+            else if (wordsLikeFarm) farmText(g, font, L, a.item, c, al);
             else text(g, font, L, a.item, c, al);
         }
 

@@ -38,6 +38,7 @@ final class Scene {
         boolean farm, helios, pest;                               // the small Farming scene (a growing crop)
         int mob;                                            // Mythological scene: which creature is summoned (0 Hunter, 1 Lynxes, 2 Gaia, 3 Minotaur, 4 Champion, 5 Inquisitor)
         boolean exp;                                        // Experimentation Table drops: the table's book opens, zooms in, flips its pages and shows the drop
+        boolean treasure;                                   // a Mythological treasure drop (the digging scene) instead of a creature drop
         boolean myth;                                       // Mythological Ritual drops: three golden lightning strikes light a rune circle between two pillars
         boolean alt;                                // the second animation style of the Dye / Farming / Mythological / Experiment scenes
         int style;                                  // slayer animation style: 0 Sword (sword), 1 Spirit (soul slashes)
@@ -53,11 +54,16 @@ final class Scene {
     /** The first two slices are identical in every scene (0.42 s each); only the later ones differ. */
     static float chopStart(Params p, int k) { return 0.7f + (k < 2 ? k * 0.42f : 0.84f + (k - 2) * interval(p.tier)); }
     static float chopIv(Params p, int k) { return k < 2 ? 0.42f : interval(p.tier); }
-    static float impact(Params p, int k) { return p.exp ? (p.tier == 2 ? 1.45f + 0.3f * k - 0.008f * k * k : 1.45f + 0.36f * k) : p.myth ? 0.55f + 0.5f * k : p.farm ? (p.pest ? 1.15f : p.helios ? 0.5f + 0.35f * k : 0.12f + 0.18f * k) : p.dye ? 0.75f : chopStart(p, k) + 0.8095f * chopIv(p, k); }   // dye: when each paint blob lands
-    static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? impact(p, Math.max(0, p.chops - 1)) + 0.6f : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.pest ? 0.32f : p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
+    /** A Mythological drop in the Normal state: the small, see-through scene (a ritual circle for a creature, a dig for a treasure) that plays 3 seconds. */
+    static boolean normalMyth(Params p) { return p.myth && p.tier != 2 && p.hasItem; }
+    /** The rows of the 112 x 96 canvas the Normal Mythological scene really uses: the layout crops the empty rest so nothing floats above the action bar. */
+    static final int CROP_T = 20, CROP_B = 80;
+
+    static float impact(Params p, int k) { return p.exp ? (p.tier == 2 ? 1.45f + 0.3f * k - 0.008f * k * k : 1.45f + 0.36f * k) : p.myth ? (normalMyth(p) ? 0.4f + 0.5f * k : 0.55f + 0.5f * k) : p.farm ? (p.pest ? 1.15f : p.helios ? 0.5f + 0.35f * k : 0.12f + 0.18f * k) : p.dye ? 0.75f : chopStart(p, k) + 0.8095f * chopIv(p, k); }   // dye: when each paint blob lands
+    static float splitTime(Params p) { return p.exp ? impact(p, Math.max(0, p.chops - 1)) + 0.45f : p.myth ? (normalMyth(p) ? (p.treasure ? 2.0f : 1.85f) : impact(p, Math.max(0, p.chops - 1)) + 0.6f) : p.farm ? impact(p, Math.max(0, p.chops - 1)) + (p.pest ? 0.32f : p.helios ? 0.7f : 0.25f) : p.dye ? impact(p, 0) + 1.0f : chopStart(p, p.chops) + 0.04f; }
     /** 0 = plain sword (first two slices of every scene); 1 = dramatic (Rare Drop); 2 = super dramatic (RNG Drop). */
     static int drama(Params p, int k) { return k < 2 ? 0 : p.tier; }
-    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (p.tier == 2 ? 5.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
+    static float length(Params p) { return p.exp ? splitTime(p) + (p.tier == 2 ? 4.6f : 3.4f) : p.myth ? splitTime(p) + (normalMyth(p) ? 1.15f : p.tier == 2 ? 5.4f : 3.9f) : p.farm ? splitTime(p) + (p.pest ? 1.0f : p.helios ? 1.9f : 0.77f) : p.dye ? splitTime(p) + 4.2f : splitTime(p) + (p.tier == 2 ? 4.6f : p.tier == 1 ? 3.7f : 3.4f); }
 
     private static float cl(float v) { return Math.max(0f, Math.min(1f, v)); }
     private static float easeOut(float x) { x = cl(x); return 1 - (1 - x) * (1 - x) * (1 - x); }
@@ -226,6 +232,7 @@ final class Scene {
         out.clear(); l3.clear(); MOB.clear(); SL.clear(); SW.clear(); IT.clear();
         if (p.exp) { drawExperiment(out, p, t); return; }
         if (p.farm) { drawFarm(out, p, t); return; }
+        if (normalMyth(p)) { if (p.treasure) drawTreasureN(out, p, t); else drawMobsN(out, p, t); return; }
         if (p.myth) { drawMytho(out, p, t); return; }
         if (p.dye) { drawDye(out, p, t); return; }
         if (p.front == null) {
@@ -2132,6 +2139,166 @@ final class Scene {
             }
         }
         if (split && p.hasItem && p.item != null) { twinPass(out, p, t, ts, us, false, false, 0, false); drawItem(out, p, t, ts, us); twinPass(out, p, t, ts, us, false, false, gy - 18, true); }
+    }
+
+    // ------------------------------------------------------------------------------------------------ the Normal Mythological scenes
+
+    private static final String[] MINO = {"h..............h", "hh............hh", ".hh..........hh.", ".ffffffffffffff.", "ffffffffffffffff", "ffefffffffffeff.", "ffeffddddfffeff.", "fffffdsssdffff..",
+        ".fffddsnnsddff..", "..ffdssssssdf...", "...fddssssddf...", "...ffffffffff...", "..dffffffffffd..", ".dddffffffffddd.", "dd.dd......dd.dd"};
+    private static int minoCol(char ch) { return switch (ch) { case 'h' -> 0xFFE8DCB4; case 'f' -> 0xFF7A4A2C; case 'd' -> 0xFF4A2A18; case 's' -> 0xFFB88A60; case 'n' -> 0xFFFFD24A; default -> 0xFF802020; }; }
+    private static char minoAt(int i, int j) { String row = MINO[j]; return i < row.length() ? row.charAt(i) : '.'; }
+
+    /** A jagged bolt from the top of the canvas down to the ground at x. */
+    private static void bolt(Canvas out, int x, float t, int seed) {
+        float px = x + (h(seed, 1) - 0.5f) * 6, py = -2; int step = (int) (t * 60);
+        for (int k = 0; k < 8; k++) {
+            float nx = x + (h(seed + k * 3, step) - 0.5f) * 12 * (1 - k / 9f), ny = py + (70 - py) / (8 - k);
+            lin(out, px - 1, py, nx - 1, ny, Canvas.rgb(120, 0x8CBEFF)); lin(out, px + 1, py, nx + 1, ny, Canvas.rgb(120, 0x8CBEFF)); lin(out, px, py, nx, ny, 0xFFFFFFFF);
+            px = nx; py = ny;
+        }
+    }
+
+    /** The light that follows the reveal: a flash, a column, two rings and grains of light rising off the ground at cx. */
+    private static void reveal(Canvas out, float t, float ts, int cx, int gy, int col) {
+        float a = t - ts; if (a < 0f) return;
+        out.glow(cx, gy - 24, 36, 0xFFFFFF, 0.7f * cl(1f - a / 0.25f));
+        float beam = cl(1f - a / 0.7f);
+        if (beam > 0f) for (int y = 0; y < gy; y++) { float w = 6f * (1f - y / (float) gy * 0.5f) * easeOut(a / 0.1f); out.rect(cx - (int) w, y, cx + (int) w + 1, y + 1, Canvas.rgb((int) (60 * beam * (1f - y / (float) gy * 0.4f)), col)); }
+        for (int r = 0; r < 2; r++) {
+            float ra = a - r * 0.07f, dur = 0.42f; if (ra < 0f || ra > dur) continue;
+            float rad = 5 + 40 * easeOut(ra / dur);
+            for (int i = 0; i < 120; i++) { double an = i * Math.PI * 2 / 120; out.set((int) (cx + Math.cos(an) * rad), (int) (gy + Math.sin(an) * rad * 0.28), Canvas.rgb((int) (200 * (1f - ra / dur)), r == 0 ? 0xFFFFFF : 0xFFE8A0)); }
+        }
+        for (int i = 0; i < 14; i++) {
+            float life = a - h(i, 41) * 0.25f; if (life < 0f || life > 1.2f) continue;
+            int x = (int) (cx + (h(i, 42) - 0.5f) * 44), y = (int) (gy - life * (22 + 34 * h(i, 43)));
+            out.rect(x, y, x + 1, y + 1, Canvas.rgb((int) (230 * (1 - life / 1.2f)), i % 3 == 0 ? 0xFFFFFF : col));
+        }
+    }
+
+    /**
+     * Mythological creature, Normal state: a rune circle charges, three lightning strikes land, the first calls up a minotaur, the next two hit it
+     * (it flashes white, its eyes flare) and the third shatters it. A column of light rises and the drop springs out of the circle.
+     */
+    private static void drawMobsN(Canvas out, Params p, float t) {
+        final float TS = splitTime(p), us = Math.max(0f, t - TS - 0.12f);
+        final boolean split = t >= TS;
+        final int cx = 56, gy = 70;
+        p.shakeX = 0; p.shakeY = 0;
+        float inn = cl(t / 0.3f);
+        out.glow(cx, gy - 20, 44, 0x9C90FF, 0.10f * inn);
+        ell(out, cx, gy + 4, 42, 6, Canvas.rgb((int) (110 * inn), 0x07050C));
+        ell(out, cx, gy + 2, 40, 7, Canvas.rgb((int) (235 * inn), 0x1A1828));
+        ell(out, cx, gy + 1, 37, 6, Canvas.rgb((int) (235 * inn), 0x34304C));
+        ell(out, cx - 5, gy, 24, 3, Canvas.rgb((int) (190 * inn), 0x565078));
+        float ring = cl((t - 0.05f) / 0.4f), pul = t > 0.5f ? 0.5f + 0.5f * (float) Math.sin(t * 8) : 0f;
+        for (int i = 0; i < 100; i++) {
+            double an = i * Math.PI * 2 / 100 + t * 0.6;
+            out.set((int) Math.round(cx + Math.cos(an) * 31 * ring), (int) Math.round(gy + 1 + Math.sin(an) * 4.5 * ring), Canvas.rgb((int) (255 * (0.35f + 0.5f * ring) * (0.75f + 0.25f * pul)), 0xFFD764));
+        }
+        for (int i = 0; i < 8; i++) {                                                                       // runes turning round the circle
+            double an = i * Math.PI / 4 + t * 0.6; int gx = (int) Math.round(cx + Math.cos(an) * 25 * ring), gz = (int) Math.round(gy + 1 + Math.sin(an) * 3.4 * ring);
+            out.rect(gx, gz - 2, gx + 1, gz + 1, Canvas.rgb((int) (210 * ring), 0xFFEB96));
+        }
+        // the minotaur: called up by strike 1, hit by 2 and 3, shattered at the reveal
+        float s0 = impact(p, 0), em = easeOut((t - s0 - 0.05f) / 0.45f);
+        if (t > s0 && t < TS) {
+            float shake = 0, flash = 0;
+            for (int k = 1; k < 3; k++) { float a = t - impact(p, k); if (a >= 0f && a < 0.22f) { shake += (float) Math.sin(a * 100) * 1.5f * (1 - a / 0.22f); flash = Math.max(flash, 1 - a / 0.14f); } }
+            flash = cl(flash);
+            boolean eyes = t > impact(p, 1);
+            int hh = Math.max(1, Math.round(15 * em)), ox = cx - 16 + Math.round(shake), oy = gy - 26 + Math.round(8 * (1 - em));
+            for (int j = 0; j < hh; j++) for (int i = 0; i < 16; i++) {
+                char ch = minoAt(i, 15 - hh + j); if (ch == '.') continue;
+                int col = minoCol(ch);
+                if (ch == 'e') col = eyes ? (Math.sin(t * 20) > 0 ? 0xFFFF5030 : 0xFFFFD0A0) : 0xFF802020;
+                if (flash > 0f) col = Canvas.mix(col, 0xFFFFFFFF, flash);
+                out.rect(ox + i * 2, oy + j * 2, ox + i * 2 + 2, oy + j * 2 + 2, col);
+            }
+            if (eyes) { out.glow(ox + 6, oy + 11, 6, 0xFF3C28, 0.35f); out.glow(ox + 26, oy + 11, 6, 0xFF3C28, 0.35f); }
+        }
+        if (t >= TS && t < TS + 0.7f) {                                                                     // it breaks into pieces that fly apart
+            float a = t - TS;
+            for (int j = 0; j < 15; j++) for (int i = 0; i < 16; i++) {
+                char ch = minoAt(i, j); if (ch == '.') continue;
+                int n = i * 15 + j; float vx = (i - 8) * (2 + h(n, 1) * 5), vy = -12 - h(n, 3) * 30;
+                int px = Math.round(cx - 16 + i * 2 + vx * a), py = Math.round(gy - 26 + j * 2 + vy * a + 110 * a * a);
+                if (py < gy + 2) out.rect(px, py, px + 2, py + 2, Canvas.rgb((int) (255 * (1 - a / 0.7f)), minoCol(ch)));
+            }
+        }
+        for (int k = 0; k < 3; k++) {                                                                       // the three strikes
+            float a = t - impact(p, k); if (a < 0f || a > 0.22f) continue;
+            int bx = cx + (k == 0 ? -16 : k == 1 ? 11 : 0);
+            if (((int) (a * 40)) % 2 == 0) bolt(out, bx, t, k * 17 + 3);
+            out.glow(bx, gy, 16, 0xAAC8FF, 0.5f * (1 - a / 0.22f));
+            for (int i = 0; i < 6; i++) { double an = -Math.PI * (0.1 + 0.8 * h(i, k)); float sp = 14 + 22 * h(i, k + 4); out.set(Math.round(bx + (float) Math.cos(an) * sp * a), Math.round(gy + (float) Math.sin(an) * sp * a * 0.7f + 60 * a * a), Canvas.rgb((int) (255 * (1 - a / 0.22f)), 0xFFE28A)); }
+        }
+        if (t >= TS - 0.2f && t < TS) { float f = (t - (TS - 0.2f)) / 0.2f; out.glow(cx, gy - 2, 6 + 22 * f, 0xFFFFFF, 0.65f * f); }
+        reveal(out, t, TS, cx, gy, 0xFFE28A);
+        if (split && p.hasItem && p.item != null) { twinPass(out, p, t, TS, us, false, false, 0, false); drawItem(out, p, t, TS, us); twinPass(out, p, t, TS, us, false, false, gy - 18, true); }
+    }
+
+    private static void digger(Canvas out, int x, int y, int bob) {
+        out.rect(x - 3, y - 14 + bob, x + 4, y - 12 + bob, 0xFF7A4A24); out.rect(x - 5, y - 12 + bob, x + 6, y - 11 + bob, 0xFF6A3E1C);       // hat
+        out.rect(x - 2, y - 11 + bob, x + 3, y - 7 + bob, 0xFFE0B088); out.set(x + 1, y - 10 + bob, 0xFF222222);                                 // face
+        out.rect(x - 3, y - 7 + bob, x + 4, y + bob, 0xFF2F8F8A);                                                                                // coat
+        out.rect(x - 3, y - 1, x, y + 5, 0xFF3A3A5A); out.rect(x + 1, y - 1, x + 4, y + 5, 0xFF3A3A5A);                                         // legs
+        out.rect(x - 3, y + 5, x, y + 6, 0xFF222222); out.rect(x + 1, y + 5, x + 4, y + 6, 0xFF222222);                                         // boots
+    }
+
+    /**
+     * Mythological treasure, Normal state: an explorer digs three times with a rigid shovel (thrust, lift, throw the clod onto the pile), the hole widens,
+     * glints show, then a chest bursts up, its lid opens and the drop springs out in a column of light.
+     */
+    private static void drawTreasureN(Canvas out, Params p, float t) {
+        final float TS = splitTime(p), us = Math.max(0f, t - TS - 0.12f);
+        final boolean split = t >= TS;
+        final int gy = 70, hx = 56, pileX = 92;
+        final float[] D = {0.34f, 0.89f, 1.44f};
+        p.shakeX = 0; p.shakeY = 0;
+        float inn = cl(t / 0.3f);
+        out.glow(56, gy - 20, 44, 0xFFE9A0, 0.14f * inn);
+        ell(out, 56, gy + 5, 48, 7, Canvas.rgb((int) (110 * inn), 0x07050C));
+        ell(out, 56, gy + 3, 46, 8, 0xFF3F2B1A); ell(out, 56, gy + 1, 44, 7, 0xFF6B4A2E); ell(out, 50, gy - 1, 28, 3, 0xFF8A6240);
+        for (int i = -5; i <= 5; i++) out.rect(56 + i * 7 - 3, gy + 2 + (i % 2 == 0 ? 0 : 2), 56 + i * 7 + 3, gy + 3 + (i % 2 == 0 ? 0 : 2), 0xFF3F2B1A);
+        int holeR = 0, stage = 0;
+        for (int k = 0; k < 3; k++) { if (t > D[k] + 0.04f) holeR = 6 + k * 4; if (t > D[k] + 0.3f) stage = k + 1; }
+        if (holeR > 0) { ell(out, hx, gy + 1, holeR + 1, Math.max(2, Math.round(holeR * 0.35f)), 0xFF2A1A0E); ell(out, hx, gy + 1, holeR, Math.max(1, Math.round(holeR * 0.3f)), 0xFF140C06); }
+        for (int k = 0; k < stage; k++) { ell(out, pileX + (k - 1) * 5, gy - 1 - k, 6 + k * 2, 3 + k, 0xFF7A5636); ell(out, pileX + (k - 1) * 5 - 1, gy - 2 - k, 4 + k, 2 + k, 0xFF9A7048); }
+        // the explorer: the shovel is swung from the hands by an angle (0 = right, positive = down) and keeps its length
+        final double deg = Math.PI / 180;
+        final float[][] key = {{0f, -62f}, {0.25f, 50f}, {0.4f, 50f}, {0.62f, -18f}, {0.78f, -72f}, {1f, -62f}};
+        double th = -62 * deg; int lean = 0, bob = 0; float[] clod = null;
+        for (int k = 0; k < 3; k++) {
+            float u = (t - (D[k] - 0.14f)) / 0.56f; if (u < 0f || u >= 1f) continue;
+            int i = 0; while (i < key.length - 2 && u > key[i + 1][0]) i++;
+            float f = (u - key[i][0]) / (key[i + 1][0] - key[i][0]), e = f * f * (3 - 2 * f);
+            th = (key[i][1] + (key[i + 1][1] - key[i][1]) * e) * deg;
+            lean = u > 0.12f && u < 0.55f ? 2 : 0; bob = u > 0.12f && u < 0.4f ? 1 : 0;
+            if (u >= 0.4f && u < 0.78f) clod = new float[]{36 + lean + (float) Math.cos(th) * 25, gy - 14 + (float) Math.sin(th) * 25 - 1};
+            if (u >= 0.78f) { float q = (u - 0.78f) / 0.22f; clod = new float[]{hx + 10 + (pileX - hx - 8) * q, gy - 16 - (float) Math.sin(q * Math.PI) * 14 + q * q * 16}; }
+        }
+        if (t >= TS - 0.1f) { th = -80 * deg; bob = -1; }
+        int body = 30 + lean, hhx = 36 + lean, hhy = gy - 14 + bob;
+        if (t >= TS - 0.1f) { float u = t - TS; int up = Math.round(easeOut((u + 0.1f) / 0.4f) * 6), lid = Math.round(easeOut((u + 0.1f) / 0.35f) * 5);       // the chest bursts out of the hole
+            out.rect(hx - 9, gy - 8 - up, hx + 9, gy + 1 - up, 0xFF8A5A2A); out.rect(hx - 9, gy - 8 - up, hx + 9, gy - 6 - up, 0xFFB07A3A); out.rect(hx - 1, gy - 6 - up, hx + 2, gy - 3 - up, 0xFFFFD24A);
+            out.rect(hx - 9, gy - 10 - up - lid, hx + 9, gy - 7 - up - lid, 0xFFA06A30); out.rect(hx - 9, gy - 10 - up - lid, hx + 9, gy - 9 - up - lid, 0xFFC8904A);
+            if (lid > 1) out.glow(hx, gy - 8 - up, 18, 0xFFE278, 0.55f * cl(lid / 5f));
+        }
+        digger(out, body, gy, bob);
+        out.rect(body + 3, hhy - 3, hhx + 2, hhy - 1, 0xFFE0B088);                                         // the arm
+        double dx = Math.cos(th), dy = Math.sin(th), px = -dy, py = dx;
+        lin(out, (float) (hhx - dx * 5), (float) (hhy - dy * 5), (float) (hhx + dx * 18), (float) (hhy + dy * 18), 0xFF8A5A2C);
+        lin(out, (float) (hhx - dx * 5 + px * 2), (float) (hhy - dy * 5 + py * 2), (float) (hhx - dx * 5 - px * 2), (float) (hhy - dy * 5 - py * 2), 0xFF8A5A2C);
+        for (int q = 0; q < 8; q++) { double bx = hhx + dx * (18 + q), by = hhy + dy * (18 + q); int w = q < 2 ? 3 : q < 5 ? 2 : 1; for (int o = -w; o <= w; o++) out.set((int) Math.round(bx + px * o), (int) Math.round(by + py * o), q < 3 ? 0xFFD4DCF2 : 0xFF98A2C4); }
+        if (clod != null) out.rect(Math.round(clod[0]) - 1, Math.round(clod[1]) - 1, Math.round(clod[0]) + 3, Math.round(clod[1]) + 2, 0xFF7A5636);
+        for (int k = 0; k < 3; k++) {                                                                       // dirt puffs at every thrust
+            float a = t - D[k]; if (a < 0f || a > 0.45f) continue;
+            for (int i = 0; i < 7; i++) { double an = -Math.PI * (0.15 + 0.7 * h(i, k)); float sp = 10 + 24 * h(i, k + 9); out.rect(Math.round(hx + (float) Math.cos(an) * sp * a), Math.round(gy - 2 + (float) Math.sin(an) * sp * a + 90 * a * a), Math.round(hx + (float) Math.cos(an) * sp * a) + 2, Math.round(gy - 2 + (float) Math.sin(an) * sp * a + 90 * a * a) + 1, Canvas.rgb((int) (255 * (1 - a / 0.45f)), i % 2 == 0 ? 0xC8AA78 : 0x8A6240)); }
+        }
+        if (t > D[2] + 0.3f && t < TS) { float f = cl((t - (D[2] + 0.3f)) / (TS - D[2] - 0.3f)); out.glow(hx, gy, 10 + 10 * f, 0xFFE278, 0.5f * f); if (((int) (t * 14)) % 2 == 0) { int gx = hx + (int) Math.round(Math.sin(t * 9) * 5); out.rect(gx, gy - 1 - Math.round(f * 3), gx + 2, gy - Math.round(f * 3), 0xFFFFFFFF); } }
+        reveal(out, t, TS, hx, gy, 0xFFE28A);
+        if (split && p.hasItem && p.item != null) { twinPass(out, p, t, TS, us, false, false, 0, false); drawItem(out, p, t, TS, us); twinPass(out, p, t, TS, us, false, false, gy - 18, true); }
     }
     private Scene() {}
 }

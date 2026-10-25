@@ -40,4 +40,50 @@ final class TreasureData {
             {"1,000,000 Coins", "", "gold_block", "0.31%", "1,472.46", "1,431.56"},
             {"Braided Griffin Feather", "BRAIDED_GRIFFIN_FEATHER", "feather", "0.03%", "14,724.57", "14,315.56"},
             {"Myth the Fish", "MYTH_THE_FISH", "tropical_fish", "0.01%", "45,714.29", "44,444.44"}}};
+
+    /** The source every treasure drop belongs to (a stand-in creature: it has no cube, its drops come from DROPS). */
+    static final SlayerData.Slayer SOURCE = new SlayerData.Slayer();
+    static { SOURCE.id = "myth_treasure"; SOURCE.name = "Treasure"; SOURCE.boss = "Treasure"; SOURCE.icon = "gold_ingot"; SOURCE.color = "#FFD25A"; }
+
+    /** "66.67%" -> "1 in 1.5  |  66.67%". */
+    static String oneIn(String pct) {
+        try {
+            double v = Double.parseDouble(pct.replace("%", "").replace(",", "").trim());
+            if (v <= 0) return pct;
+            double n = 100.0 / v;
+            String t = n < 10 ? String.format(java.util.Locale.ROOT, "%.1f", n).replaceFirst("\\.0$", "") : String.format(java.util.Locale.ROOT, "%,d", Math.round(n));
+            return "1 in " + t + "  |  " + pct.trim();
+        } catch (RuntimeException e) { return pct; }
+    }
+    /** "1 in 735" -> "1 in 735  |  0.14%". Anything else is returned as it is. */
+    static String both(String chance) {
+        if (chance == null) return "";
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^1 in ([\\d,]+(?:\\.\\d+)?)$").matcher(chance.trim());
+        if (!m.matches()) return chance;
+        try { double n = Double.parseDouble(m.group(1).replace(",", "")); return n <= 0 ? chance : chance.trim() + "  |  " + String.format(java.util.Locale.ROOT, "%.2f%%", 100.0 / n); } catch (RuntimeException e) { return chance; }
+    }
+    /** The coins in a drop called "1,000,000 Coins", or 0. */
+    static long coins(String name) {
+        if (name == null || !name.toLowerCase(java.util.Locale.ROOT).endsWith(" coins")) return 0L;
+        try { return Long.parseLong(name.substring(0, name.length() - 6).replace(",", "").trim()); } catch (RuntimeException e) { return 0L; }
+    }
+    private static SlayerData.Drop make(String[] e) {
+        SlayerData.Drop d = new SlayerData.Drop();
+        d.name = e[0]; d.id = e[1].isEmpty() ? e[2].toUpperCase(java.util.Locale.ROOT) : e[1]; d.icon = e[2]; d.chance = oneIn(e[3]);
+        long c = coins(e[0]);
+        d.rank = c > 0 ? (c >= 500_000 ? 2 : c >= 25_000 ? 1 : 0) : e[0].startsWith("Myth the") ? 3 : e[0].startsWith("Braided") ? 2 : 1;
+        return d;
+    }
+    /** Every drop of a spade, built fresh for the library. */
+    static java.util.List<SlayerData.Drop> drops(int sp) {
+        java.util.List<SlayerData.Drop> out = new java.util.ArrayList<>();
+        for (String[] e : DROPS[Math.max(0, Math.min(2, sp))]) out.add(make(e));
+        return out;
+    }
+    /** A drop by its name: the chosen spade first, then the others. Null when it is not a treasure. */
+    static SlayerData.Drop find(String name, int sp) {
+        if (name == null) return null;
+        for (int k = 0; k < 3; k++) for (String[] e : DROPS[(Math.max(0, Math.min(2, sp)) + k) % 3]) if (e[0].equalsIgnoreCase(name.trim())) return make(e);
+        return null;
+    }
 }

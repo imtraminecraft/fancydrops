@@ -52,6 +52,7 @@ public final class DropListener {
                 ProfitTracker.activity(now, ChatParser.isKill(line));
                 TRACKER.kill(now);
             } else {
+                if (playTreasureLine(line)) { drop = true; continue; }          // a treasure from a Mythological burrow
                 ChatParser.Drop d = ChatParser.parseDrop(line);
                 if (d != null) {
                     { FancyConfig fc = FancyConfig.get(); if (fc.dropsSeen < 100000) { fc.dropsSeen++; FancyConfig.save(); } }          // counts toward the First Drop / Collector cosmetics
@@ -344,7 +345,7 @@ public final class DropListener {
         if (it.slayer != null && it.slayer == ExperimentData.slayer()) return 4;
         if (it.slayer != null && FarmData.ALL.contains(it.slayer)) return 2;
         if (AnimationManager.isDye(it)) return 1;
-        if (it.slayer != null && MythData.ALL.contains(it.slayer)) return 3;
+        if (it.slayer != null && (MythData.ALL.contains(it.slayer) || it.slayer == TreasureData.SOURCE)) return 3;
         return 0;
     }
 
@@ -584,10 +585,49 @@ public final class DropListener {
 
     private static Item mythItem(SlayerData.Slayer src, SlayerData.Drop dr, String mf, boolean sim) {
         Item it = new Item();
-        it.slayer = src; it.name = dr.name; it.id = dr.id; it.icon = dr.icon; it.odds = dr.odds; it.chance = dr.chance; it.mf = mf; it.sim = sim;
+        it.slayer = src; it.name = dr.name; it.id = dr.id; it.icon = dr.icon; it.odds = dr.odds; it.chance = TreasureData.both(dr.chance); it.mf = mf; it.sim = sim;
         it.untradeable = dr.untradeable || SlayerData.untradeable(dr.id);
         it.rank = Math.max(0, dr.rank);
         return it;
+    }
+
+    // ------------------------------------------------------------------ Mythological treasure (a burrow that holds loot instead of a creature)
+
+    private static final java.util.regex.Pattern TREASURE = java.util.regex.Pattern.compile("You dug out\\s+(?:an?\\s+|some\\s+)?(.+?)\\s*[!.]*\\s*$", java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    private static Item treasureItem(SlayerData.Drop dr) {
+        Item it = new Item();
+        it.slayer = TreasureData.SOURCE; it.name = dr.name; it.id = dr.id; it.icon = dr.icon; it.chance = dr.chance; it.sim = false; it.rank = Math.max(0, dr.rank);
+        long coins = TreasureData.coins(dr.name);
+        if (coins > 0) { it.price = coins; it.source = ""; }                                  // coins: the coins are the price, always the exact number
+        return it;
+    }
+
+    /** A "You dug out ..." line that names a treasure. True when it was one and the scene is playing (the chat line is then held back). */
+    private static boolean playTreasureLine(String line) {
+        java.util.regex.Matcher m = TREASURE.matcher(line.trim());
+        if (!m.find()) return false;
+        FancyConfig c = FancyConfig.get();
+        SlayerData.Drop dr = TreasureData.find(m.group(1).trim(), c.mythSpade);
+        if (dr == null) return false;
+        FancyConfig.DropCfg dc = c.drop(TreasureData.SOURCE.id, dr.name);
+        boolean animate = c.masterAnimate && dc.animate, announce = c.masterAnnounce && dc.announce;
+        dlog("treasure: " + dr.name + "  animate=" + animate + " announce=" + announce);
+        if (!animate) return false;
+        Item it = treasureItem(dr);
+        it.announce = announce;
+        if (TreasureData.coins(dr.name) == 0) previewPrice(it); else ItemIcons.prefetch(it.id);
+        Anim a = new Anim(TreasureData.SOURCE, it, -1, null); a.myth = true;
+        AnimationManager.play(a);
+        return true;
+    }
+
+    /** Menu "play" button of a treasure drop. */
+    public static void playTreasureDrop(SlayerData.Drop dr) {
+        Item it = treasureItem(dr);
+        if (TreasureData.coins(dr.name) == 0) previewPrice(it); else ItemIcons.prefetch(it.id);
+        Anim a = new Anim(TreasureData.SOURCE, it, -1, null); a.myth = true;
+        AnimationManager.play(a);
     }
 
     /** Menu "play" button of a Mythological drop. */
