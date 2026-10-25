@@ -768,11 +768,7 @@ final class Icons {
                 else if (hot == 1) r(g, x, y, 8, 8, 1, 7, 0xFFFFFFFF);
                 else for (int k = 0; k < 7; k++) r(g, x, y, 14 - k, 4 + Math.round(k * 0.66f), 1, 1, 0xFFFFFFFF);
             }
-            case "dice" -> {                                                                            // a die whose face keeps changing
-                int v = (int) (s * 2f) % 6;
-                r(g, x, y, 2, 2, 12, 12, 0xFFF4F4F8); r(g, x, y, 2, 13, 12, 1, 0xFFB8BECC);
-                for (int pp : PIPS[v]) r(g, x, y, 4 + (pp % 3) * 3, 4 + (pp / 3) * 3, 2, 2, v == 0 ? 0xFFE5484D : 0xFF202432);
-            }
+            case "dice" -> diceRoll(g, x, y, s);                                                        // a real cube tumbling and hopping, its six faces showing in turn
             case "menu" -> {                                                                            // Menu: a window with a title bar; a bright row slides down its list and a sparkle follows
                 float u = (s * 0.7f) % 1f; int row = Math.min(2, (int) (u * 3f));
                 r(g, x, y, 1, 1, 14, 14, 0xFF1B2036); r(g, x, y, 1, 1, 14, 1, 0xFF6C86FF); r(g, x, y, 1, 14, 14, 1, 0xFF2C3556); r(g, x, y, 1, 1, 1, 14, 0xFF3A4670); r(g, x, y, 14, 1, 1, 14, 0xFF3A4670);
@@ -919,4 +915,48 @@ final class Icons {
     }
 
     private Icons() {}
+
+    /** A 3D die rolled per pixel: a cube tumbles on two axes, hops, and the faces show their pips. */
+    private static void diceRoll(GuiGraphicsExtractor g, int x, int y, float s) {
+        float u = (s * 0.55f) % 1f, roll = u < 0.8f ? u / 0.8f : 1f;
+        float e = 1f - (1f - roll) * (1f - roll) * (1f - roll);                         // the tumble slows to a stop, then a short rest
+        float ya = 0.6f + e * 9.4f + (u >= 0.8f ? (float) Math.sin((u - 0.8f) * 25f) * 0.04f : 0f), xb = 0.5f + e * 7.1f;
+        float hop = u < 0.8f ? (float) Math.abs(Math.sin(roll * Math.PI * 3f)) * 2.4f * (1f - roll) : 0f;
+        float ca = (float) Math.cos(-ya), sa = (float) Math.sin(-ya), cb = (float) Math.cos(-xb), sb = (float) Math.sin(-xb);
+        float cA = (float) Math.cos(ya), sA = (float) Math.sin(ya), cB = (float) Math.cos(xb), sB = (float) Math.sin(xb);
+        float h = 4.3f;
+        int[] val = {1, 6, 2, 5, 3, 4};
+        for (int j = 0; j < 16; j++) for (int i = 0; i < 16; i++) {
+            float ox = i + 0.5f - 8f, oy = j + 0.5f - 8f + hop - 0.5f, oz = -20f;
+            float x1 = ca * ox - sa * oz, z1 = sa * ox + ca * oz;                       // inverse of the cube's turn, for the ray
+            float y2 = cb * oy + sb * z1, z2 = -sb * oy + cb * z1;
+            float dx = -sa, dz1 = ca, dy = sb * dz1, dz = cb * dz1;
+            float[] o = {x1, y2, z2}, d = {dx, dy, dz};
+            float t0 = -1e9f, t1 = 1e9f; int ax = -1, sg = 0;
+            boolean miss = false;
+            for (int k = 0; k < 3 && !miss; k++) {
+                if (Math.abs(d[k]) < 1e-5f) { if (Math.abs(o[k]) > h) miss = true; continue; }
+                float ta = (-h - o[k]) / d[k], tb = (h - o[k]) / d[k]; int sgn = d[k] > 0 ? -1 : 1;
+                if (ta > tb) { float tmp = ta; ta = tb; tb = tmp; }
+                if (ta > t0) { t0 = ta; ax = k; sg = sgn; }
+                if (tb < t1) t1 = tb;
+            }
+            if (miss || t0 > t1 || ax < 0) continue;
+            float[] p = {o[0] + d[0] * t0, o[1] + d[1] * t0, o[2] + d[2] * t0};
+            float fu = p[(ax + 1) % 3] / h, fv = p[(ax + 2) % 3] / h;
+            float[] n = new float[3]; n[ax] = sg;
+            float ny = cB * n[1] - sB * n[2], nz = sB * n[1] + cB * n[2], nx = n[0];
+            float wx = cA * nx + sA * nz, wz = -sA * nx + cA * nz;
+            float lit = Math.max(0f, wx * -0.35f + ny * -0.6f + wz * -0.72f);
+            float sh = 0.55f + 0.45f * lit;
+            int base = 0xFFF2F2F6;
+            boolean edge = Math.abs(fu) > 0.86f || Math.abs(fv) > 0.86f;
+            int face = ax * 2 + (sg > 0 ? 1 : 0), v = val[face] - 1;
+            boolean pip = false;
+            for (int pp : PIPS[v]) { float cu = ((pp % 3) - 1) * 0.55f, cv = ((pp / 3) - 1) * 0.55f; if (Math.abs(fu - cu) < 0.2f && Math.abs(fv - cv) < 0.2f) pip = true; }
+            int c = pip ? (v == 0 ? 0xFFE5484D : 0xFF22263A) : edge ? 0xFFC4C9D8 : base;
+            int rr = Math.round(((c >> 16) & 255) * sh), gg = Math.round(((c >> 8) & 255) * sh), bb = Math.round((c & 255) * sh);
+            g.fill(x + i, y + j, x + i + 1, y + j + 1, 0xFF000000 | rr << 16 | gg << 8 | bb);
+        }
+    }
 }

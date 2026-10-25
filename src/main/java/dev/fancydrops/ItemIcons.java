@@ -540,7 +540,7 @@ public final class ItemIcons {
     /** A small 3D block (top, front and side) made from a head's faces, for lists that show a flat 16 x 16 picture. */
     private static int[] isoCube(int[][] heads) {
         int[] out = new int[256];
-        int[] top = heads[2], front = heads[4], side = shadeFace(heads[0], 0.8f);
+        int[] top = shadeFace(heads[2], 1.22f), front = shadeFace(heads[4], 0.96f), side = shadeFace(heads[0], 0.62f);
         float[][] faces = {{8f, 1f, 7f, 3.5f, -7f, 3.5f}, {1f, 4.5f, 7f, 3.5f, 0f, 7f}, {8f, 8f, 7f, -3.5f, 0f, 7f}};      // origin, edge u, edge v of each visible face
         int[][] tex = {top, front, side};
         for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
@@ -553,7 +553,13 @@ public final class ItemIcons {
                 break;
             }
         }
-        return out;
+        int[] res = out.clone();                                                  // depth: a dark outline round the block, a bright edge where the top meets the front
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
+            if ((out[y * 16 + x] >>> 24) == 0) continue;
+            boolean edge = x == 0 || y == 0 || x == 15 || y == 15 || (out[y * 16 + x - 1] >>> 24) == 0 || (out[y * 16 + x + 1] >>> 24) == 0 || (out[(y - 1) * 16 + x] >>> 24) == 0 || (out[(y + 1) * 16 + x] >>> 24) == 0;
+            if (edge) res[y * 16 + x] = Canvas.shade(out[y * 16 + x], 0.5f);
+        }
+        return res;
     }
 
     private ItemIcons() {}

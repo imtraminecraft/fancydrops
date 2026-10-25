@@ -530,8 +530,8 @@ public class FancyScreen extends Screen {
     private int dockH() {
         if (tab != Tab.CHAT) return DOCK_H0;
         FancyConfig c = FancyConfig.get();
-        String k = c.channel + c.alsoAll + c.formatFor(chatEv) + chatEv + cw;
-        if (!k.equals(chatKey)) { chatKey = k; boolean xtra = c.alsoAll && !c.channel.equals("ALL"); chatRowH = c.channel.equals("OFF") ? 14 : chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, DropListener.sample(c.formatFor(chatEv), chatEv), chatEv).h; }
+        String k = c.channel + c.alsoAll + c.formatFor(chatEv) + chatEv + pw;
+        if (!k.equals(chatKey)) { chatKey = k; boolean xtra = c.alsoAll && !c.channel.equals("ALL"); chatRowH = c.channel.equals("OFF") ? 14 : chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, DropListener.sample(c.formatFor(chatEv), chatEv), chatEv, pw - 40).h; }
         return Math.min(DOCK_H0, 30 + chatRowH);
     }
     private boolean dockPossible() { return height >= 390 && FancyConfig.get().previewAt != 2; }
@@ -600,7 +600,7 @@ public class FancyScreen extends Screen {
         boolean xtra = c.alsoAll && !c.channel.equals("ALL");
         if (c.channel.equals("OFF")) { Gfx.text(g, font, "Announcing is off", x0 + 10, y0 + 30, Ui.DIM); }
         else {
-            Row r = chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, DropListener.sample(c.formatFor(chatEv), chatEv), chatEv);
+            Row r = chatPrevRow(xtra ? new String[]{c.channel, "ALL"} : new String[]{c.channel}, DropListener.sample(c.formatFor(chatEv), chatEv), chatEv, w - 40);
             r.x = x0 + 8; r.y = y0 + 22; r.w = w - 16; r.h = Math.min(r.h, dockH() - 28);
             drawChatPrev(g, r);
         }
@@ -1323,10 +1323,11 @@ public class FancyScreen extends Screen {
     }
 
     /** One box for everything the mod will say: the chosen chat first, public chat (if it is on) underneath. */
-    private Row chatPrevRow(String[] chans, String sample, int ev) {
+    private Row chatPrevRow(String[] chans, String sample, int ev) { return chatPrevRow(chans, sample, ev, cw - 24); }
+    private Row chatPrevRow(String[] chans, String sample, int ev, int maxW) {
         Row cp = new Row(); cp.kind = CHATPREV; cp.noSearch = true; cp.title = String.join(",", chans) + "|" + ev; cp.sub = sample;
-        int h = 14;
-        for (String ch : chans) h += new PrevMsg(ch, ch.equals("ALL") ? DropListener.adv(sample) : sample, cw - 24).lines.size() * 11 + 6;
+        int h = 12;
+        for (String ch : chans) h += new PrevMsg(ch, ch.equals("ALL") ? DropListener.adv(sample) : sample, maxW).lines.size() * 11 + 6;
         cp.h = h; return cp;
     }
 
@@ -1361,7 +1362,7 @@ public class FancyScreen extends Screen {
                 if (typing && shown >= ln[0] && shown <= ln[1] && (now / 450) % 2 == 0) g.fill(x + 1, y, x + 2, y + 8, 0xFFFFFFFF);
                 y += 11;
             }
-            y += 6; off += typeSecs + 0.15;
+            y += 5; off += typeSecs + 0.15;
         }
     }
     private static final String[] COMM = {"discord", "patreon", "github"}, COMM_NAME = {"Discord", "Patreon", "GitHub"};
@@ -2436,7 +2437,7 @@ public class FancyScreen extends Screen {
     private static final int[] animType = {1, 0, 0, 1, 0};                      // Animations: which animation type of each page is open
     private static int soundMyth = 0, treasureType = 0;                      // Sounds > Mythological: 0 the creatures, 1 Treasure (and its Normal / RNG pick)
     private static final String[][] TTYPES = {
-        {"Normal", "treasure", "11", "fd:mytho", "Small, above the action bar. A shovel digs three times, the chest bursts open and the drop springs out.", "Normal"},
+        {"Normal", "treasure", "11", "fd:mytho", "A shovel digs three times, the chest bursts open and the drop springs out.", "Normal"},
         {"RNG", "treasurerng", "11", "fd:rng", "The big scene: the dig under a night sky, then god rays, rune halos and griffin feathers round the drop.", "RNG"}};
     /** The animation types a page lists; Sounds > Mythological > Treasure has its own two. */
     private String[][] typesOf(int cat) { return (tab == Tab.SOUNDS || tab == Tab.ANIMATIONS) && cat == 3 && soundMyth == 1 ? TTYPES : ATYPES[cat]; }
@@ -2457,8 +2458,8 @@ public class FancyScreen extends Screen {
         {{"Farming Drop", "farm", "5", "fd:farm", "A scythe cuts a row of crops and the last one opens. For crops and feasts.", "Farming"},
          {"Pest Drop", "pest", "10", "fd:pest", "A vacuum sucks up the pest, it pops, and the drop shoots out of the nozzle.", "Pest"},
          {"Ray of Helios", "helios", "8", "fd:sun", "A longer sunrise, only for the Ray of Helios.", "Helios"}},
-        {{"No Drops", "mythnothing", "9", "fd:nothing", "Small, above the action bar. One weak strike, a pale minotaur crumbles and the circle goes dark.", "No Drops"},
-         {"Normal", "myth", "6", "fd:mytho", "Small, above the action bar. Three strikes call up a minotaur, it shatters and the drop springs out. Treasure digs it up instead.", "Normal"},
+        {{"No Drops", "mythnothing", "9", "fd:nothing", "One weak strike, a pale minotaur crumbles and the circle goes dark.", "No Drops"},
+         {"Normal", "myth", "6", "fd:mytho", "Three strikes call up a minotaur, it shatters and the drop springs out. Treasure digs it up instead.", "Normal"},
          {"RNG", "mythrng", "6", "fd:rng", "The big scene. Black bars, the whole screen hidden: bigger bolts, god rays, rune halos and griffin feathers.", "RNG"}},
         {{"Experiment Drop", "exp", "7", "fd:experiments", "The table's book opens, the view zooms in, the pages flip and the drop bursts out.", "Normal"},
          {"RNG Drop", "exprng", "7", "fd:rng", "For RNG items: the book flips more and faster, then god rays and a laurel crown the drop.", "RNG"}}};

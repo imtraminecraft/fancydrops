@@ -1,3 +1,9 @@
+## 0.4.12
+- Chat preview: no more empty space, the box hugs its messages with a little room above and below.
+- RNG dice icon is now a real 3D die that tumbles, hops and settles.
+- 3D head icons have depth: brighter top, darker side, a dark outline.
+- Removed "above the action bar" from the animation descriptions (you choose the position).
+
 ## 0.4.11
 - Fixed: Mythological items (Normal and RNG) stay on screen as long as the words, instead of leaving first. The picture, item and bars fade out together with the text
 - Changed: the item spin is one smooth turn: it whirls, slows down and stops facing front exactly when the scene ends. The number of turns follows how long the item is on screen (and your spin settings). Flat items turn like a coin, heads like a block

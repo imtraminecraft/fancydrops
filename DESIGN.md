@@ -112,3 +112,5 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## Standing requirements added in 0.4.11
 - The item stays up as long as the words. Its spin is sized to that time and ends facing front.
+
+- Chat preview height is measured at the dock's real width. Dice icon is a per-pixel rotating cube. Descriptions never mention a screen position (the player picks it).
