@@ -577,6 +577,8 @@ public final class ItemIcons {
     /** Draws the flat icon centred on (cx, cy). scale 1.0 = a normal 16px item. Used by the menu. */
     /** 0..1: how see-through the next draw() is (the animations fade the item out with it). Always put it back to 1. */
     public static float drawAlpha = 1f;
+    /** Spin speed (1 = normal) and direction of the 3D heads; the animation sets them from the Item settings. */
+    public static float spinSpeed = 1f; public static boolean spinRev = false;
     private static int fa(int c) { return drawAlpha >= 0.999f ? c : (c & 0xFFFFFF) | (Math.round((c >>> 24) * Math.max(0f, drawAlpha)) << 24); }
 
     public static void draw(GuiGraphicsExtractor g, String id, String fallback, int cx, int cy, float scale) {
@@ -593,7 +595,7 @@ public final class ItemIcons {
         if (d != null && (d.heads != null || (d.iso != null && skullFlag(id))) && !Icons.STILL_ICONS) {                       // a skull turns and bobs like an item dropped in the world
             if (d.faces6 == null) d.faces6 = d.heads != null ? d.heads : isoHead(d.wikiPixels);
             if (d.faces6 != null) {
-                long tm = System.currentTimeMillis(); float ph0 = 0f, ang = (float) ((tm / 1000.0 * 0.9 + ph0 * 6.28) % (Math.PI * 2));
+                long tm = System.currentTimeMillis(); float ph0 = 0f, ang = (float) ((((tm / 1000.0 * 0.9 * spinSpeed * (spinRev ? -1 : 1) + ph0 * 6.28) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2));
                 Gfx.scale(g, scale);
                 if (SkullSpin.draw(g, id, d.faces6, ang, Math.max(0f, Math.min(1f, drawAlpha)))) { Gfx.pop(g); return; }     // smooth 64x64 ray-traced block
                 Gfx.pop(g); Gfx.push(g); Gfx.translate(g, cx, cy);                                                           // no texture: the old 16x16 sprite below

@@ -593,7 +593,7 @@ public class FancyScreen extends Screen {
         float secs = Math.max(3.6f, c.anim(key).secs);
         float[][] tm = AnimationManager.cueTimes(key, c.anim(key).secs);
         float pt = AnimationManager.playingT(key);
-        int rulerH = 13, lw = 62, lh = (h - rulerH - 6) / 5, tx0 = x + 4 + lw, tx1 = x + w - 8, tw = Math.max(10, tx1 - tx0);
+        int rulerH = 13, lw = 68, lh = (h - rulerH - 6) / 5, tx0 = x + 4 + lw, tx1 = x + w - 8, tw = Math.max(10, tx1 - tx0);
         g.fill(tx0, y + rulerH - 2, tx1, y + rulerH - 1, Ui.BORDER);
         for (int sec = 0; sec <= (int) secs; sec++) {                                         // the ruler: a tick and a number for every second
             int xx = tx0 + Math.round(sec / secs * tw);
@@ -608,13 +608,15 @@ public class FancyScreen extends Screen {
             for (float ct : tm[k]) if (pt >= ct && pt < ct + dur) any = true;
             pill(g, b[0], b[1], b[2], b[3], Canvas.mix(hv ? Ui.ROW_HOVER : Ui.ROW, SLOT_COL[k], 0.10f + 0.30f * pulse + (any ? 0.22f : 0f)));
             g.fill(b[0], b[1] + 2, b[0] + 2, b[1] + b[3] - 2, SLOT_COL[k]);
-            Gfx.push(g); Gfx.translate(g, b[0] + 5, b[1] + (b[3] - 8) / 2); Gfx.scale(g, 0.5f); Icons.draw(g, SLOT_ICON[k], 0, 0, now); Gfx.pop(g);
-            Gfx.text(g, font, SLOT_NAMES[k], b[0] + 16, b[1] + (b[3] - 8) / 2, any ? 0xFFFFFFFF : Ui.TEXT);
+            for (int sec = 1; sec < (int) secs + 1; sec++) { int gx = tx0 + Math.round(sec / secs * tw); if (gx < tx1) g.fill(gx, b[1] + 1, gx + 1, b[1] + b[3] - 1, 0x16FFFFFF); }        // a faint line for every second, so the blocks can be read against the ruler
+            Gfx.push(g); Gfx.translate(g, b[0] + 6, b[1] + Math.max(1, (b[3] - 11) / 2)); Gfx.scale(g, 0.7f); Icons.draw(g, SLOT_ICON[k], 0, 0, hv || any ? now : 2400L); Gfx.pop(g);
+            Gfx.text(g, font, SLOT_NAMES[k], b[0] + 22, b[1] + (b[3] - 8) / 2, any ? 0xFFFFFFFF : Ui.TEXT);
             boolean first = true;
             for (float ct : tm[k]) {
                 int bx0 = tx0 + Math.round(ct / secs * tw), bx1 = Math.max(bx0 + 3, Math.min(tx1, tx0 + Math.round((ct + dur) / secs * tw)));
                 boolean on = pt >= ct && pt < ct + dur;
-                pill(g, bx0, b[1] + 2, bx1 - bx0, b[3] - 4, Canvas.mix(Canvas.mix(Ui.PANEL2, SLOT_COL[k], on ? 0.95f : 0.55f), 0xFFFFFFFF, on ? 0.25f : 0f));
+                pill(g, bx0, b[1] + 2, bx1 - bx0, b[3] - 4, Canvas.mix(Canvas.mix(Ui.PANEL2, SLOT_COL[k], on ? 0.95f : 0.62f), 0xFFFFFFFF, on ? 0.25f : 0f));
+                g.fill(bx0 + 1, b[1] + 3, bx1 - 1, b[1] + 4, 0x40FFFFFF); g.fill(bx0, b[1] + 3, bx0 + 1, b[1] + b[3] - 3, Canvas.mix(SLOT_COL[k], 0xFFFFFFFF, 0.5f));          // a lit top and a bright start edge
                 if (first) { String lab = SoundFx.label(nm); int room = bx1 - bx0 - 4; String fit = Gfx.fit(font, lab, Math.max(0, room)); if (room > 14 && !fit.isEmpty()) small(g, fit, bx0 + 3, b[1] + (b[3] - 6) / 2, 0xFF10121A, 0.75f); }
                 first = false;
             }
@@ -624,8 +626,9 @@ public class FancyScreen extends Screen {
             int px2 = tx0 + Math.round(Math.min(pt, secs) / secs * tw);
             g.fill(px2, y + rulerH - 4, px2 + 1, y + h - 3, 0xFFFFFFFF);
             String clk = String.format(Locale.ROOT, "%.1f / %.1f s", Math.min(pt, secs), secs);
-            small(g, clk, x + w - 6 - Math.round(Gfx.w(font, clk) * 0.75f), y + 2, 0xFFFFFFFF, 0.75f);
-        } else small(g, "Press Play to hear it in time", x + 6, y + 2, Ui.DIM, 0.75f);
+            small(g, clk, x + 6, y + 3, 0xFFFFFFFF, 0.8f);
+            g.fill(px2 - 1, y + rulerH - 4, px2 + 2, y + h - 3, 0x30FFFFFF);
+        } else small(g, "Press Play", x + 6, y + 3, Ui.DIM, 0.8f);
     }
 
     private static final int SW_H = 28;      // the Active switch above the menu
@@ -1663,25 +1666,6 @@ public class FancyScreen extends Screen {
         return tab.label + "  >  " + n[curSub()] + (deep ? "  >  " + dropSrcName : "");
     }
 
-    /** The line under the header: what the open page is for. */
-    private String pageSub() {
-        if (!query.isBlank()) return "Whole pages that match, then single settings";
-        if (onLanding() || subs().length == 0) return tab.sub;
-        int k = curSub();
-        switch (tab) {
-            case DROPS, ANIMATIONS, SOUNDS -> {
-                Categories.Cat cat = curCat();
-                if (cat.wip()) return "Being built. Soon\u2122";
-                if (dropSrc != null) return tab == Tab.DROPS ? "Animation and chat alert of every drop" : tab == Tab.ANIMATIONS ? "Type, length, position and size" : "The sound of every moment";
-                return tab == Tab.DROPS ? "Pick a creature or a chest" : "Pick an animation";
-            }
-            case CHAT -> { return k == 0 ? "Where it posts and what it says" : "Which drops are announced"; }
-            case GENERAL -> { String[] d = {"How the menu looks", "Your cosmetics, shown to you and others", "Where prices come from", "Reload the drop data"}; return d[Math.min(k, d.length - 1)]; }
-            case HOME -> { return "Credits and data sources"; }
-            default -> { return tab.sub; }
-        }
-    }
-
     private static String hex(int argb) { return String.format("%06X", argb & 0xFFFFFF); }
 
 
@@ -1904,7 +1888,7 @@ public class FancyScreen extends Screen {
         int sv = sliderSeq; sliderSeq = 1000;                                                 // typed sliders, told apart from the menu's own
         slBar = new Slider(5, 15, 1, () -> c.barPx, v -> c.setBarPx((int) Math.round(v)), () -> c.barPx + " px").typed(1);
         slBarCurve = new Slider(0, 100, 5, () -> c.barCurve, v -> c.barCurve = (int) Math.round(v), () -> c.barCurve == 0 ? "Square" : c.barCurve + "%").typed(1);
-        slBarOp = new Slider(20, 100, 5, () -> c.barOpacity, v -> c.barOpacity = (int) Math.round(v), () -> c.barOpacity + "%").typed(1);
+        slBarOp = new Slider(0, 80, 5, () -> 100 - c.barOpacity, v -> c.barOpacity = 100 - (int) Math.round(v), () -> (100 - c.barOpacity) + "%").typed(1);   // see-through: 0% is solid black, higher lets the picture show
         slBob = new Slider(0, 2, 0.1, () -> c.itemBobAmp, v -> c.itemBobAmp = (float) v, () -> Math.round(c.itemBobAmp * 100) + "%").typed(100);
         slItem = new Slider(0.5, 1.1, 0.05, () -> c.itemScale, v -> c.itemScale = (float) v, () -> Math.round(c.itemScale * 100) + "%").typed(100);
         slSpin = new Slider(0, 2, 0.1, () -> c.itemSpin, v -> c.itemSpin = (float) v, () -> Math.round(c.itemSpin * 100) + "%").typed(100);
@@ -2130,7 +2114,7 @@ public class FancyScreen extends Screen {
                 if (on) g.fill(b[0] + b[2] - 8, b[1] + 6, b[0] + b[2] - 5, b[1] + 9, 0xFF62E6A8);
             }
         } else if (editor == 1 && ePage == 0) {
-            String[] bl = {"Bar height", "Bar opacity", "Curved corners"}; Slider[] sb = eSliders();
+            String[] bl = {"Bar height", "See-through", "Curved corners"}; Slider[] sb = eSliders();
             for (int i = 0; i < 3; i++) {
                 int[] b = eSliderBox(i);
                 Gfx.text(g, font, bl[i], b[0], b[1] - 11, Ui.SUB);
@@ -2686,8 +2670,8 @@ public class FancyScreen extends Screen {
         pl.ctls.add(new Btn("▶ Play", GREEN, () -> play(() -> DropListener.playSample(gr.id(), ti)))); rows.add(pl);
         Row len = row(0, ":clock:", "Length", "Between 5 and 7 seconds. The first half is the same for every type", Ui.ACCENT);
         len.ctls.add(new Slider(5, 7, 0.1, () -> a.secs, v -> { a.secs = (float) (Math.round(v * 10) / 10.0); }, () -> String.format(Locale.ROOT, "%.1f s", a.secs))); rows.add(len);
-        Row sz = row(0, ":size:", "Size", "Make the animation bigger or smaller", Ui.ACCENT);
-        sz.ctls.add(new Slider(0.5, 1.2, 0.05, () -> a.size, v -> a.size = (float) v, () -> Math.round(a.size * 100) + "%").typed(100).live()); rows.add(sz);
+        Row sz = row(0, ":size:", "Size", "How big the scene is. 100% is the standard size", Ui.ACCENT);
+        sz.ctls.add(new Slider(0.5, 1.5, 0.05, () -> a.size, v -> a.size = (float) v, () -> Math.round(a.size * 100) + "%").typed(100).live()); rows.add(sz);
         if (ty == Categories.RNG) {                                         // only the big finish has cinematic bars and a blurred background
             rows.add(section("Cinematic"));
             rows.add(toggle(":bars:", "Cinematic bars", "Black bars close in from the top and bottom", () -> a.bars, v -> a.bars = v));
@@ -2746,7 +2730,7 @@ public class FancyScreen extends Screen {
         List<String> choices = SoundFx.choices();
         for (int k = 0; k < SoundFx.SLOTS.length; k++) {
             final String slot = SoundFx.SLOTS[k]; final int slotIdx = k;
-            Row sr = row(1, ":note:", SLOT_NAMES[k], SLOT_SUBS[k], SLOT_COL[k]);
+            Row sr = row(1, SLOT_ICON[k], SLOT_NAMES[k], SLOT_SUBS[k], SLOT_COL[k]);
             sr.ctls.add(new Btn("▶", GREEN, () -> { pulseAt[slotIdx] = System.currentTimeMillis(); SoundFx.Fx fx = SoundFx.byName(SoundFx.chosen(scene, slot)); if (fx != null) SoundFx.preview(fx); }));
             final String ddKey = "dd_" + scene + "_" + slot;
             Dd sdd = new Dd(() -> SoundFx.label(SoundFx.chosen(scene, slot)), ddKey, 128);
@@ -2773,14 +2757,22 @@ public class FancyScreen extends Screen {
 
     private void chatLanding(FancyConfig c) {
         rows.add(textRow(":chat:", "Chat", "Tell your party or co-op about a rare drop. Pick where the message goes and what it says, and choose which kinds of drops are announced."));
-        String[] lb = {"Message & Channel", "Chat Enabled"}, sb = {"Where it posts and the words", "Which drops are announced"}, ic = {":format:", ":bell:"};
+        int on = 0, all = 0;                                                                              // how many drops announce, for the tile and the status
+        for (Categories.Cat cat : Categories.ALL) if (!cat.wip()) for (Categories.Group gr : cat.groups()) for (DropData.Source src : cat.sources(gr.id())) for (DropData.Drop d : src.drops) { FancyConfig.DropCfg dc = c.drop(src.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); all++; if (dc.announce) on++; }
+        boolean off = c.channel.equals("OFF");
+        String chn = c.channel.equals("PARTY") ? "party" : c.channel.equals("COOP") ? "co-op" : "public";
+        String[] lb = {"Message & Channel", "Chat Enabled"}, sb = {off ? "Off  ·  pick a channel" : "Posts in " + chn + " chat", c.masterAnnounce ? on + " of " + all + " drops announce" : "All alerts are off"}, ic = {":format:", ":bell:"};
         int[] co = {0xFFFFC857, 0xFF7BE05A};
         rows.add(picker("", "", lb, sb, ic, co, null, 2, () -> -1, i -> openPage(i, null, null)));
-        String chn = c.channel.equals("PARTY") ? "party" : c.channel.equals("COOP") ? "co-op" : "public";
-        Row st = row(0, ":chat:", "Announcing", c.channel.equals("OFF") ? "Off. Pick a channel on the first page" : "In " + chn + " chat" + (c.alsoAll && !c.channel.equals("ALL") ? " and public chat" : ""), Ui.ACCENT);
-        st.noSearch = true; rows.add(st);
+        boolean live = !off && c.masterAnnounce && on > 0;
+        Row st = row(0, off ? ":chan_off:" : c.channel.equals("PARTY") ? ":chan_party:" : c.channel.equals("COOP") ? ":chan_coop:" : ":chan_public:", live ? "Announcing" : "Not announcing",
+            off ? "No channel is picked" : !c.masterAnnounce ? "Chat alerts are switched off" : on == 0 ? "No drop has a chat alert" : "In " + chn + " chat" + (c.alsoAll && !c.channel.equals("ALL") ? " and public chat" : ""), live ? 0xFF62E6A8 : 0xFFFF7777);
+        st.noSearch = true; st.subColor = live ? 0xFF62E6A8 : 0xFFFF9A9A; rows.add(st);
+        String ex = DropListener.sample(c.formatFor(chatCat), chatCat);
+        Row em = row(0, ":send:", "Your message", Gfx.fit(font, ex == null ? "" : ex, Math.max(60, cw - 150)), 0xFFFFC857);
+        em.noSearch = true; rows.add(em);
         rows.add(section("Test"));
-        Row tr = row(0, ":send:", "Send a test message", "Posts the " + Categories.byId(chatCat).name() + " message to your " + (c.channel.equals("OFF") ? "chat (turn a channel on first)" : chn + " chat"), Ui.ACCENT);
+        Row tr = row(0, ":send:", "Send a test message", "Posts the " + Categories.byId(chatCat).name() + " message to your " + (off ? "chat (turn a channel on first)" : chn + " chat"), Ui.ACCENT);
         tr.ctls.add(new Btn("Test", GREEN, () -> DropListener.testChat(msg -> { chatStatus = msg; chatStatusColor = msg.startsWith("Sent") ? 0xFF62E6A8 : 0xFFFF7777; toast(msg, msg.startsWith("Sent") ? 0xFF62E6A8 : DropListener.NOT_ON_HYPIXEL.equals(msg) ? 0xFFFFB86B : 0xFFFF7777); }, chatCat)));
         rows.add(tr);
         if (!chatStatus.isEmpty()) rows.add(note(chatStatus, chatStatusColor));
@@ -3239,8 +3231,7 @@ public class FancyScreen extends Screen {
             if (on && !STILL) { int sw = b[0] + 2 + (int) (((now % 2600L) / 2600f) * (w - 4)); g.enableScissor(b[0] + 1, b[1] + 1, b[2] - 1, b[3] - 1); for (int i = 0; i < 6; i++) g.fill(sw + i, b[1] + 1, sw + i + 1, b[3] - 1, Gfx.argb(Math.round(26 * (1f - Math.abs(i - 3) / 3f)), 0xFFFFFF)); g.disableScissor(); }
         }
         // page header
-        Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 12, Ui.TEXT);
-        Gfx.text(g, font, Gfx.fit(font, query.isBlank() ? pageSub() : "Searching every page", cw - 134), cx, py + 25, Ui.SUB);
+        Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 15, Ui.TEXT);                      // the title alone: no line of words under it
         if (tab == Tab.COSMETICS && query.isBlank()) {                                                   // x / total owned: small, under the search box, the bar fills once
             int own = 0; for (CosmeticData.Def d : CosmeticData.ALL) if (CosmeticData.unlocked(d)) own++;
             int tot = CosmeticData.ALL.size(); String ot = own + " / " + tot; int tw = Gfx.w(font, ot), bx1 = cx + cw - 2, bw = 78, bx0 = bx1 - bw;

@@ -180,3 +180,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - "Animation Changes" has Bar, Text, Item and Position Changes. Position rules: Top Center = words below only, Center = above or below, Above Action Bar = words above only (FancyConfig.textAbove()).
 - Chat format limit: 65 letters, placeholders not counted.
 - Source art files stay in src/main/java/dev/fancydrops (the IDE needs package = folder; see ART.md); runtime art in config/fancydrops/art/{icons,heads,items,animations} (DataFiles.art). All heads turn in sync.
+
+## Standing requirements added in 0.4.28
+- Page headers show the title only: no line of words under it.
+- Item changes sliders (spin, glow, float) and toggles must change what the animation draws; the Item preview uses a 3D head so spin shows. Bar "See-through" 0% is solid. Animation Size is 50-150%.

@@ -56,7 +56,7 @@ public class FancyConfig {
     // Bar changes
     public int barPx = 15;               // bar height in pixels of the 96-pixel-tall scene (5..15)
     public int barOpacity = 90;          // how solid the bars are (%)
-    public boolean barPillars = true;    // the side pillars
+    public boolean barPillars = false;    // the side pillars
     public int barCurve = 0;             // how round the window's corners are (0..100)
     public boolean barLine = true;       // a thin bright line along the inner edge of the bars
     public void setBarPx(int v) { barPx = Math.max(5, Math.min(15, v)); }
@@ -155,7 +155,7 @@ public class FancyConfig {
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
         c.animPos = Math.max(0, Math.min(2, c.animPos)); c.textPos = Math.max(0, Math.min(1, c.textPos));
-        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 5f, 7f); a.size = clamp(a.size, 0.5f, 1.2f); a.pos = Math.max(0, Math.min(2, a.pos)); }
+        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 5f, 7f); a.size = clamp(a.size, 0.5f, 1.5f); a.pos = Math.max(0, Math.min(2, a.pos)); }
     }
     private static float clamp(float v, float lo, float hi) { return Math.max(lo, Math.min(hi, v)); }
 

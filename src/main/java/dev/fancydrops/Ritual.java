@@ -571,6 +571,10 @@ final class Ritual {
     }
 
     /** Where the item is (canvas units, y): it springs out of the ground, overshoots, then bobs gently. */
+    /** A flat round disc, one fill per row (the soft glow is a few of these stacked). */
+    private static void discFill(GuiGraphicsExtractor g, int cx, int cy, int r, int col) {
+        for (int y = -r; y <= r; y++) { int hw = (int) Math.round(Math.sqrt(Math.max(0, (double) r * r - (double) y * y))); g.fill(cx - hw, cy + y, cx + hw, cy + y + 1, col); }
+    }
     private static float itemY(float t, float p, float gy, float icy, float sz, boolean bob, float amp) {
         float rise = eob(p / 0.85f);
         return lerp(gy - 4, icy, rise) + (bob ? (float) Math.sin(t * 2.2f) * 1.8f * sz * amp * sm((p - 0.8f) / 0.6f) : 0f);
@@ -591,7 +595,7 @@ final class Ritual {
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;
-        float csz = Math.max(0.5f, Math.min(1.2f, cfg.size)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
+        float csz = Math.max(0.5f, Math.min(1.5f, cfg.size)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         boolean barsOn = (rng && cfg.bars) || TextFx.barsOnly, blurOn = rng && cfg.blur && !TextFx.barsOnly && !TextFx.itemOnly;
@@ -628,6 +632,7 @@ final class Ritual {
             int bh = Math.round(barH * u * barSlide), oa = Math.round(255 * c.barOpacity / 100f);
             int bc = c.barCustom ? (c.barColor & 0xFFFFFF) : mixc(0x05060C, rc, 0.10f);
             g.fill(0, 0, W, bh, Gfx.argb(oa, bc)); g.fill(0, H - bh, W, H, Gfx.argb(oa, bc));
+            if (c.barPillars) { int pw = Math.max(2, Math.round(bh * 0.55f)); g.fill(0, bh, pw, H - bh, Gfx.argb(oa, bc)); g.fill(W - pw, bh, W, H - bh, Gfx.argb(oa, bc)); if (c.barLine) { int lc = Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f)); g.fill(pw, bh, pw + 1, H - bh, lc); g.fill(W - pw - 1, bh, W - pw, H - bh, lc); } }
             if (c.barSoft) for (int i = 1; i <= 6; i++) { int al = Math.round(oa * (1f - i / 7f) * 0.5f); g.fill(0, bh + i - 1, W, bh + i, Gfx.argb(al, bc)); g.fill(0, H - bh - i, W, H - bh - i + 1, Gfx.argb(al, bc)); }
             if (c.barLine) { g.fill(0, bh, W, bh + 1, Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f))); g.fill(0, H - bh - 1, W, H - bh, Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f))); }
         }
@@ -637,15 +642,21 @@ final class Ritual {
             float grow = 0.25f + 0.75f * eob(p / 0.7f);
             float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f);
             float gcx = CW / 2f * W / CW + sx, gcy = itemY(tb, p, icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
+            if (c.itemGlow > 0.02f) {                                                          // the glow behind the item (Item changes > Glow), in the drop's colour
+                int gr = Math.round(s * 11f), gcol = mixc(rc, WHITE, 0.25f); float ga = Math.max(0f, Math.min(1f, itemA)) * Math.min(1f, c.itemGlow);
+                for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }
+            }
+            ItemIcons.spinSpeed = c.itemSpin; ItemIcons.spinRev = c.itemSpinRev;
             ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA)); boolean still0 = Icons.STILL_ICONS; Icons.STILL_ICONS = false;                 // the dropped item always turns, whatever the menu says
-            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; }
+            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; ItemIcons.spinSpeed = 1f; ItemIcons.spinRev = false; }
         }
 
         // ---- the words: below the animation (top and center), above it (bottom); never over the bars
         if (!TextFx.itemOnly && !TextFx.barsOnly && (textT > 0f || TextFx.textOnly)) {
-            float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * (0.8f + 0.2f * csz); if (TextFx.textOnly) sc = c.textK() * Math.max(0.9f, Math.min(1.5f, W / 230f));          // the Text editor shows the words big enough to read
+            float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * (0.8f + 0.2f * csz); if (TextFx.textOnly) sc = c.textK() * Math.max(1.3f, Math.min(2.6f, W / 150f));          // the Text editor shows the words big enough to read
             float th = TextFx.blockHeight(it, sc, c);
             float top = c.textAbove() ? (icy - hi - 14 * sz) * u - th : (icy + hi + 26 * sz) * u;
+            if (TextFx.textOnly) { while (th > H * 0.92f && sc > 0.8f) { sc *= 0.9f; th = TextFx.blockHeight(it, sc, c); } top = Math.max(2f, (H - th) / 2f); }       // the Text editor centres the words and fills the box
             if (barsOn) { float bhg = barH * u; top = Math.max(bhg + 6, Math.min(H - bhg - th - 6, top)); }
             float tl = TextFx.textOnly ? TextFx.loopClock(4.6f) : 0f;                                    // the Text editor replays the words on their own clock
             TextFx.revealT = TextFx.textOnly ? tl : textT; TextFx.waveT = TextFx.textOnly ? tl : t; TextFx.waveOut = TextFx.textOnly ? sm((tl - 2.9f) / 1.1f) : textOut; TextFx.lineDelay = 0f;

@@ -123,6 +123,18 @@ public final class AnimationManager {
         }
         return SAMPLE;
     }
+    private static Item SAMPLE_HEAD;
+    /** The Item editor shows a 3D head (a flat icon cannot spin or show a glow turning), so the sliders can be seen working. */
+    private static Item sampleHead() {
+        if (SAMPLE_HEAD == null) {
+            Item it = null;
+            for (DropData.Source s : MythData.ALL) { for (DropData.Drop d : s.drops) if (d.skull) { it = new Item(); it.name = d.name; it.id = d.id; it.icon = "stick"; break; } if (it != null) break; }
+            if (it == null) return sample();
+            it.rank = 2; it.price = 21_000_000; it.priceSource = "Auction House"; it.mf = "+250%"; it.chance = "1 in 1,800"; it.odds = "1 in 1,800";
+            SAMPLE_HEAD = it;
+        }
+        return SAMPLE_HEAD;
+    }
     private static String previewKey; private static long previewT0;
     /** Seconds into the animation the menu preview shows, or -1 to loop on its own clock. */
     public static float syncSec = -1f;
@@ -131,7 +143,7 @@ public final class AnimationManager {
         if (key == null || !key.contains(".")) key = "myth.normal";
         String group = key.substring(0, key.indexOf('.')), tid = key.substring(key.indexOf('.') + 1);
         int type = NORMAL; for (int i = 0; i < TYPE_IDS.length; i++) if (TYPE_IDS[i].equals(tid)) type = i;
-        Anim a = new Anim(group, type, sample());
+        Anim a = new Anim(group, type, TextFx.itemOnly ? sampleHead() : sample());
         a.kind = (int) (((System.currentTimeMillis() - (key.equals(previewKey) ? previewT0 : System.currentTimeMillis())) / 1000L) / Math.max(1, (long) (FancyConfig.get().anim(key).secs + 1f))) % Ritual.KINDS.length;      // the preview cycles through all twelve creatures
         long now = System.currentTimeMillis();
         if (!key.equals(previewKey)) { previewKey = key; previewT0 = now; }

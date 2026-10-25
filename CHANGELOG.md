@@ -1,3 +1,12 @@
+## 0.4.28
+- Item changes: Spin speed, Spin the other way and Glow now work (the preview shows a 3D head, so you can see them). Glow is a soft light behind the item.
+- Bar changes: the opacity slider is now "See-through" (0% solid, higher lets the picture show). Side pillars are back (off by default).
+- Text changes: the preview is much bigger and centred.
+- Animation size: 50% to 150% (100% is the standard size), with a clearer description.
+- Sounds: the timeline preview is cleaner (clock moved out of the ruler, second lines, bigger icons, lit blocks). The sound rows use their own icons.
+- Chat: the landing page shows the channel, how many drops announce, and your current message.
+- Removed the line of words under every page title.
+
 ## 0.4.27
 - Fix: the Position/Bar/Text/Item editors are solid now, so the page behind no longer shows through as ghost text.
 
