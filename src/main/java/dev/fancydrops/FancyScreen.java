@@ -1064,12 +1064,12 @@ public class FancyScreen extends Screen {
                 sets = true;
                 List<CosmeticData.Def> ms = CosmeticData.members(sd);
                 boolean owned = CosmeticData.unlocked(ms.get(0)), wearing = CosmeticData.wearingSet(sd);
-                lb[k] = sd.name(); sb[k] = !owned ? "Locked" : wearing ? "Wearing" : "Wear set"; ic[k] = "fd:suf_" + sd.suffix(); cl[k] = sd.color(); bg[k] = sd.color(); rar[k] = sd.rarity(); lk[k] = !owned; eq[k] = owned && wearing; fxs[k] = sd.fx(); sids[k] = sd.id();
+                lb[k] = sd.name(); sb[k] = !owned ? "Locked" : wearing ? "Wearing" : "Wear set"; ic[k] = "fd:" + Cosmetics.token(sd.suffix()); cl[k] = sd.color(); bg[k] = sd.color(); rar[k] = sd.rarity(); lk[k] = !owned; eq[k] = owned && wearing; fxs[k] = sd.fx(); sids[k] = sd.id();
                 tp[k] = tipLines(sd.name(), "Set", sd.rarity(), owned, "Items " + CosmeticData.owned(sd) + " / " + ms.size(), sd.how());
             } else {
                 CosmeticData.Def d = (CosmeticData.Def) it; boolean open2 = CosmeticData.unlocked(d);
                 lb[k] = !open2 && d.id().equals("secret") ? "???" : d.name(); sids[k] = d.set(); cl[k] = d.color(); bg[k] = schemeOf(d); rar[k] = CosmeticData.rarityOf(d); lk[k] = !open2; eq[k] = open2 && CosmeticData.isEquipped(d); ids[k] = d.id();
-                ic[k] = d.kind() == CosmeticData.Kind.NAME ? null : d.kind() == CosmeticData.Kind.SUFFIX ? "fd:suf_" + d.id() : "fd:cx_" + d.id();
+                ic[k] = d.kind() == CosmeticData.Kind.NAME ? null : d.kind() == CosmeticData.Kind.SUFFIX ? "fd:" + Cosmetics.token(d.id()) : "fd:cx_" + d.id();
                 fxs[k] = d.kind() == CosmeticData.Kind.NAME ? d.id() : null;
                 CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
                 boolean hid = !open2 && d.id().equals("secret");
@@ -1092,7 +1092,6 @@ public class FancyScreen extends Screen {
         CosmeticData.Kind[] kinds = {CosmeticData.Kind.SUFFIX, CosmeticData.Kind.NAME, CosmeticData.Kind.AURA};
         String[] heads = {"SUFFIX", "NAME EFFECT", "AURA"}, subs = {"A little icon after your name.", "Your name in moving colours.", "Particles around your character."};
         int[] accents = {0xFFFFC857, 0xFFFF9AC8, 0xFF8FD0FF};
-        { int own = 0; for (CosmeticData.Def d : CosmeticData.ALL) if (CosmeticData.unlocked(d)) own++; rows.add(collectionHeader(own + " / " + CosmeticData.ALL.size())); }
         // --- sets: the rarest first
         int ownedSets = 0; for (CosmeticData.SetDef sd : CosmeticData.SETS) if (CosmeticData.unlocked(CosmeticData.members(sd).get(0))) ownedSets++;
         rows.add(catHeader("SETS", "A suffix and a name effect that go together, and an aura for most.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
@@ -1574,8 +1573,7 @@ public class FancyScreen extends Screen {
     /** The building site: a fixed, tidy scene on the ground line. Nothing is interactive. */
     private void site(GuiGraphicsExtractor g, Row r, float sec) {
         int gy = r.y + r.h - 12, mid = r.w / 2;
-        Gfx.push(g); Gfx.translate(g, r.x + 8, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
-        Gfx.push(g); Gfx.translate(g, r.x + r.w - 30, r.y + 14); Gfx.scale(g, 1.3f); Icons.draw(g, "fd:wip", 0, 0, System.currentTimeMillis()); Gfx.pop(g);
+        roadSign(g, r.x + 12, r.y + 14, sec); roadSign(g, r.x + r.w - 32, r.y + 14, sec + 1.3f);                  // a swinging road-work sign at each top corner (no hats)
         g.fill(r.x + 6, gy, r.x + r.w - 6, gy + 1, 0x33FFFFFF);                                    // the ground line everything stands on
         g.fill(r.x + 6, gy + 1, r.x + r.w - 6, gy + 3, 0xFF211C10);
         int laneL = 12, laneR = mid - 50;
@@ -1592,6 +1590,19 @@ public class FancyScreen extends Screen {
             float fx = r.x + r.w * (0.52f + 0.4f * ((f * 53) % 10) / 10f) + (float) Math.sin(sec * 0.7f + f * 2.1f) * 9f, fy = gy - 34 - ((f * 29) % 7) * 5 + (float) Math.sin(sec * 1.1f + f) * 5f;
             g.fill(Math.round(fx), Math.round(fy), Math.round(fx) + 1, Math.round(fy) + 1, Gfx.argb(Math.round(200 * (0.5f + 0.5f * (float) Math.sin(sec * 2.4f + f * 1.7f))), 0xFFE066));
         }
+    }
+
+    /** A diamond road-work sign on a short chain: yellow, with a black edge and a man digging, swinging gently. */
+    private static void roadSign(GuiGraphicsExtractor g, int x, int y, float sec) {
+        int sw = Math.round((float) Math.sin(sec * 1.6f) * 2f);
+        g.fill(x + 9, y - 6, x + 10, y, 0xFF6A6A74);                                          // the chain it hangs from
+        int cx = x + 10 + sw, cy = y + 11;
+        for (int dy = -10; dy <= 10; dy++) { int hw = 10 - Math.abs(dy); g.fill(cx - hw, cy + dy, cx + hw + 1, cy + dy + 1, 0xFF1A1710); }
+        for (int dy = -8; dy <= 8; dy++) { int hw = 8 - Math.abs(dy); if (hw >= 0) g.fill(cx - hw, cy + dy, cx + hw + 1, cy + dy + 1, dy < -3 ? 0xFFFFE066 : 0xFFFFC21A); }
+        int dig = ((int) (sec * 3f)) % 2;                                                      // the little digger
+        g.fill(cx - 1, cy - 4, cx + 1, cy - 2, 0xFF1A1710); g.fill(cx - 1, cy - 2, cx + 1, cy + 2, 0xFF1A1710);
+        g.fill(cx + 1, cy - 1 + dig, cx + 4, cy + dig, 0xFF1A1710); g.fill(cx + 3, cy + dig, cx + 5, cy + 2 + dig, 0xFF1A1710);
+        g.fill(cx - 3, cy + 2, cx + 1, cy + 3, 0xFF1A1710); g.fill(cx - 4, cy + 3, cx - 2, cy + 4, 0xFF1A1710); g.fill(cx - 1, cy + 3, cx + 1, cy + 5, 0xFF1A1710);
     }
 
     /** A steel scaffold tower: poles, cross braces and two planks, with a swinging work light. Drawn dim, so it sits behind the bench. */
@@ -2805,11 +2816,12 @@ public class FancyScreen extends Screen {
         pill(g, b[0], b[1], 17, 17, Canvas.mix(0xFF1C2030, 0xFF3A1C22, k));                    // a dark round badge
         rout(g, b[0], b[1], 17, 17, Canvas.mix(0xFF3A4260, 0xFFFF8A8A, k));
         int core = Canvas.mix(0xFFE04B4B, 0xFFFF7B7B, k), edge = Canvas.mix(0xFF8A2A2A, 0xFFC03A3A, k);
-        for (int d = -3; d <= 3; d++) for (int sg = -1; sg <= 1; sg += 2) {                    // a red cross, two pixels thick, ends rounded off
+        for (int d = -3; d <= 3; d++) for (int sg = -1; sg <= 1; sg += 2) {                    // a red cross built from little plus shapes: symmetric round the middle pixel, so it sits dead centre
             int x = cx + d, y = cy + sg * d;
-            g.fill(x, y, x + 2, y + 1, core); g.fill(x, y + 1, x + 2, y + 2, core);
-            g.fill(x - 1, y, x, y + 1, edge); g.fill(x + 2, y + 1, x + 3, y + 2, edge);
+            g.fill(x - 1, y, x + 2, y + 1, edge); g.fill(x, y - 1, x + 1, y + 2, edge);
+            g.fill(x, y, x + 1, y + 1, core);
         }
+        g.fill(cx - 1, cy - 1, cx + 2, cy + 2, core);
     }
     private void openEditor(int which) {
         FancyConfig c = FancyConfig.get();
@@ -3824,6 +3836,15 @@ public class FancyScreen extends Screen {
         // page header
         Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 12, Ui.TEXT);
         Gfx.text(g, font, Gfx.fit(font, query.isBlank() ? pageSub() : "Searching every page", cw - 134), cx, py + 25, Ui.SUB);
+        if (tab == Tab.COSMETICS && query.isBlank()) {                                                   // x / total owned: small, under the search box, the bar fills once
+            int own = 0; for (CosmeticData.Def d : CosmeticData.ALL) if (CosmeticData.unlocked(d)) own++;
+            int tot = CosmeticData.ALL.size(); String ot = own + " / " + tot; int tw = Gfx.w(font, ot), bx1 = cx + cw - 2, bw = 78, bx0 = bx1 - bw;
+            float fk = ease(Math.min(1f, (now - cosAt) / 1400f)) * (own / (float) Math.max(1, tot)); int fw = Math.round(bw * fk);
+            Gfx.text(g, font, "Owned", bx0, py + 25, Ui.SUB); Gfx.text(g, font, ot, bx1 - tw, py + 25, Canvas.mix(0xFFB56BFF, 0xFFFFFFFF, 0.5f));
+            g.fill(bx0, py + 36, bx1, py + 39, 0x66000000);
+            for (int i = 0; i < fw; i++) g.fill(bx0 + i, py + 36, bx0 + i + 1, py + 39, Canvas.mix(0xFFB56BFF, 0xFF56D8FF, i / (float) bw));
+            if (fw > 1 && fw < bw) g.fill(bx0 + fw - 1, py + 35, bx0 + fw, py + 40, 0xFFFFFFFF);
+        }
         g.fill(cx, py + 39, cx + cw, py + 40, Ui.BORDER);
 
         // rows

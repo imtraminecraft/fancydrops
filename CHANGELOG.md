@@ -11,6 +11,10 @@
 - Home hero shows its words again. Tips, page descriptions, mod description and README now describe the current mod (Mythological live, the rest being rebuilt).
 - Cosmetics: 8 new animated suffix icons (Lucky Dice, Shovel, Skull, Moon, Comet earned by rare drops; Watcher, Rocket, Cat for the early players) and 5 new name effects (Rainbow, Aurora for the early players; Ember, Frost, Neon earned by rare drops). Each page header has a bar that fills once when the page opens.
 - Construction page: the worker tosses each brick up to the wall from a pile instead of the crane lowering it.
+- Cosmetics: suffixes are now referred to as :id: (like Discord emoji). Menu tiles, previews, chat and the tab list all read the same strip file, so changing textures/font/suffix_<id>.png changes it everywhere; a missing picture is logged at startup. The Collection row is now a small "Owned x / total" bar under the Search box. The close X is centred.
+- Construction page: the hard hats are replaced by swinging road-work signs.
+- Drop animation has more depth: a floor shadow under the item, far motes behind it and soft motes drifting past in front.
+- Icons of 3D items (anything that is a skull, like Myth the Fish) are now 3D blocks in every page instead of the flat wiki picture.
 - Cosmetics: a Collection bar at the top (x / total owned) fills once; the Aura preview has a spotlight, glowing floor ring, rising sparkles and a bobbing character. Fixed the Discord, Legend, Lucky Dice and Skull suffix icons, redrew Secret, and the Special rarity icon is animated. Non-special name effects keep your server colour and only add an effect on top.
 - Experiments icon: the yellow star above the book is gone. Dye icon is a still palette with a glint.
 - Pages no longer slide or bounce when you switch. The construction page has depth (haze, moon, drifting clouds, a far skyline, a scaffold tower, a lamp post and fireflies) and the bricks ride smoothly from the pile to the worker's hand.

@@ -506,8 +506,11 @@ public final class ItemIcons {
         Icon ic = get(id);
         Cached d = ic.ready ? ic.data : null;
         Gfx.push(g); Gfx.translate(g, cx, cy);
-        boolean head = d != null && d.heads != null && skullFlag(id);                                   // a skull item shows its 3D head, never the wiki picture
-        int[] pix = d == null ? null : head ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : d.wikiPixels != null ? d.wikiPixels : d.heads != null ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : null;
+        boolean head = d != null && d.heads != null;                                   // any item that is a skull (NEU says so) shows a 3D head block, never the flat wiki picture (Myth the Fish, pets, fragments...)
+        if (d != null && d.heads == null && d.wikiPixels != null && skullFlag(id) && !isBook(id)) {         // no skin found: the icon is still a real block, rebuilt from the wiki picture of the head
+            if (d.iso == null) { int[][] cube = isoHead(d.wikiPixels); if (cube != null) d.iso = isoCube(cube); }
+        }
+        int[] pix = d == null ? null : d.iso != null && d.heads == null && skullFlag(id) ? d.iso : head ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : d.wikiPixels != null ? d.wikiPixels : d.heads != null ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : null;
         if (pix != null) {
             Gfx.scale(g, scale);
             for (int y = 0; y < 16; y++) {                         // one fill per run of the same colour, not per pixel (far fewer draw calls)

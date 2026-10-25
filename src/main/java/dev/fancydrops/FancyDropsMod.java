@@ -48,6 +48,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     @Override
     public void onInitializeClient() {
         FancyConfig.load();
+        Cosmetics.checkIcons();
         DataFiles.reloadAll();   // slayer drop tables
         ProfitTracker.load();    // overall profit, kept between sessions
 

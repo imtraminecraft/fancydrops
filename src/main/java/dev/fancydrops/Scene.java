@@ -739,6 +739,7 @@ final class Scene {
         float sx = (float) (CX + dx), sy = (float) (CY - yy * CT);
         IT.clear();
         float pulseG = 0.75f + 0.25f * (float) Math.sin(us * 3.2);
+        if (side == 0) { depthShadow(out, sx, sy, (float) size, uu, us); depthMotes(out, sx, sy, us, uu, rar, false); }      // depth: a shadow on the floor and far motes behind the item
         out.glow(sx, sy, (float) size * (side != 0 ? 1.25f : epic ? 1.7f : 1.4f), rar & 0xFFFFFF, Math.min(1f, uu) * (epic ? 0.62f : 0.5f) * pulseG * ic.itemGlow);     // the icons' soft halo
         if (side == 0) out.glow(sx, sy, (float) size * 0.8f, 0xFFFFFF, Math.min(1f, uu) * 0.22f * pulseG * ic.itemGlow);
         int rst = p.exp ? 2 : p.myth ? 1 : 0;
@@ -756,7 +757,32 @@ final class Scene {
         if (ic.itemOutline) IT.softOutline(0.42f);
         out.draw(IT);
         if (epic && side == 0) rngAura(out, rst, sx, sy, (float) size, us, uu, rar, true);
+        if (side == 0) depthMotes(out, sx, sy, us, uu, rar, true);                                  // and big soft motes drifting past in front
     }
+
+    /** A soft dark ellipse on the floor under the item: it shrinks and fades as the item floats up, so it reads as hovering above the ground. */
+    private static void depthShadow(Canvas out, float sx, float sy, float size, float uu, float us) {
+        float lift = 0.6f + 0.4f * (float) Math.sin(us * 2.0), a = Math.min(1f, uu) * 0.42f * lift;
+        int fy = Math.round(sy + size * 0.95f + 6), rx = Math.round(size * (0.55f + 0.1f * (1f - lift)));
+        for (int dy = -3; dy <= 3; dy++) {
+            int half = Math.round(rx * (float) Math.sqrt(Math.max(0f, 1f - (dy / 3.4f) * (dy / 3.4f))));
+            for (int dx = -half; dx <= half; dx++) { float e = 1f - Math.abs(dx) / (float) Math.max(1, half); out.set(Math.round(sx) + dx, fy + dy, Canvas.rgb(Math.round(150 * a * e * (1f - Math.abs(dy) / 4f)), 0x000000)); }
+        }
+    }
+    /** Two layers of drifting motes: small dim ones far behind the item that move slowly, and bigger softer ones in front that move faster, which gives the scene depth. */
+    private static void depthMotes(Canvas out, float sx, float sy, float us, float uu, int rar, boolean front) {
+        int col = rar & 0xFFFFFF; float a0 = Math.min(1f, uu);
+        int n = front ? 5 : 12;
+        for (int i = 0; i < n; i++) {
+            float h1 = ((i * 2654435761L + (front ? 77 : 0)) & 0xFFFF) / 65536f, h2 = ((i * 40503L + 11 + (front ? 5 : 0)) & 0xFFFF) / 65536f;
+            float sp = front ? 0.32f + h2 * 0.25f : 0.08f + h2 * 0.1f, u = (us * sp + h1) % 1f;
+            float px = sx + (h1 - 0.5f) * (front ? 150f : 190f) + (float) Math.sin(us * 0.9f + i) * (front ? 7f : 3f), py = sy + 40f - u * 110f;
+            float al = (float) Math.sin(u * Math.PI) * a0 * (front ? 0.5f : 0.4f);
+            if (front) { out.glow(px, py, 5f, col, al * 0.55f); out.rect(Math.round(px), Math.round(py), Math.round(px) + 2, Math.round(py) + 2, Canvas.rgb(Math.round(200 * al), 0xFFFFFF)); }
+            else out.set(Math.round(px), Math.round(py), Canvas.rgb(Math.round(170 * al), Canvas.mix(0xFF000000 | col, 0xFFFFFFFF, 0.4f) & 0xFFFFFF));
+        }
+    }
+
 
     /** Non-skull items: coin-flip entrance, glowing halo, travelling shine and orbiting sparkles. */
     private static void flatItem(Canvas out, Params p, Model m, int rar, float sx, float sy, float size, float us, float uu, float sm, boolean slab, float ang, int style) {

@@ -83,6 +83,7 @@ final class Icons {
         String name = key.startsWith("fd:") ? key.substring(3) : key; int tint = 0xFF888888;
         int hash = name.indexOf('#');
         if (hash >= 0) { try { tint = 0xFF000000 | Integer.parseInt(name.substring(hash + 1), 16); } catch (Exception ignored) {} name = name.substring(0, hash); }
+        if (name.length() > 2 && name.charAt(0) == ':' && name.endsWith(":")) { Cosmetics.drawIcon(g, name.substring(1, name.length() - 1), x, y, now); return; }        // ":discord:" draws that suffix, like an emoji
         if (name.startsWith("cx_")) { Cosmetics.drawCosIcon(g, name.substring(3), x, y, now); return; }
         if (PixArt.draw(g, name, x, y, s, tint == 0xFF888888 ? 0 : tint & 0xFFFFFF)) return;                                                          // the hand-pixeled pictures
         if (name.startsWith("suf_")) { Cosmetics.drawIcon(g, name.substring(4), x, y, now); return; }

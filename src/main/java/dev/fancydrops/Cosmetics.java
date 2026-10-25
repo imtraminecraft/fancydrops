@@ -172,6 +172,22 @@ final class Cosmetics {
         return m;
     }
     static String frameNow(Suffix s, long now) { return s.frames()[(int) ((now / 100L) % s.frames().length)]; }
+    /** A suffix written like a Discord emoji: ":discord:". Every place that shows a suffix (menu tiles, previews, chat, tab list) goes through its id, and the picture is only ever read from textures/font/suffix_<id>.png, so changing that one file changes it everywhere. */
+    static String token(String id) { return ":" + id + ":"; }
+    /** Replaces every ":id:" in a text with that suffix's current animated frame. */
+    static Component expand(String text, long now) {
+        net.minecraft.network.chat.MutableComponent out = Component.empty(); int i = 0;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(":([a-z0-9_]+):").matcher(text);
+        while (m.find()) { Suffix s = byId(m.group(1)); if (s == null) continue; if (m.start() > i) out.append(Component.literal(text.substring(i, m.start()))); out.append(glyph(frameNow(s, now))); i = m.end(); }
+        if (i < text.length()) out.append(Component.literal(text.substring(i)));
+        return out;
+    }
+    /** Logs any suffix whose picture file or font entry is missing, so a wrong id never shows up as an empty box silently. */
+    static void checkIcons() {
+        for (Suffix s : SUFFIXES) {
+            if (Cosmetics.class.getResource("/assets/fancydrops/textures/font/suffix_" + s.id() + ".png") == null) System.err.println("[FancyDrops] suffix " + s.id() + " has no picture (textures/font/suffix_" + s.id() + ".png)");
+        }
+    }
     static Component glyph(String g) { return Component.literal(g).withStyle(Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)); }
     /** One frame of a suffix as a menu icon. */
     static void drawIcon(net.minecraft.client.gui.GuiGraphicsExtractor g, String id, int x, int y, long now) {
