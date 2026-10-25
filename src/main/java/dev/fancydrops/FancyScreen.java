@@ -627,7 +627,7 @@ public class FancyScreen extends Screen {
     }
 
     private static final int SW_H = 28;      // the Active switch above the menu
-    private int menuHeight(int screenH) { return Math.min(350, screenH - 16 - SW_H - (screenH >= 390 && FancyConfig.get().previewAt != 2 ? dockH() + DOCK_GAP : 0)); }
+    private int menuHeight(int screenH) { return Math.min(350, screenH - 16 - SW_H - (screenH >= 390 && FancyConfig.get().previewAt != 2 ? DOCK_H0 + DOCK_GAP : 0)); }       // always room for the biggest dock, so the menu is the same size (and place) on every page
 
 
 
@@ -2463,7 +2463,7 @@ public class FancyScreen extends Screen {
         relayout();
         if (landing() && query.isBlank()) {                                // main pages never scroll: the tiles get a little shorter until everything fits
             int viewH = lb - lt;
-            if (totalH > viewH) { for (Row r : rows) if (r.kind == TEXT) { r.h = 0; r.noSearch = true; } relayout(); }          // the page title above already says it
+            if (totalH > viewH) { rows.removeIf(r -> r.kind == TEXT); relayout(); }          // the page title above already says it
             for (int pass = 0; pass < 14 && totalH > viewH; pass++) {
                 boolean ch = false;
                 for (Row r : rows) if (r.pLabels != null && r.pTh > (r.pVert ? 40 : 27)) { r.pTh -= 2; fit(r); ch = true; }

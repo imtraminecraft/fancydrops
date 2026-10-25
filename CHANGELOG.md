@@ -1,3 +1,8 @@
+## 0.4.24
+- The menu stays the same size and place on every page. It only moves when a live preview slides in above or below it (the Chat page used to nudge it because it reserved less room for its preview).
+- Hidden intro rows on main pages are removed, so they no longer draw over the tiles.
+- Icon animations have 16 frames (was 12) at 70 ms. Older exports in `config/fancydrops/icons/` are moved to `icons/old/` (named like `dice_12f.png`) and made again, 256 px tall.
+
 ## 0.4.23
 - The Spade setting has a shovel icon (blade in the spade tier colour, dips into the ground and flicks up dirt) instead of a sword.
 
