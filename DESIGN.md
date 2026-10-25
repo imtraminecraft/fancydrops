@@ -175,3 +175,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## 0.4.22
 - Icons have 12 frames (IconArt.FRAMES). The sidebar is not squeezed (sq stays 1); main pages never scroll.
+
+## 0.4.25
+- "Animation Changes" has Bar, Text, Item and Position Changes. Position rules: Top Center = words below only, Center = above or below, Above Action Bar = words above only (FancyConfig.textAbove()).
+- Chat format limit: 65 letters, placeholders not counted.
+- Source art lives in src/main/java/dev/fancydrops/art/{icons,animations,heads}; runtime art in config/fancydrops/art/{icons,heads,items,animations} (DataFiles.art). All heads turn in sync.

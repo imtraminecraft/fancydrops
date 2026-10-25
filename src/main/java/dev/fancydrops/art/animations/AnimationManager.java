@@ -139,7 +139,7 @@ public final class AnimationManager {
         float t = syncSec >= 0 ? syncSec : ((now - previewT0) / 1000f) % (secs + 1f);
         float pivot = Math.max(3.6f, secs) - Ritual.TAIL;
         if (TextFx.freezeT >= 0) t = pivot + TextFx.freezeT;                       // held that many seconds after the drop appears
-        else if (TextFx.itemOnly) t = pivot + 1.6f;                                // the Item editor shows the scene held, with the item living on its own clock
+        else if (TextFx.itemOnly || TextFx.barsOnly) t = pivot + 1.6f;                                // the Item editor shows the scene held, with the item living on its own clock
         else if (TextFx.textOnly) t = pivot + 1.6f;                                // the Text editor draws the words alone (they loop on the text clock)
         if (t > secs + 0.01f) return;
         draw(g, Minecraft.getInstance().font, a, t, W, H);

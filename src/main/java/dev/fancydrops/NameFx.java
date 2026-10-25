@@ -20,12 +20,6 @@ final class NameFx {
         return Math.abs(h);
     }
 
-    /** These effects have their own hue. A white or grey name (the tab list, many ranks) takes it fully; a coloured one is blended halfway, so it still shows its own colour. */
-    private static int tint(int own, int base) {
-        int r = (base >> 16) & 255, g = (base >> 8) & 255, b = base & 255;
-        boolean plain = Math.max(r, Math.max(g, b)) - Math.min(r, Math.min(g, b)) < 40;
-        return plain ? own : mix(base, own, 0.5f);
-    }
 
     /** The colour (RGB) of letter i of n at time t (ms), starting from the name's own colour. */
     static int color(String fx, int i, int n, int base, long t) {

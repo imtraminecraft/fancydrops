@@ -245,6 +245,7 @@ public class FancyScreen extends Screen {
     private EditBox searchField;
     private static final Identifier ICON = Identifier.fromNamespaceAndPath("fancydrops", "textures/gui/icon.png");
     private final List<Row> rows = new ArrayList<>();
+    private String lastFormatOk = "";
     private EditBox formatField, addField, numField, hexField, adminField, thrField, tokenField;
     private static int sliderSeq; private int typingId = -1;
     private Slider typing; private boolean numShow; private double lastMx;
@@ -297,9 +298,11 @@ public class FancyScreen extends Screen {
         cx = px + sw + 10; cw = pw - sw - 20 - RS; lt = py + 46; lb = py + ph - 10;
 
         formatField = new EditBox(font, 0, 0, 100, 16, Component.literal("format"));
-        formatField.setMaxLength(ChatFilter.MAX);
-        formatField.setValue(FancyConfig.get().formatFor(chatCat));
+        formatField.setMaxLength(160);          // room for the placeholders; the 65 letter limit is counted without them
+        lastFormatOk = FancyConfig.get().formatFor(chatCat); formatField.setValue(lastFormatOk);
         formatField.setResponder(v -> {                    // only a clean message is ever saved
+            if (ChatFilter.plainLength(v) > ChatFilter.MAX) { formatField.setValue(lastFormatOk); return; }          // typing stops at 65 letters
+            lastFormatOk = v;
             formatError = ChatFilter.check(v);
             if (formatError == null) FancyConfig.get().setFormat(chatCat, v);
         });
@@ -454,7 +457,6 @@ public class FancyScreen extends Screen {
     private static final long[] pulseAt = new long[5];                                            // when each sound slot was last played by hand
     private final int[] dockBtn = {-1, -1, -1, -1};
     private float dockK;                                                                          // 0..1: how far the dock has slid open
-    private static int soundCat;                                                                  // Sounds > Animation Sounds: which animation page is open
 
     private String chatKey = ""; private int chatRowH = 40;
     private boolean dockPossible() { return height >= 390 && FancyConfig.get().previewAt != 2; }
@@ -861,9 +863,6 @@ public class FancyScreen extends Screen {
         }
         if (!badge.isEmpty()) { int bw = Gfx.w(font, badge) + 10; pill(g, r.x + r.w - bw - 8, r.y + 8, bw, 16, Canvas.mix(Ui.PANEL2, col, 0.25f)); rout(g, r.x + r.w - bw - 8, r.y + 8, bw, 16, Gfx.argb(160, col & 0xFFFFFF)); Gfx.text(g, font, badge, r.x + r.w - bw - 3, r.y + 12, Canvas.mix(col, 0xFFFFFFFF, 0.6f)); }
     }
-    private Row collectionHeader(String badge) {
-        Row r = catHeader("COLLECTION", "Every suffix, name effect and aura you own.", badge, 0xFFB56BFF); r.h = 44; r.pSubs = new String[]{badge, "wide"}; return r;
-    }
     private Row catHeader(String title, String sub, String badge, int col) {
         Row r = new Row(); r.kind = CAT; r.noSearch = true; r.title = title; r.sub = sub; r.accent = col; r.h = 34; r.pSubs = new String[]{badge}; return r;
     }
@@ -1269,7 +1268,7 @@ public class FancyScreen extends Screen {
             pill(g, b[0] - 2, b[1] - 2, 26, 26, Gfx.argb(Math.round(10 + 14 * pulse + 18 * k), cacc & 0xFFFFFF));                          // a soft rounded glow behind the button
             pill(g, b[0], b[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, cacc, 0.10f), Ui.ROW_HOVER, k));
             rout(g, b[0], b[1], 22, 22, Gfx.argb(Math.round(50 + 50 * pulse + 80 * k), cacc & 0xFFFFFF));
-            Icons.draw(g, Icons.tok(COMM[i]), b[0] + 3, b[1] + 3, 2400L);
+            Icons.draw(g, Icons.tok(COMM[i]), b[0] + 3, b[1] + 3, cn);
             for (int q = 0; q < 3; q++) {                                                                       // a few quiet sparkles
                 float ph = ((cn / 1500f) + q * 0.34f + i * 0.17f) % 1f, al = (float) Math.sin(ph * Math.PI);
                 int sx = b[0] + 1 + (q * 9 + i * 5 + 2) % 20, sy = b[1] + 1 + (q * 13 + i * 3 + 1) % 20 - Math.round(ph * 3f);
@@ -1749,20 +1748,9 @@ public class FancyScreen extends Screen {
 
 
 
-    /** Position, bars, size and text of one animation page (these used to live in Settings > Scene Settings). */
-    /** Animation Changes: the look every animation shares (bar colour and height, item size). Per-animation pages only keep what is theirs. */
-    private void animChanges(List<Row> rows, FancyConfig c) {
-        rows.add(section("Changes"));
-        Row bc = row(0, ":bars:", "Bar Changes", c.barPx + " px tall  \u00B7  " + (c.barCustom ? "your own colour" : "colour follows the drop"), Ui.ACCENT);
-        bc.ctls.add(new Btn("Edit", 0xFF3A4FA0, () -> openEditor(1)));
-        rows.add(bc);
-        int fxOn = (c.fxPop ? 1 : 0) + (c.fxShine ? 1 : 0) + (c.fxWave ? 1 : 0);
-        Row tc = row(0, ":text:", "Text Changes", String.format(java.util.Locale.ROOT, "Words after %.2f s  \u00B7  %d of 3 effects on", c.subDelay, fxOn), Ui.ACCENT);
-        tc.ctls.add(new Btn("Edit", 0xFF3A4FA0, () -> openEditor(2)));
-        rows.add(tc);
-    }
 
     // ------------------------------------------------------------------ the Bar / Text editors
+    private int ePos0, eTextPos0;                              // Position Changes: what to go back to on Cancel
     private int editor;                                         // 0 none, 1 Bar Changes, 2 Text Changes
     private boolean editWarn; private int lastHoverFx = -2; private long hoverFxAt;
     private int eBarPx, eColor, eDrag, hoverFx = -1; private boolean eCustom; private final boolean[] eFx = new boolean[25];
@@ -1811,6 +1799,52 @@ public class FancyScreen extends Screen {
     private int[] eHexBox() { return new int[]{eRx(), eY() + 168, 64, 14}; }
     private int[] eAuto() { return new int[]{eRx() + 68, eY() + 168, Math.min(80, eRw() - 68), 14}; }
     private int[] ePreset(int i) { return new int[]{eX() + 10 + i * 21, eBy() + previewH(ePrevW()) + 8, 18, 18}; }
+    // ---- Position Changes: where the animation sits (Animation Position) and where its words sit (Text Position)
+    private int[] ePosBox(int i) { return new int[]{eRx(), eY() + 56 + i * 24, eRw(), 21}; }
+    private int[] eTxtBox(int j) { return new int[]{eRx(), eY() + 56 + 3 * 24 + 26 + j * 24, eRw(), 21}; }
+    /** Words above: only when the animation is in the Center or above the action bar. Words below: only when it is in the Center or at the top. */
+    private boolean textChoiceOpen(FancyConfig c, int j) { return c.animPos == 1 || (j == 0 ? c.animPos == 0 : c.animPos == 2); }
+    private void drawPosPage(GuiGraphicsExtractor g, int mx, int my) {
+        FancyConfig c = FancyConfig.get();
+        Gfx.text(g, font, "Animation Position", eRx(), eY() + 42, Ui.TEXT);
+        String[] an = POS_NAMES;
+        for (int i = 0; i < 3; i++) {
+            int[] b = ePosBox(i); boolean on = c.animPos == i, hv = in(mx, my, b);
+            tile(g, b, on, hv); rout(g, b[0], b[1], b[2], b[3], on ? Gfx.argb(190, Ui.ACCENT & 0xFFFFFF) : Ui.BORDER);
+            Gfx.text(g, font, an[i], b[0] + 9, b[1] + 6, on ? Ui.TEXT : Ui.SUB);
+        }
+        int ty = eY() + 56 + 3 * 24 + 8;
+        Gfx.text(g, font, "Text Position", eRx(), ty, Ui.TEXT);
+        String[] tn = {"Above the animation", "Below the animation"};
+        for (int j = 0; j < 2; j++) {
+            int[] b = eTxtBox(j); boolean open = textChoiceOpen(c, j), on = c.textAbove() == (j == 0), hv = in(mx, my, b) && open;
+            tile(g, b, on, hv); rout(g, b[0], b[1], b[2], b[3], on ? Gfx.argb(190, Ui.ACCENT & 0xFFFFFF) : Ui.BORDER);
+            Gfx.text(g, font, tn[j], b[0] + 9, b[1] + 6, !open ? 0xFF4A4F60 : on ? Ui.TEXT : Ui.SUB);
+            if (!open) Gfx.text(g, font, "locked", b[0] + b[2] - 6 - Gfx.w(font, "locked"), b[1] + 6, 0xFF4A4F60);
+        }
+        String rule = c.animPos == 0 ? "At the top, the words sit below." : c.animPos == 1 ? "In the center, the words can sit either side." : "Above the action bar, the words sit above.";
+        for (String ln : wrap(rule, eRw())) { Gfx.text(g, font, ln, eRx(), eY() + 56 + 3 * 24 + 26 + 2 * 24 + 4, Ui.DIM); break; }
+    }
+    /** A still picture of the screen: the hotbar (action bar), the crosshair, the animation where you put it and the words where you put them. */
+    private void drawPosMock(GuiGraphicsExtractor g, int x, int y, int w, int h) {
+        FancyConfig c = FancyConfig.get();
+        pill(g, x, y, w, h, 0xFF0A0C14);
+        for (int i = 1; i < h - 1; i++) g.fill(x + 1, y + i, x + w - 1, y + i + 1, Canvas.mix(0xFF111733, 0xFF2A2140, i / (float) h));
+        g.fill(x + 1, y + Math.round(h * 0.80f), x + w - 1, y + h - 1, 0xFF161B22);
+        int slot = Math.max(8, w / 17), total = slot * 9, hx = x + (w - total) / 2, hy = y + h - slot - 4;
+        for (int i = 0; i < 9; i++) { g.fill(hx + i * slot, hy, hx + (i + 1) * slot - 1, hy + slot - 1, i == 4 ? 0xB0B8C0D0 : 0xA0262A32); }
+        g.fill(x + w / 2 - 3, y + h / 2, x + w / 2 + 4, y + h / 2 + 1, 0xCCFFFFFF); g.fill(x + w / 2, y + h / 2 - 3, x + w / 2 + 1, y + h / 2 + 4, 0xCCFFFFFF);
+        float[] pf = {0.30f, 0.46f, 0.66f};
+        int cx = x + w / 2, cy = y + Math.round(h * pf[c.animPos]), rx = Math.max(16, w / 6), ry = Math.max(5, rx * 2 / 5), gy = cy + Math.max(10, h / 9);
+        for (int dy = -ry; dy <= ry; dy++) { int half = (int) (rx * Math.sqrt(1.0 - (dy / (double) ry) * (dy / (double) ry))); g.fill(cx - half, gy + dy, cx + half, gy + dy + 1, Gfx.argb(60, 0x55D8FF)); }
+        for (int dy = -ry; dy <= ry; dy++) { int half = (int) (rx * Math.sqrt(1.0 - (dy / (double) ry) * (dy / (double) ry))); g.fill(cx - half, gy + dy, cx - half + 1, gy + dy + 1, 0xCC55D8FF); g.fill(cx + half - 1, gy + dy, cx + half, gy + dy + 1, 0xCC55D8FF); }
+        Icons.draw(g, ":dropped:", cx - 8, cy - 12, 2400L);
+        String t1 = "Item name", t2 = "1 in 50";
+        int th = 22, ty = c.textAbove() ? cy - 12 - th - 2 : gy + ry + 4;
+        ty = Math.max(y + 3, Math.min(hy - th - 2, ty));
+        Gfx.textCentered(g, font, t1, cx, ty, 0xFFFF72C6); Gfx.textCentered(g, font, t2, cx, ty + 11, 0xFFB8BDD0);
+    }
+
     private int[] eFxTab(int gi) { int w = (eRw() - 9) / 4; return new int[]{eRx() + gi * (w + 3), eY() + 58, w, 16}; }
     private int[] eFxBox(int i) {
         int w = (eRw() - 6) / 2;
@@ -1824,11 +1858,10 @@ public class FancyScreen extends Screen {
         return top + Math.max(0, (eHt() - 38 - 30 - grp) / 2);
     }
     private int[] eSliderBox(int i) { return editor == 2 ? new int[]{eX() + 10, eY() + 38 + previewH(ePrevW()) + 34 + i * 29, ePrevW(), 14} : new int[]{eRx(), eY() + 70 + i * 34, eRw(), 14}; }
-    private int[] eSegBox(int i) { int w = (eRw() - 4) / 2; return new int[]{eRx() + i * (w + 4), eY() + 76, w, 16}; }
     private int[] eTogBox(int i) { int w = (eRw() - 4) / 2; return new int[]{eRx() + (i % 2) * (w + 4), eY() + 112 + (i / 2) * 19, w, 16}; }
     // every Changes menu has the same right-hand side: page tabs on top, the controls of that page below
     private int ePage;
-    private String[] ePages() { return editor == 1 ? new String[]{"Size", "Colour"} : editor == 3 ? new String[]{"Size", "Extras"} : new String[]{"Effects", "Layout", "Font"}; }
+    private String[] ePages() { return editor == 4 ? new String[0] : editor == 1 ? new String[]{"Size", "Colour"} : editor == 3 ? new String[]{"Size", "Extras"} : new String[]{"Effects", "Layout", "Font"}; }
     private int[] ePageBox(int i) { int n = ePages().length, w = (eRw() - (n - 1) * 3) / n; return new int[]{eRx() + i * (w + 3), eY() + 34, w, 17}; }
     private int[] eFontBox(int i) { int w = (eRw() - 4) / 2; return new int[]{eRx() + (i % 2) * (w + 4), eY() + 62 + (i / 2) * 21, w, 18}; }
     private int[] eFTog(int i) { return new int[]{eRx(), eY() + 62 + 4 * 21 + 8 + i * 19, eRw(), 16}; }
@@ -1861,7 +1894,7 @@ public class FancyScreen extends Screen {
         FancyConfig c = FancyConfig.get();
         editor = which; editWarn = false; eDrag = 0; eSl = null; hoverFx = -1; ePage = 0;
         eBarOp = c.barOpacity; eBarPil = c.barPillars; eBarLine = c.barLine; eBarCurve = c.barCurve; eBarSoft = c.barSoft; fxGrp = 0; eBobAmp = c.itemBobAmp; eSpinRev = c.itemSpinRev; eBold = c.textBold; eOutl = c.textOutline; eTFont = c.textFont;
-        eBarPx = c.barPx; eCustom = c.barCustom; eColor = c.barColor;
+        eBarPx = c.barPx; eCustom = c.barCustom; eColor = c.barColor; ePos0 = c.animPos; eTextPos0 = c.textPos;
         for (int i = 0; i < FX_N; i++) eFx[i] = c.fx(i);
         for (int gi = 0; gi < FX_ORDER.length; gi++) { int lim = gi == 2 ? 2 : 1, on = 0; for (int k : FX_ORDER[gi]) if (c.fx(k)) { if (++on > lim) c.setFx(k, false); } }      // 1 entrance, 1 motion, 2 colour, 1 exit
         eAll = c.textScale; eTitle = c.titleScale; eSub = c.subScale; eSubDelay = c.subDelay;
@@ -1887,7 +1920,7 @@ public class FancyScreen extends Screen {
         if (typing != null) endTyping(true);
         if (save) { FancyConfig.save(); toast("Changes saved successfully.", 0xFF62E6A8); }
         else {
-            c.setBarPx(eBarPx); c.barCustom = eCustom; c.barColor = eColor;
+            c.setBarPx(eBarPx); c.barCustom = eCustom; c.barColor = eColor; c.animPos = ePos0; c.textPos = eTextPos0;
             for (int i = 0; i < FX_N; i++) c.setFx(i, eFx[i]);
             c.barOpacity = eBarOp; c.barPillars = eBarPil; c.barLine = eBarLine; c.barCurve = eBarCurve; c.barSoft = eBarSoft; c.itemBobAmp = eBobAmp; c.itemSpinRev = eSpinRev; c.textBold = eBold; c.textOutline = eOutl; c.textFont = eTFont;
             c.textScale = eAll; c.titleScale = eTitle; c.subScale = eSub; c.subDelay = eSubDelay;
@@ -1935,7 +1968,7 @@ public class FancyScreen extends Screen {
             c.barCustom = true; c.barColor = hsvToRgb(eHue, eSat, eVal);
         }
     }
-    private Slider[] eSliders() { return editor == 1 ? new Slider[]{slBar, slBarOp, slBarCurve} : editor == 3 ? new Slider[]{slItem, slSpin, slGlow, slBob} : new Slider[]{slAll, slTitle, slSub, slDelay}; }
+    private Slider[] eSliders() { return editor == 4 ? new Slider[0] : editor == 1 ? new Slider[]{slBar, slBarOp, slBarCurve} : editor == 3 ? new Slider[]{slItem, slSpin, slGlow, slBob} : new Slider[]{slAll, slTitle, slSub, slDelay}; }
     private void editorClick(double mx, double my, int button) {
         FancyConfig c = FancyConfig.get();
         if (button != 0) return;
@@ -1951,6 +1984,14 @@ public class FancyScreen extends Screen {
             closeEditor(true); return;
         }
         if (in(mx, my, eBtn(1))) { closeEditor(false); toast("Changes discarded.", 0xFFFFB86B); return; }
+        if (editor == 4) {
+            for (int i = 0; i < 3; i++) if (in(mx, my, ePosBox(i))) { c.animPos = i; return; }
+            for (int j = 0; j < 2; j++) if (in(mx, my, eTxtBox(j))) {
+                if (!textChoiceOpen(c, j)) { toast(c.animPos == 0 ? "With the animation at the top,\nthe words can only sit below it." : "With the animation above the action bar,\nthe words can only sit above it.", 0xFFFFB86B); return; }
+                c.textPos = j; return;
+            }
+            return;
+        }
         Slider[] ss = eSliders();
         for (int i = 0; i < ss.length; i++) {
             if (editor != 2 && ePage != 0) break;
@@ -1978,7 +2019,7 @@ public class FancyScreen extends Screen {
                 if (k == 0) c.show3d = !c.show3d; else if (k == 1) c.itemBob = !c.itemBob; else if (k == 2) c.itemGlints = !c.itemGlints; else if (k == 3) c.itemOutline = !c.itemOutline; else c.itemSpinRev = !c.itemSpinRev;
                 TextFx.restartText();
             }
-        } else {
+        } else if (editor == 2) {
             if (ePage == 0) {
                 for (int gi = 0; gi < FX_ORDER.length; gi++) if (in(mx, my, eFxTab(gi))) { fxGrp = gi; return; }
                 for (int i = 0; i < FX_N; i++) if (in(mx, my, eFxBox(i))) { fxToggle(i, c); return; }
@@ -2000,8 +2041,8 @@ public class FancyScreen extends Screen {
         g.fill(px, py, px + pw, py + ph, 0xCC0A0C12);
         pill(g, ex, ey, ew, eh, Ui.PANEL); rout(g, ex, ey, ew, eh, Ui.BORDER);
         g.fill(ex + 1, ey + 1, ex + ew - 1, ey + 2, Gfx.argb(160, Ui.ACCENT & 0xFFFFFF));
-        Gfx.text(g, font, editor == 1 ? "Bar Changes" : editor == 3 ? "Item Changes" : "Text Changes", ex + 10, ey + 9, Ui.TEXT);
-        Gfx.text(g, font, editor == 1 ? "Height and colour of the cinematic bars" : editor == 3 ? "Size, spin, glow and extras for the dropped item" : "Sizes, effects and what the words show", ex + 10, ey + 21, Ui.DIM);
+        Gfx.text(g, font, editor == 1 ? "Bar Changes" : editor == 3 ? "Item Changes" : editor == 4 ? "Position Changes" : "Text Changes", ex + 10, ey + 9, Ui.TEXT);
+        Gfx.text(g, font, editor == 1 ? "Height and colour of the cinematic bars" : editor == 4 ? "Where the animation and its words sit on the screen" : editor == 3 ? "Size, spin, glow and extras for the dropped item" : "Sizes, effects and what the words show", ex + 10, ey + 21, Ui.DIM);
         drawX(g, eClose(), in(mx, my, eClose()), "edx");
         int bw = ePrevW(), bh = previewH(bw), bx = ex + 10, by = eBy();
         hoverFx = -1;
@@ -2009,9 +2050,9 @@ public class FancyScreen extends Screen {
         Row syn = new Row(); syn.x = bx; syn.y = by; syn.w = bw; syn.pkey = editor == 2 ? "myth.normal" : "myth.rng"; syn.nolabel = true;          // Mythological is the live category: bars and items show on its RNG scene, the words on its Normal one syn.pbw = bw;
         TextFx.itemOnly = editor == 3; TextFx.itemKey = null; TextFx.textOnly = editor == 2; TextFx.fxOnly = editor == 2 ? hoverFx : -1;
         if (hoverFx != lastHoverFx) { lastHoverFx = hoverFx; hoverFxAt = System.currentTimeMillis(); TextFx.restartText(); }
-        TextFx.loopTxt = editor == 2; TextFx.freezeT = editor == 1 ? 1.8f : -1f;
-        drawPositionPreview(g, syn);
-        TextFx.textOnly = false; TextFx.itemOnly = false; TextFx.itemKey = null; TextFx.fxOnly = -1; TextFx.loopTxt = false; TextFx.freezeT = -1f;
+        TextFx.loopTxt = editor == 2; TextFx.freezeT = -1f; TextFx.barsOnly = editor == 1;
+        if (editor == 4) drawPosMock(g, bx, by, bw, bh); else drawPositionPreview(g, syn);
+        TextFx.textOnly = false; TextFx.itemOnly = false; TextFx.itemKey = null; TextFx.fxOnly = -1; TextFx.loopTxt = false; TextFx.freezeT = -1f; TextFx.barsOnly = false;
         if (editor == 1) {
             for (int i = 0; i < PRESETS.length; i++) {
                 int[] b = ePreset(i); boolean cur = c.barCustom && (c.barColor & 0xFFFFFF) == (PRESETS[i] & 0xFFFFFF), hv = in(mx, my, b);
@@ -2028,6 +2069,7 @@ public class FancyScreen extends Screen {
             if (on) g.fill(b[0] + 4, b[1] + b[3] - 2, b[0] + b[2] - 4, b[1] + b[3] - 1, Ui.ACCENT);
             Gfx.textCentered(g, font, pgs[i], b[0] + b[2] / 2, b[1] + 5, on ? Ui.TEXT : hv ? Ui.SUB : Ui.DIM);
         }
+        if (editor == 4) drawPosPage(g, mx, my);
         if (editor == 2 && ePage == 0) {
             for (int gi = 0; gi < FX_ORDER.length; gi++) {                                              // four small tabs, one for each kind of effect
                 int[] tb = eFxTab(gi); boolean on = fxGrp == gi, hv = in(mx, my, tb), any = false;
@@ -2599,8 +2641,7 @@ public class FancyScreen extends Screen {
 
     // ---- Animations
 
-    private static final String[] POS_NAMES = {"Top Center", "Center", "Bottom Center"};
-    private static final String[] POS_SUBS = {"Text sits below", "Text sits below", "Text sits above"};
+    private static final String[] POS_NAMES = {"Top Center", "Center", "Above Action Bar"};
 
     private void animationsPage(FancyConfig c) {
         if (searching || landing()) { animationsLanding(c); return; }
@@ -2615,11 +2656,10 @@ public class FancyScreen extends Screen {
     private void animationsLanding(FancyConfig c) {
         rows.add(textRow(":animations:", "Animations", "Set the looks every animation shares, then open a category."));
         int fxOn = 0; for (int i = 0; i < FX_N; i++) if (c.fx(i)) fxOn++;
-        String[] lb = {"Bar Changes", "Text Changes", "Item Changes"};
-        String[] sb = {c.barPx + " px tall", fxOn + " effects on", "Size " + Math.round(c.itemScale * 100) + "%"};
-        Row ch = picker("Looks for every animation", "", lb, sb, new String[]{":bars:", ":text:", ":size:"}, new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFFFFC857}, null, 3, () -> -1, i -> openEditor(i + 1));
+        String[] lb = {"Bar Changes", "Text Changes", "Item Changes", "Position Changes"};
+        String[] sb = {c.barPx + " px tall", fxOn + " effects on", "Size " + Math.round(c.itemScale * 100) + "%", POS_NAMES[c.animPos] + "  \u00B7  words " + (c.textAbove() ? "above" : "below")};
+        Row ch = picker("Animation Changes", "The look every animation shares", lb, sb, new String[]{":bars:", ":text:", ":size:", ":dock_top:"}, new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFFFFC857, 0xFF56D8FF}, null, 2, () -> -1, i -> openEditor(i + 1));
         rows.add(ch);
-        rows.add(picker("Position", "Where every animation sits on the screen", POS_NAMES, POS_SUBS, new String[3], new int[]{0xFF56D8FF, 0xFFFF72C6, 0xFFFFC857}, null, 3, () -> c.animPos, i -> { c.animPos = i; FancyConfig.save(); }));
         rows.add(section("Categories"));
         rows.add(catTiles());
     }
@@ -2863,7 +2903,7 @@ public class FancyScreen extends Screen {
     private void mythSettings(List<Row> rows, FancyConfig c) {
         rows.add(section("Settings"));
         int pc = PET_COLS[Math.max(0, Math.min(5, c.mythPet))];
-        Row pet = row(0, String.format(":griffin:#%06X", pc & 0xFFFFFF), "Griffin pet", "Mythic is best  \u00B7  creatures it can't call are hidden", pc);
+        Row pet = row(0, String.format(":griffin_pet:#%06X", pc & 0xFFFFFF), "Griffin pet", "Creatures it can't call are hidden", pc);
         Dd petDd = new Dd(() -> MythData.PETS[c.mythPet], "dd_pet", 90); petDd.col = () -> pc;
         pet.ctls.add(petDd); rows.add(pet);
         if (open.contains("dd_pet") && !searching) { Row pl = miniList(pet, petDd, java.util.Arrays.asList(MythData.PETS), c.mythPet, i -> { c.mythPet = i; MythData.applyPet(i); open.remove("dd_pet"); }); pl.pickCols = PET_COLS; rows.add(pl); }
@@ -2899,7 +2939,7 @@ public class FancyScreen extends Screen {
 
     private void insertPlaceholder(String token) {
         String v = formatField.getValue();
-        if (v.length() + token.length() + 1 > ChatFilter.MAX) return;
+        if (v.length() + token.length() + 1 > 160) return;
         formatField.setValue(v.isEmpty() || v.endsWith(" ") ? v + token : v + " " + token);
     }
 
@@ -2930,7 +2970,6 @@ public class FancyScreen extends Screen {
     private void squeezeSide() {
         sq = 1f;                                            // (the sidebar keeps its own scrolling; only the main pages must not scroll)
     }
-    private static String jumpTo;                                 // a row title to scroll to after the next build
     private static final int[] subSel = new int[Tab.values().length];
     static { java.util.Arrays.fill(subSel, -1); }   // the chosen sub page of every tab
     private final boolean[] searchVis = new boolean[Tab.values().length];      // while searching: which pages have something that matches

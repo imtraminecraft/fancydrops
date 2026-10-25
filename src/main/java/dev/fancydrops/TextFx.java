@@ -55,7 +55,7 @@ final class TextFx {
     // Text: every letter slams in from large, one after another; a light sweeps across it now and then; it fades out the same way.
     static float waveIn = 1f, waveOut = 0f, waveT = 0f, bounceT = -1f;
     /** Menu previews: freezeT >= 0 holds the scene that many seconds after the words appear; loopTxt replays the words; textOnly leaves the scene out; fxOnly >= 0 shows just that text effect. */
-    public static float freezeT = -1f; public static boolean loopTxt, textOnly; public static int fxOnly = -1;
+    public static float freezeT = -1f; public static boolean loopTxt, textOnly, barsOnly; public static int fxOnly = -1;
     private static long textT0 = System.currentTimeMillis(); static float textBoost = 1f;
     public static String itemKey;                                     // the Item Changes preview: show this animation's drop (the RNG page)
     public static boolean itemOnly;                                   // the Item Changes preview: just the drop, nothing else

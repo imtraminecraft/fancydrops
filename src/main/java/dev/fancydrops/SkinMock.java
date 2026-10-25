@@ -197,12 +197,6 @@ final class SkinMock {
             {0, 1, 0, -hw, hh, -hd, 2 * hw, 0, 0, 0, 0, 2 * hd, u + d, v, w, d},
             {0, -1, 0, -hw, -hh, hd, 2 * hw, 0, 0, 0, 0, -2 * hd, u + d + w, v, w, d}};
     }
-    private static boolean tri(double px, double py, double ax, double ay, double bx, double by, double cx, double cy) {
-        double d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
-        if (Math.abs(d) < 1e-9) return false;
-        double l1 = ((by - cy) * (px - cx) + (cx - bx) * (py - cy)) / d, l2 = ((cy - ay) * (px - cx) + (ax - cx) * (py - cy)) / d, l3 = 1 - l1 - l2;
-        return l1 >= -0.09 && l2 >= -0.09 && l3 >= -0.09;
-    }
 
     /** The figure with its feet at (cx, feetY), turned by yaw (radians; 0 = facing you). One GUI pixel per picture pixel (about 150 tall). */
     // the 36 pictures live in one texture, so the figure is ONE quad instead of hundreds of rectangles

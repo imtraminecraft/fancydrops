@@ -594,7 +594,7 @@ final class Ritual {
         float csz = Math.max(0.5f, Math.min(1.2f, cfg.size)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale);
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
-        boolean barsOn = rng && cfg.bars, blurOn = rng && cfg.blur;
+        boolean barsOn = (rng && cfg.bars) || TextFx.barsOnly, blurOn = rng && cfg.blur && !TextFx.barsOnly && !TextFx.itemOnly;
 
         // where everything is (canvas units)
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f));
@@ -605,11 +605,12 @@ final class Ritual {
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
         float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene
         float textT = t - (O + 0.45f), textOut = sm((t - (S - 0.6f)) / 0.5f);               // the words leave after the item
-        float barSlide = Math.min(sm((t - (O - 0.8f)) / 0.6f), 1f - sm((t - (S - 0.5f)) / 0.45f));
+        float barSlide = TextFx.barsOnly ? 1f : Math.min(sm((t - (O - 0.8f)) / 0.6f), 1f - sm((t - (S - 0.5f)) / 0.45f));
         float shake = rng && p > 0 && p < 0.5f ? (1f - p / 0.5f) * 3f : 0f;
         int sx = Math.round((rnd((int) (t * 60)) - 0.5f) * 2f * shake * u), sy = Math.round((rnd((int) (t * 60) + 77) - 0.5f) * 2f * shake * u);
 
-        if (!TextFx.textOnly) {
+        boolean sceneOff = TextFx.textOnly || TextFx.itemOnly || TextFx.barsOnly;            // the Changes previews show only the part being edited
+        if (!sceneOff) {
             // ---- the blur: the world dims and softens at the edges (RNG, switchable)
             if (blurOn && barSlide > 0.01f) {
                 g.fill(0, 0, W, H, Gfx.argb(Math.round(110 * barSlide), 0x04050E));
@@ -623,7 +624,7 @@ final class Ritual {
         }
 
         // ---- the bars
-        if (barsOn && barSlide > 0.01f && !TextFx.textOnly) {
+        if (barsOn && barSlide > 0.01f && !TextFx.textOnly && !TextFx.itemOnly) {
             int bh = Math.round(barH * u * barSlide), oa = Math.round(255 * c.barOpacity / 100f);
             int bc = c.barCustom ? (c.barColor & 0xFFFFFF) : mixc(0x05060C, rc, 0.10f);
             g.fill(0, 0, W, bh, Gfx.argb(oa, bc)); g.fill(0, H - bh, W, H, Gfx.argb(oa, bc));
@@ -632,22 +633,22 @@ final class Ritual {
         }
 
         // ---- the item (flat icons stay flat, skulls are 3D and turn)
-        if (it != null && p >= 0f && !nod && !TextFx.textOnly) {
+        if (it != null && p >= 0f && !nod && !TextFx.textOnly && !TextFx.barsOnly) {
             float grow = 0.25f + 0.75f * eob(p / 0.7f);
-            float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f);
+            float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f);
             float gcx = CW / 2f * W / CW + sx, gcy = itemY(tb, p, icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
             ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA)); boolean still0 = Icons.STILL_ICONS; Icons.STILL_ICONS = false;                 // the dropped item always turns, whatever the menu says
             try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; }
         }
 
         // ---- the words: below the animation (top and center), above it (bottom); never over the bars
-        if (!TextFx.itemOnly && (textT > 0f || TextFx.textOnly)) {
-            float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * (0.8f + 0.2f * csz);
+        if (!TextFx.itemOnly && !TextFx.barsOnly && (textT > 0f || TextFx.textOnly)) {
+            float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * (0.8f + 0.2f * csz); if (TextFx.textOnly) sc = c.textK() * Math.max(0.9f, Math.min(1.5f, W / 230f));          // the Text editor shows the words big enough to read
             float th = TextFx.blockHeight(it, sc, c);
-            float top = c.animPos == 2 ? (icy - hi - 14 * sz) * u - th : (icy + hi + 26 * sz) * u;
+            float top = c.textAbove() ? (icy - hi - 14 * sz) * u - th : (icy + hi + 26 * sz) * u;
             if (barsOn) { float bhg = barH * u; top = Math.max(bhg + 6, Math.min(H - bhg - th - 6, top)); }
             float tl = TextFx.textOnly ? TextFx.loopClock(4.6f) : 0f;                                    // the Text editor replays the words on their own clock
-            TextFx.revealT = TextFx.textOnly ? tl : textT; TextFx.waveT = TextFx.textOnly ? tl : t; TextFx.waveOut = TextFx.textOnly ? sm((tl - 3.9f) / 0.6f) : textOut; TextFx.lineDelay = 0f;
+            TextFx.revealT = TextFx.textOnly ? tl : textT; TextFx.waveT = TextFx.textOnly ? tl : t; TextFx.waveOut = TextFx.textOnly ? sm((tl - 2.9f) / 1.1f) : textOut; TextFx.lineDelay = 0f;
             TextFx.block(g, font, W / 2, Math.round(top), sc, it, c, 255);
         }
     }

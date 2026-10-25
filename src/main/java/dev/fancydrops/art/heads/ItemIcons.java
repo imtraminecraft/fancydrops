@@ -94,7 +94,7 @@ public final class ItemIcons {
         }
         if (id.startsWith("MOB_") && MOB_SKINS.containsKey(id.substring(4))) {                   // a creature's head
             Cached b = new Cached(); b.wikiVersion = 12;
-            try { if (!Files.exists(texDir().resolve(id.replaceAll("[^A-Za-z0-9_]", "_") + "_head.png"))) { b.heads = fetchHead(MOB_SKINS.get(id.substring(4))); b.face = b.heads[4]; } } catch (Exception e) { log(id + ": head failed: " + e); }
+            try { if (!Files.exists(headDir().resolve(id.replaceAll("[^A-Za-z0-9_]", "_") + "_head.png"))) { b.heads = fetchHead(MOB_SKINS.get(id.substring(4))); b.face = b.heads[4]; } } catch (Exception e) { log(id + ": head failed: " + e); }
             ic.data = applyFolder(id, b); ic.ready = true; return;
         }
         Cached c = new Cached();
@@ -144,15 +144,16 @@ public final class ItemIcons {
         ic.ready = true;
     }
 
-    // ---- the textures folder: config/fancydrops/textures/. Every item picture is saved there once; put your own PNG with the same name to replace it (the game reads it the next time the item loads).
+    // ---- the textures folder: config/fancydrops/art/items (flat) and art/heads (skins). Every item picture is saved there once; put your own PNG with the same name to replace it (the game reads it the next time the item loads).
     //      <ID>.png       = flat item art (any size, it is scaled to 16x16)
     //      <ID>_head.png  = the skin of a head item (64x64 or 64x32), shown as the 3D block
-    static Path texDir() { return DataFiles.dir().resolve("textures"); }
+    static Path texDir() { return DataFiles.art("items"); }
+    static Path headDir() { return DataFiles.art("heads"); }
     private static Cached applyFolder(String id, Cached c) {
         try {
             Path dir = texDir(); Files.createDirectories(dir);
             String nm = id.replaceAll("[^A-Za-z0-9_]", "_");
-            Path flat = dir.resolve(nm + ".png"), head = dir.resolve(nm + "_head.png");
+            Path flat = dir.resolve(nm + ".png"), head = headDir().resolve(nm + "_head.png");
             if (Files.exists(head)) {
                 var im = ImageIO.read(head.toFile());
                 if (im != null && im.getWidth() >= 32) { c.heads = facesOf(im); c.face = c.heads[4]; c.iso = null; c.spin = null; c.faces6 = null; }
@@ -356,17 +357,6 @@ public final class ItemIcons {
         return hits.get(0).getAsJsonObject().get("title").getAsString();
     }
 
-    /** Fetch a Wiki item PNG. Try pageimages first, then the page's own image files (many item pages do not expose a pageimage). */
-    /** The picture the wiki page itself advertises (og:image = the item's info-box icon). */
-    private static int[] ogImagePixels(String pageName) throws Exception {
-        String html = httpString("https://hypixelskyblock.minecraft.wiki/w/" + URLEncoder.encode(pageName.replace(' ', '_'), StandardCharsets.UTF_8).replace("+", "%20"));
-        Matcher m = Pattern.compile("<meta[^>]+property=\"og:image\"[^>]+content=\"([^\"]+)\"").matcher(html);
-        if (!m.find()) m = Pattern.compile("<meta[^>]+content=\"([^\"]+)\"[^>]+property=\"og:image\"").matcher(html);
-        if (!m.find()) return null;
-        String url = m.group(1).replace("&amp;", "&");
-        if (url.startsWith("//")) url = "https:" + url; else if (url.startsWith("/")) url = "https://hypixelskyblock.minecraft.wiki" + url;
-        return downloadWikiPixels(url);
-    }
 
     private static int[] fetchWikiPixels(String pageName) throws Exception {
         String title = URLEncoder.encode(pageName.replace(' ', '_'), StandardCharsets.UTF_8);
@@ -603,7 +593,7 @@ public final class ItemIcons {
         if (d != null && (d.heads != null || (d.iso != null && skullFlag(id))) && !Icons.STILL_ICONS) {                       // a skull turns and bobs like an item dropped in the world
             if (d.faces6 == null) d.faces6 = d.heads != null ? d.heads : isoHead(d.wikiPixels);
             if (d.faces6 != null) {
-                long tm = System.currentTimeMillis(); float ph0 = (id.hashCode() & 255) / 255f, ang = (float) ((tm / 1000.0 * 0.9 + ph0 * 6.28) % (Math.PI * 2));
+                long tm = System.currentTimeMillis(); float ph0 = 0f, ang = (float) ((tm / 1000.0 * 0.9 + ph0 * 6.28) % (Math.PI * 2));
                 Gfx.scale(g, scale);
                 if (SkullSpin.draw(g, id, d.faces6, ang, Math.max(0f, Math.min(1f, drawAlpha)))) { Gfx.pop(g); return; }     // smooth 64x64 ray-traced block
                 Gfx.pop(g); Gfx.push(g); Gfx.translate(g, cx, cy);                                                           // no texture: the old 16x16 sprite below

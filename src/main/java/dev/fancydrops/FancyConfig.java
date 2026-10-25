@@ -108,6 +108,8 @@ public class FancyConfig {
     public int uiFont = 0, textFont = 0;
 
     // ------------------------------------------------------------------ cosmetics
+    public int textPos = 0;                                     // 0 the words sit below the animation, 1 above (only a choice while the animation is in the Center)
+    public boolean textAbove() { return animPos == 2 || (animPos == 1 && textPos == 1); }
     public int animPos = 1;                                     // where every animation sits: 0 Top Center, 1 Center, 2 Bottom Center
     public String suffix = "", nameFx = "", aura = "";        // what you picked ("" = none)
     public String firstVersion = "";                           // the first version this config saw: decides who gets the Beta cosmetics
@@ -152,7 +154,7 @@ public class FancyConfig {
         c.barPx = Math.max(5, Math.min(15, c.barPx));
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
-        c.animPos = Math.max(0, Math.min(2, c.animPos));
+        c.animPos = Math.max(0, Math.min(2, c.animPos)); c.textPos = Math.max(0, Math.min(1, c.textPos));
         for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 5f, 7f); a.size = clamp(a.size, 0.5f, 1.2f); a.pos = Math.max(0, Math.min(2, a.pos)); }
     }
     private static float clamp(float v, float lo, float hi) { return Math.max(lo, Math.min(hi, v)); }

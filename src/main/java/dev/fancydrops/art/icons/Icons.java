@@ -31,6 +31,7 @@ final class Icons {
         int[][] ov = OVR.get(name);
         if (ov != null) { blit(g, ov[ov.length == 1 || now == 2400L ? 0 : (int) ((now / FRAME_MS) % ov.length)], x, y); return; }
         if (name.equals("coin")) { ItemIcons.draw(g, "@COIN", null, x + 8, y + 8, 1f); return; }       // the Hypixel coin head, never a drawn disc
+        if (name.equals("griffin_pet")) { if (ItemIcons.hasPixels("GRIFFIN;5")) { ItemIcons.draw(g, "GRIFFIN;5", null, x + 8, y + 8, 1.15f); return; } ItemIcons.prefetch("GRIFFIN;5"); name = "griffin"; }      // the pet's own head (a feather until it loads)
         if (name.startsWith("mob_") && ItemIcons.hasPixels("MOB_" + name.substring(4))) { ItemIcons.draw(g, "MOB_" + name.substring(4), null, x + 8, y + 8, 1.15f); return; }      // the creature's own 3D head (the pixel icon shows until it has loaded)
         if (name.startsWith("mob_")) ItemIcons.prefetch("MOB_" + name.substring(4));
         if (name.equals("sparkle") || Cosmetics.byId(name) != null) { Cosmetics.drawIcon(g, name, x, y, now); return; }      // the one suffix we have: shaded, six frames
@@ -46,7 +47,7 @@ final class Icons {
     private static final String[] EXPORT = {"anim_icons", "anim_menu", "animations", "back", "bars", "bazaar", "bell", "chan_coop", "chan_off", "chan_party", "chan_public", "chat", "clock", "cone", "cos_aura", "cos_name", "cos_suffix", "cosmetics", "cube", "dice", "disc", "discord", "dock_bottom", "dock_off", "dock_top", "dropped", "dye", "experiments", "fancydrops", "farm", "fishing", "format", "glass", "griffin", "hammer", "menu", "mining", "mytho", "nodrops", "normal", "note", "play", "refresh", "send", "settings", "size", "slayers", "snd_beat", "snd_burst", "snd_end", "snd_linger", "snd_reveal", "sounds", "speed", "stats", "switch", "sword", "shovel", "text", "treasure", "updates"};
     private static final java.util.Map<String, int[][]> OVR = new java.util.HashMap<>();
     private static long ovrScan, ovrStamp; private static boolean exported;
-    static java.nio.file.Path iconDir() { return DataFiles.dir().resolve("icons"); }
+    static java.nio.file.Path iconDir() { return DataFiles.art("icons"); }
     private static void scanOverrides() {
         long nw = System.currentTimeMillis();
         if (nw - ovrScan < 1000L) return; ovrScan = nw;
@@ -133,10 +134,6 @@ final class Icons {
         }
     }
     private static int al(int a, int rgb) { return (Math.max(0, Math.min(255, a)) << 24) | (rgb & 0xFFFFFF); }
-    private static void ln(GuiGraphicsExtractor g, int x, int y, float x0, float y0, float x1, float y1, int c) {
-        int n = Math.max(1, Math.round(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
-        for (int i = 0; i <= n; i++) { int px = Math.round(x0 + (x1 - x0) * i / n), py = Math.round(y0 + (y1 - y0) * i / n); g.fill(x + px, y + py, x + px + 1, y + py + 1, c); }
-    }
     private static void spark(GuiGraphicsExtractor g, int x, int y, int cx, int cy, int len, int c) {
         r(g, x, y, cx - len, cy, len * 2 + 1, 1, c); r(g, x, y, cx, cy - len, 1, len * 2 + 1, c);
         if (len > 1) { r(g, x, y, cx - 1, cy - 1, 3, 3, al(150, c)); }

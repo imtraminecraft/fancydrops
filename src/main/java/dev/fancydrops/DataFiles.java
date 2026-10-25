@@ -16,6 +16,22 @@ import java.nio.file.Path;
 public final class DataFiles {
     public static volatile String status = "Bundled data";
 
+    /** Everything you can edit by hand lives in config/fancydrops/art/: icons/ (the little menu icons), heads/ (3D head skins), items/ (flat item pictures), animations/ (notes: the scenes are drawn in code). */
+    public static Path art(String sub) {
+        Path root = dir().resolve("art"), p = root.resolve(sub);
+        try {
+            if (!Files.exists(root)) {                                                    // the first run after the folders were gathered: bring the earlier icons/ and textures/ along
+                Files.createDirectories(root.resolve("icons")); Files.createDirectories(root.resolve("heads")); Files.createDirectories(root.resolve("items")); Files.createDirectories(root.resolve("animations"));
+                Path oi = dir().resolve("icons"), ot = dir().resolve("textures");
+                if (Files.isDirectory(oi)) try (var st = Files.list(oi)) { for (Path f : (Iterable<Path>) st::iterator) { if (Files.isRegularFile(f)) Files.move(f, root.resolve("icons").resolve(f.getFileName()), java.nio.file.StandardCopyOption.REPLACE_EXISTING); } }
+                if (Files.isDirectory(ot)) try (var st = Files.list(ot)) { for (Path f : (Iterable<Path>) st::iterator) { if (Files.isRegularFile(f)) Files.move(f, root.resolve(f.getFileName().toString().endsWith("_head.png") ? "heads" : "items").resolve(f.getFileName()), java.nio.file.StandardCopyOption.REPLACE_EXISTING); } }
+                Files.writeString(root.resolve("animations").resolve("README.txt"), "The animation scenes (the ritual circle, the creatures, the digger, the lightning) are drawn in code: Ritual.java in the mod's source (art/animations).\nTiming, size and position are in the Animations page of the menu.\n");
+            }
+            Files.createDirectories(p);
+        } catch (Exception ignored) {}
+        return p;
+    }
+
     public static Path dir() {
         Path now = FabricLoader.getInstance().getConfigDir().resolve("fancydrops");
         if (!Files.exists(now)) {                       // first run after the RNGDrops -> FancyDrops rename: bring the old data folder along

@@ -9,7 +9,8 @@ import java.util.regex.Pattern;
  */
 public final class ChatFilter {
     public static final Set<String> PLACEHOLDERS = new LinkedHashSet<>(List.of("{item}", "{drop}", "{price}", "{mf}", "{slayer}", "{overbloom}", "{source}"));
-    public static final int MAX = 120;
+    public static final int MAX = 65;                 // letters you can type; the {placeholders} do not count
+    public static int plainLength(String f) { return f == null ? 0 : f.replaceAll("\\{[^}]*}", "").length(); }
 
     // whole words (after un-leeting). Plurals and -ing/-ed/-er endings are handled by stemming.
     private static final Set<String> WORDS = new HashSet<>(Arrays.asList(
@@ -27,7 +28,7 @@ public final class ChatFilter {
     /** null = fine, otherwise a short reason to show the player. */
     public static String check(String format) {
         if (format == null || format.isBlank()) return "The message can't be empty";
-        if (format.length() > MAX) return "Too long (max " + MAX + " characters)";
+        if (plainLength(format) > MAX) return "Too long (max " + MAX + " characters, placeholders not counted)";
         if (format.startsWith("/")) return "Can't start with / (that would run a command)";
         if (format.indexOf('\n') >= 0 || format.indexOf('§') >= 0) return "Can't contain colour codes or line breaks";
         var m = BRACES.matcher(format);
