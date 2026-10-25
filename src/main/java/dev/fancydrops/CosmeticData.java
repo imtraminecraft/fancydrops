@@ -19,18 +19,13 @@ final class CosmeticData {
         new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, null, "contribfx", "stardust", 3),
         new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, null, "royal", "patronaura", 3),
         new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, null, "pulse", null, 2),
-        new SetDef("common", "Common", "Everyone gets this set.", 0xFF9AA3B5, null, "fresh", null, 0));
+        new SetDef("common", "Common", "Everyone gets this set.", 0xFF9AA3B5, null, "", null, 0));
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
     private static final String BETA_HOW = "Downloaded the mod before v1.0", RARE_HOW = "Rare: given to the first players of the mod";
     static final List<Def> ALL = List.of(
         // Beta: kept by everyone who had the mod before 1.0
-        new Def("rainbow", "Rainbow", Line.RARE, Kind.NAME, RARE_HOW, 0xFFFF9AC8),
-        new Def("aurora", "Aurora", Line.RARE, Kind.NAME, RARE_HOW, 0xFF62E6C8),
-        new Def("shimmer", "Shimmer", Line.RARE, Kind.NAME, RARE_HOW, 0xFFBFD4FF),
         new Def("pulse", "Pulse", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFF9AC8, "beta"),
-        new Def("wave", "Ripple", Line.RARE, Kind.NAME, RARE_HOW, 0xFF7FE0D0),
-        new Def("glow", "Glow", Line.RARE, Kind.NAME, RARE_HOW, 0xFFFFE9A8),
         // Special: handed out by hand, one set at a time (suffix + name effect + aura)
         new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFB48CFF, "sparkle"),
         new Def("sparklefx", "Starlight", Line.SPECIAL, Kind.NAME, "Special Set", 0xFFFFE9A8, "sparkle"),
@@ -40,12 +35,7 @@ final class CosmeticData {
         new Def("contribfx", "Aqua Flow", Line.SPECIAL, Kind.NAME, "Contributors Set", 0xFF55D8FF, "contributors"),
         new Def("stardust", "Stardust", Line.SPECIAL, Kind.AURA, "Contributors Set", 0xFF8FD0FF, "contributors"),
         new Def("royal", "Royal", Line.SPECIAL, Kind.NAME, "Patreon Set", 0xFFFFC832, "patreon"),
-        new Def("patronaura", "Embers", Line.SPECIAL, Kind.AURA, "Patreon Set", 0xFFFF9B2E, "patreon"),
-        // Everyone: earn them yourself (all still, except the secret one)
-        new Def("fresh", "Fresh", Line.FREE, Kind.NAME, "Downloaded the mod", 0xFF9BE8A8, "common"),
-        new Def("ember", "Ember", Line.FREE, Kind.NAME, "Got 15 rare drops", 0xFFFF8A3D),
-        new Def("frost", "Frost", Line.FREE, Kind.NAME, "Got 75 rare drops", 0xFF9AD8FF),
-        new Def("neon", "Neon", Line.FREE, Kind.NAME, "Got 300 rare drops", 0xFFFF5AE0));
+        new Def("patronaura", "Embers", Line.SPECIAL, Kind.AURA, "Patreon Set", 0xFFFF9B2E, "patreon"));
 
     static Def byId(String id) { for (Def d : ALL) if (d.id().equals(id)) return d; return null; }
     static List<Def> line(Line l) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (d.line() == l) o.add(d); return o; }

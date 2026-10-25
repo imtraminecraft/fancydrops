@@ -716,7 +716,7 @@ public class FancyScreen extends Screen {
         }
         int sel = Math.min(r.pLabels.length - 1, r.pSel.getAsInt());
         for (int i = 0; i < r.pLabels.length; i++) {
-            int[] b = pickBox(r, i); boolean on = r.pOn != null ? r.pOn.test(i) : i == sel, hv = mx >= b[0] && mx < b[0] + b[2] && my >= b[1] && my < b[1] + b[3], wip = r.pWip != null && r.pWip[i];
+            int[] b = pickBox(r, i); boolean on = r.pOn != null ? r.pOn.test(i) : i == sel, hv = mx >= b[0] && mx < b[0] + b[2] && my >= Math.max(b[1], lt) && my < Math.min(b[1] + b[3], lb) && popup == null, wip = r.pWip != null && r.pWip[i];
             int col = r.pColors[i];
             boolean lk = r.pLock != null && r.pLock[i];
             Long shk = lk ? lockShake.get(r.pLabels[i]) : null;
@@ -2471,7 +2471,7 @@ public class FancyScreen extends Screen {
 
     private void homePage(FancyConfig c) {
         if (!landing()) { resourcesPage(); return; }
-        rows.add(hero(":fancydrops:", "FancyDrops", "Every rare drop becomes a short animation you design yourself: how it looks, how it sounds and what your party reads in chat. Mythological Rituals come first, Slayers next.", Ui.ACCENT));
+        rows.add(hero(":fancydrops:", "FancyDrops", "Every rare drop becomes a short animation you design yourself: how it looks, how it sounds and what your party reads in chat.", Ui.ACCENT));
         UpdateCheck.check(false);
         rows.add(section("Updates"));
         Row ur = new Row(); ur.kind = UPDATE; ur.h = 36; ur.noSearch = true; rows.add(ur);
@@ -2497,7 +2497,10 @@ public class FancyScreen extends Screen {
         Categories.Cat cat = curCat();
         if (cat.wip()) { wipPanel(cat.icon(), cat.name() + " drops", cat.blurb()); return; }
         // three levels: the category hub (Mythological Mobs / Treasure), a group page (the creatures), and one source page (a creature or the burrow)
-        for (Categories.Group gr : cat.groups()) srcList.add(new String[]{gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())});
+        for (Categories.Group gr : cat.groups()) {
+            srcList.add(new String[]{gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())});
+            if (gr.id().equals("myth")) for (DropData.Source s : cat.sources("myth")) srcList.add(new String[]{"myth/" + s.id, srcName(s), ":mob_" + s.id + ":", String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
+        }
         String ds = dropSrc == null ? "" : dropSrc;
         String gid = ds.contains("/") ? ds.substring(0, ds.indexOf('/')) : ds;
         Categories.Group grp = null; for (Categories.Group gr : cat.groups()) if (gr.id().equals(gid)) grp = gr;
@@ -2533,9 +2536,9 @@ public class FancyScreen extends Screen {
         rows.add(hero(grp.icon(), grp.name(), grp.blurb() + "  " + srcs.size() + " creatures, " + total + " drops.", grp.color()));
         mythSettings(rows, c);
         rows.add(section("Creatures"));
-        int n = srcs.size(); String[] lb = new String[n], sb = new String[n]; int[] co = new int[n];
-        for (int i = 0; i < n; i++) { lb[i] = srcName(srcs.get(i)); sb[i] = srcs.get(i).drops.size() + " drops"; co[i] = srcs.get(i).color(); }
-        rows.add(picker("", "", lb, sb, new String[n], co, null, 3, () -> -1, i -> openPage(curSub(), grp.id() + "/" + srcs.get(i).id, lb[i])));
+        int n = srcs.size(); String[] lb = new String[n], sb = new String[n], mi = new String[n]; int[] co = new int[n];
+        for (int i = 0; i < n; i++) { lb[i] = srcName(srcs.get(i)); sb[i] = srcs.get(i).drops.size() + " drops"; co[i] = srcs.get(i).color(); mi[i] = ":mob_" + srcs.get(i).id + ":"; }
+        rows.add(picker("", "", lb, sb, mi, co, null, 3, () -> -1, i -> openPage(curSub(), grp.id() + "/" + srcs.get(i).id, lb[i])));
     }
 
     private void dropsSource(Categories.Cat cat, Categories.Group grp, DropData.Source s, FancyConfig c, boolean single) {
@@ -3273,10 +3276,12 @@ public class FancyScreen extends Screen {
         placePopup();
         drawPopup(g, mx, my);
 
-        searchField.setBordered(false); searchField.setVisible(true); searchField.setX(cx + cw - 118); searchField.setY(py + 14); searchField.setWidth(112);
-        pill(g, cx + cw - 124, py + 11, 124, 16, searchField.isFocused() ? Canvas.mix(Ui.PANEL2, Ui.ACCENT, 0.25f) : Ui.PANEL2);
-        if (searchField.isFocused()) rout(g, cx + cw - 124, py + 11, 124, 16, Gfx.argb(190, Ui.ACCENT & 0xFFFFFF));
-        searchField.extractRenderState(g, mx, my, delta);
+        if (tab != Tab.COSMETICS) {                                                      // Cosmetics has no search
+            searchField.setBordered(false); searchField.setVisible(true); searchField.setX(cx + cw - 118); searchField.setY(py + 14); searchField.setWidth(112);
+            pill(g, cx + cw - 124, py + 11, 124, 16, searchField.isFocused() ? Canvas.mix(Ui.PANEL2, Ui.ACCENT, 0.25f) : Ui.PANEL2);
+            if (searchField.isFocused()) rout(g, cx + cw - 124, py + 11, 124, 16, Gfx.argb(190, Ui.ACCENT & 0xFFFFFF));
+            searchField.extractRenderState(g, mx, my, delta);
+        } else searchField.setFocused(false);
 
         if (totalH > viewH) {
             int bh = Math.max(16, viewH * viewH / totalH);
@@ -3424,6 +3429,7 @@ public class FancyScreen extends Screen {
 
 
     @Override public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) { dirty = true;
+        if (searchField.isFocused() && !(event.x() >= searchField.getX() - 6 && event.x() < searchField.getX() + searchField.getWidth() + 6 && event.y() >= searchField.getY() - 3 && event.y() < searchField.getY() + 14)) searchField.setFocused(false);          // a click anywhere else leaves the search box
         if (adminOpen) return event.button() != 0 || adminClick(event.x(), event.y());
         if (adminHome) {
             if (event.button() == 0) for (Object[] h : adminHits) if (event.x() >= (int) h[0] && event.x() < (int) h[2] && event.y() >= (int) h[1] && event.y() < (int) h[3]) { ((Runnable) h[4]).run(); return true; }

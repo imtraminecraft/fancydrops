@@ -188,19 +188,9 @@ final class Ritual {
     private static void minotaur(float cx, float gy, float k, float reveal, float breakT, boolean crumble, int rc, int rim, float a, float t) {
         if (reveal <= 0f || a <= 0.01f) return;
         Canvas saved = cv; cv = sil; sil.clear();
-        int d = 0xFF070A14;
-        fillE(cx - 8 * k, gy - 10 * k, 7 * k, 12 * k, d & 0xFFFFFF, 1f); fillE(cx + 8 * k, gy - 10 * k, 7 * k, 12 * k, d & 0xFFFFFF, 1f);     // legs
-        fillE(cx, gy - 34 * k, 17 * k, 25 * k, d & 0xFFFFFF, 1f);                                                                               // torso
-        fillE(cx, gy - 54 * k, 27 * k, 11 * k, d & 0xFFFFFF, 1f);                                                                               // shoulders
-        fillE(cx - 28 * k, gy - 40 * k, 6 * k, 18 * k, d & 0xFFFFFF, 1f); fillE(cx + 28 * k, gy - 40 * k, 6 * k, 18 * k, d & 0xFFFFFF, 1f);   // arms
-        fillE(cx - 29 * k, gy - 21 * k, 6 * k, 6 * k, d & 0xFFFFFF, 1f); fillE(cx + 29 * k, gy - 21 * k, 6 * k, 6 * k, d & 0xFFFFFF, 1f);       // fists
-        fillE(cx, gy - 68 * k, 10 * k, 11 * k, d & 0xFFFFFF, 1f); fillE(cx, gy - 62 * k, 6 * k, 5 * k, d & 0xFFFFFF, 1f);                       // head and snout
-        for (int s = -1; s <= 1; s += 2) {                                                                                                         // the horns
-            float[] hx = {8, 16, 21, 23, 20}, hy = {-74, -75, -80, -88, -95};
-            for (int i = 0; i < 4; i++) for (int w = -1; w <= 1; w++) line(cx + s * hx[i] * k + w, gy + hy[i] * k, cx + s * hx[i + 1] * k + w, gy + hy[i + 1] * k, d & 0xFFFFFF, 1f);
-        }
+        float[] eyes = shape(kind, cx, gy, k);
         cv = saved;
-        int[] sp = sil.px; float cy0 = gy - 45 * k, top = 100 * k;
+        int[] sp = sil.px; float cy0 = gy - 45 * k, top = SHAPE_TOP[kind] * k;
         boolean[] edge = new boolean[sp.length];
         for (int y = 1; y < CH - 1; y++) for (int x = 1; x < CW - 1; x++) if (sp[y * CW + x] >>> 24 == 0 && ((sp[y * CW + x - 1] >>> 24) > 100 || (sp[y * CW + x + 1] >>> 24) > 100 || (sp[(y - 1) * CW + x] >>> 24) > 100 || (sp[(y + 1) * CW + x] >>> 24) > 100)) edge[y * CW + x] = true;
         for (int y = 0; y < CH; y++) for (int x = 0; x < CW; x++) {
@@ -223,22 +213,190 @@ final class Ritual {
         }
         if (breakT < 0f && reveal > 0.55f) {                                              // glaring eyes
             float e = cl((reveal - 0.55f) / 0.3f) * (0.7f + 0.3f * (float) Math.sin(t * 7f)) * a;
-            for (int s = -1; s <= 1; s += 2) { float ex = cx + s * 4.5f * k, ey = gy - 69 * k; glowE(ex, ey, 6 * k, 5 * k, 0xFF4A2A, 0.7f * e); dot(ex, ey, 0xFFE0B0, e); dot(ex + s, ey, 0xFF8A4A, e); }
+            for (int q = 0; q + 1 < eyes.length; q += 2) { float ex = eyes[q], ey = eyes[q + 1], sd = q == 0 ? -1 : 1; glowE(ex, ey, 6 * k, 5 * k, 0xFF4A2A, 0.7f * e); dot(ex, ey, 0xFFE0B0, e); dot(ex + sd, ey, 0xFF8A4A, e); }
+        }
+    }
+
+    // ------------------------------------------------------------------ the creatures: one silhouette for each of the twelve
+    /** Which creature the scene summons: the Mythological Mobs of the Animations page rotate through all twelve; a real drop calls its own. */
+    static final String[] KINDS = {"minotaur", "minos_hunter", "siamese_lynxes", "stranded_nymph", "cretan_bull", "harpy", "gaia_construct", "minos_champion", "sphinx", "minos_inquisitor", "manticore", "king_minos"};
+    private static final float[] SHAPE_TOP = {100, 90, 58, 76, 60, 90, 98, 100, 74, 104, 86, 108};
+    static int kind = 0;
+    static int kindOf(String sourceId) { for (int i = 0; i < KINDS.length; i++) if (KINDS[i].equals(sourceId)) return i; return 0; }
+    private static final int DK = 0x070A14;
+    private static void fe(float cx, float gy, float k, float x, float y, float rx, float ry) { fillE(cx + x * k, gy + y * k, rx * k, ry * k, DK, 1f); }
+    private static void ln2(float cx, float gy, float k, float x0, float y0, float x1, float y1, int w) { for (int i = -(w / 2); i <= w / 2; i++) { line(cx + x0 * k + i, gy + y0 * k, cx + x1 * k + i, gy + y1 * k, DK, 1f); line(cx + x0 * k, gy + y0 * k + i, cx + x1 * k, gy + y1 * k + i, DK, 1f); } }
+
+    /** Draws the dark shape of creature `kd` on the silhouette canvas; returns where its eyes glare (x, y pairs). */
+    private static float[] shape(int kd, float cx, float gy, float k) {
+        switch (kd) {
+            case 1 -> {                                                                       // Minos Hunter: a hooded archer with a bow and a quiver
+                fe(cx, gy, k, -5, -9, 4, 10); fe(cx, gy, k, 5, -9, 4, 10); fe(cx, gy, k, 0, -30, 12, 22); fe(cx, gy, k, 0, -46, 15, 6);
+                fe(cx, gy, k, 0, -58, 8, 9); fe(cx, gy, k, 0, -68, 4, 6); fe(cx, gy, k, -16, -40, 4, 12); fe(cx, gy, k, 15, -38, 4, 10);
+                ln2(cx, gy, k, -22, -66, -30, -54, 2); ln2(cx, gy, k, -30, -54, -31, -42, 2); ln2(cx, gy, k, -31, -42, -30, -30, 2); ln2(cx, gy, k, -30, -30, -22, -18, 2); ln2(cx, gy, k, -22, -66, -22, -18, 1);
+                ln2(cx, gy, k, 8, -62, 15, -48, 2); ln2(cx, gy, k, 9, -64, 8, -70, 1); ln2(cx, gy, k, 12, -60, 14, -67, 1);
+                return new float[]{cx - 3 * k, gy - 58 * k, cx + 3 * k, gy - 58 * k};
+            }
+            case 2 -> {                                                                       // Siamese Lynxes: two cats, tails curled, ears up
+                for (int s = -1; s <= 1; s += 2) {
+                    float o = s * 19, f = -s;                                                  // the left cat looks right, the right cat looks left
+                    fe(cx, gy, k, o, -14, 14, 11); fe(cx, gy, k, o - 8 * f, -12, 8, 10); fe(cx, gy, k, o + 9 * f, -22, 7, 12); fe(cx, gy, k, o + 11 * f, -36, 8, 7);
+                    ln2(cx, gy, k, o + 6 * f, -41, o + 7 * f, -53, 3); ln2(cx, gy, k, o + 14 * f, -41, o + 17 * f, -53, 3); fe(cx, gy, k, o + 17 * f, -33, 4, 3);
+                    ln2(cx, gy, k, o - 14 * f, -16, o - 22 * f, -26, 3); ln2(cx, gy, k, o - 22 * f, -26, o - 24 * f, -38, 3); ln2(cx, gy, k, o - 24 * f, -38, o - 19 * f, -47, 2);
+                    fe(cx, gy, k, o + 8 * f, -4, 3, 6); fe(cx, gy, k, o - 6 * f, -4, 3, 6);
+                }
+                return new float[]{cx - 5 * k, gy - 37 * k, cx + 5 * k, gy - 37 * k};
+            }
+            case 3 -> {                                                                       // Stranded Nymph: long hair, a flowing dress, seaweed, a shell
+                fe(cx, gy, k, 0, -14, 10, 16); fe(cx, gy, k, 0, -8, 16, 8); fe(cx, gy, k, 0, -38, 8, 14); fe(cx, gy, k, 0, -58, 6.5f, 7.5f);
+                fe(cx, gy, k, -8, -50, 5, 20); fe(cx, gy, k, 8, -50, 5, 20); ln2(cx, gy, k, -9, -40, -15, -18, 3); ln2(cx, gy, k, 9, -40, 15, -18, 3);
+                fe(cx, gy, k, -11, -38, 3, 10); fe(cx, gy, k, 11, -34, 3, 9); fe(cx, gy, k, 14, -27, 5, 4);
+                ln2(cx, gy, k, -18, -2, -21, -16, 2); ln2(cx, gy, k, -21, -16, -18, -26, 1); ln2(cx, gy, k, 19, -2, 23, -14, 2); ln2(cx, gy, k, 23, -14, 20, -24, 1);
+                return new float[]{cx - 2.5f * k, gy - 58 * k, cx + 2.5f * k, gy - 58 * k};
+            }
+            case 4 -> {                                                                       // Cretan Bull: a bull on four legs, head lowered, horns forward
+                float x0 = -4;
+                fe(cx, gy, k, x0, -30, 28, 15); fe(cx, gy, k, x0 - 8, -42, 12, 7); fe(cx, gy, k, x0 - 20, -28, 10, 14); fe(cx, gy, k, x0 + 18, -30, 12, 14);
+                fe(cx, gy, k, x0 + 30, -24, 9, 9); fe(cx, gy, k, x0 + 38, -19, 5, 4);
+                ln2(cx, gy, k, x0 + 28, -31, x0 + 26, -42, 3); ln2(cx, gy, k, x0 + 26, -42, x0 + 32, -49, 2); ln2(cx, gy, k, x0 + 33, -31, x0 + 36, -43, 3); ln2(cx, gy, k, x0 + 36, -43, x0 + 43, -47, 2);
+                for (int l : new int[]{-22, -12, 14, 24}) fe(cx, gy, k, x0 + l, -8, 4, 12);
+                ln2(cx, gy, k, x0 - 30, -34, x0 - 36, -22, 2); ln2(cx, gy, k, x0 - 36, -22, x0 - 34, -12, 2);
+                return new float[]{cx + (x0 + 33) * k, gy - 26 * k, cx + (x0 + 37) * k, gy - 25 * k};
+            }
+            case 5 -> {                                                                       // Harpy: a woman with great wings and talons
+                fe(cx, gy, k, 0, -40, 8, 16); fe(cx, gy, k, 0, -62, 6, 7); fe(cx, gy, k, 0, -67, 7, 4);
+                ln2(cx, gy, k, -3, -70, -6, -80, 2); ln2(cx, gy, k, 0, -71, 0, -82, 2); ln2(cx, gy, k, 3, -70, 6, -80, 2);
+                for (int sd = -1; sd <= 1; sd += 2) for (int i = 0; i <= 12; i++) ln2(cx, gy, k, sd * 6, -52, sd * (24 + i * 2.6f), -82 + i * 5.2f, 2);
+                for (int sd = -1; sd <= 1; sd += 2) fe(cx, gy, k, sd * 20, -62, 13, 11);
+                fe(cx, gy, k, -4, -18, 3, 10); fe(cx, gy, k, 4, -18, 3, 10); ln2(cx, gy, k, -4, -7, -9, 0, 2); ln2(cx, gy, k, 4, -7, 9, 0, 2);
+                return new float[]{cx - 2.5f * k, gy - 62 * k, cx + 2.5f * k, gy - 62 * k};
+            }
+            case 6 -> {                                                                       // Gaia Construct: a hulking golem of stone and moss
+                fe(cx, gy, k, -10, -12, 8, 14); fe(cx, gy, k, 10, -12, 8, 14); fe(cx, gy, k, 0, -42, 22, 28); fe(cx, gy, k, 0, -66, 30, 10);
+                fe(cx, gy, k, -36, -50, 8, 24); fe(cx, gy, k, 36, -50, 8, 24); fe(cx, gy, k, -37, -22, 9, 9); fe(cx, gy, k, 37, -22, 9, 9);
+                fe(cx, gy, k, 0, -82, 9, 8); ln2(cx, gy, k, -20, -74, -6, -76, 2); ln2(cx, gy, k, 14, -78, 22, -90, 2); ln2(cx, gy, k, 22, -90, 18, -96, 2);
+                return new float[]{cx - 4 * k, gy - 82 * k, cx + 4 * k, gy - 82 * k};
+            }
+            case 7 -> {                                                                       // Minos Champion: an armoured guard with a horned helm, a spear and a round shield
+                fe(cx, gy, k, -8, -10, 6, 12); fe(cx, gy, k, 8, -10, 6, 12); fe(cx, gy, k, 0, -34, 14, 22); fe(cx, gy, k, 0, -54, 22, 8); fe(cx, gy, k, 0, -66, 8, 9);
+                fe(cx, gy, k, 0, -76, 3, 6); ln2(cx, gy, k, 0, -80, 5, -90, 3);
+                ln2(cx, gy, k, -7, -70, -14, -80, 2); ln2(cx, gy, k, 7, -70, 14, -80, 2);
+                fe(cx, gy, k, -27, -40, 10, 16); fe(cx, gy, k, 24, -38, 5, 14);
+                ln2(cx, gy, k, 26, -12, 26, -96, 2); ln2(cx, gy, k, 26, -96, 22, -88, 2); ln2(cx, gy, k, 26, -96, 30, -88, 2);
+                return new float[]{cx - 3.5f * k, gy - 67 * k, cx + 3.5f * k, gy - 67 * k};
+            }
+            case 8 -> {                                                                       // Sphinx: a lion lying down, a headdress, folded wings
+                float x0 = -6;
+                fe(cx, gy, k, x0 + 10, -18, 34, 14); fe(cx, gy, k, x0 - 26, -5, 14, 4); fe(cx, gy, k, x0 - 8, -4, 10, 4);
+                fe(cx, gy, k, x0 - 20, -34, 8, 16); fe(cx, gy, k, x0 - 22, -56, 8, 9); fe(cx, gy, k, x0 - 22, -52, 12, 12);
+                fe(cx, gy, k, x0 - 31, -40, 4, 12); fe(cx, gy, k, x0 - 13, -40, 4, 12);
+                fe(cx, gy, k, x0 + 14, -34, 22, 12); ln2(cx, gy, k, x0 + 30, -40, x0 + 42, -54, 3);
+                ln2(cx, gy, k, x0 + 42, -14, x0 + 48, -8, 2); ln2(cx, gy, k, x0 + 48, -8, x0 + 46, -2, 2);
+                return new float[]{cx + (x0 - 25) * k, gy - 57 * k, cx + (x0 - 19) * k, gy - 57 * k};
+            }
+            case 9 -> {                                                                       // Minos Inquisitor: a tall robed figure in a horned mask, with a staff
+                fe(cx, gy, k, 0, -30, 15, 30); fe(cx, gy, k, 0, -8, 19, 10); fe(cx, gy, k, 0, -52, 11, 12); fe(cx, gy, k, 0, -72, 7, 8);
+                for (int sd = -1; sd <= 1; sd += 2) { ln2(cx, gy, k, sd * 6, -76, sd * 14, -84, 3); ln2(cx, gy, k, sd * 14, -84, sd * 16, -98, 3); ln2(cx, gy, k, sd * 16, -98, sd * 12, -104, 2); }
+                fe(cx, gy, k, -15, -48, 4, 12); fe(cx, gy, k, 18, -50, 3, 10);
+                ln2(cx, gy, k, 22, -4, 22, -92, 2); ln2(cx, gy, k, 17, -98, 22, -92, 2); ln2(cx, gy, k, 27, -98, 22, -92, 2); fe(cx, gy, k, 22, -99, 3, 3);
+                return new float[]{cx - 3 * k, gy - 72 * k, cx + 3 * k, gy - 72 * k};
+            }
+            case 10 -> {                                                                      // Manticore: a lion with a human face, bat wings and a scorpion tail
+                float x0 = -4;
+                fe(cx, gy, k, x0, -26, 24, 13); fe(cx, gy, k, x0 - 20, -24, 10, 12); fe(cx, gy, k, x0 + 16, -28, 10, 14);
+                for (int l : new int[]{-22, -10, 12, 22}) fe(cx, gy, k, x0 + l, -7, 4, 10);
+                fe(cx, gy, k, x0 + 26, -42, 12, 12); fe(cx, gy, k, x0 + 28, -40, 7, 8);
+                for (int i = 0; i <= 10; i++) ln2(cx, gy, k, x0 - 4, -38, x0 - 26 + i * 4.2f, -70 - (i % 2) * 8 + (i > 5 ? (i - 5) * 1.5f : 0), 2);
+                fe(cx, gy, k, x0 - 8, -58, 16, 14);
+                ln2(cx, gy, k, x0 - 24, -30, x0 - 36, -50, 3); ln2(cx, gy, k, x0 - 36, -50, x0 - 30, -68, 3); ln2(cx, gy, k, x0 - 30, -68, x0 - 16, -76, 3); ln2(cx, gy, k, x0 - 16, -76, x0 - 8, -70, 2); ln2(cx, gy, k, x0 - 8, -70, x0 - 6, -62, 2);
+                return new float[]{cx + (x0 + 24) * k, gy - 41 * k, cx + (x0 + 30) * k, gy - 41 * k};
+            }
+            case 11 -> {                                                                      // King Minos: a crowned giant in a cape, a sceptre in his hand
+                fe(cx, gy, k, 0, -44, 34, 44);
+                shape(0, cx, gy, k * 1.05f);
+                for (int i = -3; i <= 3; i++) ln2(cx, gy, k, i * 3, -78, i * 3.4f, -86 - (i % 2 == 0 ? 6 : 0), 2);
+                fe(cx, gy, k, 0, -78, 10, 2);
+                ln2(cx, gy, k, 38, -8, 38, -98, 3); fe(cx, gy, k, 38, -102, 5, 5);
+                return new float[]{cx - 4.7f * k, gy - 72.5f * k, cx + 4.7f * k, gy - 72.5f * k};
+            }
+            default -> {                                                                      // Minotaur: a horned brute
+                fe(cx, gy, k, -8, -10, 7, 12); fe(cx, gy, k, 8, -10, 7, 12); fe(cx, gy, k, 0, -34, 17, 25); fe(cx, gy, k, 0, -54, 27, 11);
+                fe(cx, gy, k, -28, -40, 6, 18); fe(cx, gy, k, 28, -40, 6, 18); fe(cx, gy, k, -29, -21, 6, 6); fe(cx, gy, k, 29, -21, 6, 6);
+                fe(cx, gy, k, 0, -68, 10, 11); fe(cx, gy, k, 0, -62, 6, 5);
+                for (int sd = -1; sd <= 1; sd += 2) { float[] hx = {8, 16, 21, 23, 20}, hy = {-74, -75, -80, -88, -95}; for (int i = 0; i < 4; i++) ln2(cx, gy, k, sd * hx[i], hy[i], sd * hx[i + 1], hy[i + 1], 3); }
+                return new float[]{cx - 4.5f * k, gy - 69 * k, cx + 4.5f * k, gy - 69 * k};
+            }
         }
     }
 
     // ------------------------------------------------------------------ treasure: the dig
     private static final float[] DIG = {0.14f, 0.43f, 0.72f};
 
-    private static void spade(float x, float tipY, int blade, float a) {
-        float hx = x + 15, hy = tipY - 34;
-        for (int k = -1; k <= 1; k++) line(x + 2 + k, tipY - 7, hx + k, hy, 0x5B3A1C, a);                // the shaft
-        line(x + 2, tipY - 7, hx, hy, 0x8A5A2C, a);
-        line(hx - 3, hy, hx + 3, hy, 0x3A2410, a); line(hx - 3, hy - 1, hx + 3, hy - 1, 0x6B4423, a);     // the grip
-        for (int r = 0; r < 8; r++) {                                                                      // the blade, a rounded diamond
-            float wd = r < 5 ? 1 + r * 0.9f : 5.5f - (r - 4) * 1.5f;
-            line(x - wd + 2, tipY - 7 + r, x + wd + 2, tipY - 7 + r, r < 2 ? mixc(blade, WHITE, 0.45f) : r < 5 ? blade : mixc(blade, 0x000000, 0.25f), a);
+    /** An outlined ellipse: a dark rim first, then the colour. */
+    private static void pe(float x, float y, float rx, float ry, int rgb, float a) { fillE(x, y, rx + 0.9f, ry + 0.9f, 0x0A0A12, a); fillE(x, y, rx, ry, rgb, a); }
+    private static float key(float u, float[] ts, float[] vs) {
+        for (int i = 1; i < ts.length; i++) if (u <= ts[i]) return lerp(vs[i - 1], vs[i], sm((u - ts[i - 1]) / (ts[i] - ts[i - 1])));
+        return vs[vs.length - 1];
+    }
+
+    /** A digger in a straw hat and a proper spade: wind up, drive it in, prise, lift a lump of earth and fling it onto the pile. */
+    private static void digger(float t, float O, float cx, float gy, float sz, int blade, float a, float done) {
+        float k = sz, cyc = 0.29f * O;
+        int kk = -1; for (int i = 0; i < 3; i++) if (t >= DIG[i] * O - 0.1f * O) kk = i;
+        float u = kk < 0 ? 0f : (t - DIG[kk] * O + 0.1f * O) / cyc;
+        boolean after = kk == 2 && u > 1f;
+        float[] ts = {0f, 0.16f, 0.30f, 0.46f, 0.74f, 1f};
+        float tx = key(u, ts, new float[]{22, -6, -3, -3, 3, 22}) * k, ty = key(u, ts, new float[]{-30, -38, 1, 1, -24, -30}) * k;
+        float ang = key(u, ts, new float[]{0.55f, -0.45f, -0.38f, -0.38f, -0.05f, 0.7f});
+        if (kk < 0) { tx = -6 * k; ty = -38 * k; ang = -0.45f; }
+        if (after) { float q = sm((u - 1f) / 0.5f); tx = lerp(22, -14, q) * k; ty = lerp(-30, 0, q) * k; ang = lerp(0.7f, -0.2f, q); }
+        float tipX = cx + tx, tipY = gy + ty, L = 40 * k, sa = (float) Math.sin(ang), ca = (float) Math.cos(ang);
+        float gx = tipX + sa * L, gyy = tipY - ca * L;                                        // the grip
+        float fx = cx - 36 * k + Math.max(-4 * k, Math.min(12 * k, (gx - (cx - 16 * k)) * 0.3f));    // the digger follows the spade a little
+        float lean = (gx - fx) * 0.08f;
+        int skin = 0xF2C9A0, shirt = 0x3F6FB5, pants = 0x4A4256, boot = 0x2A1A10;
+        // legs and boots
+        for (int sd = -1; sd <= 1; sd += 2) { line(fx + sd * 3 * k, gy - 14 * k, fx + sd * 4 * k, gy - 1, 0x0A0A12, a); pe(fx + sd * 3 * k, gy - 8 * k, 2.4f * k, 7 * k, pants, a); pe(fx + sd * 4 * k + sd, gy - 1, 3.2f * k, 1.8f * k, boot, a); }
+        // torso, arms, head, hat
+        pe(fx + lean * 0.5f, gy - 22 * k, 6.5f * k, 9 * k, shirt, a);
+        fillE(fx + lean * 0.5f - 2 * k, gy - 25 * k, 2.4f * k, 4 * k, 0x5A8FD5, a * 0.9f);
+        float sx0 = fx + lean, sy0 = gy - 27 * k;
+        for (int sd = 0; sd < 2; sd++) { float hx = lerp(sx0, gx, 0.9f) + sd * 2, hy = lerp(sy0, gyy, 0.9f) + sd * 4 * k; line(sx0, sy0, hx, hy, 0x0A0A12, a); line(sx0 + 1, sy0, hx + 1, hy, shirt, a); pe(hx, hy, 1.8f * k, 1.8f * k, skin, a); }
+        pe(fx + lean, gy - 35 * k, 4.2f * k, 4.5f * k, skin, a);
+        dot(fx + lean + 1.5f * k, gy - 35.5f * k, 0x2A1A10, a);
+        pe(fx + lean, gy - 38.5f * k, 8f * k, 1.7f * k, 0xC8A040, a); pe(fx + lean, gy - 41 * k, 4.4f * k, 3f * k, 0xE0BC58, a); fillE(fx + lean, gy - 39.4f * k, 4.5f * k, 0.8f * k, 0x8A5A20, a);
+        // the spade: shaft, grip, blade
+        float ux = sa, uy = -ca, px2 = ca, py2 = sa;                                         // along the shaft (up) and across it
+        float bl = 12 * k;
+        for (float r = bl; r < L; r += 0.5f) { float sxp = tipX + ux * r, syp = tipY + uy * r; dot(sxp, syp, 0x8A5A2C, a); dot(sxp + 1, syp, 0x5B3A1C, a); }
+        for (float w = -3.2f * k; w <= 3.2f * k; w += 0.5f) dot(gx + px2 * w, gyy + py2 * w, 0x3A2410, a);
+        for (float w = -3.2f * k; w <= 3.2f * k; w += 0.5f) { dot(gx + px2 * w - ux * 1.5f, gyy + py2 * w - uy * 1.5f, 0x6B4423, a); }
+        int bc = mixc(blade, 0xC9D1E0, 0.6f);
+        for (float r = 0; r <= bl; r += 0.5f) {
+            float hw = (r < 3 * k ? 0.7f + r * 0.85f : r < 9 * k ? 3.4f * k : 3.4f * k - (r - 9 * k) * 0.9f);
+            for (float w = -hw - 0.9f; w <= hw + 0.9f; w += 0.5f) {
+                boolean rim = Math.abs(w) > hw - 0.4f || r < 0.8f;
+                int col = rim ? 0x2A3040 : w < -hw * 0.35f ? mixc(bc, WHITE, 0.55f) : w > hw * 0.45f ? mixc(bc, 0x000000, 0.28f) : bc;
+                if (Math.abs(w) > hw) col = 0x0A0A12;
+                dot(tipX + ux * r + px2 * w, tipY + uy * r + py2 * w, col, a);
+            }
         }
+        // the lump of earth carried on the blade, then flung to the pile
+        float pileX = cx + 40 * k;
+        if (u >= 0.46f && u < 0.74f) { float q = (u - 0.46f) / 0.28f; float lx = tipX + ux * 7 * k, ly = tipY + uy * 7 * k - 1.5f * k; fillE(lx, ly, 4.5f * k * (0.6f + 0.4f * q), 2.4f * k, 0x6B4A2B, a); fillE(lx - 1, ly - 1, 2.5f * k, 1.2f * k, 0x9A7A52, a); }
+        if (u >= 0.74f && u < 1f && !after) {
+            float q = (u - 0.74f) / 0.26f;
+            for (int j = 0; j < 12; j++) {
+                float qq = cl(q * (0.85f + 0.3f * rnd(j + kk * 40)));
+                float x = lerp(tipX + ux * 7 * k, pileX + (rnd(j) - 0.5f) * 14 * k, qq), y = lerp(tipY, gy, qq * qq) - (float) Math.sin(qq * 3.1416f) * (24 + 14 * rnd(j + 9)) * k;
+                int c = j % 3 == 0 ? 0x9A7A52 : j % 3 == 1 ? 0x6B4A2B : 0x3A2616; dot(x, y, c, a); dot(x + 1, y, c, a); if (j % 2 == 0) dot(x, y + 1, c, a);
+            }
+        }
+        // the pile grows with every spadeful
+        fillE(pileX, gy + 3 * k, (4 + 13 * done) * k, (1.6f + 5.5f * done) * k, 0x0A0A12, a * 0.6f);
+        fillE(pileX, gy + 2 * k, (3.4f + 12 * done) * k, (1.2f + 5f * done) * k, 0x5A3E22, a);
+        fillE(pileX - 2 * k, gy + 1 * k - 2 * done * k, (2f + 7 * done) * k, (0.8f + 3f * done) * k, 0x8A6A44, a * 0.9f);
+        if (u >= 0.3f && u < 0.46f) for (int j = 0; j < 4; j++) dot(cx - 3 * k + (rnd(j) - 0.5f) * 10, gy - rnd(j + 4) * 4, 0x9A7A52, a * 0.8f);        // dust puff when it bites
     }
 
     /** The mound, the hole, the spade and the clumps of dirt. Returns how far the dig has got (0..1). */
@@ -257,23 +415,8 @@ final class Ritual {
         fillE(cx, gy + 1, rh, rhy, 0x0C0705, a);
         glowE(cx, gy, rh * 2.4f, rhy * 3.2f, GOLD, (0.10f + 0.50f * done) * a);
         if (done > 0.04f) { float h = 52 * sz * (0.2f + 0.8f * done); for (int y = 0; y < h; y++) { float f = 1f - y / h; for (int x = -(int) (rh * 0.6f); x <= rh * 0.6f; x++) cv.set(Math.round(cx + x), Math.round(gy - y), A(0.35f * f * a, mixc(GOLD, WHITE, 0.4f))); } }
-        for (int k = 0; k < 3; k++) {                                                                        // flying dirt
-            float tau = t - (DIG[k] * O + 0.075f * O);
-            if (tau < 0 || tau > 0.8f) continue;
-            for (int j = 0; j < 16; j++) {
-                float vx = (rnd(k * 50 + j) - 0.5f) * 110, vy = -(50 + rnd(k * 60 + j) * 90);
-                float x = cx + vx * tau, y = gy + vy * tau + 120 * tau * tau;
-                int c = j % 3 == 0 ? 0x9A7A52 : j % 3 == 1 ? 0x6B4A2B : 0x3A2616;
-                float al = (1f - tau / 0.8f) * a; dot(x, y, c, al); dot(x + 1, y, c, al); dot(x, y + 1, c, al); dot(x + 1, y + 1, c, al * 0.8f);
-            }
-        }
-        for (int k = 0; k < 3; k++) {                                                                        // the spade
-            float u = (t - DIG[k] * O) / (0.15f * O);
-            if (u < -0.45f || u > 1.3f) continue;
-            float y = u < 0 ? gy - 34 * sz : u < 0.5f ? lerp(gy - 34 * sz, gy + 1, eo(u / 0.5f)) : lerp(gy + 1, gy - 34 * sz, sm((u - 0.5f) / 0.8f));
-            float vis = u < 0 ? sm((u + 0.45f) / 0.45f) : 1f - sm((u - 1.0f) / 0.3f) * (k == 2 ? 1f : 0f);
-            spade(cx + 8 * sz, y, blade, a * vis);
-        }
+        if (done > 0.9f) { float cu = sm((t - (DIG[2] + 0.13f) * O) / (0.12f * O)); if (cu > 0f) chest(cx, gy - 4 * sz * cu, sz * 0.62f, 0f, a * cu); }
+        digger(t, O, cx, gy, sz, blade, a, done);
         return done;
     }
 
@@ -400,6 +543,7 @@ final class Ritual {
             orbit(t, cx0, cy0, 26 * sz * isc, 8 * sz * isc, -0.3f, 6, rc, 0.95f * itemA, 2.1f);
             fountain(t, cx0, cy0 + 8, O + 0.15f, 14, rc, 0.8f * itemA, 1.3f, 0.45f);
             glowE(icx, gy, rx * 1.1f * (1f - cl(p / 0.9f)), ry * 1.6f * (1f - cl(p / 0.9f)), rc, 0.4f * bg);
+            if (tre) { float cu = sm(p / 0.6f); chest(icx, gy - 13 * sz * cu - 2, sz * 1.0f, sm((p - 0.15f) / 0.35f), bg); }
             return;
         }
         // ---- RNG: the big finish
@@ -442,6 +586,7 @@ final class Ritual {
         FancyConfig.AnimCfg cfg = a.cfg();
         Item it = a.item;
         boolean tre = a.group.equals("treasure");
+        kind = a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? kindOf(a.item.source.id) : 0;
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;

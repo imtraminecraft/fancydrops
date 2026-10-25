@@ -35,7 +35,7 @@ public final class AnimationManager {
         final String group;                      // "myth" or "treasure"
         final int type;                          // NO_DROPS, NORMAL or RNG
         final long created = System.currentTimeMillis();
-        long start; float lastT = -1f;
+        long start; float lastT = -1f; int kind = -1;                  // kind: which Mythological creature to show (-1 = the one the drop belongs to)
         Anim(String group, int type, Item item) { this.group = group; this.type = type; this.item = type == NO_DROPS ? null : item; }
         String key() { return group + "." + TYPE_IDS[type]; }
         FancyConfig.AnimCfg cfg() { return FancyConfig.get().anim(key()); }
@@ -132,6 +132,7 @@ public final class AnimationManager {
         String group = key.substring(0, key.indexOf('.')), tid = key.substring(key.indexOf('.') + 1);
         int type = NORMAL; for (int i = 0; i < TYPE_IDS.length; i++) if (TYPE_IDS[i].equals(tid)) type = i;
         Anim a = new Anim(group, type, sample());
+        a.kind = (int) (((System.currentTimeMillis() - (key.equals(previewKey) ? previewT0 : System.currentTimeMillis())) / 1000L) / Math.max(1, (long) (FancyConfig.get().anim(key).secs + 1f))) % Ritual.KINDS.length;      // the preview cycles through all twelve creatures
         long now = System.currentTimeMillis();
         if (!key.equals(previewKey)) { previewKey = key; previewT0 = now; }
         float secs = a.secs();

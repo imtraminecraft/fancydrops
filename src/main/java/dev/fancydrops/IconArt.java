@@ -316,8 +316,8 @@ final class IconArt {
                 int col = tint != 0 ? tint : 0xB48CFF;
                 poly(new float[]{2, 14, 14, 8, 2}, new float[]{2, 2, 9, 15, 9}, col);
                 poly(new float[]{3.5f, 12.5f, 12.5f, 8, 3.5f}, new float[]{3.5f, 3.5f, 8.5f, 13, 8.5f}, dark(col, 0.35f));
-                float r = 0.8f + 0.25f * t;
-                for (int i = 0; i < 5; i++) { float a1 = -1.57f + i * 1.2566f, a2 = a1 + 0.6283f; ln(8, 7, 8 + (float) Math.cos(a1) * 4 * r, 7 + (float) Math.sin(a1) * 4 * r, 0xFFFFFF); ln(8, 7, 8 + (float) Math.cos(a2) * 1.8f, 7 + (float) Math.sin(a2) * 1.8f, lite(col, 0.6f)); }
+                float r = 0.8f + 0.2f * t;
+                for (int i = 0; i < 5; i++) { float a1 = -1.57f + i * 1.2566f, a2 = a1 + 0.6283f; ln(8, 8, 8 + (float) Math.cos(a1) * 3.7f * r, 8 + (float) Math.sin(a1) * 3.7f * r, 0xFFFFFF); ln(8, 8, 8 + (float) Math.cos(a2) * 1.8f, 8 + (float) Math.sin(a2) * 1.8f, lite(col, 0.6f)); }
                 outline();
                 glint(4, 3, 1, 0xFFFFFF, 0.4f + 0.6f * t);
             }
@@ -620,6 +620,7 @@ final class IconArt {
             }
             default -> {
                 if (n.startsWith("cx_")) return generic(n, f);
+                if (n.startsWith("mob_")) { mob(n.substring(4), f); outline(); return true; }
                 if (n.startsWith("emblem")) return paint("emblem", tint, f);
                 return false;
             }
@@ -642,6 +643,118 @@ final class IconArt {
 
     // ------------------------------------------------------------------ the 25 text effects: the letter A, doing what the effect does
     private static final String[] BIG_A = {".###.", "#...#", "#...#", "#####", "#...#", "#...#", "#...#"};
+    // ---- the twelve Mythological creatures (Drop Library sidebar and tiles)
+    private static void mob(String id, float f) {
+        float t = tri(f), s = sn(f);
+        switch (id) {
+            case "minos_hunter" -> {                                                         // a hooded hunter drawing a bow
+                tri(3, 14, 8, 2, 13, 14, 0x2F6B3A); tri(5, 14, 8, 4, 11, 14, 0x3F8A4C);
+                ball(8, 7, 2.6f, 0x1A2A1C); px(7, 7, 0xFFE6A0); px(9, 7, 0xFFE6A0);
+                rect(5, 12, 6, 3, 0x6B4A2B);
+                float pull = 1.5f * t;
+                ln(13, 3, 14 + 0.5f, 8, 0xC8A060); ln(14.5f, 8, 13, 13, 0xC8A060);
+                ln(13 - pull, 8, 13, 3, 0xE8E8E8); ln(13 - pull, 8, 13, 13, 0xE8E8E8);
+                ln(6 + pull, 8, 14, 8, 0xD8D0B8); px(15, 8, 0xFFFFFF);
+            }
+            case "siamese_lynxes" -> {                                                       // two cats side by side
+                for (int k = 0; k < 2; k++) {
+                    int ox = k * 7, base = k == 0 ? 0xD8B27A : 0xB8946A;
+                    tri(1 + ox, 7, 1 + ox, 2, 4 + ox, 5, base); tri(8 + ox - 1, 7, 7 + ox + 1, 2, 5 + ox, 5, base);
+                    px(2 + ox, 4, 0xF0A0A0);
+                    ball(4.5f + ox, 9, 3.4f, base); px(1 + ox, 11, lite(base, 0.5f)); px(8 + ox, 11, lite(base, 0.5f));
+                    boolean blink = (k == 0 ? f > 0.55f && f < 0.65f : f > 0.2f && f < 0.3f);
+                    if (blink) { px(3 + ox, 9, 0x1A1208); px(6 + ox, 9, 0x1A1208); } else { px(3 + ox, 8, 0x7CFF9A); px(3 + ox, 9, 0x101810); px(6 + ox, 8, 0x7CFF9A); px(6 + ox, 9, 0x101810); }
+                    px(4 + ox, 10, 0xF08A8A); px(5 + ox, 10, 0xF08A8A);
+                    px(4 + ox, 2 + (k == 0 ? 0 : 0), 0x3A2A18);
+                }
+                rect(1, 13, 14, 2, 0x8A6A44);
+            }
+            case "stranded_nymph" -> {                                                       // a sea nymph with flowing aqua hair
+                float sw = s * 1.2f;
+                for (int y = 3; y < 15; y++) { float k = (y - 3) / 12f; int x0 = Math.round(3 - sw * k), x1 = Math.round(12 + sw * k); px(x0, y, 0x2FB8B0); px(x0 + 1, y, 0x58E0D0); px(x1, y, 0x2FB8B0); px(x1 - 1, y, 0x58E0D0); }
+                ball(8, 6, 3.2f, 0x2FB8B0); ball(8, 7, 2.6f, 0xF6D2B4);
+                px(7, 7, 0x203040); px(9, 7, 0x203040); px(8, 9, 0xE08A8A);
+                rect(4, 3, 8, 2, 0x58E0D0); px(8, 2, 0xFFFFFF);
+                tri(5, 15, 8, 11, 11, 15, 0x3F8AD8);
+                float d = (f * 12) % 12; pxa(14, 2 + Math.round(d), 0x9AE8FF, 1f - d / 12f);
+            }
+            case "cretan_bull" -> {                                                          // a bull's head with a ring in its nose
+                ln(1, 6, 3, 3, 0xF0E8D0); ln(1, 6, 2, 8, 0xF0E8D0); ln(15, 6, 13, 3, 0xF0E8D0); ln(15, 6, 14, 8, 0xF0E8D0);
+                px(2, 3, 0xFFFFFF); px(13, 3, 0xFFFFFF);
+                rect(3, 5, 10, 6, 0x7A4A2A); rect(4, 4, 8, 1, 0x7A4A2A);
+                rect(5, 10, 6, 4, 0xC89870); rect(6, 13, 4, 1, 0xA87850);
+                px(5, 7, t > 0.5f ? 0x101010 : 0xFF6A3A); px(10, 7, t > 0.5f ? 0x101010 : 0xFF6A3A);
+                px(6, 11, 0x301810); px(9, 11, 0x301810);
+                ln(7, 13, 8, 15, 0xE8D060); px(9, 13, 0xE8D060);
+                if (t > 0.5f) { pxa(5, 15, 0xD8E8F0, 0.7f); pxa(10, 15, 0xD8E8F0, 0.7f); }
+            }
+            case "harpy" -> {                                                                // a flapping harpy
+                float fl = s * 3f;
+                poly(new float[]{7, 0, 1, 7}, new float[]{8, 5 - fl, 9 - fl, 11}, 0x9A5AB8); poly(new float[]{9, 16, 15, 9}, new float[]{8, 5 - fl, 9 - fl, 11}, 0x9A5AB8);
+                ln(1, 9 - fl, 7, 9, 0xC890E0); ln(15, 9 - fl, 9, 9, 0xC890E0);
+                rect(6, 8, 4, 5, 0xB87AD0); tri(6, 13, 8, 15, 10, 13, 0x7A3A98);
+                ball(8, 6, 2.4f, 0xF2CBA8); rect(5, 3, 6, 2, 0x5A2A78); px(5, 5, 0x5A2A78); px(10, 5, 0x5A2A78);
+                px(7, 6, 0x301020); px(9, 6, 0x301020);
+                px(6, 14, 0xE8D060); px(10, 14, 0xE8D060);
+            }
+            case "gaia_construct" -> {                                                       // a stone golem with green eyes
+                bev(3, 3, 10, 10, 0x8A8F9A); rect(4, 4, 8, 2, 0xA8ADB8);
+                rect(1, 6, 2, 6, 0x6E7380); rect(13, 6, 2, 6, 0x6E7380);
+                rect(4, 7, 3, 2, 0x161A18); rect(9, 7, 3, 2, 0x161A18);
+                int ey = mix(0x3FD16A, 0xB8FFC8, t); px(5, 7, ey); px(6, 7, ey); px(10, 7, ey); px(11, 7, ey);
+                rect(5, 11, 6, 1, 0x4A4F5A); for (int i = 5; i < 11; i += 2) px(i, 12, 0x4A4F5A);
+                px(4, 4, 0x4F9A4A); px(5, 3, 0x4F9A4A); px(11, 12, 0x4F9A4A); px(12, 11, 0x4F9A4A);
+                glow(8, 8, 6, 0x3FD16A, 0.12f * t);
+            }
+            case "minotaur" -> {                                                             // the horned dark head, eyes burning
+                ln(2, 6, 2, 3, 0xE8E0C8); ln(2, 3, 4, 2, 0xE8E0C8); ln(13, 6, 13, 3, 0xE8E0C8); ln(13, 3, 11, 2, 0xE8E0C8);
+                rect(4, 3, 8, 7, 0x4A2C2C); rect(3, 5, 10, 4, 0x4A2C2C); rect(5, 9, 6, 5, 0x3A2222); rect(6, 13, 4, 1, 0x2A1616);
+                int ey = mix(0xFF4A2A, 0xFFE0A0, t); px(5, 6, ey); px(6, 6, ey); px(9, 6, ey); px(10, 6, ey);
+                px(7, 11, 0x1A0E0E); px(8, 11, 0x1A0E0E); px(7, 12, 0xA8A0A0); px(8, 12, 0xA8A0A0);
+                glow(8, 6, 7, 0xFF4A2A, 0.12f * t);
+            }
+            case "minos_champion" -> {                                                       // a gold helm with a red plume
+                for (int i = 0; i < 6; i++) { float w = (float) Math.sin((f - i * 0.08f) * TAU) * 1.2f; px(Math.round(8 + w), 1 + i, i % 2 == 0 ? 0xD8402A : 0xA82A1A); px(Math.round(9 + w), 1 + i, 0xA82A1A); }
+                rect(4, 6, 8, 4, 0xE0B83A); rect(3, 8, 10, 6, 0xC89A28); rect(4, 6, 8, 1, 0xFFE27A);
+                rect(5, 9, 6, 1, 0x1A1208); rect(7, 9, 2, 5, 0x1A1208);
+                rect(3, 13, 10, 1, 0x8A6A18); px(5, 9, mix(0x1A1208, 0xFFE27A, t * 0.7f)); px(10, 9, mix(0x1A1208, 0xFFE27A, t * 0.7f));
+                px(4, 7, 0xFFF3B0);
+            }
+            case "sphinx" -> {                                                               // the headdress of a sphinx, gold and blue stripes
+                poly(new float[]{3, 8, 13, 14, 2}, new float[]{3, 1, 3, 14, 14}, 0x2F5FB0);
+                for (int y = 3; y < 14; y += 2) { rect(3, y, 2, 1, 0xE8C040); rect(11, y, 2, 1, 0xE8C040); }
+                rect(5, 3, 6, 9, 0xE6B87A); rect(5, 3, 6, 1, 0xE8C040);
+                px(6, 6, 0x101828); px(9, 6, 0x101828); px(6, 5, 0xE8C040); px(9, 5, 0xE8C040);
+                rect(7, 8, 2, 2, 0xC8986A); rect(6, 11, 4, 1, 0xB87A5A);
+                px(8, 1, 0xE8C040); if (t > 0.6f) px(8, 2, 0xFFF3B0);
+            }
+            case "minos_inquisitor" -> {                                                     // a white mask in a dark purple hood
+                tri(2, 15, 8, 0, 14, 15, 0x4A2A6A); tri(4, 15, 8, 3, 12, 15, 0x2A1A3A);
+                rect(5, 4, 6, 8, 0xEAEAF0); rect(6, 12, 4, 1, 0xEAEAF0); rect(7, 13, 2, 1, 0xC8C8D8);
+                int ey = mix(0xB46AFF, 0xF0D8FF, t); rect(5, 7, 2, 1, ey); rect(9, 7, 2, 1, ey);
+                ln(8, 8, 8, 10, 0xB8B8C8); px(8, 5, 0xB46AFF);
+                glow(8, 7, 6, 0xB46AFF, 0.12f * t);
+            }
+            case "manticore" -> {                                                            // a lion's face with a mane and a stinging tail
+                for (int i = 0; i < 12; i++) { float a = i * 0.5236f; px(Math.round(8 + (float) Math.cos(a) * 6), Math.round(9 + (float) Math.sin(a) * 5.5f), 0xC8601A); px(Math.round(8 + (float) Math.cos(a) * 5), Math.round(9 + (float) Math.sin(a) * 4.5f), 0xE08A2A); }
+                ball(8, 9, 4.4f, 0xE8B060); ball(8, 9, 3.4f, 0xF0C47A);
+                px(6, 8, 0x201008); px(10, 8, 0x201008); px(8, 10, 0x6A2A18); px(7, 11, 0x6A2A18); px(9, 11, 0x6A2A18);
+                px(5, 5, 0xE8B060); px(11, 5, 0xE8B060);
+                float sw = s * 1.5f;
+                ln(13, 5, 14 + sw * 0.4f, 2, 0x7A3A8A); ln(14 + sw * 0.4f, 2, 12 + sw, 0, 0x7A3A8A); px(12 + Math.round(sw), 0, 0xD0F060);
+            }
+            case "king_minos" -> {                                                           // a crowned, bearded king in purple
+                rect(2, 12, 12, 3, 0x6A2A9A); rect(3, 12, 10, 1, 0xA860D8);
+                rect(5, 5, 6, 6, 0xF2CBA8); rect(4, 9, 8, 3, 0xE8E0D0); rect(5, 12, 6, 1, 0xC8C0B0);
+                px(6, 7, 0x203040); px(9, 7, 0x203040); px(7, 9, 0xB89888); px(8, 9, 0xB89888);
+                rect(4, 3, 8, 2, 0xE8C040); px(4, 2, 0xE8C040); px(7, 1, 0xE8C040); px(8, 1, 0xE8C040); px(11, 2, 0xE8C040);
+                px(7, 4, 0xE84A4A); px(5, 3, mix(0x4A9AFF, 0xFFFFFF, t)); px(10, 3, mix(0x4AD86A, 0xFFFFFF, 1f - t)); px(8, 2, 0xFFF3B0);
+                glint(8, 1, 1, 0xFFFFFF, t);
+            }
+            default -> ball(8, 8, 4, 0x8890A0);
+        }
+    }
+
     private static void bigA(int x, int y, int rgb) { letter(BIG_A, x, y, rgb, true); }
     /** The big A with a colour per pixel: col(x, y) gets the pixel's place in the letter. */
     private interface Tint { int at(int x, int y); }

@@ -16,3 +16,6 @@ The version lives in one place: `version=` in `gradle.properties`. It flows into
 ## License
 
 CC0.
+
+## Editing art
+Icons: `IconArt.java` (16x16, one `case` per `:name:`). Scene animations: `Ritual.java`. Timing: `AnimationManager.java`. Item art: `ItemIcons.java`, `SkullSpin.java`. Defaults: `FancyConfig.java`.

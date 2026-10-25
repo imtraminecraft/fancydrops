@@ -1,3 +1,11 @@
+## 0.4.16
+- Mythological animations: every creature has its own shape now (Minotaur, Minos Hunter, Siamese Lynxes as two cats, Stranded Nymph, Cretan Bull, Harpy, Gaia Construct, Minos Champion, Sphinx, Minos Inquisitor, Manticore, King Minos). On the Animations page they stay ONE "Mythological Mobs" group; its preview cycles through all twelve.
+- Treasure animation remade: a digger in a straw hat with a proper spade (wind up, drive in, prise, lift, fling) onto a growing pile, a hole that deepens, and a chest that rises. Normal treasure shows the chest too.
+- 12 new creature icons (`mob_<id>`) on the creature tiles and as a sub-sub menu under Mythological Mobs in the sidebar.
+- Cosmetics: no search box on this page; clicking outside the search box (any page) leaves it so typing no longer goes into it; tiles hidden by the scroll clip can no longer be hovered; the set emblem star is centred in the shield; every name effect is gone except the Special and Beta ones.
+- Home: removed the "Mythological Rituals come first, Slayers next" line.
+- Nothing here is compiled in the cloud; 0 own-code errors in the checker.
+
 ## 0.4.15
 - Mythological is one sub page again: Drop Library > Mythological opens two sub-sub pages, **Mythological Mobs** (the Griffin pet and the creatures) and **Treasure** (spade, Erudite, treasure drops). The "Diana's Mythological Ritual:" and "Chances for this pet" texts are gone.
 - Drop Library: the "switch off to ignore this page" row is gone. Every drop starts Normal (chat alert off); rare drops start RNG (chat alert on). Choosing Normal turns the chat alert off at once, RNG turns it on (also on the "All drops" button).
