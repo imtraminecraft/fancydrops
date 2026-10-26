@@ -1,3 +1,6 @@
+## 0.4.44
+- Fixed a compile error in the Animations and Sounds pages (the WIP tag on the sub page list).
+
 ## 0.4.43
 - The Spade row on the Treasure page shows the spade you chose (Ancestral, Archaic or Deific) as its own picture.
 - The Erudite reforge icon is an anvil being struck by a hammer, sparks flying.

@@ -2507,7 +2507,7 @@ public class FancyScreen extends Screen {
         if (searching || landing()) { animationsLanding(c); return; }
         Categories.Cat cat = curCat();
         if (cat.wip()) { wipPanel(cat.icon(), cat.name() + " animations", cat.blurb()); return; }
-        for (Categories.Group gr0 : cat.groups()) srcList.add(new String[]{gr0.id(), gr0.name(), gr0.icon(), String.valueOf(gr0.color())}); if (gr0.wip()) srcWip.add(gr0.id());
+        for (Categories.Group gr0 : cat.groups()) { srcList.add(new String[]{gr0.id(), gr0.name(), gr0.icon(), String.valueOf(gr0.color())}); if (gr0.wip()) srcWip.add(gr0.id()); }
         Categories.Group wg = wipGroup(cat); if (wg != null) { wipPanel(wg.icon(), wg.name(), ""); return; }
         Categories.Group gr = curGroup();
         if (gr == null) { groupTiles(cat, "Open one to edit its animations."); return; }
@@ -2583,7 +2583,7 @@ public class FancyScreen extends Screen {
         if (searching || landing()) { soundsLanding(c); return; }
         Categories.Cat cat = curCat();
         if (cat.wip()) { wipPanel(cat.icon(), cat.name() + " sounds", cat.blurb()); return; }
-        for (Categories.Group gr0 : cat.groups()) srcList.add(new String[]{gr0.id(), gr0.name(), gr0.icon(), String.valueOf(gr0.color())}); if (gr0.wip()) srcWip.add(gr0.id());
+        for (Categories.Group gr0 : cat.groups()) { srcList.add(new String[]{gr0.id(), gr0.name(), gr0.icon(), String.valueOf(gr0.color())}); if (gr0.wip()) srcWip.add(gr0.id()); }
         Categories.Group wg = wipGroup(cat); if (wg != null) { wipPanel(wg.icon(), wg.name(), ""); return; }
         Categories.Group gr = curGroup();
         if (gr == null) { groupTiles(cat, "Open one to edit its sounds."); return; }
