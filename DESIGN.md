@@ -230,3 +230,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Category tiles show pages, sub pages and items. Unfinished groups carry a WIP tag in the sidebar. Mythological creature tiles take the colour of the pet rarity they first spawn for.
 - Menu previews must not issue hundreds of fills per frame: the backdrop is a texture (`BackdropTex`).
 
+## Standing requirements added in 0.4.41
+- Text that does not fit a tile pans (marquee: slide, pause, slide back) rather than being cut or shrunk (`FancyScreen.scrollText`).
+

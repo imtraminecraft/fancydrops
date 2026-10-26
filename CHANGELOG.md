@@ -1,3 +1,6 @@
+## 0.4.41
+- Names and small lines that are too long for a tile (Tarantula Broodfather, Riftstalker Bloodfiend...) now slide left, wait, then slide back instead of being cut off.
+
 ## 0.4.40
 - Revenant Horror's icon is Minecraft's zombie head.
 - The Rift and Crimson Isle show a WIP tag in the left menu; the Animations and Sounds page tiles match the Drop Library's.

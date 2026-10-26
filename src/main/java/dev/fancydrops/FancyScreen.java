@@ -724,6 +724,17 @@ public class FancyScreen extends Screen {
             }
         }
     }
+    /** Text that is too long for its box pans left, waits, then pans back (a sliding marquee) instead of being cut off. */
+    private void scrollText(GuiGraphicsExtractor g, String text, int x, int y, int maxW, float scale, int color, long now) {
+        float w = Gfx.w(font, text) * scale, over = w - maxW;
+        if (over <= 0.5f) { Gfx.push(g); Gfx.translate(g, x, y); Gfx.scale(g, scale); Gfx.text(g, font, text, 0, 0, color); Gfx.pop(g); return; }
+        float move = over / 22f, wait = 0.9f, cyc = 2f * (move + wait), u = (now % 3600000L) / 1000f % cyc, off;     // 22 px a second, a pause at each end
+        if (u < wait) off = 0f; else if (u < wait + move) off = over * (u - wait) / move; else if (u < 2f * wait + move) off = over; else off = over * (1f - (u - 2f * wait - move) / move);
+        g.enableScissor(x, y - 2, x + maxW, y + 12);
+        Gfx.push(g); Gfx.translate(g, x - off, y); Gfx.scale(g, scale); Gfx.text(g, font, text, 0, 0, color); Gfx.pop(g);
+        g.disableScissor();
+    }
+
     private void drawPicker(GuiGraphicsExtractor g, Row r, int mx, int my) {
         long now = System.currentTimeMillis();
         pill(g, r.x, r.y, r.w, r.h, Ui.ROW);
@@ -778,9 +789,14 @@ public class FancyScreen extends Screen {
             int ny = sb2 != null ? b[1] + 7 : b[1] + (b[3] - 8) / 2 - 1, nx = tx;
             if (r.pFx != null && r.pFx[i] != null) { int lx = nx; for (int ci = 0; ci < nm.length(); ci++) { String chs = String.valueOf(nm.charAt(ci)); Gfx.text(g, font, chs, lx, ny, 0xFF000000 | NameFx.color(r.pFx[i], ci, nm.length(), col & 0xFFFFFF, now)); lx += Gfx.w(font, chs); } }
             else if (r.pFontTiles) g.text(font, Fonts.text(nm, i), nx, ny, on ? Ui.TEXT : Ui.SUB, true);
+            else if (fullW > avN && r.pSubs != null) scrollText(g, r.pLabels[i], nx, ny, avN, 1f, on ? Ui.TEXT : wip ? Ui.DIM : Canvas.mix(Ui.SUB, Ui.TEXT, 0.5f), now);
             else if (nk < 1f) { Gfx.push(g); Gfx.translate(g, nx, ny + (1f - nk) * 4f); Gfx.scale(g, nk); Gfx.text(g, font, nm, 0, 0, on ? Ui.TEXT : wip ? Ui.DIM : Ui.SUB); Gfx.pop(g); }
             else Gfx.text(g, font, nm, nx, ny, on ? Ui.TEXT : wip ? Ui.DIM : sb2 != null ? Canvas.mix(Ui.SUB, Ui.TEXT, 0.5f) : Ui.SUB);
-            if (sb2 != null) { Gfx.push(g); Gfx.translate(g, tx, b[1] + 19); Gfx.scale(g, 0.8f); Gfx.text(g, font, sb2, 0, 0, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM); Gfx.pop(g); }
+            if (sb2 != null) {
+                int sAv = b[2] - 18 - iw;
+                if (Gfx.w(font, r.pSubs[i]) * 0.8f > sAv) scrollText(g, r.pSubs[i], tx, b[1] + 19, sAv, 0.8f, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM, now);
+                else { Gfx.push(g); Gfx.translate(g, tx, b[1] + 19); Gfx.scale(g, 0.8f); Gfx.text(g, font, sb2, 0, 0, on ? Canvas.mix(Ui.SUB, col, 0.45f) : Ui.DIM); Gfx.pop(g); }
+            }
             if (wip) { pill(g, b[0] + b[2] - 22, b[1] + 5, 18, 10, 0xFF3A3220); Gfx.text(g, font, "WIP", b[0] + b[2] - 20, b[1] + 6, 0xFFFFC857); }
             if (lk) {                                                                                  // locked: dimmed, with a padlock
                 g.fill(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1, 0x70080A10);
