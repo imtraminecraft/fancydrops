@@ -809,14 +809,14 @@ public class FancyScreen extends Screen {
     }
     private static final Map<String, Long> lockShake = new HashMap<>();
     private static String tipText, hoverCos; private static int tipCol;                      // the hover card of the tile under the mouse (drawn last, on top of everything)
-    private static final int[] RAR_COL = {0xFF9AA3B5, 0xFF4B6BEB, 0xFF3FD16A, 0xFFC77DFF};
+    private static final int[] RAR_COL = {0xFF9AA3B5, 0xFF4B6BEB, 0xFF3FD16A, 0xFFFFB400, 0xFFC77DFF};      // common, rare, beta, legendary, special
     /** The little rarity pin: a tiny gem on a pin, in the colour of the rarity. */
     private static void rarityPin(GuiGraphicsExtractor g, int x, int y, int rar) {
-        int c = RAR_COL[Math.max(0, Math.min(3, rar))], lt = Canvas.mix(c, 0xFFFFFFFF, 0.55f), dk = Canvas.mix(c, 0xFF000000, 0.45f);
+        int c = RAR_COL[Math.max(0, Math.min(4, rar))], lt = Canvas.mix(c, 0xFFFFFFFF, 0.55f), dk = Canvas.mix(c, 0xFF000000, 0.45f);
         g.fill(x + 2, y, x + 5, y + 1, lt); g.fill(x + 1, y + 1, x + 6, y + 3, c); g.fill(x, y + 3, x + 7, y + 4, c);
         g.fill(x + 1, y + 4, x + 6, y + 5, dk); g.fill(x + 2, y + 5, x + 5, y + 6, dk); g.fill(x + 3, y + 6, x + 4, y + 7, dk);
         g.fill(x + 2, y + 1, x + 3, y + 2, 0xFFFFFFFF);
-        if (rar == 3) {                                                                                  // special: the gem shimmers and two stars twinkle in turn
+        if (rar == 4) {                                                                                  // special: the gem shimmers and two stars twinkle in turn
             long nw = System.currentTimeMillis(); float sh = 0.5f + 0.5f * (float) Math.sin(nw / 260.0), t1 = 0.5f + 0.5f * (float) Math.sin(nw / 180.0), t2 = 0.5f + 0.5f * (float) Math.sin(nw / 180.0 + 2.4);
             g.fill(x + 2, y + 1, x + 5, y + 3, Gfx.argb(Math.round(90 * sh), 0xFFFFFF));
             g.fill(x + 6, y - 1, x + 7, y, Gfx.argb(Math.round(255 * t1), 0xFFFFFF)); g.fill(x + 5, y - 1, x + 8, y, Gfx.argb(Math.round(90 * t1), 0xFFFFFF));
@@ -829,7 +829,7 @@ public class FancyScreen extends Screen {
         if (t == null || t.isEmpty()) return;
         String[] ln = t.split("\n", -1); if (ln.length < 6) return;
         int rar = 0; try { rar = Integer.parseInt(ln[2]); } catch (NumberFormatException ignored) { }
-        boolean yours = "1".equals(ln[3]); int rc = RAR_COL[Math.max(0, Math.min(3, rar))];
+        boolean yours = "1".equals(ln[3]); int rc = RAR_COL[Math.max(0, Math.min(4, rar))];
         List<String> how = new ArrayList<>(); String cur = "";
         for (String wd : ln[5].split(" ")) { if (!cur.isEmpty() && Gfx.w(font, cur + " " + wd) > 150) { how.add(cur); cur = wd; } else cur = cur.isEmpty() ? wd : cur + " " + wd; }
         if (!cur.isEmpty()) how.add(cur);
@@ -905,7 +905,7 @@ public class FancyScreen extends Screen {
     /** The colour scheme every tile of a set shares (beta green, common grey for the rest). */
     private static int schemeOf(CosmeticData.Def d) {
         CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
-        return sd != null ? sd.color() : d.line() == CosmeticData.Line.BETA ? 0xFF3FD16A : d.line() == CosmeticData.Line.RARE ? 0xFF3B5BDB : 0xFF9AA3B5;
+        return sd != null ? sd.color() : d.line() == CosmeticData.Line.BETA ? 0xFF3FD16A : d.line() == CosmeticData.Line.LEGENDARY ? 0xFFFFB400 : d.line() == CosmeticData.Line.RARE ? 0xFF3B5BDB : 0xFF9AA3B5;
     }
     /** One line on what a name effect does, put in front of how to get it. */
     private static String effectNote(CosmeticData.Def d) {
@@ -968,12 +968,12 @@ public class FancyScreen extends Screen {
         // --- sets: the rarest first
         int ownedSets = 0; for (CosmeticData.SetDef sd : CosmeticData.SETS) if (CosmeticData.unlocked(CosmeticData.members(sd).get(0))) ownedSets++;
         rows.add(catHeader("SETS", "A name icon and a name effect that go together, and an aura for most.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
-        List<Object> st = new ArrayList<>(); for (int r2 = 3; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) st.add(sd);
+        List<Object> st = new ArrayList<>(); for (int r2 = 4; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) st.add(sd);
         rows.add(grid(st, 3));
         // --- one section per kind, ordered by rarity (special, then beta, then common); a set's items keep the set's colours
         for (int ki = 0; ki < kinds.length; ki++) {
             List<Object> li = new ArrayList<>(); int have = 0;
-            for (int r2 = 3; r2 >= 0; r2--) {                                                  // rarest first: a rarity's set items, then its single items
+            for (int r2 = 4; r2 >= 0; r2--) {                                                  // rarest first: a rarity's set items, then its single items
                 for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) for (CosmeticData.Def d : CosmeticData.members(sd)) if (d.kind() == kinds[ki]) li.add(d);
                 for (CosmeticData.Def d : CosmeticData.ALL) if (d.kind() == kinds[ki] && d.set() == null && CosmeticData.rarityOf(d) == r2) li.add(d);
             }
@@ -1008,6 +1008,7 @@ public class FancyScreen extends Screen {
             if (con != null) for (var pi : con.getOnlinePlayers()) if (Cosmetics.code(pi.getProfile().id()).equals(code)) nm = pi.getProfile().name();
         } catch (Throwable ignored) { }
         if (nm == null && code.equals(Cosmetics.OWNER)) nm = "you";
+        if (nm == null && Cosmetics.isAdminCode(code)) nm = "admin";
         adminName = nm != null ? nm : (t.matches("(?i)[0-9a-f]{64}|[0-9a-f-]{36}") ? "" : t);
         adminTarget = code; adminPicks.clear(); adminPicks.addAll(CosmeticData.pickedFor(code)); adminDirtyAt = 0; adminScroll = 0; adminOpen = true;
     }
@@ -1115,7 +1116,7 @@ public class FancyScreen extends Screen {
         int x0 = cx + 14, iw = cw - 28, gap = 6, cols = Math.max(2, iw / 150), tw = (iw - (cols - 1) * gap) / cols, y = top + 8 - adminScroll;
         Gfx.text(g, font, "SETS", x0, y, 0xFFC77DFF); Gfx.text(g, font, "click to tick every member  ·  saves by itself", x0 + 34, y, Ui.DIM); y += 13;
         int i = 0;
-        List<CosmeticData.SetDef> setOrd = new ArrayList<>(); for (int r2 = 3; r2 >= 0; r2--) for (CosmeticData.SetDef s2 : CosmeticData.SETS) if (s2.rarity() == r2) setOrd.add(s2);
+        List<CosmeticData.SetDef> setOrd = new ArrayList<>(); for (int r2 = 4; r2 >= 0; r2--) for (CosmeticData.SetDef s2 : CosmeticData.SETS) if (s2.rarity() == r2) setOrd.add(s2);
         for (CosmeticData.SetDef sd : setOrd) {
             List<CosmeticData.Def> m = CosmeticData.members(sd); int have = 0; for (CosmeticData.Def d : m) if (adminPicks.contains(d.id())) have++;
             boolean all = !m.isEmpty() && have == m.size();
@@ -1129,7 +1130,7 @@ public class FancyScreen extends Screen {
             g.fill(x0, y - 4, x0 + iw, y - 3, 0x1CFFFFFF);
             Gfx.text(g, font, heads[k.ordinal()], x0, y, 0xFFFFC857); y += 13; i = 0;
             List<CosmeticData.Def> ord = new ArrayList<>();
-            for (int r2 = 3; r2 >= 0; r2--) {                                              // rarest first: a rarity's set items, then its single items
+            for (int r2 = 4; r2 >= 0; r2--) {                                              // rarest first: a rarity's set items, then its single items
                 for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) for (CosmeticData.Def d : CosmeticData.members(sd)) if (d.kind() == k) ord.add(d);
                 for (CosmeticData.Def d : CosmeticData.ALL) if (d.kind() == k && d.set() == null && CosmeticData.rarityOf(d) == r2) ord.add(d);
             }

@@ -6,7 +6,7 @@ import java.util.*;
 final class CosmeticData {
     private CosmeticData() {}
 
-    enum Line { BETA, RARE, SPECIAL, FREE }
+    enum Line { BETA, RARE, SPECIAL, LEGENDARY, FREE }
     enum Kind { SUFFIX, NAME, AURA }
     record Def(String id, String name, Line line, Kind kind, String how, int color, String set) {
         Def(String id, String name, Line line, Kind kind, String how, int color) { this(id, name, line, kind, how, color, null); }
@@ -14,10 +14,10 @@ final class CosmeticData {
     /** A Special set: a suffix, a name effect and an aura that belong together. */
     record SetDef(String id, String name, String how, int color, String suffix, String fx, String aura, int rarity) {}
     static final List<SetDef> SETS = List.of(
-        new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura", 3),
-        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, null, "glitch", "glitchaura", 3),
-        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, null, "contribfx", "stardust", 3),
-        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFC832, null, "royal", "patronaura", 3),
+        new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura", 4),
+        new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, "bug", "glitch", "glitchaura", 4),
+        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "hammer", "contribfx", "stardust", 4),
+        new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFB400, "patron", "royal", "patronaura", 4),
         new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, null, "pulse", null, 2));
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
@@ -25,6 +25,29 @@ final class CosmeticData {
     static final List<Def> ALL = List.of(
         // Beta: kept by everyone who had the mod before 1.0
         new Def("pulse", "Pulse", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFF9AC8, "beta"),
+        // Name Icons: Special (Bug Finder, Contributors, Patreon only), Legendary, Rare, Common. Unlock rules for the last three come later.
+        new Def("bug", "Bug", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFFF5A36, "bugfinder"),
+        new Def("hammer", "Hammer", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFF55D8FF, "contributors"),
+        new Def("patron", "Patreon", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFFFB400, "patreon"),
+        new Def("minos", "King Minos", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF2B01E),
+        new Def("griffin", "Griffin", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFE8B030),
+        new Def("dice", "Lucky Dice", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF4F6FB),
+        new Def("coin", "Gold Coin", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF2B01E),
+        new Def("minotaur", "Minotaur", Line.RARE, Kind.SUFFIX, "Rare", 0xFF8A5A2C),
+        new Def("sphinx", "Sphinx", Line.RARE, Kind.SUFFIX, "Rare", 0xFFE8C060),
+        new Def("harpy", "Harpy", Line.RARE, Kind.SUFFIX, "Rare", 0xFF9AA8D8),
+        new Def("chest", "Treasure Chest", Line.RARE, Kind.SUFFIX, "Rare", 0xFF8A5A2C),
+        new Def("anvil", "Anvil", Line.RARE, Kind.SUFFIX, "Rare", 0xFF9AA3B5),
+        new Def("disc", "Music Disc", Line.RARE, Kind.SUFFIX, "Rare", 0xFF22242E),
+        new Def("shovel", "Shovel", Line.FREE, Kind.SUFFIX, "Common", 0xFFB8C0CC),
+        new Def("wheat", "Wheat", Line.FREE, Kind.SUFFIX, "Common", 0xFFF0CE50),
+        new Def("pickaxe", "Pickaxe", Line.FREE, Kind.SUFFIX, "Common", 0xFFB8C0CC),
+        new Def("rod", "Fishing Rod", Line.FREE, Kind.SUFFIX, "Common", 0xFF8A5A2C),
+        new Def("dye", "Dye Drop", Line.FREE, Kind.SUFFIX, "Common", 0xFF3D8CFF),
+        new Def("book", "Book", Line.FREE, Kind.SUFFIX, "Common", 0xFF6A3AC8),
+        new Def("tractor", "Tractor", Line.FREE, Kind.SUFFIX, "Common", 0xFF3AA848),
+        new Def("bell", "Bell", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2B01E),
+        new Def("clock", "Clock", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2F4FA),
         // Special: handed out by hand, one set at a time (suffix + name effect + aura)
         new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFB48CFF, "sparkle"),
         new Def("sparklefx", "Starlight", Line.SPECIAL, Kind.NAME, "Special Set", 0xFFA9BBFF, "sparkle"),
@@ -77,7 +100,8 @@ final class CosmeticData {
         if (Cosmetics.isAdmin() || grantsOf(Cosmetics.me()).contains("c:" + d.id())) return true;           // the owner has everything; single cosmetics can be handed out one by one
         FancyConfig c = FancyConfig.get();
         switch (d.line()) {
-            case BETA: case RARE: return betaEligible();
+            case BETA: return betaEligible();
+            case RARE: case LEGENDARY: return false;                              // unlock rules come later (admins have everything)
             case SPECIAL: return grantsOf(Cosmetics.me()).contains(d.set());
             default:
                 if (d.id().equals("newcomer") || d.id().equals("fresh")) return true;
@@ -91,7 +115,7 @@ final class CosmeticData {
     }
     /** What to tell a player who presses a locked cosmetic. */
     static String lockText(Def d) {
-        if (d.line() == Line.RARE) return "A rare cosmetic from the early days. Only players who downloaded before v1.0 have it.";
+        if (d.line() == Line.RARE || d.line() == Line.LEGENDARY) return "Cannot be unlocked yet. How to get it comes soon.";
         if (d.line() == Line.BETA) return "The beta is over. Only players who downloaded before v1.0 have it.";
         if (d.line() == Line.SPECIAL) return setById(d.set()).how();
         return switch (d.id()) {
@@ -101,8 +125,8 @@ final class CosmeticData {
             default -> "Find the hidden button.";
         };
     }
-    static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 3 : d.line() == Line.BETA ? 2 : d.line() == Line.RARE ? 1 : 0; }
-    static String rarityName(int r) { return r == 3 ? "Special" : r == 2 ? "Beta" : r == 1 ? "Rare" : "Common"; }
+    static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 4 : d.line() == Line.LEGENDARY ? 3 : d.line() == Line.BETA ? 2 : d.line() == Line.RARE ? 1 : 0; }
+    static String rarityName(int r) { return r == 4 ? "Special" : r == 3 ? "Legendary" : r == 2 ? "Beta" : r == 1 ? "Rare" : "Common"; }
     static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set())) o.add(d); return o; }
     static int owned(SetDef s) { int n = 0; for (Def d : members(s)) if (unlocked(d)) n++; return n; }
     static boolean unlockedId(String id) { return unlocked(byId(id)); }
@@ -131,7 +155,7 @@ final class CosmeticData {
     /** How many players hold each set, and each single cosmetic, according to cosmetics.json. */
     static Map<String, Integer> counts() {
         Map<String, Integer> m = new LinkedHashMap<>();
-        Set<String> players = new LinkedHashSet<>(grants.keySet()); players.add(Cosmetics.OWNER);                 // the owner always holds everything
+        Set<String> players = new LinkedHashSet<>(grants.keySet()); players.addAll(Cosmetics.ADMINS);                 // the owner always holds everything
         for (String p : players) {
             Set<String> held = heldBy(p);
             for (SetDef sd : SETS) { List<Def> mem = members(sd); boolean all = !mem.isEmpty(); for (Def d : mem) if (!held.contains(d.id())) all = false; if (all) m.merge(sd.id(), 1, Integer::sum); }
@@ -142,7 +166,7 @@ final class CosmeticData {
     /** What a player is given right now, as a list of cosmetic ids (sets expanded). */
     static Set<String> heldBy(String code) {
         Set<String> o = new LinkedHashSet<>(); Set<String> g = grants.getOrDefault(code, Set.of());
-        if (code.equals(Cosmetics.OWNER)) { for (Def d : ALL) o.add(d.id()); return o; }                              // the owner has everything
+        if (Cosmetics.isAdminCode(code)) { for (Def d : ALL) o.add(d.id()); return o; }                              // the owner has everything
         for (String x : g) {
             if (x.startsWith("c:")) o.add(x.substring(2));
             else { SetDef sd = setById(x); if (sd != null) for (Def d : members(sd)) o.add(d.id()); }
@@ -156,10 +180,10 @@ final class CosmeticData {
             if (x.startsWith("c:")) o.add(x.substring(2));
             else { SetDef sd = setById(x); if (sd != null) for (Def d : members(sd)) o.add(d.id()); }
         }
-        if (code.equals(Cosmetics.OWNER) && (remoteRawHasOwner() ? false : true)) return heldBy(code);
+        if (Cosmetics.isAdminCode(code) && !remoteRawHas(code)) return heldBy(code);
         return o;
     }
-    private static boolean remoteRawHasOwner() { String r = Cosmetics.remoteRaw; return r != null && r.contains(Cosmetics.OWNER); }
+    private static boolean remoteRawHas(String code) { String r = Cosmetics.remoteRaw; return r != null && r.contains(code); }
     /** cosmetics.json with this player's gifts replaced by the picks: whole Special sets go in their list, anything else under "extra". */
     static String buildJson(String code, Set<String> picks) {
         com.google.gson.JsonObject root;

@@ -1,3 +1,8 @@
+## 0.7.0
+- 22 new animated Name Icons: Special (Bug, Hammer, Patreon: for Bug Finder, Contributors and Patreon only), Legendary (King Minos, Griffin, Lucky Dice, Gold Coin), Rare (Minotaur, Sphinx, Harpy, Treasure Chest, Anvil, Music Disc) and Common (Shovel, Wheat, Pickaxe, Fishing Rod, Dye Drop, Book, Tractor, Bell, Clock). They show in chat, the tab list and the Cosmetics page.
+- New Legendary rarity (gold), between Beta and Special. Legendary, Rare and Common icons are locked for everyone except admins until their unlock rules are set.
+- A second admin was added (full Cosmetics and the Admin Panel).
+
 ## 0.6.3
 - Faster menu: every icon and item picture is now one textured quad instead of dozens of small rectangles, skull heads are traced at a quarter of the work, the item lookups the menu asked for every frame are remembered, and the page rows are rebuilt less often.
 - Faster loading: pictures already saved on your PC load on their own threads and never wait behind downloads, downloads run six at a time instead of two, and flat items no longer ask NEU for a skull they don't have.
