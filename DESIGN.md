@@ -300,3 +300,11 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## Standing requirements added in 0.5.1
 - A rebuilt data file gets a higher "v" than any file ever shipped, so an old copy in the config folder is replaced; a data file with the wrong ids falls back to the bundled one.
+
+## Standing requirements added in 0.6.0
+- Every Farming scene plays in a place of its own (FarmScenery): Rare Crops a golden-hour field, Harvest Feast a harvest night, Pest Drops the inside of a barn, Harvest Bounty a morning field with a tractor. Pests are never in a field.
+- A Farming or Experiment drop has no rings, dashed halos, runes or lightning round the item: light, petals, leaves and sparks only.
+- Farming has four pages: Rare Crops, Harvest Feast, Harvest Bounty, Pest Drops. Harvest Bounty items live only on the Harvest Bounty page, with no "(Harvest Bounty)" in their odds.
+- Experiments is called Rare Drops: Experimentation Table, Rare Mob Drops (WIP) and Events (WIP). Every page of a category appears on all four main pages (Drop Library, Animations, Sounds, Chat).
+- The Experimentation Table book turns exactly three pages in both animations; RNG is the same three pages made far more dramatic.
+- A new data file version is higher than every version ever shipped (farming.json is 10).

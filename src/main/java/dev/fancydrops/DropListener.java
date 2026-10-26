@@ -518,7 +518,7 @@ public final class DropListener {
                 DropData.Drop dr = s.drops.get(s.drops.size() - 1), dr2 = two && s.drops.size() > 1 ? s.drops.get(s.drops.size() - 2) : null;      // the boss's rarest drops
                 launchSlayer(s, dr, s, dr2, "+250%", type);
             }
-            case "crops", "feast", "pests" -> {
+            case "crops", "feast", "bounty", "pests" -> {
                 DropData.Source s = FarmData.byId(group);
                 if (s == null || s.drops.isEmpty()) return;
                 DropData.Drop dr = type == AnimationManager.RNG ? s.drops.get(s.drops.size() - 1) : s.drops.get(s.drops.size() / 3);

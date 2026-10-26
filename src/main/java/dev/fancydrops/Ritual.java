@@ -76,7 +76,7 @@ final class Ritual {
     static void glint(float x, float y, int r, int rgb, float a) { if (a > 0.03f) cv.glint(Math.round(x), Math.round(y), r, rgb, cl(a)); }
 
     /** A forked bolt of lightning from (x0,y0) to (x1,y1): a wide soft glow, a coloured body and a white core. */
-    private static void bolt(float x0, float y0, float x1, float y1, int seed, int rgb, float a, int depth, boolean branches) {
+    static void bolt(float x0, float y0, float x1, float y1, int seed, int rgb, float a, int depth, boolean branches) {
         if (depth == 0) {
             line(x0 - 2, y0, x1 - 2, y1, rgb, a * 0.13f); line(x0 + 3, y0, x1 + 3, y1, rgb, a * 0.13f);
             line(x0 - 1, y0, x1 - 1, y1, rgb, a * 0.28f); line(x0 + 2, y0, x1 + 2, y1, rgb, a * 0.28f);
@@ -602,6 +602,7 @@ final class Ritual {
         float cx0 = icx, cy0 = itemY(t, p, gy, icy, sz, itemBob, bobAmp);
         float pulse = 0.85f + 0.15f * (float) Math.sin(t * 5f);
         float[] offs = spread > 0f ? new float[]{-spread, spread} : new float[]{0f};                 // one centre per drop
+        if (farmMode || expMode) { softPivot(t, p, icx, gy, icy, sz, isc, rc, energy, rng, offs, bg, itemA, cx0, cy0, pulse, O); return; }          // no rings and no runes: a field gives petals, a book gives light
         if (!rng) {                                                                        // ---- NORMAL: ascension rings, a glow, orbiting sparkles
             float sw = p / 0.8f; if (sw < 1f) ringE(icx, gy, rx * (0.5f + 1.5f * eo(sw)), ry * (0.5f + 1.5f * eo(sw)), mixc(rc, WHITE, 0.45f), (1f - sw) * 0.95f, 0, 6.2832f, 0, 0);
             for (int j = 0; j < 4; j++) {
@@ -647,18 +648,55 @@ final class Ritual {
     }
 
 
+    /** The finish of a Farming or Experiment drop: warm light behind the item, petals (or sparks of light from the book) rising round it, sun rays; RNG adds a golden bloom, a sunburst and a spray of petals. */
+    private static void softPivot(float t, float p, float icx, float gy, float icy, float sz, float isc, int rc, int energy, boolean rng, float[] offs, float bg, float itemA, float cx0, float cy0, float pulse, float O) {
+        boolean book = expMode;
+        int[] pal = book ? new int[]{0xE6D2FF, 0x9AF0FF, 0xFFFFFF, rng ? 0xFFC857 : 0xB56BFF}
+            : farmKind == FarmScene.FEAST ? new int[]{0xFF9A3A, 0xFFD070, 0xE8502A, 0x7CCB4F}
+            : farmKind == FarmScene.PEST || farmKind == FarmScene.HELIOS ? new int[]{0x9AE05A, 0xFFE27A, 0xFFFFFF, 0x7CCB4F}
+            : new int[]{0xFFD25A, 0xFFF0A0, 0x7CCB4F, 0xFF9AC8};
+        float swell = 1f - cl(p / 0.9f);
+        glowE(icx, gy, 50 * sz * (1.1f + (rng ? 1.6f : 0.5f) * eo(p / 0.9f)), 13 * sz * (1.6f + (rng ? 1.6f : 0.5f) * eo(p / 0.9f)), energy, (rng ? 0.5f : 0.4f) * swell * bg);          // the ground gives a soft flash of light
+        if (rng) {
+            rays(cx0, cy0, t * 0.30f, 14, mixc(energy, WHITE, 0.5f), 0.5f * bg * sm(p / 0.6f), 190);
+            rays(cx0, cy0, -t * 0.20f + 0.1f, 9, mixc(energy, rc, 0.4f), 0.28f * bg * sm(p / 0.8f), 150);
+            glowE(cx0, cy0, 76 * sz * pulse, 76 * sz * pulse, mixc(energy, rc, 0.5f), 0.5f * (bg * 0.6f + 0.4f * itemA));
+        } else {
+            rays(cx0, cy0, t * 0.2f, 8, mixc(energy, WHITE, 0.6f), 0.22f * bg * sm(p / 0.6f), 90);
+        }
+        for (float off : offs) {
+            float cxo = cx0 + off, R = 16 * sz * isc;
+            glowE(cxo, cy0, (rng ? 40 : 32) * sz * isc * pulse, (rng ? 40 : 32) * sz * isc * pulse, mixc(rc, energy, 0.35f), (rng ? 0.5f : 0.45f) * itemA);
+            glowE(cxo, cy0, 15 * sz * isc, 15 * sz * isc, WHITE, 0.22f * itemA);
+            int n = rng ? 22 : 12;
+            for (int i = 0; i < n; i++) {                                                  // petals, leaves or sparks drift up round the item and turn as they go
+                float u = (t * (rng ? 0.55f : 0.34f) + rnd(i * 7)) % 1f, ang = i * 2.4f + t * 0.6f;
+                float rr = (0.9f + 1.5f * rnd(i * 3 + 1)) * R, x = cxo + (float) Math.sin(ang + u * 5f) * rr * (0.6f + 0.6f * u), y = cy0 + R * 0.9f - u * R * (rng ? 4.6f : 3.2f);
+                float al = (float) Math.sin(u * 3.1416f) * itemA * (rng ? 1f : 0.9f);
+                int col = pal[i % pal.length];
+                if (book) { dot(x, y, col, al); dot(x, y - 1, col, al * 0.6f); dot(x - 1, y, col, al * 0.4f); dot(x + 1, y, col, al * 0.4f); if (i % 4 == 0) glint(x, y, 2, WHITE, al); }
+                else { dot(x, y, col, al); dot(x + (i % 2 == 0 ? 1 : -1), y + 1, mixc(col, 0x000000, 0.25f), al * 0.85f); }
+            }
+            for (int k = 0; k < (rng ? 7 : 3); k++) {                                      // twinkles that come and go on the item
+                float ph = (t * 1.3f + rnd(k * 11 + 3) * 4f) % 1.6f; if (ph > 0.5f) continue;
+                glint(cxo + (rnd(k * 5 + 2) - 0.5f) * 2.4f * R, cy0 + (rnd(k * 9 + 4) - 0.5f) * 2.2f * R, 2 + (k % 2), k % 2 == 0 ? WHITE : pal[1], (1f - ph / 0.5f) * itemA);
+            }
+            if (rng) fountain(t, cxo, cy0 + 6, O + 0.1f, offs.length > 1 ? 30 : 46, pal[0], itemA, 1.5f, 0.8f);
+        }
+    }
+
     // ------------------------------------------------------------------ the slayer bosses: the same ritual as Mythological, a sword slashes the boss instead of lightning
     static boolean slayerMode;                                                          // set by the caller: paint() draws a slayer scene
-    static boolean farmMode, expMode;                                                   // the Farming field (farmKind: 0 crops, 1 feast, 2 pest, 3 Ray of Helios) and the Experimentation Table book
+    static boolean farmMode, expMode;                                                   // the Farming field (farmKind: 0 crops, 1 feast, 2 pest, 3 Ray of Helios, 4 bounty) and the Experimentation Table book
     static int farmKind;
     static float spread;                                                                // canvas units between the middle and each of two drops (0 = one drop)
 
     /** Sets the scene flags for an animation; end() clears them again. */
     static void begin(Anim a, float sz, float isc) {
         slayerMode = isSlayer(a); if (slayerMode) { kind = 12 + slTheme(a); slSeed = System.identityHashCode(a) & 0xFFFF; }
-        farmMode = a.group.equals("crops") || a.group.equals("feast") || a.group.equals("pests");
+        farmMode = a.group.equals("crops") || a.group.equals("feast") || a.group.equals("bounty") || a.group.equals("pests");
         expMode = a.group.equals("exp");
-        farmKind = a.group.equals("feast") ? FarmScene.FEAST : a.group.equals("pests") ? (a.helios ? FarmScene.HELIOS : FarmScene.PEST) : FarmScene.CROPS;
+        farmKind = a.group.equals("feast") ? FarmScene.FEAST : a.group.equals("bounty") ? FarmScene.BOUNTY : a.group.equals("pests") ? (a.helios ? FarmScene.HELIOS : FarmScene.PEST) : FarmScene.CROPS;
         spread = spreadOf(a, sz, isc);
     }
     /** Canvas units from the middle to each of two drops (0 for one). */

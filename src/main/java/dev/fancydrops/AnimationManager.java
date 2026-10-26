@@ -35,7 +35,7 @@ public final class AnimationManager {
     public static final class Anim {
         final Item item;                         // null = nothing dropped
         Item item2;                              // a second drop of the same kill / reward (Slayers and Experiments): both show side by side
-        final String group;                      // "myth", "treasure", "slayer", "crops", "feast", "pests" or "exp"
+        final String group;                      // "myth", "treasure", "slayer", "crops", "feast", "bounty", "pests" or "exp"
         final int type;                          // NO_DROPS, NORMAL or RNG
         final long created = System.currentTimeMillis();
         boolean helios;                          // the Ray of Helios pest drop: a sunbeam instead of the vacuum

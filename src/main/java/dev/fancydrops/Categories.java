@@ -57,11 +57,11 @@ final class Categories {
     private static final Type FARM_RNG = new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a golden bloom.");
     private static final List<Type> FARM_TYPES = List.of(FARM_NORMAL, FARM_RNG);
     private static final List<Type> PEST_TYPES = List.of(
-        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: a pest pops out of the soil and the item springs out with its text."),
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: a pest scuttles through the barn, the vacuum pulls it up and the item springs out with its text."),
         new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a big finish."));
     private static final List<Type> EXP_TYPES = List.of(
-        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A book opens and its pages flip: the items rise from it with their text."),
-        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "An RNG item: the book flips for longer, with cinematic bars and blur."));
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A book opens and turns three pages: the items rise from its light with their text."),
+        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "An RNG item: the book turns three pages in a storm of light, with cinematic bars and blur."));
 
     /** True for a group whose Drop Library page is one list of drops (no creatures to pick first). */
     static boolean single(Group g) { return !g.id().equals("myth") && !g.id().equals("slayer"); }
@@ -79,9 +79,12 @@ final class Categories {
         new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, false, "Crops, pests and the rare drops of the Garden.", List.of(
             new Group("crops", "Rare Crops", ":grp_crops:", 0xFF7CCB4F, "What plays when a crop turns out rare.", FARM_TYPES),
             new Group("feast", "Harvest Feast", ":grp_feast:", 0xFFFFA63A, "What plays when the Harvest Feast serves a rare crop.", FARM_TYPES),
+            new Group("bounty", "Harvest Bounty", ":grp_bounty:", 0xFFB8E860, "What plays when a Harvest Bounty drops something.", FARM_TYPES),
             new Group("pests", "Pest Drops", ":grp_pests:", 0xFFD2603F, "What plays when a pest drops something.", PEST_TYPES))),
-        new Cat("experiments", "Experiments", ":experiments:", 0xFFB56BFF, false, "The Experimentation Table's rewards.", List.of(
-            new Group("exp", "Experimentation Table", ":grp_exp:", 0xFFB56BFF, "What plays when the Table gives out rewards.", EXP_TYPES))),
+        new Cat("experiments", "Rare Drops", ":raredrops:", 0xFFB56BFF, false, "Rare drops from the Experimentation Table, rare mobs and events.", List.of(
+            new Group("exp", "Experimentation Table", ":grp_exp:", 0xFFB56BFF, "What plays when the Table gives out rewards.", EXP_TYPES),
+            new Group("mobs", "Rare Mob Drops", ":grp_mobs:", 0xFFFF8A5A, "Rare drops of everyday mobs.", EXP_TYPES, true),
+            new Group("events", "Events", ":grp_events:", 0xFF55D8FF, "Rare drops of the server's events.", EXP_TYPES, true))),
         new Cat("mining", "Mining", ":mining:", 0xFF9AB8FF, true, "Rare finds underground.", List.of()),
         new Cat("fishing", "Fishing", ":fishing:", 0xFF4FC3FF, true, "Sea creatures and what they carry.", List.of()),
         new Cat("dyes", "Dyes", ":dye:", 0xFFFF72C6, true, "Every dye in the game.", List.of()));

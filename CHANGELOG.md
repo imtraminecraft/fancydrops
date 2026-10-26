@@ -1,3 +1,11 @@
+## 0.6.0
+- Farming scenes now play in a place of their own, like the slayer bosses: a golden-hour wheat field with two windmills (Rare Crops), a harvest night with a huge moon, lanterns and glowing pumpkins (Harvest Feast), the inside of a barn with light through the planks (Pest Drops), and a bright morning field where a tractor mows (Harvest Bounty).
+- The rings, dashed halos and lightning round a farming drop are gone: the item gets warm light, petals and leaves rising round it, and (RNG) a golden sunburst and a spray of petals.
+- New Harvest Bounty page in Farming (Drop Library, Animations, Sounds and Chat), with its own sounds and a tractor icon. Its 7 drops moved there from Rare Crops, and "(Harvest Bounty)" is gone from their odds.
+- Experiments is now Rare Drops, with three pages: Experimentation Table, Rare Mob Drops (soon) and Events (soon). It is on every main page: Drop Library, Animations, Sounds and Chat.
+- The Experimentation Table book scene is new: an open spell book in a violet hall with light pouring from its pages and mist at its foot. Both animations turn exactly three pages; RNG adds ghost pages, lightning, rings of light and a rising book.
+- New icons: Rare Drops, Rare Mob Drops, Events, Harvest Bounty; redrawn Farming, Pest Drops; the old book icon is now the Experimentation Table's.
+
 ## 0.5.1
 - Fixed: the Farming pages crashed the menu when your config still had the old farming.json. It is replaced by the new one, and an old file with other ids is ignored.
 

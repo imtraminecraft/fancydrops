@@ -39,7 +39,7 @@ final class SlayerScenery {
     }
 
     /** The rounded frame (erase = false), or the clearing of everything outside its four round corners (erase = true). */
-    private static void corners(Canvas c, int x0, int y0, int x1, int y1, int r, int rgb, float a, boolean erase) {
+    static void corners(Canvas c, int x0, int y0, int x1, int y1, int r, int rgb, float a, boolean erase) {
         if (!erase) {
             for (int x = x0 + r; x < x1 - r; x++) { px(c, x, y0, rgb, a * 0.85f); px(c, x, y1 - 1, rgb, a * 0.85f); }
             for (int y = y0 + r; y < y1 - r; y++) { px(c, x0, y, rgb, a * 0.85f); px(c, x1 - 1, y, rgb, a * 0.85f); }
@@ -57,11 +57,11 @@ final class SlayerScenery {
 
     // ---- shared pieces
     /** A ridge of far hills or rooftops: its height is a few waves, so it never repeats exactly. */
-    private static void ridge(Canvas c, int x0, int x1, int hz, float amp, float freq, float ph, int rgb, float a) {
+    static void ridge(Canvas c, int x0, int x1, int hz, float amp, float freq, float ph, int rgb, float a) {
         for (int x = x0; x < x1; x++) { int h = (int) (amp * (0.55f + 0.3f * Math.sin(x * freq + ph) + 0.15f * Math.sin(x * freq * 2.7f + ph * 2))); rect(c, x, hz - h, x + 1, hz, rgb, a); }
     }
     /** The ground: a perspective floor, finer and darker far away. `mixA`/`mixB` are the two kinds of ground, `lump` how much of the second one shows. */
-    private static void floor(Canvas c, int x0, int y0, int x1, int y1, int hz, int ga, int gb, float lump, int seed, float a) {
+    static void floor(Canvas c, int x0, int y0, int x1, int y1, int hz, int ga, int gb, float lump, int seed, float a) {
         for (int y = hz; y < y1; y++) {
             float d = (y - hz) / (float) Math.max(1, y1 - hz), cell = 1f + d * 3f;
             for (int x = x0; x < x1; x++) {
@@ -79,7 +79,7 @@ final class SlayerScenery {
         rect(c, x, base - h, x + 2, base, rgb, a);
         for (int b = 0; b < 4; b++) { int by = base - h + b * h / 6, dir = b % 2 == 0 ? -1 : 1, len = 5 + (b * 3 + x) % 6; for (int i = 0; i < len; i++) px(c, x + 1 + dir * i, by - i / 2, rgb, a); }
     }
-    private static void pine(Canvas c, int x, int base, int h, int rgb, float a) {
+    static void pine(Canvas c, int x, int base, int h, int rgb, float a) {
         rect(c, x, base - 3, x + 1, base, mix(rgb, 0x3B2A1A, 0.5f), a);
         for (int i = 0; i < h; i++) { int w = 1 + (int) ((i / (float) h) * h * 0.38f); rect(c, x - w / 2, base - h + i - 2, x + (w + 1) / 2, base - h + i - 1, mix(rgb, 0xFFFFFF, i % 4 == 0 ? 0.08f : 0f), a); }
     }
@@ -106,7 +106,7 @@ final class SlayerScenery {
         }
         MOONS.clear();
     }
-    private static void fog(Canvas c, float t, int x0, int x1, int y, int h, int rgb, float a, int seed) {
+    static void fog(Canvas c, float t, int x0, int x1, int y, int h, int rgb, float a, int seed) {
         for (int x = x0; x < x1; x++) { float w = 0.5f + 0.5f * (float) Math.sin(x * 0.05f + t * 0.4f + seed); rect(c, x, y, x + 1, y + h, rgb, a * w * 0.18f); }
     }
 

@@ -29,7 +29,7 @@ public final class SoundFx {
     }
 
     public static final String NONE = "none";
-    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng", "crops.normal", "crops.rng", "feast.normal", "feast.rng", "pests.normal", "pests.rng", "exp.normal", "exp.rng"};
+    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng", "crops.normal", "crops.rng", "feast.normal", "feast.rng", "bounty.normal", "bounty.rng", "pests.normal", "pests.rng", "exp.normal", "exp.rng"};
     public static final String[] SLOTS = {"chop", "split", "reveal", "linger", "end"};
 
     private static final Map<String, Fx> ALL = new LinkedHashMap<>();
@@ -131,6 +131,8 @@ public final class SoundFx {
             {"crops.rng", "mc_swish", "mc_harvest", "mc_fanfare", "mc_hum", "mc_powerdown"},
             {"feast.normal", "mc_swish", "mc_harvest", "mc_levelup", "mc_hum", "mc_powerdown"},
             {"feast.rng", "mc_swish", "mc_harvest", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"bounty.normal", "mc_swish", "mc_harvest", "mc_levelup", "mc_hum", "mc_powerdown"},
+            {"bounty.rng", "mc_swish", "mc_harvest", "mc_fanfare", "mc_hum", "mc_powerdown"},
             {"pests.normal", "mc_squish", "mc_smack", "mc_orb", "mc_hum", "mc_powerdown"},
             {"pests.rng", "mc_squish", "mc_smack", "mc_fanfare", "mc_hum", "mc_powerdown"},
             {"exp.normal", "mc_page", "mc_enchant", "mc_crystal", "mc_hum", "mc_powerdown"},
@@ -155,6 +157,8 @@ public final class SoundFx {
             {"crops.rng", "farm_cut", "farm_heave", "farm_bloom_big", "myth_glow_big", "farm_end"},
             {"feast.normal", "farm_cut", "farm_heave", "farm_bloom", "myth_glow", "farm_end"},
             {"feast.rng", "farm_cut", "farm_heave", "farm_bloom_big", "myth_glow_big", "farm_end"},
+            {"bounty.normal", "farm_cut", "farm_heave", "farm_bloom", "myth_glow", "farm_end"},
+            {"bounty.rng", "farm_cut", "farm_heave", "farm_bloom_big", "myth_glow_big", "farm_end"},
             {"pests.normal", "pest_vacuum", "pest_gulp", "pest_pop", "myth_glow", "farm_end"},
             {"pests.rng", "pest_vacuum", "pest_gulp", "farm_bloom_big", "myth_glow_big", "farm_end"},
             {"exp.normal", "exp_flip", "exp_open", "exp_reveal", "myth_glow", "exp_end"},

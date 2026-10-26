@@ -206,7 +206,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         helpLine(s, "/fd toggle", "Turn the whole mod on or off");
         helpLine(s, "/fd simulate Mythological <Mob|Treasure> <Drop> <mf>", "Play a pretend drop through the real animation");
         helpLine(s, "/fd simulate Slayer <Boss> <Drop> [Drop 2] <mf>", "The same for a slayer boss: one or two drops (Nothing for no drop)");
-        helpLine(s, "/fd simulate Farming <Rare Crops|Harvest Feast|Pest Drops> <Drop> <overbloom>", "A pretend crop or pest drop");
+        helpLine(s, "/fd simulate Farming <Rare Crops|Harvest Feast|Harvest Bounty|Pest Drops> <Drop> <overbloom>", "A pretend crop or pest drop");
         helpLine(s, "/fd simulate Experiments <Drop> [Drop 2]", "A pretend Experimentation Table reward: one or two items");
         s.sendFeedback(Component.literal(" "));
         s.sendFeedback(Chat.color("Example  ", Chat.DIM).append(Chat.color("/fd simulate Mythological Minos Hunter Daedalus Stick 250", Chat.COMMAND)));
@@ -236,7 +236,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     private static String usage(String mode) {
         return switch (mode) {
             case "Slayer" -> "/fd simulate Slayer <Boss> <Drop> [Drop 2] <mf>";
-            case "Farming" -> "/fd simulate Farming <Rare Crops|Harvest Feast|Pest Drops> <Drop> <overbloom>";
+            case "Farming" -> "/fd simulate Farming <Rare Crops|Harvest Feast|Harvest Bounty|Pest Drops> <Drop> <overbloom>";
             case "Experiments" -> "/fd simulate Experiments <Drop> [Drop 2]";
             default -> "/fd simulate Mythological <Mob|Treasure> <Drop> <mf>";
         };

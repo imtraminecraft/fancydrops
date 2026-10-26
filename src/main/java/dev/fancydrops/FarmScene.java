@@ -13,9 +13,9 @@ package dev.fancydrops;
 final class FarmScene {
     private FarmScene() {}
 
-    static final int CROPS = 0, FEAST = 1, PEST = 2, HELIOS = 3;
+    static final int CROPS = 0, FEAST = 1, PEST = 2, HELIOS = 3, BOUNTY = 4;
     /** The colour of the light each scene gives the drop's effects. */
-    static final int[] ENERGY = {0xFFD25A, 0xFFA63A, 0x9AE05A, 0xFFE27A};
+    static final int[] ENERGY = {0xFFD25A, 0xFFA63A, 0x9AE05A, 0xFFE27A, 0xB8E860};
     private static final float[] BEAT = {0.34f, 0.58f, 0.80f};
 
     private static float rnd(int n) { return Ritual.rnd(n); }
@@ -30,13 +30,22 @@ final class FarmScene {
         if (a <= 0.01f) return;
         float op = Math.min(t, O);
         float rumble = sm((op - 0.84f * O) / (0.16f * O)) * (1f - sm(p / 0.4f));
-        soil(icx, gy, sz, kind, a, rumble);
-        if (kind >= PEST) pestScene(t, O, op, p, icx, gy, sz, kind == HELIOS, a, rumble);
+        panel(t, icx, gy, sz, kind, a);
+        if (kind != PEST && kind != HELIOS && kind != BOUNTY) soil(icx, gy, sz, kind, a, rumble);
+        if (kind == PEST || kind == HELIOS) pestScene(t, O, op, p, icx, gy, sz, kind == HELIOS, a, rumble);
         else cropScene(t, O, op, p, icx, gy, sz, kind == FEAST, a, rumble);
         if (p >= 0f) heave(p, icx, gy, sz, kind, a, rng);
         float warm = kind == FEAST ? 0.14f : 0.09f;                                                // the sun (or the lanterns) lying over the field
-        Ritual.glowE(icx, gy - 8 * sz, 100 * sz, 36 * sz, kind == FEAST ? 0xFFA63A : 0xFFE9A0, warm * a);
+        if (kind != PEST && kind != HELIOS) Ritual.glowE(icx, gy - 8 * sz, 100 * sz, 36 * sz, kind == FEAST ? 0xFFA63A : 0xFFE9A0, warm * a);
         Ritual.motes(t, icx, gy, 90 * sz, 14 * sz, 46 * sz, ENERGY[kind], 0.8f * a, kind == FEAST ? 16 : 12);          // pollen, or embers of the lanterns, drifting over the field
+    }
+
+    /** The place the scene stands in (see FarmScenery): a see-through rounded panel, framed by a thin line in the scene's colour. */
+    private static void panel(float t, float icx, float gy, float sz, int kind, float a) {
+        float al = a * sm(t / 0.25f); if (al <= 0.01f) return;
+        int x0 = Math.max(0, Math.round(icx - 118 * sz)), x1 = Math.min(Ritual.CW, Math.round(icx + 118 * sz)), y0 = Math.max(0, Math.round(gy - 112 * sz)), y1 = Math.min(Ritual.CH, Math.round(gy + 27 * sz));
+        int theme = kind == FEAST ? 1 : kind >= PEST && kind != BOUNTY ? 2 : kind == BOUNTY ? 3 : 0;
+        FarmScenery.paint(Ritual.cv, theme, t, x0, y0, x1, y1, Math.round(gy - 15 * sz), al * 0.66f, ENERGY[kind]);
     }
 
     // ------------------------------------------------------------------ the ground
@@ -192,7 +201,7 @@ final class FarmScene {
     private static void heave(float p, float icx, float gy, float sz, int kind, float a, boolean rng) {
         float e = Ritual.eo(p / 0.45f), fade = 1f - sm((p - 0.9f) / 0.9f);
         float mh = (6 + 4 * (rng ? 1 : 0)) * sz * e * fade, mw = (14 + 6 * (rng ? 1 : 0)) * sz * (0.5f + 0.5f * e);
-        int dirt = kind == FEAST ? 0x4A2C16 : 0x5A3E22;
+        int dirt = kind == FEAST ? 0x4A2C16 : kind == PEST || kind == HELIOS ? 0xC8A24A : 0x5A3E22;      // in the barn the floor bursts into straw
         Ritual.fillE(icx, gy + 1 * sz, mw * 1.1f, mh * 0.5f + 0.5f, 0x000000, 0.35f * a * fade);
         Ritual.fillE(icx, gy + 1 * sz - mh * 0.3f, mw, mh, dirt, a * fade);
         Ritual.fillE(icx - mw * 0.2f, gy + 1 * sz - mh * 0.55f, mw * 0.55f, mh * 0.45f, mix(dirt, 0xFFFFFF, 0.28f), 0.8f * a * fade);
@@ -213,21 +222,11 @@ final class FarmScene {
         float rx = fieldRx(sz), ry = fieldRy(sz), cy = gy + 2 * sz, sp = 12 * sz, xl = icx - rx * 0.86f, xr = icx + rx * 0.86f;
         float t1 = BEAT[0] * O, t2 = BEAT[1] * O, t3 = BEAT[2] * O;
         float pluck = sm((op - t2) / (t3 - t2)), gulp = op - t3;
-        // leafy crops, some nibbled: they stay standing, they are not the target
-        for (int r = 0; r < 3; r++) {
-            float yb = rowY(gy, sz, r);
-            for (int i = 0; ; i++) {
-                float x = xl + i * sp + (rnd(r * 53 + i) - 0.5f) * sp * 0.4f; if (x > xr) break;
-                float yy = yb + (rnd(r * 17 + i * 3) - 0.5f) * 1.6f * sz;
-                if (sq((x - icx) / rx) + sq((yy - cy) / ry) > 0.86f) continue;
-                int seed = r * 101 + i * 7;
-                float sway = (float) Math.sin(t * 2.1f + x * 0.2f + r) * 0.8f + rumble * (rnd(seed + (int) (t * 30)) - 0.5f) * 3f + (op > t1 && op < t3 ? -(x - (icx + 34 * sz)) * 0.004f * 12f : 0f);          // the leaves lean towards the vacuum
-                crop(rnd(seed) < 0.5f ? CARROT : WHEAT, x, yy, sz, sway, seed, a * 0.9f, -1f, 1, t);
-            }
-        }
+        barnProps(t, op, t1, t3, icx, gy, sz, a, rumble);
         float px = pestX(t, op, t1, icx, sz), py = gy + 3 * sz;                                              // where the pest is
         float vac = sm(op / (0.30f * O)) * (1f - sm((p - 0.2f) / 0.8f));                                      // the vacuum swings in, and out again after the drop
         float nx = icx + 36 * sz, ny = gy - 40 * sz;                                                         // the nozzle
+        if (op < t3 + 0.01f) Ritual.fillE(px, py + 4 * sz, 8 * sz, 2.2f * sz, 0x000000, 0.35f * a);
         if (!helios) {
             if (op >= t1) suction(t, op, t1, t2, t3, px, py, nx, ny, sz, a);
             float pk = pluck;
@@ -238,6 +237,29 @@ final class FarmScene {
             if (gulp >= 0f) gulpCloud(px, py - 4 * sz, gulp, sz, a);
         } else {
             helios(t, op, t1, t2, t3, p, px, py, icx, gy, sz, a);
+        }
+    }
+
+    /** The floor of the barn in front of the pest: a torn grain sack with its spill on the left, a crate of carrots on the right; both shiver when the drop is near. */
+    private static void barnProps(float t, float op, float t1, float t3, float icx, float gy, float sz, float a, float rumble) {
+        float sh = rumble * (rnd((int) (t * 30)) - 0.5f) * 2f;
+        float fy = gy + 6 * sz;
+        for (int side = -1; side <= 1; side += 2) {
+            float bx = icx + side * 52 * sz + sh;
+            Ritual.fillE(bx, fy + 1.5f * sz, 11 * sz, 3 * sz, 0x000000, 0.35f * a);
+            if (side < 0) {                                                                                 // the sack: round belly, tied neck, a tear that spills grain
+                Ritual.fillE(bx, fy - 7 * sz, 8 * sz, 8 * sz, 0x8A6A3A, a); Ritual.fillE(bx - 2 * sz, fy - 8 * sz, 5.5f * sz, 6 * sz, 0xB8935A, a);
+                Ritual.line(bx - 3 * sz, fy - 14 * sz, bx + 3 * sz, fy - 14 * sz, 0x5A3E1E, a); Ritual.fillE(bx, fy - 15.5f * sz, 3 * sz, 2.2f * sz, 0x9A7A46, a);
+                for (int i = 0; i < 16; i++) { float ang = rnd(i * 5) * 3.14f, r = (3 + rnd(i * 3) * 9) * sz; Ritual.dot(bx + 5 * sz + (float) Math.cos(ang) * r, fy - 0.5f * sz - (float) Math.sin(ang) * r * 0.25f, i % 3 == 0 ? 0xFFE27A : 0xE0B84A, a); }
+            } else {                                                                                        // the crate with carrots and wheat
+                float w = 9 * sz, h = 9 * sz;
+                Ritual.fillE(bx, fy - h * 0.5f, w, h * 0.5f, 0x6A4220, a);
+                for (int i = 0; i < 5; i++) { float cx = bx - 6 * sz + i * 3 * sz; Ritual.line(cx, fy - h, cx + (i - 2) * 0.8f, fy - h - 5 * sz, i % 2 == 0 ? 0x5FB040 : 0x7CD05A, a); Ritual.dot(cx, fy - h + 0.5f, 0xFF8A2A, a); }
+                Ritual.line(bx - w, fy - h * 0.55f, bx + w, fy - h * 0.55f, 0x3A2210, a); Ritual.line(bx - w, fy - h * 0.15f, bx + w, fy - h * 0.15f, 0x3A2210, a);
+            }
+        }
+        if (op < t3) {                                                                                      // nibbled grain scattered where the pest runs
+            for (int i = 0; i < 9; i++) Ritual.dot(icx + (rnd(i * 7) - 0.5f) * 56 * sz, fy + (rnd(i * 3 + 1) - 0.2f) * 3 * sz, i % 2 == 0 ? 0xE8C860 : 0xB88A38, 0.9f * a);
         }
     }
 

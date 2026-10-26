@@ -268,32 +268,35 @@ final class IconArt {
                 for (int k = 0; k < 2; k++) { float e = (d + k * 0.5f) % 1f; pxa(11 + Math.round(sn(e * 2 + k)), 2 - Math.round(e * 2) + 2, 0xFFFFFF, 0.6f * (1f - e)); pxa(3 + Math.round(sn(e * 2 + k)), 3 - Math.round(e * 2) + 1, 0xFFFFFF, 0.5f * (1f - e)); }
                 outline();
             }
-            case "grp_pests" -> {                                                            // Pest Drops: a green beetle with red eyes, legs scuttling, antennae twitching
-                glow(8, 9, 7, 0x8AD84A, 0.06f + 0.06f * t);
+            case "grp_pests" -> {                                                            // Pest Drops: a red shelled beetle seen from above, legs scuttling, feelers twitching
+                glow(8, 9, 7, 0xFF5A3A, 0.06f + 0.06f * t);
                 int lg = Math.round(sn(f * 2) * 0.9f);
-                for (int k = 0; k < 3; k++) { int y = 7 + k * 2; int o = (k % 2 == 0) ? lg : -lg;
-                    ln(5, y, 2, y + 1 + o, 0x2A1A14); ln(10, y, 13, y + 1 - o, 0x2A1A14); px(2, y + 1 + o, 0x5A3A2A); px(13, y + 1 - o, 0x5A3A2A); }
-                for (int y = 4; y < 14; y++) {
-                    float dy = (y - 9f) / 5f; int hw = Math.round((float) Math.sqrt(Math.max(0, 1 - dy * dy)) * 4.2f);
-                    for (int x = 8 - hw; x <= 7 + hw; x++) px(x, y, x < 7 ? 0x4E9A2E : 0x6CC444);
+                for (int k = 0; k < 3; k++) { int y = 6 + k * 3, o = (k % 2 == 0) ? lg : -lg;
+                    ln(4.5f, y, 1, y + 1 + o, 0x2A1810); ln(11.5f, y, 15, y + 1 - o, 0x2A1810); px(1, y + 1 + o, 0x5A3A2A); px(14, y + 1 - o, 0x5A3A2A); }
+                for (int y = 5; y < 15; y++) {
+                    float dy = (y - 10f) / 5.2f; int hw = Math.round((float) Math.sqrt(Math.max(0, 1 - dy * dy)) * 4.6f);
+                    for (int x = 8 - hw; x <= 7 + hw; x++) px(x, y, x < 8 ? (y < 8 ? 0xE0503A : 0xC03A2A) : (y < 8 ? 0xC03A2A : 0x9A2A20));
                 }
-                rect(7, 5, 2, 8, 0x2E6A1C); px(5, 8, 0xA8F070); px(10, 11, 0x2E6A1C); px(5, 11, 0x2E6A1C);
-                rect(6, 2, 4, 3, 0x2E4A22); px(6, 3, 0xFF3A3A); px(9, 3, 0xFF3A3A);
-                int an = Math.round(sn(f * 3)); ln(6, 2, 4 + an, 0, 0x2A1A14); ln(9, 2, 11 - an, 0, 0x2A1A14);
+                rect(7, 5, 2, 10, 0x2A1410); px(5, 8, 0x2A1410); px(6, 8, 0x2A1410); px(10, 11, 0x2A1410); px(9, 11, 0x2A1410); px(5, 12, 0x2A1410); px(10, 7, 0x2A1410);
+                px(5, 7, 0xFF9A7A); px(6, 6, 0xFF9A7A);                                                                                 // a shine on the shell
+                rect(6, 2, 4, 3, 0x2A1410); px(6, 3, 0xFFE27A); px(9, 3, 0xFFE27A);
+                int an = Math.round(sn(f * 3)); ln(6, 2, 4 + an, 0, 0x2A1810); ln(9, 2, 11 - an, 0, 0x2A1810);
                 outline();
-                glint(5, 6, 1, 0xFFFFFF, 0.2f + 0.8f * t);
+                glint(5, 5, 1, 0xFFFFFF, 0.2f + 0.8f * t);
             }
-            case "grp_exp" -> {                                                              // Experiments: an open spell book, a violet rune floating above it, a page mid-flip
-                glow(8, 7, 8, 0xB56BFF, 0.12f + 0.12f * t);
-                rect(1, 8, 14, 6, 0x4A2A7A); rect(1, 13, 14, 1, 0x2E1A4E); rect(7, 8, 2, 6, 0x2E1A4E);
-                rect(2, 8, 5, 4, 0xF2E8D0); rect(9, 8, 5, 4, 0xF2E8D0); rect(2, 12, 5, 1, 0xD8CCB0); rect(9, 12, 5, 1, 0xD8CCB0);
-                for (int k = 0; k < 3; k++) { rect(3, 9 + k, 3 - (k == 2 ? 1 : 0), 1, 0x8A7AA8); rect(10, 9 + k, 3 - (k == 1 ? 1 : 0), 1, 0x8A7AA8); }
-                int pf = Math.round(tri(f) * 3);                                                   // the right page lifts and turns
-                if (pf > 0) { rect(9, 8 - pf, 5 - pf, pf + 1, 0xFFF6E0); px(9 + 4 - pf, 8 - pf, 0xD8CCB0); }
-                int ry = 2 + Math.round(sn(f) * 0.9f); int rc = mix(0xD8B0FF, 0xFFFFFF, t);
-                px(8, ry, rc); px(7, ry + 1, 0xB56BFF); px(8, ry + 1, rc); px(9, ry + 1, 0xB56BFF); px(8, ry + 2, 0xB56BFF); px(8, ry - 1, 0x8A5AD8);
+            case "grp_exp" -> {                                                              // the Experimentation Table: the enchanting table's book, a page flipping, runes rising
+                float u = f;                                                                           // the flip: a page swings from right to left
+                float fl = (float) Math.cos(u * 3.1416f);                                              // 1 .. -1
+                bev(1, 10, 14, 4, 0x8A1F2E);                                                            // cover
+                quad(2, 6, 8, 7, 8, 11, 2, 10, 0xF2E8C8);                                               // left page
+                quad(8, 7, 14, 6, 14, 10, 8, 11, 0xFFF6DC);                                             // right page
+                ln(3, 8, 7, 8.8f, 0xB8A878); ln(9, 8.8f, 13, 8, 0xB8A878);
+                float px0 = 8 + fl * 6;                                                                 // the turning page's edge
+                quad(8, 7, px0, 6 - Math.abs(fl) * 2.2f, px0, 10 - Math.abs(fl) * 2.2f, 8, 11, fl > 0 ? 0xFFFFF0 : 0xE8DCB4);
+                rect(7, 6, 2, 6, 0x5A1018);                                                             // spine
                 outline();
-                glint(4 + Math.round(f * 8), 3 + Math.round(sn(f * 2)), 1, 0xFFFFFF, 0.3f + 0.7f * t);
+                for (int i = 0; i < 3; i++) { float v = (f + i / 3f) % 1f; int rx = 4 + i * 4 + Math.round((float) Math.sin(v * 6 + i) * 1.5f), ry = Math.round(5 - v * 5);
+                    pxa(rx, ry, 0xC9A0FF, 1f - v * 0.6f); pxa(rx + 1, ry, 0xFFFFFF, (1f - v) * 0.7f); }
             }
             case "shovel" -> {                                                               // a digging shovel (the blade takes the spade's colour): it dips into the ground and flicks up a lump of dirt
                 int bl = tint != 0 ? tint : 0xC9D1E0;
@@ -309,35 +312,58 @@ final class IconArt {
                 if (u > 0f) { px(Math.round(8 + u * 4), Math.round(12 - 5 * (float) Math.sin(u * 3.14f)), 0x9A7A52); px(Math.round(9 + u * 5), Math.round(12 - 4 * (float) Math.sin(u * 3.14f)), 0x6B4A2B); }
                 outline();
             }
-            case "farm" -> {                                                                 // a farmer in a straw hat, hoeing the rows
-                float hoe = f < 0.5f ? f / 0.5f : 1f - (f - 0.5f) / 0.5f;                              // the swing: up then down
-                rect(0, 13, 16, 3, 0x6B4423); rect(0, 13, 16, 1, 0x8A5A2C);                              // tilled soil
-                for (int i = 0; i < 4; i++) { rect(1 + i * 4, 14, 2, 1, 0x4A2E16); }
-                px(13, 12, 0x7BE05A); px(13, 11, 0x5FBF40); px(12, 11, 0x7BE05A); px(14, 11, 0x7BE05A);    // a young crop
-                rect(4, 3, 5, 1, 0xF0D060); rect(3, 4, 7, 1, 0xD4B040); px(2, 4, 0xB89430); px(10, 4, 0xB89430);       // straw hat
-                rect(5, 5, 3, 2, 0xF2C9A0); px(6, 5, 0x3A2410); px(7, 5, 0x3A2410);                       // face
-                rect(4, 7, 5, 4, 0x4FA0E0); rect(4, 7, 5, 1, 0x7CC0F8); rect(5, 7, 1, 4, 0x2E6FB0);       // shirt with overalls
-                rect(4, 11, 2, 2, 0x3A4A8A); rect(7, 11, 2, 2, 0x3A4A8A); rect(4, 13, 2, 1, 0x3A2410); rect(7, 13, 2, 1, 0x3A2410);
-                rect(3, 8, 1, 2, 0xF2C9A0); rect(9, 8, 1, 2, 0xF2C9A0);                                   // arms
-                float hx = 9 + 3 * hoe, hy = 3 + 6 * hoe;                                                   // the hoe: handle then a blade
-                ln(9.5f, 8.5f, hx + 2.5f, hy - 1.5f, 0x8A5A2C); ln(10, 8.5f, hx + 3, hy - 1, 0x6B4423);
-                rect(Math.round(hx + 2), Math.round(hy - 2), 3, 1, 0xB0BAD0); px(Math.round(hx + 4), Math.round(hy - 1), 0x8A93A6);
+            case "farm" -> {                                                                 // the farm: a red barn and a silo over a green field of wheat, the weathervane turning
+                for (int y = 11; y < 16; y++) rect(0, y, 16, 1, y == 11 ? 0x7CCB4F : y < 14 ? 0x4E9A32 : 0x3A7A26);                   // the field, lit at the far edge
+                for (int i = 0; i < 4; i++) { int sw = Math.round(sn(f + i * 0.25f) * 0.7f); px(1 + i * 4 + sw, 12, 0xE8C64A); px(1 + i * 4, 13, 0xC8A438); px(1 + i * 4, 14, 0x6A9A32); px(2 + i * 4 + sw, 12, 0xF4DA70); }
+                rect(2, 5, 8, 6, 0xC83A32); rect(2, 5, 8, 1, 0xE86A5A); rect(2, 10, 8, 1, 0x8A2420);
+                tri(1, 6, 6, 1, 11, 6, 0x8A2420); tri(2, 6, 6, 2, 10, 6, 0xB02E2A);                                                   // the gambrel roof
+                rect(4, 7, 4, 4, 0xF4E8D8); ln(4, 7, 7.5f, 10.5f, 0xC83A32); ln(7.5f, 7, 4, 10.5f, 0xC83A32);                          // the doors with their white X
+                rect(11, 4, 3, 7, 0xB8C0CC); rect(11, 4, 1, 7, 0xE0E6EE); tri(10.5f, 4, 12.5f, 2, 14.5f, 4, 0x8A93A8);                // the silo
+                float an = f * TAU; px(6, 0, 0x3A2A20); px(Math.round(6 + (float) Math.cos(an) * 1.4f), 0, 0xFFD25A); px(6, 1, 0x3A2A20);
                 outline();
-                if (hoe > 0.85f) { px(12, 12, 0xB0793A); px(14, 13, 0x8A5A2C); }
+                glint(13 - Math.round(f * 3), 2, 1, 0xFFFFFF, 0.25f + 0.75f * t);
             }
-            case "experiments" -> {                                                          // the enchanting table's book, a page flipping, runes rising
-                float u = f;                                                                           // the flip: a page swings from right to left
-                float fl = (float) Math.cos(u * 3.1416f);                                              // 1 .. -1
-                bev(1, 10, 14, 4, 0x8A1F2E);                                                            // cover
-                quad(2, 6, 8, 7, 8, 11, 2, 10, 0xF2E8C8);                                               // left page
-                quad(8, 7, 14, 6, 14, 10, 8, 11, 0xFFF6DC);                                             // right page
-                ln(3, 8, 7, 8.8f, 0xB8A878); ln(9, 8.8f, 13, 8, 0xB8A878);
-                float px0 = 8 + fl * 6;                                                                 // the turning page's edge
-                quad(8, 7, px0, 6 - Math.abs(fl) * 2.2f, px0, 10 - Math.abs(fl) * 2.2f, 8, 11, fl > 0 ? 0xFFFFF0 : 0xE8DCB4);
-                rect(7, 6, 2, 6, 0x5A1018);                                                             // spine
+            case "grp_bounty" -> {                                                           // Harvest Bounty: a green tractor mowing a field, a mown strip behind it, grass flying
+                for (int y = 9; y < 16; y++) rect(0, y, 16, 1, y == 9 ? 0x9AE05A : y < 13 ? 0x5EAE3A : 0x468A2C);
+                int off = Math.round(f);                                                                                               // it creeps along, the stripes slide under it
+                for (int x = 0; x < 16; x++) rect(x, 13, 1, 2, (x + Math.round(f * 4)) % 4 < 2 ? 0xB8E064 : 0x8CCB48);                 // the mown stripes
+                rect(4 + off, 5, 7, 4, 0x2E8A3A); rect(4 + off, 5, 7, 1, 0x6ACB5A); rect(9 + off, 6, 5, 3, 0x2E8A3A); rect(9 + off, 6, 5, 1, 0x6ACB5A);   // body and bonnet
+                rect(3 + off, 1, 5, 4, 0x3AA848); rect(4 + off, 2, 3, 3, 0xBFE8FF); rect(3 + off, 0, 6, 1, 0x1E6A2A);                  // the cab
+                rect(13 + off, 3, 1, 3, 0x3A3A44); pxa(13 + off, 2 - Math.round(f * 2), 0xDADADA, 1f - f);
+                for (int w = 0; w < 2; w++) { int wr = w == 0 ? 3 : 2, wx = (w == 0 ? 6 : 12) + off, wy = 13 - wr + 1;
+                    for (int y = -wr; y <= wr; y++) for (int x = -wr; x <= wr; x++) if (x * x + y * y <= wr * wr + 1) px(wx + x, wy + y, x * x + y * y <= (wr - 1) * (wr - 1) ? 0x4A4A56 : 0x1A1A20);
+                    px(wx, wy, 0xE8B83A); int a2 = Math.round(f * 8) % 4; px(wx + (a2 == 0 ? 1 : a2 == 2 ? -1 : 0), wy + (a2 == 1 ? 1 : a2 == 3 ? -1 : 0), 0x8A8A96); }
+                rect(off, 12, 3, 2, 0xB8B8C8); px(off, 12, 0xE8E8F4);                                                                   // the mower deck
+                for (int i = 0; i < 3; i++) { float u = (f + i / 3f) % 1f; pxa(Math.round(off + 1 - u * 3), Math.round(11 - u * 4 + i), 0x9AE05A, 1f - u); }
                 outline();
-                for (int i = 0; i < 3; i++) { float v = (f + i / 3f) % 1f; int rx = 4 + i * 4 + Math.round((float) Math.sin(v * 6 + i) * 1.5f), ry = Math.round(5 - v * 5);
-                    pxa(rx, ry, 0xC9A0FF, 1f - v * 0.6f); pxa(rx + 1, ry, 0xFFFFFF, (1f - v) * 0.7f); }
+            }
+            case "raredrops" -> {                                                            // Rare Drops: a faceted violet gem, sparkles flying off it
+                glow(8, 8, 8, 0xB56BFF, 0.14f + 0.12f * t);
+                tri(3, 6, 8, 2, 13, 6, 0xC9A0FF); tri(3, 6, 8, 2, 8, 6, 0xE4CCFF); tri(3, 6, 13, 6, 8, 14, 0x8A5AD8); tri(8, 6, 13, 6, 8, 14, 0x6A3AB8); tri(3, 6, 8, 6, 8, 14, 0xA878F0);
+                ln(3, 6, 13, 6, 0xF0E4FF); ln(5.5f, 4, 7, 6, 0xF8F0FF); px(5, 5, 0xFFFFFF); px(6, 4, 0xFFFFFF);
+                outline();
+                glint(12 - Math.round(f * 2), 3 + Math.round(f * 2), 2, 0xFFE27A, 0.3f + 0.7f * t);
+                glint(3 + Math.round(f * 2), 12 - Math.round(f * 3), 1, 0x9AF0FF, 0.2f + 0.8f * (1f - t));
+                glint(13, 12, 1, 0xFFFFFF, 0.25f + 0.75f * (float) Math.abs(sn(f * 2)));
+            }
+            case "grp_mobs" -> {                                                             // Rare Mob Drops: a zombie head, a gold star dropping out of it
+                rect(3, 3, 10, 10, 0x5E9A3C); rect(3, 3, 10, 1, 0x86CC5A); rect(3, 12, 10, 1, 0x3E7A28); rect(3, 3, 1, 10, 0x76B84E);
+                rect(5, 6, 2, 2, 0x1A2A12); rect(9, 6, 2, 2, 0x1A2A12); px(5, 6, 0xFF4A3A); px(9, 6, 0xFF4A3A); rect(7, 9, 2, 1, 0x3E7A28); rect(6, 11, 4, 1, 0x1A2A12);
+                px(4, 4, 0x4A7A30); px(11, 9, 0x4A7A30); px(11, 4, 0x86CC5A);
+                outline();
+                float u = f; int sy = 11 + Math.round(u * 3), sx = 12; float sa = 1f - u * 0.4f;
+                pxa(sx, sy, 0xFFD25A, sa); pxa(sx - 1, sy, 0xFFE27A, sa); pxa(sx + 1, sy, 0xFFE27A, sa); pxa(sx, sy - 1, 0xFFE27A, sa); pxa(sx, sy + 1, 0xFFB830, sa);
+                glint(12, 11, 1, 0xFFFFFF, 0.2f + 0.8f * t);
+            }
+            case "grp_events" -> {                                                           // Events: a calendar page with a gold star, confetti falling past it
+                rect(2, 3, 12, 11, 0xF4F0E4); rect(2, 3, 12, 3, 0x4FA8E0); rect(2, 3, 12, 1, 0x7CC8FF); rect(2, 13, 12, 1, 0xC8C2B0);
+                rect(4, 1, 1, 3, 0x6A6A78); rect(11, 1, 1, 3, 0x6A6A78);
+                int sc = mix(0xFFB830, 0xFFE27A, t);
+                px(8, 6, 0xFFF0A0); rect(7, 7, 3, 1, sc); rect(5, 8, 7, 1, sc); rect(6, 9, 5, 1, sc); rect(7, 10, 3, 1, sc); px(6, 11, sc); px(10, 11, sc); px(8, 8, 0xFFFFFF);
+                for (int i = 0; i < 4; i++) rect(3 + (i % 2) * 8, 11 + (i / 2), 1, 1, 0xD8D2C0);
+                outline();
+                int[] cc = {0xFF5A8A, 0x7CCB4F, 0x55D8FF, 0xFFD25A, 0xB56BFF};
+                for (int i = 0; i < 5; i++) { float u = (f + i * 0.2f) % 1f; pxa(1 + i * 3 + Math.round((float) Math.sin(u * 6 + i)), Math.round(u * 15), cc[i], (float) Math.sin(u * 3.1416f)); }
             }
             case "mining" -> {                                                               // a pickaxe swings onto a rock and cracks it
                 float sw = f < 0.55f ? f / 0.55f : 1f;                                                  // 0 raised .. 1 hits
