@@ -670,6 +670,15 @@ final class Ritual {
     }
 
 
+    /** Where the animation sits when it is at the Top Center: its highest point (the boss, or the item) just touches the top of the screen, or the bottom of the top bar. */
+    private static float topIcy(float sz, float hi, float topM) {
+        float icy = topM + hi + 1;
+        for (int n = 0; n < 160; n++, icy += 1f) {
+            float gy = icy + 22 * sz, kk = Math.min(sz, (gy - 4) / 98f);
+            if (gy - 2 - 86 * kk >= topM && icy - hi >= topM) break;
+        }
+        return icy;
+    }
     /** Where the item is (canvas units, y): it springs out of the ground, overshoots, then bobs gently. */
     /** A flat round disc, one fill per row (the soft glow is a few of these stacked). */
     private static void discFill(GuiGraphicsExtractor g, int cx, int cy, int r, int col) {
@@ -694,7 +703,8 @@ final class Ritual {
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
-        if (rng && cfg.bars) icy = Math.max(barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
+        if (c.animPos == 0) icy = topIcy(sz, hi, rng && cfg.bars ? barH + 1 : 0f);
+        if (rng && cfg.bars) icy = Math.max(c.animPos == 0 ? 0f : barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
         slayerMode = isSlayer(a); if (slayerMode) { kind = 12 + slTheme(a); slSeed = System.identityHashCode(a) & 0xFFFF; }
         try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { slayerMode = false; }
         return cv.px.clone();
@@ -720,7 +730,8 @@ final class Ritual {
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f));
         float hi = 16 * sz * isc * (rng ? 1.2f : 1f);
         float icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
-        if (barsOn) icy = Math.max(barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
+        if (c.animPos == 0) icy = topIcy(sz, hi, barsOn ? barH + 1 : 0f);
+        if (barsOn) icy = Math.max(c.animPos == 0 ? 0f : barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
         float u = (float) H / CH;                                                          // gui units per canvas unit
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
         float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene
@@ -772,7 +783,7 @@ final class Ritual {
                 }
             }
             // (the pillars above are exactly as thick as the bars)
-            if (c.barSoft) for (int i = 1; i <= 6; i++) { int al = Math.round(oa * (1f - i / 7f) * 0.5f); g.fill(0, bh + i - 1, W, bh + i, Gfx.argb(al, bc)); g.fill(0, H - bh - i, W, H - bh - i + 1, Gfx.argb(al, bc)); }
+            if (c.barSoft) { int nr = Math.max(8, Math.round(16 * u)); for (int i = 0; i < nr; i++) { float f = 1f - (i + 0.5f) / nr; int al = Math.round(oa * f * f * 0.9f * barSlide); if (al <= 0) continue; g.fill(0, bh + i, W, bh + i + 1, Gfx.argb(al, bc)); g.fill(0, H - bh - i - 1, W, H - bh - i, Gfx.argb(al, bc)); } }          // a smooth fade along the inner edge, one thin row per step (no visible lines)
             if (c.barLine) { g.fill(0, bh, W, bh + 1, Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f))); g.fill(0, H - bh - 1, W, H - bh, Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f))); }
         }
 

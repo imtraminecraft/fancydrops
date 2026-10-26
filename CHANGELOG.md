@@ -1,3 +1,8 @@
+## 0.4.51
+- Bar Changes > Soft edge is a smooth fade now (the four visible lines are gone).
+- Position Changes > Top Center puts the top of the animation at the very top of the screen, or just under the top cinematic bar when the bars are on.
+- The words follow the position: Top Center = below only, Center = either, Above Action Bar = above only. The blocked button shows its pop-up.
+
 ## 0.4.50
 - Revenant Horror and Inferno Demonlord show the creatures' own heads, read from the game's zombie and blaze pictures, as spinning 3D skulls.
 - Slayer animation: three cuts, not four. Each cut now opens the hologram along its line, and the gap widens after the blade passes. The lightning at the end of "No Drops" is gone for slayers.

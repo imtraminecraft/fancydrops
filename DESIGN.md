@@ -257,3 +257,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Slayer boss icons use the creature's real texture (zombie, blaze) as a 3D head; the hand-drawn head is only the fallback.
 - A slayer scene has exactly three cuts, and every cut opens the hologram.
 - Item Changes has no Outline or 3D items buttons; Glints draws sparks around the item.
+
+## Standing requirements added in 0.4.51
+- Top Center places the highest point of the animation at the top edge (below the top bar when bars show).
+- Text position is locked by animation position: Top = below, Above Action Bar = above, Center = free; the blocked button explains why.
+- Soft edge on the bars is a smooth gradient of thin rows, never a few thick steps.

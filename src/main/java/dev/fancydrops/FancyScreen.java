@@ -1663,7 +1663,7 @@ public class FancyScreen extends Screen {
         int slot = Math.max(8, w / 17), total = slot * 9, hx = x + (w - total) / 2, hy = y + h - slot - 4;
         for (int i = 0; i < 9; i++) { g.fill(hx + i * slot, hy, hx + (i + 1) * slot - 1, hy + slot - 1, i == 4 ? 0xB0B8C0D0 : 0xA0262A32); }
         g.fill(x + w / 2 - 3, y + h / 2, x + w / 2 + 4, y + h / 2 + 1, 0xCCFFFFFF); g.fill(x + w / 2, y + h / 2 - 3, x + w / 2 + 1, y + h / 2 + 4, 0xCCFFFFFF);
-        float[] pf = {0.30f, 0.46f, 0.66f};
+        float[] pf = {0.12f, 0.46f, 0.66f};
         int cx = x + w / 2, cy = y + Math.round(h * pf[c.animPos]), rx = Math.max(16, w / 6), ry = Math.max(5, rx * 2 / 5), gy = cy + Math.max(10, h / 9);
         for (int dy = -ry; dy <= ry; dy++) { int half = (int) (rx * Math.sqrt(1.0 - (dy / (double) ry) * (dy / (double) ry))); g.fill(cx - half, gy + dy, cx + half, gy + dy + 1, Gfx.argb(60, 0x55D8FF)); }
         for (int dy = -ry; dy <= ry; dy++) { int half = (int) (rx * Math.sqrt(1.0 - (dy / (double) ry) * (dy / (double) ry))); g.fill(cx - half, gy + dy, cx - half + 1, gy + dy + 1, 0xCC55D8FF); g.fill(cx + half - 1, gy + dy, cx + half, gy + dy + 1, 0xCC55D8FF); }
