@@ -16,7 +16,7 @@ public final class AnimationManager {
         public DropData.Source source;
         public String name = "", id = "", icon = "nether_star", odds = "", chance = "", mf, stateKey;     // stateKey: the library row this drop follows
         public int rank, amount = 1;
-        public boolean untradeable, announce, sim, rngPick;
+        public boolean untradeable, announce, sim, rngPick, fixedPrice;
         public volatile double price = -2;       // -2 = still loading, -1 = no price
         public volatile String priceSource = "";
         public String extra; public int extraCol = Ui.SUB;     // one more line under the price

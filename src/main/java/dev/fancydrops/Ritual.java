@@ -736,8 +736,8 @@ final class Ritual {
             float su = cl((tau - si * 0.08f) / 0.09f);
             float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk;
             float hx = lerp(x0, x1, su), hy = lerp(y0, y1, su);
-            stroke(x0, y0, hx, hy, Math.max(1.6f, 2.6f * kk), rgb, 0.55f * fade * a);                     // round-capped strokes: the same look at any scale
-            stroke(x0, y0, hx, hy, Math.max(0.8f, 1.1f * kk), WHITE, fade * a);
+            stroke(x0, y0, hx, hy, Math.max(1.1f, 1.7f * kk), rgb, 0.4f * fade * a);                     // round-capped strokes: the same look at any scale
+            stroke(x0, y0, hx, hy, Math.max(0.55f, 0.75f * kk), WHITE, fade * a);
             if (tau < 0.5f) glowE((x0 + hx) / 2, (y0 + hy) / 2, Math.abs(hx - x0) * 0.5f + 4, Math.abs(hy - y0) * 0.5f + 4, rgb, 0.35f * fade * a);
             if (su < 1f) {                                                                // the sword itself, leading the cut
                 float dx = x1 - x0, dy = y1 - y0, len = (float) Math.sqrt(dx * dx + dy * dy), ux = dx / len, uy = dy / len;

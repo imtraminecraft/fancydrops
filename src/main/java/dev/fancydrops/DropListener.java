@@ -285,7 +285,8 @@ public final class DropListener {
             String r = rarity.isEmpty() ? dr.rarity.toUpperCase(Locale.ROOT) : rarity;
             Long gp = dr.george.get(r);
             if (gp == null) { r = dr.george.keySet().iterator().next(); gp = dr.george.get(r); }
-            it.extra = r.charAt(0) + r.substring(1).toLowerCase(Locale.ROOT) + " Pet  \u00B7  George pays " + PriceService.fmt(gp) + " coins";
+            it.extra = r.charAt(0) + r.substring(1).toLowerCase(Locale.ROOT) + " Pet";
+            it.price = gp; it.priceSource = "George"; it.fixedPrice = true; it.untradeable = false;          // the Value of a pet is what George pays for its rarity
             it.extraCol = switch (r) { case "COMMON" -> 0xFFFFFFFF; case "UNCOMMON" -> 0xFF55FF55; case "RARE" -> 0xFF5555FF; case "EPIC" -> 0xFFAA00AA; case "LEGENDARY" -> 0xFFFFAA00; default -> 0xFFFF55FF; };
         }
         return it;
@@ -414,6 +415,7 @@ public final class DropListener {
     /** Looks the price up (a cached one is instant), and sends the alert once it is known when announceNow is set. An animated drop sends its own alert when its animation starts. */
     private static void lookupPrice(Item it, boolean announceNow) {
         ItemIcons.prefetch(it.id);
+        if (it.fixedPrice) { if (announceNow) queueAnnounce(it, it.price * Math.max(1, it.amount)); return; }
         if (it.untradeable) it.price = -1;
         else if (TreasureData.coins(it.name) == 0) {
             double quick = PriceService.lookup(it.id, it.name, false);
@@ -513,6 +515,7 @@ public final class DropListener {
 
     private static void previewPrice(Item it) {
         ItemIcons.prefetch(it.id);
+        if (it.fixedPrice) return;
         if (it.untradeable) { it.price = -1; return; }
         if (TreasureData.coins(it.name) > 0) return;
         double quick = PriceService.lookup(it.id, it.name, false);

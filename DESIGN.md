@@ -374,3 +374,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Releases have no description text, and the downloaded file is `FancyDrops-<version>.jar` (release.yml no longer reads CHANGELOG.md).
 
 - Commits carry no `Co-Authored-By` or `Claude-Session` trailers (author decision, Oct 27). Author them as tra only.
+
+## Standing requirements added in 0.7.10
+- A pet's Value in the animation (and its chat alert price) is what George pays for its rarity (`Item.fixedPrice`, source "George"); the auction price is never looked up for it.
