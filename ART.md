@@ -5,7 +5,7 @@ Everything that is drawn, by kind. All files are in `src/main/java/dev/fancydrop
 | Folder | What | Main file |
 |---|---|---|
 | icons | the 16x16 pixel icons (`:name:`), 16 frames each | `IconArt.java` (one `case` per icon), `Icons.java` (drawing, caching, PNG overrides) |
-| animations | the Mythological and Treasure scenes, creatures, digger, timing | `Ritual.java` (pictures), `AnimationManager.java` (timing and cues), `SceneTexture.java` |
+| animations | the Mythological, Slayer and Treasure scenes, creatures, digger, timing | `Ritual.java` (pictures), `SlayerScenery.java` (the places the slayer bosses stand in), `AnimationManager.java` (timing and cues), `SceneTexture.java` |
 | heads | 3D heads and item pictures | `SkullSpin.java` (the turning block), `ItemIcons.java` (loading and the PNG folder), `ItemModel.java` |
 
 ## Replacing art without touching code

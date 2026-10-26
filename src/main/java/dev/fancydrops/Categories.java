@@ -68,12 +68,6 @@ final class Categories {
         for (Cat c : ALL) for (Group gr : c.groups()) if (gr.id().equals(g)) return gr;
         return ALL.get(0).groups().get(0);
     }
-    static Cat catOfGroup(String groupId) { for (Cat c : ALL) for (Group g : c.groups()) if (g.id().equals(groupId)) return c; return ALL.get(0); }
-    /** The category a drop source belongs to. */
-    static Cat catOfSource(DropData.Source s) {
-        if (SlayerData.byId(s.id) == s) return byId("bosses");
-        return ALL.get(0);
-    }
 
     private Categories() {}
 }

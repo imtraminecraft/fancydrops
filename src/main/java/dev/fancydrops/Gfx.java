@@ -22,9 +22,6 @@ public final class Gfx {
     public static ItemStack stack(String name) {
         return STACKS.computeIfAbsent(name, n -> new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(n))));
     }
-    public static boolean hasItem(String name) {
-        return name != null && BuiltInRegistries.ITEM.containsKey(Identifier.withDefaultNamespace(name));
-    }
     public static void item(GuiGraphicsExtractor g, String name, int x, int y) { g.item(stack(name), x, y); }
 
     /** The font of the mod's own menu (Settings > Menu). */

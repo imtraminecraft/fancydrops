@@ -16,6 +16,5 @@ final class Ui {
             default -> SUB;
         };
     }
-    static boolean significant(String odds) { return "Pray RNGesus".equals(odds) || "RNGesus Incarnate".equals(odds); }
     private Ui() {}
 }

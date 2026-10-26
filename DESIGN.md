@@ -274,3 +274,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## Standing requirements added in 0.4.54
 - A slayer scene has no ritual look (no runes, rings or circle): the boss stands as a hologram in the place it belongs to (SlayerScenery), on an opaque panel with depth.
+
+## Standing requirements added in 0.4.55
+- Nothing unused stays: when a feature or icon goes, its code, config field, resources and menu entry go with it.
+

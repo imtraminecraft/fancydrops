@@ -59,8 +59,6 @@ public class FancyScreen extends Screen {
     }
 
     /** The three animation states of a drop. */
-    static final String[] STATE_L = {"Off", "Normal", "RNG"};
-    static final int[] STATE_C = {0xFF4A4F60, 0xFF4A6CF0, 0xFF8A3FD0};
 
     private class Switch extends Ctl {
         final BooleanSupplier get; final Consumer<Boolean> set;
@@ -1593,9 +1591,9 @@ public class FancyScreen extends Screen {
     private int editor;                                         // 0 none, 1 Bar Changes, 2 Text Changes
     private boolean editWarn; private int lastHoverFx = -2; private long hoverFxAt;
     private int eBarPx, eColor, eDrag, hoverFx = -1; private boolean eCustom; private final boolean[] eFx = new boolean[25];
-    private float eSpin, eGlow; private boolean eBob, eGlints, eOutline; private float eItem, eHue, eSat, eVal = 1f, eAll, eTitle, eSub, eSubDelay;
+    private float eSpin, eGlow; private boolean eBob, eGlints; private float eItem, eHue, eSat, eVal = 1f, eAll, eTitle, eSub, eSubDelay;
     private int eBarOp, eTFont, eBarCurve, fxGrp; private boolean eBarSoft; private boolean eBarPil, eBarLine, eSpinRev, eBold, eOutl; private float eBobAmp;
-    private boolean eShowOdds, eShowPrice, eShowSrc, eShowMf, eShow3d;
+    private boolean eShowOdds, eShowPrice, eShowSrc, eShowMf;
     private Slider slBarCurve, slBarOp, slBob, slSpin, slGlow, slItem, slBar, slAll, slTitle, slSub, slDelay, eSl; private boolean hexSync;
     private static final int[] PRESETS = {0xFF0B0E2A, 0xFF2A0B1C, 0xFF0B2418, 0xFF1A202C, 0xFF000000, 0xFF5A0F1B, 0xFF14206B, 0xFF0B3A3F, 0xFF2B1450, 0xFF4A3208, 0xFF5A1F3D, 0xFF2F3A4C};
     private static final String[] FX_NAMES = {"Slam in", "Light sweep", "Wave", "Rainbow", "Drop in", "Pulse", "Glitch", "Neon glow", "Bounce in", "Typewriter", "Float", "Shake", "Fire", "Frost", "Twinkle", "Fade away", "Fly up", "Shrink", "Scatter", "Slide in", "Flip in", "Swing", "Gold", "Slide out", "Melt"};
@@ -1738,7 +1736,7 @@ public class FancyScreen extends Screen {
         for (int i = 0; i < FX_N; i++) eFx[i] = c.fx(i);
         for (int gi = 0; gi < FX_ORDER.length; gi++) { int lim = gi == 2 ? 2 : 1, on = 0; for (int k : FX_ORDER[gi]) if (c.fx(k)) { if (++on > lim) c.setFx(k, false); } }      // 1 entrance, 1 motion, 2 colour, 1 exit
         eAll = c.textScale; eTitle = c.titleScale; eSub = c.subScale; eSubDelay = c.subDelay;
-        eShowOdds = c.showOdds; eShowPrice = c.showPrice; eShowSrc = c.showPriceSource; eShowMf = c.showMagicFind; eShow3d = c.show3d; eItem = c.itemScale; eSpin = c.itemSpin; eGlow = c.itemGlow; eBob = c.itemBob; eGlints = c.itemGlints; eOutline = c.itemOutline;
+        eShowOdds = c.showOdds; eShowPrice = c.showPrice; eShowSrc = c.showPriceSource; eShowMf = c.showMagicFind; eItem = c.itemScale; eSpin = c.itemSpin; eGlow = c.itemGlow; eBob = c.itemBob; eGlints = c.itemGlints;
         int col = c.barCustom ? c.barColor : 0xFF0B0E2A;
         float[] hsv = rgbToHsv(col); eHue = hsv[0]; eSat = hsv[1]; eVal = Math.max(0.05f, hsv[2]);
         int sv = sliderSeq; sliderSeq = 1000;                                                 // typed sliders, told apart from the menu's own
@@ -1764,7 +1762,7 @@ public class FancyScreen extends Screen {
             for (int i = 0; i < FX_N; i++) c.setFx(i, eFx[i]);
             c.barOpacity = eBarOp; c.barPillars = eBarPil; c.barLine = eBarLine; c.barCurve = eBarCurve; c.barSoft = eBarSoft; c.itemBobAmp = eBobAmp; c.itemSpinRev = eSpinRev; c.textBold = eBold; c.textOutline = eOutl; c.textFont = eTFont;
             c.textScale = eAll; c.titleScale = eTitle; c.subScale = eSub; c.subDelay = eSubDelay;
-            c.showOdds = eShowOdds; c.showPrice = eShowPrice; c.showPriceSource = eShowSrc; c.showMagicFind = eShowMf; c.show3d = eShow3d; c.itemScale = eItem; c.itemSpin = eSpin; c.itemGlow = eGlow; c.itemBob = eBob; c.itemGlints = eGlints; c.itemOutline = eOutline;
+            c.showOdds = eShowOdds; c.showPrice = eShowPrice; c.showPriceSource = eShowSrc; c.showMagicFind = eShowMf; c.itemScale = eItem; c.itemSpin = eSpin; c.itemGlow = eGlow; c.itemBob = eBob; c.itemGlints = eGlints;
         }
         editor = 0; eDrag = 0; eSl = null; editWarn = false; hexField.setFocused(false); hexField.setVisible(false);
     }
@@ -2225,11 +2223,6 @@ public class FancyScreen extends Screen {
 
     private Row hero(String icon, String title, String sub, int accent) {
         Row h = row(0, icon, title, sub, accent); h.kind = HERO; h.h = 84; h.noSearch = true; return h;
-    }
-    /** A heading and a short paragraph under it, no card: the top of a main page. */
-    private Row textRow(String icon, String title, String sub) {
-        Row t = row(0, icon, title, sub, Ui.ACCENT); t.kind = TEXT; t.noSearch = true;
-        t.h = 22 + 11 * Math.max(1, wrap(sub, cw - 62).size()) + 4; return t;
     }
     private void wipPanel(String icon, String title, String sub) {
         Row wp = row(0, icon, title, sub, Ui.DIM); wp.kind = PANEL; wp.h = 150; wp.noSearch = true; rows.add(wp);

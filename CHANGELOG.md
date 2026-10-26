@@ -1,3 +1,6 @@
+## 0.4.55
+- Cleanup: removed the unused "cube" icon, 15 methods and 7 fields nothing used any more, and the Outline and 3D items settings (their code, config fields and editor state). Every sound, texture and font in the mod is referenced, so none were deleted.
+
 ## 0.4.54
 - Slayer animation: no runes, rings or circle any more. Each boss is a hologram standing in its own place on an opaque panel, with a far and a near layer for depth: a graveyard of grass, dirt and gravestones for the Revenant Horror, a web-hung cave for the Tarantula Broodfather, a snowy pine forest for the Sven Packmaster, the End for the Voidgloom Seraph, the Nether for the Inferno Demonlord and gothic ruins for the Riftstalker Bloodfiend.
 - The Inferno blaze skull is looked up under every place the game has kept the picture.

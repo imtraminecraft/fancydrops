@@ -147,14 +147,6 @@ final class Cosmetics {
     static String frameNow(Suffix s, long now) { return s.frames()[(int) ((now / 100L) % s.frames().length)]; }
     /** A suffix written like a Discord emoji: ":discord:". Every place that shows a suffix (menu tiles, previews, chat, tab list) goes through its id, and the picture is only ever read from textures/font/suffix_<id>.png, so changing that one file changes it everywhere. */
     static String token(String id) { return id == null ? "" : ":" + id + ":"; }
-    /** Replaces every ":id:" in a text with that suffix's current animated frame. */
-    static Component expand(String text, long now) {
-        net.minecraft.network.chat.MutableComponent out = Component.empty(); int i = 0;
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile(":([a-z0-9_]+):").matcher(text);
-        while (m.find()) { String sid = m.group(1).startsWith("suf_") ? m.group(1).substring(4) : m.group(1); Suffix s = byId(sid); if (s == null) continue; if (m.start() > i) out.append(Component.literal(text.substring(i, m.start()))); out.append(glyph(frameNow(s, now))); i = m.end(); }
-        if (i < text.length()) out.append(Component.literal(text.substring(i)));
-        return out;
-    }
     /** Logs any suffix whose picture file or font entry is missing, so a wrong id never shows up as an empty box silently. */
     static void checkIcons() {
         for (Suffix s : SUFFIXES) try {                                                   // the chat/tab sprite must show what the strip shows; tools/make_suffix_sprites.py rebuilds the sprites
@@ -449,22 +441,6 @@ final class Cosmetics {
         return o;
     }
 
-    /** Menu icon of a name effect ("Aa" in its colours) or an aura (a few of its own particles). */
-    static void drawCosIcon(net.minecraft.client.gui.GuiGraphicsExtractor g, String id, int x, int y, long now) {
-        CosmeticData.Def d = CosmeticData.byId(id); if (d == null) return;
-        var font = Minecraft.getInstance().font;
-        if (d.kind() == CosmeticData.Kind.NAME) {
-            String t = "Aa"; int cx = x + 2;
-            for (int i = 0; i < t.length(); i++) { Gfx.text(g, font, String.valueOf(t.charAt(i)), cx, y + 4, 0xFF000000 | NameFx.color(id, i, t.length(), d.color(), now)); cx += font.width(String.valueOf(t.charAt(i))) + 1; }
-        } else {
-            for (AuraFx.P q : AuraFx.particles(id, 2400L)) {
-                if (q.shape() == 2) continue;
-                float sx = x + 8 + q.x() * 9f, sy = y + 15 - q.y() * 7f;
-                if (sx < x + 1 || sx > x + 15 || sy < y + 1 || sy > y + 15) continue;
-                AuraFx.draw(g, sx, sy, Math.max(1f, q.size() * 18f), q);
-            }
-        }
-    }
 
     private static final Map<String, Component> CHAT_GLYPH = new HashMap<>();
     /** The suffix as it goes into chat: an animated GUI sprite (assets/fancydrops/textures/gui/sprites/suffix/<id>.png + .mcmeta play on their own), or the still emoji if this Minecraft can't draw one. */

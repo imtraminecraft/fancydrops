@@ -35,7 +35,6 @@ public class FancyConfig {
     public boolean customSounds = true;      // the mod's own sound effects (off = Minecraft's sounds instead)
     public Map<String, String> sounds = new LinkedHashMap<>();      // "<scene>.<slot>" -> sound name, see SoundFx
     public Map<String, String> mcSounds = new LinkedHashMap<>();    // the same slots for the Minecraft sound set
-    public boolean show3d = true;            // the dropped item is a real spinning 3D model instead of a flat icon
     public boolean epicEffects = true;       // a drop worth epicThreshold or more plays RNG even when its rarity says Normal
     public long epicThreshold = 20_000_000L; // coins
     public boolean popups = true;            // notices pop up under the menu instead of going to chat
@@ -76,7 +75,7 @@ public class FancyConfig {
     public void setFx(int i, boolean v) { switch (i) { case 0 -> fxPop = v; case 1 -> fxShine = v; case 2 -> fxWave = v; case 3 -> fxRainbow = v; case 4 -> fxDrop = v; case 5 -> fxPulse = v; case 6 -> fxGlitch = v; case 7 -> fxGlow = v; case 8 -> fxBounce = v; case 9 -> fxType = v; case 10 -> fxFloat = v; case 11 -> fxShake = v; case 12 -> fxFire = v; case 13 -> fxFrost = v; case 14 -> fxTwinkle = v; case 15 -> fxFade = v; case 16 -> fxRise = v; case 17 -> fxShrink = v; case 18 -> fxScatter = v; case 19 -> fxSlide = v; case 20 -> fxFlip = v; case 21 -> fxSwing = v; case 22 -> fxGold = v; case 23 -> fxSlideOut = v; case 24 -> fxMelt = v; default -> { } } }
     // Item changes
     public float itemScale = 1f, itemSpin = 1f, itemGlow = 1f, itemBobAmp = 1f;
-    public boolean itemBob = true, itemGlints = true, itemOutline = false, itemSpinRev = false;
+    public boolean itemBob = true, itemGlints = true, itemSpinRev = false;
 
     // ------------------------------------------------------------------ chat
     public Map<String, String> formats = new LinkedHashMap<>();     // category id -> the message
@@ -172,5 +171,4 @@ public class FancyConfig {
     }
 
     public float textK() { return 0.6f + 0.4f * textScale; }
-    public float itemK() { return itemScale; }
 }

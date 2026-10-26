@@ -15,8 +15,6 @@ public final class ChatParser {
     }
 
     // "Your Slayer Kill gave you ..."  (also tolerates "Slayer Boss Kill")
-    private static final Pattern KILL = Pattern.compile("\\byour slayer (?:boss )?kill gave you\\b", Pattern.CASE_INSENSITIVE);
-    private static final Pattern QUEST_DONE = Pattern.compile("^\\s*SLAYER QUEST COMPLETE!?\\s*$", Pattern.CASE_INSENSITIVE);
     // "RARE DROP! Scythe Blade (+120% ✯ Magic Find)"
     private static final Pattern DROP = Pattern.compile("(?:^|(?<=[\\s\\]>»:*]))((?:VERY |CRAZY )?RARE|CRAZY|INSANE|PET|SWEET|RNGESUS)\\s+(DROP|CROP)!\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern MF_ANY = Pattern.compile("\\(\\+([\\d.,]+)%");
@@ -35,8 +33,6 @@ public final class ChatParser {
         return !before.contains("DROP!") && !before.contains("CROP!");
     }
 
-    public static boolean isKill(String line) { return line != null && KILL.matcher(line).find(); }
-    public static boolean isQuestComplete(String line) { return line != null && QUEST_DONE.matcher(line).matches(); }
 
     /** The drop on this line, or null. Tolerant: leading symbols / tags, odd spaces and any trailing "(...)" groups are fine. */
     public static Drop parseDrop(String line) {

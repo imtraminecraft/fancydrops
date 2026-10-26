@@ -810,9 +810,8 @@ final class Ritual {
                 for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }
             }
             ItemIcons.spinSpeed = c.itemSpin; ItemIcons.spinRev = c.itemSpinRev;
-            ItemIcons.outlineRgb = -1;
             ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA)); boolean still0 = Icons.STILL_ICONS; Icons.STILL_ICONS = false;                 // the dropped item always turns, whatever the menu says
-            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; ItemIcons.spinSpeed = 1f; ItemIcons.spinRev = false; ItemIcons.outlineRgb = -1; }
+            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; ItemIcons.spinSpeed = 1f; ItemIcons.spinRev = false; }
             if (c.itemGlints && itemA > 0.05f) for (int i = 0; i < 9; i++) {                      // Item changes > Glints: little four-point sparks twinkle in and out round the item
                 float cyc = tb * 1.7f + i * 0.113f, ph = cyc - (float) Math.floor(cyc); int slot = (int) Math.floor(cyc) * 31 + i * 7;
                 float an = rnd(slot) * 6.2832f, rad = s * (9f + 8f * rnd(slot + 1)), tw = (float) Math.sin(Math.PI * ph);

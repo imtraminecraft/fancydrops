@@ -385,14 +385,6 @@ public final class DropListener {
         launchTreasure(picks.get(0), -1);
     }
 
-    /** Every drop name the user could test. */
-    public static List<String> allDropNames() {
-        TreeSet<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        for (DropData.Source s : MythData.ALL) for (DropData.Drop d : s.drops) names.add(d.name);
-        for (DropData.Source s : SlayerData.ALL) for (DropData.Drop d : s.drops) names.add(d.name);
-        for (int sp = 0; sp < 3; sp++) for (DropData.Drop d : TreasureData.drops(sp)) names.add(d.name);
-        return new ArrayList<>(names);
-    }
 
     // ------------------------------------------------------------------ tick
 

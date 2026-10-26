@@ -82,17 +82,6 @@ public final class MythData {
         return true;
     }
 
-    /** The wiki sprite of each creature (used as its icon when it can be downloaded). */
-    private static final java.util.Map<String, String> SPRITES = java.util.Map.ofEntries(
-        java.util.Map.entry("minos_hunter", "Minos_Hunter_Sprite"), java.util.Map.entry("siamese_lynxes", "Siamese_Lynxes_Sprite"), java.util.Map.entry("minotaur", "Minotaur_Sprite"),
-        java.util.Map.entry("gaia_construct", "Iron_Golem_Sprite"), java.util.Map.entry("minos_champion", "Minos_Champion_Sprite"), java.util.Map.entry("minos_inquisitor", "Minos_Inquisitor_Sprite"),
-        java.util.Map.entry("manticore", "Manticore_Sprite"), java.util.Map.entry("king_minos", "King_Minos_Sprite"), java.util.Map.entry("stranded_nymph", "Stranded_Nymph_Sprite"),
-        java.util.Map.entry("harpy", "Harpy_Sprite"), java.util.Map.entry("sphinx", "Sphinx_Sprite"), java.util.Map.entry("cretan_bull", "Cretan_Bull_Sprite"));
-    /** The wiki picture file a drop asks for (shards, the dye), or null. */
-    public static String imgOf(String id) {
-        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && !d.img.isBlank()) return d.img;
-        return null;
-    }
     public static boolean isDye(DropData.Drop d) { return d.name.toLowerCase(Locale.ROOT).endsWith(" dye"); }
     /** The on/off switches of a drop. The Mythological Dye shares them with the Dye page, so turning one off turns the other off too. */
     public static FancyConfig.DropCfg cfg(FancyConfig c, DropData.Source s, DropData.Drop d) { return isDye(d) ? c.drop("dyes", d.name) : c.drop(s.id, d.name); }
@@ -102,10 +91,6 @@ public final class MythData {
         for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (!isDye(d)) FancyConfig.initDrop(cfg(c, s, d), d.rank);
     }
 
-    public static boolean hasId(String id) {
-        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id)) return true;
-        return false;
-    }
 
     public static int version(String json) {
         try { return JsonParser.parseString(json).getAsJsonObject().get("v").getAsInt(); } catch (Exception e) { return 0; }

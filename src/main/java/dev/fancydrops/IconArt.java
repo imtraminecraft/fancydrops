@@ -589,16 +589,6 @@ final class IconArt {
                 float a = f * TAU; px(Math.round(8 + (float) Math.cos(a) * 4.5f), Math.round(8 + (float) Math.sin(a) * 4.5f), 0xFFFFFF); px(8, 8, 0x14161F);
                 outline();
             }
-            case "cube" -> {                                                                 // a cube turning
-                float a = f * TAU / 4f; float k = (float) Math.cos(a), q = (float) Math.sin(a);
-                float cx = 8, cy = 8;
-                float[] fx = {cx - 5 * k - 5 * q, cx + 5 * k - 5 * q, cx + 5 * k + 5 * q, cx - 5 * k + 5 * q};
-                poly(new float[]{cx, cx + 6, cx, cx - 6}, new float[]{cy - 7, cy - 3.5f, cy, cy - 3.5f}, 0xA8E8FF);
-                poly(new float[]{cx - 6, cx, cx, cx - 6}, new float[]{cy - 3.5f, cy, cy + 7, cy + 3.5f}, 0x55B8F0);
-                poly(new float[]{cx, cx + 6, cx + 6, cx}, new float[]{cy, cy - 3.5f, cy + 3.5f, cy + 7}, 0x2E88C8);
-                outline();
-                glint(5 + Math.round(f * 6), 4, 1, 0xFFFFFF, 0.7f);
-            }
             case "griffin" -> {                                                              // a feather in the colour you give it
                 int col = tint != 0 ? tint : 0xFFD25A;
                 poly(new float[]{13, 8, 2, 4.5f, 9, 11}, new float[]{1.5f, 2, 13, 11.5f, 6, 7}, col);

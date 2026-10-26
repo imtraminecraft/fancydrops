@@ -203,17 +203,6 @@ public final class ItemIcons {
         "................",
         "................"};
 
-    /** A purple enchanted book with a gold glint, 16x16. */
-    /** A small pile of wheat seeds. */
-    static int[] seedSprite() {
-        String[] rows = {"................", "................", "................", "................", "................", ".....ss..ss.....", "....sSSs.sSSs...", "....sSSs.sSSs...", ".....ss..ss.....", "..ss...ss...ss..", ".sSSs.sSSs.sSSs.", ".sSSs.sSSs.sSSs.", "..ss...ss...ss..", "................", "................", "................"};
-        int[] px = new int[256];
-        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
-            char ch = rows[y].charAt(x);
-            px[y * 16 + x] = ch == 's' ? 0xFF6B5A1E : ch == 'S' ? 0xFFC9B24A : 0;
-        }
-        return px;
-    }
 
     /** The Total profit coin as a picture: a gold disc with a darker inner ring and a light bar. */
     static int[] coinSprite() {
@@ -632,18 +621,10 @@ public final class ItemIcons {
     public static float drawAlpha = 1f;
     /** Spin speed (1 = normal) and direction of the 3D heads; the animation sets them from the Item settings. */
     public static float spinSpeed = 1f; public static boolean spinRev = false;
-    /** The rim round a dropped item (Item changes > Outline): -1 = none, else the colour. The item is drawn once tinted, a pixel to each side, then normally. */
-    public static int outlineRgb = -1;
-    private static int tintRgb = -1;
-    private static int fa(int c) { if (tintRgb >= 0) c = (c & 0xFF000000) | tintRgb; return drawAlpha >= 0.999f ? c : (c & 0xFFFFFF) | (Math.round((c >>> 24) * Math.max(0f, drawAlpha)) << 24); }
+    private static int fa(int c) { return drawAlpha >= 0.999f ? c : (c & 0xFFFFFF) | (Math.round((c >>> 24) * Math.max(0f, drawAlpha)) << 24); }
 
     public static void draw(GuiGraphicsExtractor g, String id, String fallback, int cx, int cy, float scale) {
         if (scale <= 0.01f || drawAlpha <= 0.01f) return;
-        if (outlineRgb >= 0 && tintRgb < 0) {                                                            // the outline: four tinted copies a little to each side, under the real one
-            int rgb = outlineRgb, o = Math.max(1, Math.round(scale * 0.8f)); outlineRgb = -1; tintRgb = rgb; SkullSpin.tint = rgb;
-            try { float a0 = drawAlpha; drawAlpha = a0 * 0.85f; draw(g, id, fallback, cx - o, cy, scale); draw(g, id, fallback, cx + o, cy, scale); draw(g, id, fallback, cx, cy - o, scale); draw(g, id, fallback, cx, cy + o, scale); drawAlpha = a0; }
-            finally { tintRgb = -1; SkullSpin.tint = 0xFFFFFF; outlineRgb = rgb; }
-        }
         Icon ic = get(id);
         Cached d = ic.ready ? ic.data : null;
         Gfx.push(g); Gfx.translate(g, cx, cy);
@@ -687,8 +668,6 @@ public final class ItemIcons {
                 int c = d.face[y * 8 + x];
                 if ((c >>> 24) != 0) g.fill(x - 4, y - 4, x - 3, y - 3, fa(c));
             }
-        } else if (tintRgb >= 0) {
-            // a plain Minecraft item cannot be tinted: it has no outline
         } else if (fallback != null && !fallback.isEmpty() && !Icons.has(fallback)) {      // no art (yet): the plain Minecraft item, never a grey square
             Gfx.scale(g, scale * (drawAlpha < 0.99f ? Math.max(0.01f, drawAlpha) : 1f));          // a plain Minecraft item cannot be made see-through: it shrinks away instead
             if (drawAlpha > 0.12f) Gfx.item(g, fallback, -8, -8);
