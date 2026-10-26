@@ -1,3 +1,11 @@
+## 0.4.40
+- Revenant Horror's icon is Minecraft's zombie head.
+- The Rift and Crimson Isle show a WIP tag in the left menu; the Animations and Sounds page tiles match the Drop Library's.
+- Main page buttons now count pages, sub pages and items (drops, animations or sound sets).
+- Mythological Mobs tiles are coloured by the Griffin pet rarity each creature first spawns for (Mythic ones are purple).
+- Items in animations are 50% bigger (the new 100%).
+- Menu previews: the landscape behind them is painted once into a texture instead of hundreds of rectangles every frame.
+
 ## 0.4.39
 - The slayer animations are rebuilt on the Mythological ritual: the same ground circle and strike beats, with the boss in silhouette (zombie, spider, wolf, enderman, blaze, vampire) and a sword slashing it three times before it shatters and the drop appears. No backdrop, so the game behind stays visible. Same size as the Mythological ones.
 - Boss icons are skulls (zombie head, spider, wolf, enderman, blaze and bat pet heads).

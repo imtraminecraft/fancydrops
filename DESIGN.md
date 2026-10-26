@@ -225,3 +225,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Boss icons are skull items (`:boss_<id>:`: zombie head, then the Spider, Wolf, Enderman, Blaze and Bat pet heads), never drawn art. The Bosses page has three sub pages: Slayers (live), The Rift (a mirror dimension of the main server) and Crimson Isle (the Nether of SkyBlock), the last two WIP. Each has its own hand-pixeled animated icon (`grp_slayers`, `grp_rift`, `grp_crimson`). Future boss types are more groups of Bosses.
 - A WIP page shows only the page's icon and name on the hanging sign (no "drops" / "animations" suffix).
 
+## Standing requirements added in 0.4.40
+- The item in every animation is drawn 1.5x the old size; that is the new 100% of the Item size slider.
+- Category tiles show pages, sub pages and items. Unfinished groups carry a WIP tag in the sidebar. Mythological creature tiles take the colour of the pet rarity they first spawn for.
+- Menu previews must not issue hundreds of fills per frame: the backdrop is a texture (`BackdropTex`).
+
