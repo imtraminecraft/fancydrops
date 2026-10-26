@@ -297,3 +297,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Slayers and Experiments support two items in one animation: side by side, scaled down, with stacked compact text. The type is RNG if either item is RNG.
 - /fd simulate reflects two drops for Slayer and Experiments.
 - Every new animation has its own sounds in the Sounds tab and its own hand-pixeled, animated icon.
+
+## Standing requirements added in 0.5.1
+- A rebuilt data file gets a higher "v" than any file ever shipped, so an old copy in the config folder is replaced; a data file with the wrong ids falls back to the bundled one.

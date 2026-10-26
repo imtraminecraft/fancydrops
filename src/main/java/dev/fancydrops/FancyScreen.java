@@ -671,7 +671,7 @@ public class FancyScreen extends Screen {
     }
     private Row fit(Row r) {
         if (r.pColsForce > 0) r.pCols = r.pColsForce;
-        int nr = (r.pLabels.length + r.pCols - 1) / r.pCols;
+        int nr = r.pCols <= 0 ? 0 : (r.pLabels.length + r.pCols - 1) / r.pCols;
         r.h = r.pTop + nr * r.pTh + (nr - 1) * 4 + 8;
         return r;
     }

@@ -17,6 +17,9 @@ public final class FarmData {
             DataFiles.status = "farming.json error: " + e.getMessage();
             try { ALL = sorted(new Gson().fromJson(DataFiles.bundled("farming.json"), File.class).sources); } catch (Exception ignored) { ALL = List.of(); }
         }
+        if (byId("crops") == null || byId("feast") == null || byId("pests") == null) {          // a file from an older version (other ids): use the bundled one
+            try { ALL = sorted(new Gson().fromJson(DataFiles.bundled("farming.json"), File.class).sources); } catch (Exception ignored) { ALL = List.of(); }
+        }
         initDefaults(FancyConfig.get());
     }
 
