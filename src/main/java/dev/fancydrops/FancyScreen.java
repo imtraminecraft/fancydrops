@@ -3138,7 +3138,7 @@ public class FancyScreen extends Screen {
             if (on && !STILL) { int sw = b[0] + 2 + (int) (((now % 2600L) / 2600f) * (w - 4)); g.enableScissor(b[0] + 1, b[1] + 1, b[2] - 1, b[3] - 1); for (int i = 0; i < 6; i++) g.fill(sw + i, b[1] + 1, sw + i + 1, b[3] - 1, Gfx.argb(Math.round(26 * (1f - Math.abs(i - 3) / 3f)), 0xFFFFFF)); g.disableScissor(); }
         }
         // page header
-        Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, hdrBack != null ? py + 9 : py + 15, Ui.TEXT);                      // the title alone: no line of words under it
+        Gfx.text(g, font, Gfx.fit(font, pageTitle(), cw - 134), cx, py + 9, Ui.TEXT);                      // the title alone: no line of words under it
         hdrBackBox = null;
         if (hdrBack != null) {                                                                           // the back button, right under the title
             String bt = "Back to " + hdrBackLabel; int bw = Math.min(cw - 140, 22 + Gfx.w(font, bt)); hdrBackBox = new int[]{cx - 2, py + 21, bw, 15};

@@ -1,3 +1,6 @@
+## 0.4.49
+- The page title at the top of the menu stays in the same place on main pages and sub pages (main pages moved up to match).
+
 ## 0.4.48
 - The Tracked Drops counter is a small chip at the top right of the Drop Library banner (number and label on one line).
 - The Animations, Sounds, Chat and Settings main pages now open with the same banner as the Drop Library, followed by their tiles, so the main pages look alike.

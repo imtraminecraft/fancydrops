@@ -249,3 +249,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.4.48
 - Every main page (Home, Drop Library, Animations, Sounds, Chat, Settings) opens with the same banner (icon, title, short words) and then its tiles. A main page must fit without scrolling.
 - The Tracked Drops counter stays a small one-line chip.
+
+## Standing requirements added in 0.4.49
+- The page title never moves when a sub page opens: main and sub pages draw it at the same height.
