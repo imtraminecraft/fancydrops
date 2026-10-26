@@ -285,3 +285,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.4.57
 - Every slayer place is centred on the boss: the focal object behind it, the rest mirrored left and right.
 
+## Standing requirements added in 0.4.58
+- A slayer place is clipped to its frame, with at most 4 px of spill above and 2 px at the sides.
+

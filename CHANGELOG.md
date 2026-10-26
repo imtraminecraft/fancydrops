@@ -1,3 +1,6 @@
+## 0.4.58
+- Slayer places: the scenery (the Revenant's moon glow, trees and so on) may spill only 4 px above the frame and 2 px at its sides, and never below it.
+
 ## 0.4.57
 - Slayer places for the Sven Packmaster, Voidgloom Seraph and Riftstalker Bloodfiend are built around the middle: the moon or sun sits right behind the boss, and the trees, pillars, columns and islands are mirrored on both sides.
 

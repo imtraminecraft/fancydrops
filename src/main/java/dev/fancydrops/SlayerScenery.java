@@ -30,6 +30,10 @@ final class SlayerScenery {
             default -> ruins(c, t, x0, y0, x1, y1, hz, a);
         }
         corners(c, x0, y0, x1, y1, 7, frameRgb, a, true);                                              // round off the corners of the panel itself
+        for (int y = 0; y < c.h; y++) {                                                                    // only a little may spill out of the frame: 4 px above it, 2 px at the sides, none below
+            boolean rowOut = y < y0 - 4 || y >= y1;
+            for (int x = 0; x < c.w; x++) if (rowOut || x < x0 - 2 || x >= x1 + 2) c.px[y * c.w + x] = 0;
+        }
     }
 
     /** The rounded frame (erase = false), or the clearing of everything outside its four round corners (erase = true). */
