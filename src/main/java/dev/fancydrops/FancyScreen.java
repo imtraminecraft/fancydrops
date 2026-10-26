@@ -1404,31 +1404,6 @@ public class FancyScreen extends Screen {
         if (updCheck != null && mx >= updCheck[0] && mx < updCheck[0] + updCheck[2] && my >= updCheck[1] && my < updCheck[1] + updCheck[3]) { if (!UpdateCheck.busy()) UpdateCheck.check(true); return true; }
         return false;
     }
-    /** The building site: a fixed, tidy scene on the ground line. Nothing is interactive. */
-    private void site(GuiGraphicsExtractor g, Row r, float sec) {
-        int gy = r.y + r.h - 12, mid = r.w / 2;
-        roadSign(g, r.x + 12, r.y + 14, sec); roadSign(g, r.x + r.w - 32, r.y + 14, sec + 1.3f);                  // a swinging road-work sign at each top corner (no hats)
-        g.fill(r.x + 6, gy, r.x + r.w - 6, gy + 1, 0x33FFFFFF);                                    // the ground line everything stands on
-        g.fill(r.x + 6, gy + 1, r.x + r.w - 6, gy + 3, 0xFF211C10);
-        farLayers(g, r, sec, gy); frames(g, r, sec, gy);                                                // far cranes and unfinished buildings with tiny workers behind the site
-        lamp(g, r.x + Math.round(r.w * 0.27f), gy, sec + 1.1f); lamp(g, r.x + Math.round(r.w * 0.35f), gy, sec + 2.3f); lamp(g, r.x + Math.round(r.w * 0.76f), gy, sec + 3.4f);   // more lamp posts along the site
-        int laneL = 12, laneR = mid - 50;
-        if (laneR - laneL >= 84) build(g, r, sec, gy, laneL, laneR);                               // left: a little house goes up brick by brick... then it all comes down
-        int rx = r.w - 44;                                                                          // right edge: barrel, crate on a pallet, cone
-        { int ax = r.x + rx + 12, ay = gy - 9; g.fill(ax, ay, ax + 8, ay + 9, 0xFFE06A20); g.fill(ax, ay + 2, ax + 8, ay + 3, 0xFFF2F2F2); g.fill(ax, ay + 5, ax + 8, ay + 6, 0xFFF2F2F2); g.fill(ax + 1, ay - 1, ax + 7, ay, 0xFF3A3A3A); }
-        { int ax = r.x + rx - 14, ay = gy - 6; g.fill(ax, ay, ax + 20, ay + 2, 0xFFC8964E); g.fill(ax, ay + 2, ax + 20, ay + 4, 0xFFB0803E); g.fill(ax, ay + 4, ax + 20, ay + 6, 0xFFC8964E); g.fill(ax + 4, ay - 7, ax + 14, ay, 0xFFD03A30); g.fill(ax + 4, ay - 7, ax + 14, ay - 6, 0xFFFF6A5A); g.fill(ax + 8, ay - 5, ax + 10, ay - 3, 0xFFFFD84A); }
-        Gfx.push(g); Gfx.translate(g, r.x + rx - 36, gy - 15); Gfx.scale(g, 0.9f); Icons.draw(g, ":cone:", 0, 0, 2400L); Gfx.pop(g);
-        scaffold(g, r.x + r.w - 118, gy, sec);                                                      // a scaffold tower behind everything on the right
-        int bx = r.x + mid + 62;                                                                    // right of centre: three builders on a bench, chatting over a cuppa
-        if (r.x + rx - 46 - bx >= 52) bench(g, bx, gy, sec);
-        lamp(g, r.x + r.w - 22, gy, sec);                                                           // a lamp post at the right edge, its light cone and moths
-        nearLayers(g, r, sec, gy);
-        for (int f = 0; f < 6; f++) {                                                               // fireflies
-            float fx = r.x + r.w * (0.52f + 0.4f * ((f * 53) % 10) / 10f) + (float) Math.sin(sec * 0.7f + f * 2.1f) * 9f, fy = gy - 34 - ((f * 29) % 7) * 5 + (float) Math.sin(sec * 1.1f + f) * 5f;
-            g.fill(Math.round(fx), Math.round(fy), Math.round(fx) + 1, Math.round(fy) + 1, Gfx.argb(Math.round(200 * (0.5f + 0.5f * (float) Math.sin(sec * 2.4f + f * 1.7f))), 0xFFE066));
-        }
-    }
-
     /** The "Coming Soon" board: it hangs on two chains from the top tape, its bulbs chase round the frame and one letter flickers while a builder hammers on top and another welds from a plank underneath. */
     private void comingSoon(GuiGraphicsExtractor g, Row r, int mid, float sec) {
         String wt = "Coming Soon", tm = "TM"; int tmw = Math.round(Gfx.w(font, tm) * 0.6f) + 1, wtw = Gfx.w(font, wt) + tmw, pw = wtw + 34, ph = 22, hx = mid - pw / 2, hy = r.y + 64;
@@ -1450,284 +1425,23 @@ public class FancyScreen extends Screen {
         for (int[] o : new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}) Gfx.text(g, font, wt, tx + o[0], ty + o[1], gc);
         Gfx.text(g, font, wt, tx, ty, tc);
         Gfx.push(g); Gfx.translate(g, tx + Gfx.w(font, wt) + 1, ty - 1); Gfx.scale(g, 0.6f); Gfx.text(g, font, tm, 0, 0, tc); Gfx.pop(g);
-        if (!(Math.sin(sec * 23f) > 0.2 || Math.sin(sec * 7f) > 0.6)) { int sx = tx + Gfx.w(font, "Coming "); g.fill(sx, ty - 1, sx + Gfx.w(font, "S"), ty + 9, 0xFF120E06); }
         g.enableScissor(hx + 3, hy + 3, hx + pw - 3, hy + ph - 3);
         int sh = Math.round((sec * 40f) % 160f - 30f); for (int row = 0; row < ph - 6; row++) g.fill(hx + sh - row / 2, hy + 3 + row, hx + sh - row / 2 + 6, hy + 4 + row, 0x38FFF0C8);
         g.disableScissor();
         // a builder on top hammers beside a tin of paint
-        worker(g, hx + 14, hy, 1, sec, 0f);
+        Site.worker(g, hx + 14, hy - 1, 1, 0xF2B01A, 0xF06A1A, 0f, false, ((int) (sec * 9f)) % 2 == 0);
+        { boolean hm = ((int) (sec * 9f)) % 2 == 0; Site.R(g, hx + 18, hy - 1 - (hm ? 14 : 9), 1, 5, 0x7A5A30); Site.R(g, hx + 17, hy - 1 - (hm ? 16 : 11), 4, 2, 0x9A9AA2); }
         int tn = hx + pw - 20; g.fill(tn, hy - 6, tn + 5, hy, 0xFF5A7A9A); g.fill(tn, hy - 6, tn + 5, hy - 5, 0xFF7A9ABA); g.fill(tn - 1, hy - 7, tn + 6, hy - 6, 0xFF3A5A7A);
         // a welder on a plank hung under the board, torch up at the frame
-        int py = hy + ph + 22, wxp = mid - 4;
+        int py = hy + ph + 16, wxp = mid - 4;
         for (int cx : new int[]{hx + 14, hx + pw - 15}) { g.fill(cx, hy + ph + 1, cx + 1, py, 0xFF8A8A92); }
         g.fill(hx + 8, py, hx + pw - 8, py + 2, 0xFF7A5A30);
-        worker(g, wxp, py, 0, sec, 0f);
-        g.fill(wxp + 7, py - 20, wxp + 9, py - 11, 0xFFE8B98A); g.fill(wxp + 6, hy + ph + 1, wxp + 9, hy + ph + 4, 0xFF707078);
+        Site.worker(g, wxp, py, 1, 0x888890, 0x707078, 0f, false, true);
         if (Math.sin(sec * 10f) > -0.3) {
             int fx = wxp + 8, fy = hy + ph + 3; g.fill(fx - 6, fy - 4, fx + 7, fy + 5, 0x28BEE1FF); g.fill(fx - 1, fy - 1, fx + 2, fy + 2, 0xFFFFFFFF);
             for (int q = 0; q < 8; q++) { double an = ((int) (sec * 14f) + q * 5) * 1.3; int rr = 2 + (q * 3 + (int) (sec * 14f)) % 7; int sx2 = fx + (int) (Math.cos(an) * rr), sy2 = fy + 1 + (int) (Math.abs(Math.sin(an)) * rr); g.fill(sx2, sy2, sx2 + 1, sy2 + 1, q % 2 == 0 ? 0xFFFFE08A : 0xFFFFFFFF); }
         }
     }
-
-    /** A diamond road-work sign on a short chain: yellow, with a black edge and a man digging, swinging gently. */
-    private static void roadSign(GuiGraphicsExtractor g, int x, int y, float sec) {
-        int sw = Math.round((float) Math.sin(sec * 1.6f) * 2f);
-        g.fill(x + 9, y - 6, x + 10, y, 0xFF6A6A74);                                          // the chain it hangs from
-        int cx = x + 10 + sw, cy = y + 11;
-        for (int dy = -10; dy <= 10; dy++) { int hw = 10 - Math.abs(dy); g.fill(cx - hw, cy + dy, cx + hw + 1, cy + dy + 1, 0xFF1A1710); }
-        for (int dy = -8; dy <= 8; dy++) { int hw = 8 - Math.abs(dy); if (hw >= 0) g.fill(cx - hw, cy + dy, cx + hw + 1, cy + dy + 1, dy < -3 ? 0xFFFFE066 : 0xFFFFC21A); }
-        int dig = ((int) (sec * 3f)) % 2;                                                      // the little digger
-        g.fill(cx - 1, cy - 4, cx + 1, cy - 2, 0xFF1A1710); g.fill(cx - 1, cy - 2, cx + 1, cy + 2, 0xFF1A1710);
-        g.fill(cx + 1, cy - 1 + dig, cx + 4, cy + dig, 0xFF1A1710); g.fill(cx + 3, cy + dig, cx + 5, cy + 2 + dig, 0xFF1A1710);
-        g.fill(cx - 3, cy + 2, cx + 1, cy + 3, 0xFF1A1710); g.fill(cx - 4, cy + 3, cx - 2, cy + 4, 0xFF1A1710); g.fill(cx - 1, cy + 3, cx + 1, cy + 5, 0xFF1A1710);
-    }
-
-    /** A steel scaffold tower: poles, cross braces and two planks, with a swinging work light. Drawn dim, so it sits behind the bench. */
-    private static void scaffold(GuiGraphicsExtractor g, int x, int gy, float sec) {
-        int w = 30, h = 54, top = gy - h, dim = 0xFF3A3A42, lite = 0xFF50505C;
-        g.fill(x, top, x + 2, gy, dim); g.fill(x + w - 2, top, x + w, gy, dim);
-        for (int y = top + 4, seg = 0; y < gy - 9; y += 9, seg++) { for (int k = 0; k < w - 4; k++) { int yy = y + (seg % 2 == 0 ? k * 9 / (w - 4) : 9 - k * 9 / (w - 4)); g.fill(x + 2 + k, yy, x + 3 + k, yy + 1, 0xFF2C2C34); } g.fill(x, y + 9, x + w, y + 10, dim); }
-        g.fill(x - 3, top + 12, x + w + 3, top + 15, 0xFF8A6A3A); g.fill(x - 3, top + 12, x + w + 3, top + 13, 0xFFA88450);
-        g.fill(x - 3, top + 34, x + w + 3, top + 37, 0xFF8A6A3A); g.fill(x - 3, top + 34, x + w + 3, top + 35, 0xFFA88450);
-        g.fill(x, top - 1, x + w, top, lite);
-        float sw = (float) Math.sin(sec * 1.7f) * 3f; int lx = x + w / 2 + Math.round(sw);                 // the work light swings from the top rail
-        g.fill(x + w / 2, top, x + w / 2 + 1, top + 6, 0xFF6A6A74); g.fill(lx - 2, top + 6, lx + 3, top + 9, 0xFFFFE08A);
-        g.fill(lx - 6, top + 8, lx + 7, top + 20, 0x14FFE08A);
-    }
-
-    /** A lamp post with a warm light cone that flickers a little and a few moths around the lamp. */
-    private static void lamp(GuiGraphicsExtractor g, int x, int gy, float sec) {
-        int top = gy - 46; float fl = 0.85f + 0.15f * (float) Math.sin(sec * 9f) * (float) Math.sin(sec * 2.3f);
-        for (int y = 0; y < 38; y++) { int half = 2 + y / 2; g.fill(x + 1 - half, top + 4 + y, x + 2 + half, top + 5 + y, Gfx.argb(Math.round(24 * fl * (1f - y / 38f)), 0xFFD870)); }   // the cone widens as it falls
-        g.fill(x, top + 4, x + 3, gy, 0xFF2E2C34); g.fill(x - 1, gy - 3, x + 4, gy, 0xFF3A3842);
-        g.fill(x - 3, top, x + 6, top + 2, 0xFF2E2C34); g.fill(x - 2, top + 2, x + 5, top + 5, Gfx.argb(Math.round(255 * fl), 0xFFE9A0)); g.fill(x - 4, top - 2, x + 7, top + 6, Gfx.argb(Math.round(30 * fl), 0xFFE9A0));
-        for (int m = 0; m < 3; m++) { double an = sec * (1.6 + m * 0.5) + m * 2.0; g.fill(x + 1 + (int) (Math.cos(an) * (7 + m * 2)), top + 2 + (int) (Math.sin(an * 1.3) * (5 + m)), x + 2 + (int) (Math.cos(an) * (7 + m * 2)), top + 3 + (int) (Math.sin(an * 1.3) * (5 + m)), 0xCCF4EBC8); }
-    }
-
-    /** Three builders sitting on a plank, talking in turn: the speaker nods and gets a bubble of moving dots, one holds a steaming cup. */
-    private static void bench(GuiGraphicsExtractor g, int x, int gy, float sec) {
-        int by = gy - 9;
-        g.fill(x - 2, by, x + 50, by + 3, 0xFFB0803E); g.fill(x - 2, by, x + 50, by + 1, 0xFFD0A060); g.fill(x + 2, by + 3, x + 4, gy, 0xFF6A4A24); g.fill(x + 43, by + 3, x + 45, gy, 0xFF6A4A24);
-        int[] hat = {0xFFFFD020, 0xFFF4F4F4, 0xFFFF9A20}, vest = {0xFFF08A1C, 0xFF9AD83A, 0xFFF08A1C}, skin = {0xFFE8B98A, 0xFFC8946A, 0xFFF0C8A0};
-        int talker = ((int) (sec / 1.7f)) % 3;
-        for (int i = 0; i < 3; i++) {
-            int px = x + 4 + i * 15, nod = (i == talker && ((int) (sec * 6f)) % 2 == 0) ? 1 : 0, lean = i == 1 ? 0 : 0, hy = by - 18 + nod;
-            g.fill(px + 1, hy, px + 7, hy + 2, hat[i]); g.fill(px, hy + 2, px + 8, hy + 3, hat[i]);                                  // hard hat
-            g.fill(px + 1, hy + 3, px + 7, hy + 7, skin[i]); g.fill(px + (i == 2 ? 1 : 5), hy + 4, px + (i == 2 ? 2 : 6), hy + 5, 0xFF2A1A10);   // face, one eye (turned toward its neighbour)
-            if (i == talker && ((int) (sec * 8f)) % 2 == 0) g.fill(px + (i == 2 ? 1 : 4), hy + 6, px + (i == 2 ? 3 : 6), hy + 7, 0xFF7A3A2A);       // mouth moves
-            g.fill(px + 1, hy + 7, px + 7, by, vest[i]); g.fill(px + 1, hy + 10, px + 7, hy + 11, 0xFFF4F4C8);                       // vest and its stripe
-            g.fill(px + 1, by - 3, px + 9, by, 0xFF2E4A8A); g.fill(px + 7, by, px + 10, by + 6, 0xFF263E78); g.fill(px + 7, by + 6, px + 11, by + 7, 0xFF3A2A1A);   // thighs out, shins down, boot
-            if (i == 1) { g.fill(px + 6, by - 9, px + 10, by - 5, 0xFFF4F4F4); g.fill(px + 10, by - 8, px + 11, by - 6, 0xFFF4F4F4); g.fill(px + 6, by - 10, px + 10, by - 9, 0xFF6A4A24);   // a cup
-                for (int st = 0; st < 2; st++) { float u = (sec * 0.8f + st * 0.5f) % 1f; g.fill(px + 7 + st * 2, by - 12 - Math.round(u * 7), px + 8 + st * 2, by - 11 - Math.round(u * 7), Gfx.argb(Math.round(150 * (1f - u)), 0xFFFFFF)); } }
-            else { int sw = (i == talker) ? (((int) (sec * 5f)) % 2) : 0; g.fill(px + 6, by - 8 - sw * 2, px + 8, by - 4, skin[i]); }                                  // a free hand, waving when it talks
-            if (i == talker) {                                                                                                       // speech bubble with dots that rise one after another
-                int bxx = px - 1, byy = hy - 12;
-                g.fill(bxx, byy, bxx + 14, byy + 8, 0xFFF4F4F4); g.fill(bxx + 5, byy + 8, bxx + 7, byy + 10, 0xFFF4F4F4);
-                int ph = ((int) (sec * 4f)) % 4;
-                for (int d = 0; d < 3; d++) g.fill(bxx + 2 + d * 4, byy + 3 - (ph == d + 1 ? 1 : 0), bxx + 4 + d * 4, byy + 5 - (ph == d + 1 ? 1 : 0), 0xFF3A3A44);
-            }
-        }
-    }
-
-    /** The construction loop (14 s): the little house stands, trembles, collapses in a cloud of dust, the foreman shrugs, and the crane lifts the pile in three loads and sets the house up again row by row. */
-    private static void build(GuiGraphicsExtractor g, Row r, float sec, int gy, int laneL, int laneR) {
-        float ph0 = sec % 14f, shk = ph0 > 3.6f && ph0 < 4.1f ? 1f - (ph0 - 3.6f) / 0.5f : 0f;
-        int sx = Math.round((float) Math.sin(sec * 90f) * 1.5f * shk), sy = Math.round((float) Math.cos(sec * 70f) * shk);
-        Gfx.push(g); Gfx.translate(g, sx, sy); buildInner(g, r, sec, gy, laneL, laneR); Gfx.pop(g);
-    }
-    private static void buildInner(GuiGraphicsExtractor g, Row r, float sec, int gy, int laneL, int laneR) {
-        final float LOOP = 14f, TREM = 2.4f, TCF = 3.6f, LD0 = 5.4f, LDP = 1.5f; final int COLS = 4, WALL = 24, N = WALL + 3, bw = 11, bh = 5;
-        float ph = sec % LOOP;
-        int wx = r.x + laneL + 36 + Math.max(0, (laneR - laneL - 36 - COLS * bw) / 2), mastX = r.x + laneL + 4, top = gy - 64, hookX0 = wx + COLS * bw / 2;
-        // the crane: lattice mast, jib, counterweight and a blinking beacon
-        g.fill(mastX, top, mastX + 4, gy, 0xFFE0A020); g.fill(mastX - 3, gy - 3, mastX + 7, gy, 0xFF6B5410);
-        for (int yy = top + 3; yy < gy - 4; yy += 5) { g.fill(mastX, yy, mastX + 4, yy + 1, 0xFF8A6410); g.fill(mastX + 1, yy + 1, mastX + 3, yy + 3, 0xFFB07818); }
-        g.fill(mastX - 8, top - 1, hookX0 + 14, top + 2, 0xFFE0A020); g.fill(mastX - 8, top + 2, hookX0 + 14, top + 3, 0xFF8A6410); g.fill(mastX - 8, top + 3, mastX - 2, top + 8, 0xFF5A5A66);
-        g.fill(mastX - 1, top - 5, mastX + 5, top - 1, 0xFFD6A020); g.fill(mastX + 1, top - 8, mastX + 3, top - 5, 0xFF5A5A66);
-        boolean blink = (int) (sec * 2.2f) % 2 == 0; g.fill(mastX + 1, top - 10, mastX + 3, top - 8, blink ? 0xFFFF4A3A : 0xFF5A1812);
-        if (blink) g.fill(mastX - 1, top - 12, mastX + 5, top - 6, 0x22FF4A3A);
-        { int lx = mastX + 26; float f = 0.9f + 0.1f * (float) Math.sin(sec * 17f);                      // a work light hangs from the jib
-          g.fill(lx, top + 3, lx + 1, top + 10, 0xFF7A7A82); g.fill(lx - 2, top + 10, lx + 3, top + 12, 0xFF5A5A62); g.fill(lx - 1, top + 12, lx + 2, top + 13, 0xFFFFE28A);
-          for (int y = 0; y < 40; y++) { int half = 1 + y / 3; g.fill(lx - half, top + 13 + y, lx + 1 + half, top + 14 + y, Gfx.argb(Math.round(20 * f * (1f - y / 40f)), 0xFFE28A)); } }
-        int farX = wx - 14, homeX = r.x + laneL + 22;
-        boolean tremble = ph >= TREM && ph < TCF;
-        // the bricks: standing, shaking, falling, carried by the crane, or set back in place
-        for (int i = 0; i < N; i++) {
-            boolean roof = i >= WALL; int row = roof ? 6 + (i - WALL) : i / COLS, col = i % COLS;
-            int w = roof ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw, h = bh;
-            int bx = roof ? wx + (COLS * bw - w) / 2 : wx + col * bw + (row % 2 == 1 ? 3 : 0) - (row % 2 == 1 && col == COLS - 1 ? 3 : 0), by = gy - bh * (row + 1);
-            float hh = ((i * 2654435761L) & 0xFFFF) / 65536f;
-            int ld = i < 8 ? 0 : i < 16 ? 1 : 2; float pickT = LD0 + LDP * ld + LDP * 0.4f, placeT = LD0 + LDP * ld + LDP * 0.98f + (row % 3) * 0.045f;
-            if (ph < TCF) { int off = tremble ? (int) Math.round(Math.sin(ph * 60f + i) * Math.min(1.6, (ph - TREM) * 1.6)) : 0; brick(g, bx + off, by, w, h, 0, roof); continue; }
-            if (ph >= placeT) { float u = ph - placeT; brick(g, bx, by - (u < 0.17f ? Math.round(Math.max(0f, 2f - u * 12f)) : 0), w, h, 0, roof); continue; }
-            if (ph >= pickT) continue;                                                                   // it is in the crane's load
-            float tc = ph - TCF - hh * 0.12f; if (tc < 0) { brick(g, bx, by, w, h, 0, roof); continue; }
-            float fall = 0.5f * 190f * tc * tc, vx = (hh - 0.45f) * 52f;
-            int rest = gy - bh - ((i % 3 == 0 && hh > 0.5f) ? bh : 0); float tHit = (float) Math.sqrt(2.0 * Math.max(1, rest - by) / 190.0);
-            float bnc = tc > tHit ? 5f * hh * Math.max(0f, (float) Math.sin((tc - tHit) * 11f)) * (float) Math.exp(-(tc - tHit) * 5f) : 0f;
-            int yy = Math.round(Math.min(rest, by + fall) - bnc), xx = Math.max(r.x + laneL + 10, Math.min(r.x + laneR + 10, Math.round(bx + vx * Math.min(tc, 0.8f))));
-            brick(g, xx, yy, w, h, 0, roof);
-        }
-        if (ph >= TREM + 0.2f && ph < TCF) {                                                              // cracks, trickling dust and one loose brick
-            int cx2 = wx + COLS * bw / 2, cy2 = gy - bh * 3, cr = 0xFF1A0E08;
-            g.fill(cx2, cy2 - 12, cx2 + 1, cy2 - 6, cr); g.fill(cx2 + 1, cy2 - 6, cx2 + 2, cy2 - 1, cr); g.fill(cx2, cy2 - 1, cx2 + 1, cy2 + 5, cr);
-            for (int d = 0; d < 6; d++) { float u = (sec * 2f + d * 0.37f) % 1f; g.fill(wx + 4 + d * 7, gy - bh * 8 + Math.round(u * 14), wx + 6 + d * 7, gy - bh * 8 + Math.round(u * 14) + 1, Gfx.argb(Math.round(150 * (1f - u)), 0xB8A890)); }
-            if (ph > TREM + 0.9f) { float u = ph - TREM - 0.9f; brick(g, wx + COLS * bw + 3, Math.min(gy - bh, gy - bh * 7 + Math.round(u * u * 200f)), bw, bh, 0, false); }
-        }
-        // the door and window
-        boolean standing = ph < TCF, body = standing || ph >= LD0 + LDP * 1.98f + 0.1f, low = standing || ph >= LD0 + LDP * 0.98f + 0.2f, lit = standing || ph >= LD0 + LDP * 2.98f + 0.4f;
-        int d0 = tremble ? (int) Math.round(Math.sin(ph * 60f) * 1.2) : 0;
-        if (low) { g.fill(wx + 4 + d0, gy - 11, wx + 12 + d0, gy, 0xFF4A2C14); g.fill(wx + 5 + d0, gy - 10, wx + 11 + d0, gy - 1, 0xFF6A4020); g.fill(wx + 10 + d0, gy - 6, wx + 11 + d0, gy - 5, 0xFFFFD84A); }
-        if (body) { g.fill(wx + 27 + d0, gy - 22, wx + 37 + d0, gy - 14, 0xFF3A2410); g.fill(wx + 28 + d0, gy - 21, wx + 36 + d0, gy - 15, lit ? 0xFFFFE08A : 0xFF16120C); g.fill(wx + 31 + d0, gy - 21, wx + 32 + d0, gy - 15, 0xFF3A2410);
-            if (lit) g.fill(wx + 22 + d0, gy - 27, wx + 43 + d0, gy - 9, 0x16FFE08A); }
-        // the hook, the rope and the load
-        float hy = top + 10, hsw = 0f; boolean carry = false; int ldK = Math.max(0, Math.min(2, (int) ((ph - LD0) / LDP)));
-        float[] stop = {gy - bh * 3 - 8, gy - bh * 5 - 8, gy - bh * 9 - 8};
-        if (ph >= LD0 && ph < LD0 + LDP * 3) {
-            float u = (ph - (LD0 + LDP * ldK)) / LDP, y0 = ldK == 0 ? top + 10 : stop[ldK - 1] - 6, pile = gy - 12, lift = top + 24;
-            if (u < 0.3f) hy = y0 + (pile - y0) * smooth(u / 0.3f);
-            else if (u < 0.4f) { hy = pile; carry = true; }
-            else if (u < 0.65f) { float k = smooth((u - 0.4f) / 0.25f); hy = pile + (lift - pile) * k; carry = true; hsw = (float) Math.sin((u - 0.4f) * 18f) * 4f * (1f - k); }
-            else { float k = smooth((u - 0.65f) / 0.35f); hy = lift + (stop[ldK] - 6 - lift) * k; carry = true; hsw = (float) Math.sin((u - 0.4f) * 18f) * 1.5f * (1f - k); }
-        } else if (ph >= LD0 + LDP * 3 && ph < LD0 + LDP * 3 + 0.7f) hy = stop[2] - 6 + (top + 10 - (stop[2] - 6)) * smooth((ph - LD0 - LDP * 3) / 0.7f);
-        else if (ph >= LD0 + LDP * 3 + 0.7f || ph < LD0) hy = top + 10 + (float) Math.sin(sec * 1.4f) * 0.8f;
-        int hx = hookX0 + Math.round(hsw), hyi = Math.round(hy);
-        g.fill(hookX0, top + 3, hx + 1, top + 4, 0xFFB0B0B8); g.fill(hx, top + 3, hx + 1, hyi, 0xFFB0B0B8); g.fill(hx - 2, hyi, hx + 3, hyi + 2, 0xFF8A8A94);
-        if (carry) { g.fill(hx - 8, hyi + 3, hx + 8, hyi + 9, 0xFFA03C26); for (int q = 0; q < 2; q++) g.fill(hx - 8, hyi + 5 + q * 2, hx + 8, hyi + 6 + q * 2, 0xFF7A2F1C); g.fill(hx - 8, hyi + 3, hx + 8, hyi + 4, 0xFFE08A62); g.fill(hx - 9, hyi + 5, hx + 9, hyi + 6, 0xFF8A6A0C); }
-        // the foreman
-        float tt = ph; int wk = farX, pose = 0;
-        if (tt < TREM) pose = 0;
-        else if (tt < TCF) pose = 2;
-        else if (tt < TCF + 0.6f) { wk = Math.round(farX + (homeX - farX) * smooth((tt - TCF) / 0.6f)); pose = 4; }
-        else if (tt < TCF + 1.6f) { wk = homeX; pose = 2; }
-        else if (tt < LD0 - 0.4f) { wk = homeX; pose = 3; }
-        else if (tt < LD0 + 0.8f) { wk = Math.round(homeX + (farX - homeX) * smooth((tt - LD0 + 0.4f) / 1.2f)); pose = 4; }
-        else if (tt > LD0 + LDP * 3 + 0.3f && tt < LD0 + LDP * 3 + 2.6f) { pose = 2; }
-        if (pose == 0 && tt > TCF) { wk = farX; }
-        worker(g, wk, gy, pose, sec, 0f);
-        if (pose == 2 && tt < TCF + 1.6f) glyph(g, wk + 1, gy - 26, '!', 0xFFE5484D);
-        if (pose == 3 && tt < LD0 - 0.4f) glyph(g, wk + 1, gy - 26, '?', 0xFFFFC857);
-        // dust while it falls
-        float dt2 = ph - TCF;
-        if (dt2 > -0.2f && dt2 < 2.2f) for (int i = 0; i < 22; i++) {
-            float st = ((i * 7919) % 50) / 100f, u = (dt2 - st) / 1.7f; if (u < 0 || u > 1) continue;
-            float hx2 = ((i * 6007) % 100) / 100f; int dx = wx + Math.round(hx2 * (COLS * bw + 30)) - 15 + Math.round((hx2 - 0.5f) * 36 * u), dy = gy - 2 - Math.round(u * (8 + (i % 4) * 6)), sz = 3 + Math.round(u * 6);
-            g.fill(dx, dy - sz, dx + sz, dy, Gfx.argb(Math.round(110 * (1f - u) * (1f - u)), i % 3 == 0 ? 0xE0D6C0 : 0xA89E8C));
-        }
-        float done = ph - (LD0 + LDP * 2.98f + 0.4f);
-        if (done > 0 && done < 1.1f) for (int i = 0; i < 8; i++) { float u = done / 1.1f, an = i * 0.785f + u; g.fill(wx + COLS * bw / 2 + Math.round((float) Math.cos(an) * (10 + u * 24)), gy - 30 + Math.round((float) Math.sin(an) * (8 + u * 12)), wx + COLS * bw / 2 + Math.round((float) Math.cos(an) * (10 + u * 24)) + 2, gy - 29 + Math.round((float) Math.sin(an) * (8 + u * 12)), Gfx.argb(Math.round(255 * (1f - u)), 0xFFE08A)); }
-    }
-    private static float smooth(float x) { x = Math.max(0f, Math.min(1f, x)); return x * x * (3f - 2f * x); }
-
-    /** Unfinished steel-frame buildings behind the site, each with tiny workers who hammer, walk planks and weld. Dim, so they sit far back. */
-    private static void frames(GuiGraphicsExtractor g, Row r, float sec, int gy) {
-        float[][] def = {{0.07f, 32, 3}, {0.36f, 24, 2}, {0.57f, 30, 3}, {0.70f, 34, 4}, {0.82f, 26, 2}};
-        int seed = 3;
-        for (float[] d : def) {
-            seed += 5; int x = r.x + Math.round(r.w * d[0]), w = (int) d[1], fl = (int) d[2], fh = 12, n = w / 12;
-            g.fill(x - 2, gy - 3, x + w + 3, gy, 0xFF2A2217);
-            for (int f = 0; f < fl; f++) {
-                int yb = gy - 3 - f * fh;
-                for (int c = 0; c <= n; c++) g.fill(x + c * 12, yb - fh, x + c * 12 + 2, yb, 0xFF3A3022);
-                g.fill(x, yb - fh, x + n * 12 + 2, yb - fh + 2, 0xFF4A3E2C);
-                if (f < fl - 1) for (int c = 0; c < n; c++) if (((seed + f * 7 + c) * 2654435761L & 0xFFFF) / 65536f < 0.5f) {
-                    g.fill(x + c * 12 + 3, yb - fh + 3, x + c * 12 + 11, yb - 4, 0xFF15110C);
-                    if (((seed + f + c * 3) * 40503L & 0xFFFF) / 65536f < 0.3f) g.fill(x + c * 12 + 4, yb - fh + 4, x + c * 12 + 10, yb - 5, Gfx.argb(Math.round(120 + 60 * (float) Math.sin(sec + c)), 0xFF6A5326));
-                } else g.fill(x + c * 12 + 5, yb - fh + 5, x + c * 12 + 9, yb - fh + 7, 0xFF2A2218);
-                if (f == fl - 1) for (int c = 0; c <= n; c++) if (((seed + c * 11) * 2654435761L & 0xFFFF) / 65536f < 0.5f) g.fill(x + c * 12, yb - fh - 5, x + c * 12 + 2, yb - fh, 0xFF3A3022);
-            }
-            for (int yy = gy - 3 - fl * 12 + 2; yy < gy - 3; yy += 3) g.fill(x, yy, x + 5, yy + 1, 0x40706648);          // netting
-            for (int wi = 0; wi < Math.min(fl, 3); wi++) {                                               // the little workers
-                int fy = gy - 3 - wi * fh - 2, kind = (wi + seed) % 3;
-                float ph = sec * (1.6f + ((seed + wi) % 3) * 0.4f) + wi * 2f;
-                int wxp = x + 4 + Math.round((((seed + wi * 3) * 2654435761L & 0xFFFF) / 65536f) * (w - 14));
-                if (kind == 1) wxp = x + 4 + Math.round((0.5f + 0.5f * (float) Math.sin(ph * 0.7f)) * (w - 12));
-                g.fill(wxp, fy - 3, wxp + 1, fy, 0xFF1A1A24); g.fill(wxp + 1, fy - 3, wxp + 2, fy, 0xFF1A1A24);
-                g.fill(wxp, fy - 6, wxp + 2, fy - 3, wi % 2 == 0 ? 0xFFE8742A : 0xFF8AC058); g.fill(wxp, fy - 8, wxp + 2, fy - 6, 0xFFF2C030); g.fill(wxp, fy - 7, wxp + 2, fy - 6, 0xFFF0C8A0);
-                if (kind == 0) { boolean up = Math.sin(ph * 4f) > 0; g.fill(wxp + (up ? 2 : 3), fy - 8 - (up ? 1 : 0), wxp + (up ? 3 : 5), fy - 7 - (up ? 1 : 0), 0xFFCCCCCC); }
-                else if (kind == 1) g.fill(wxp - 1, fy - 10, wxp + 3, fy - 9, 0xFF9A7A3A);
-                else if (Math.sin(sec * 8f + wi) > -0.2f) { for (int s2 = 0; s2 < 5; s2++) { double an = ((int) (sec * 14f) + s2 * 5) * 1.3; int rr = 2 + (s2 * 3 + (int) (sec * 14f)) % 6; g.fill(wxp + 3 + (int) (Math.cos(an) * rr), fy - 5 + (int) (Math.sin(an) * rr * 0.8), wxp + 4 + (int) (Math.cos(an) * rr), fy - 4 + (int) (Math.sin(an) * rr * 0.8), s2 % 2 == 0 ? 0xFFFFE08A : 0xFFFFFFFF); } g.fill(wxp + 2, fy - 6, wxp + 4, fy - 4, 0xFFFFFFFF); }
-            }
-        }
-    }
-    /** Far cranes with blinking lights, a water tank and a fence, and a second dim skyline: the layers that give the site depth. */
-    private static void farLayers(GuiGraphicsExtractor g, Row r, float sec, int gy) {
-        for (int i = 0; i < 24; i++) { int bw2 = 9 + (i * 5) % 9, bx = r.x + 6 + i * 16, bh2 = 14 + (i * 13) % 30; if (bx + bw2 > r.x + r.w - 6) break; g.fill(bx, gy - bh2, bx + bw2, gy, 0xFF241D14); if (i % 5 == 0) g.fill(bx + bw2 / 2, gy - bh2 - 6, bx + bw2 / 2 + 1, gy - bh2, 0xFF241D14); }
-        for (float cf : new float[]{0.44f, 0.9f}) { int cx = r.x + Math.round(r.w * cf), hh = 62; g.fill(cx, gy - hh, cx + 2, gy, 0xFF2C2418); g.fill(cx - 14, gy - hh, cx + 20, gy - hh + 2, 0xFF2C2418); g.fill(cx + 12, gy - hh + 2, cx + 13, gy - hh + 10, 0xFF2C2418);
-            if ((int) (sec * 2.5f + cf * 9) % 2 == 0) g.fill(cx, gy - hh - 3, cx + 2, gy - hh - 1, 0xFFC03030); }
-        int tx = r.x + Math.round(r.w * 0.62f); g.fill(tx, gy - 34, tx + 16, gy - 24, 0xFF221B12); g.fill(tx - 1, gy - 35, tx + 17, gy - 33, 0xFF2C2418); g.fill(tx + 2, gy - 24, tx + 4, gy, 0xFF221B12); g.fill(tx + 12, gy - 24, tx + 14, gy, 0xFF221B12);
-        for (int x = r.x + 90; x < r.x + 90 + 150 && x < r.x + r.w - 6; x += 5) g.fill(x, gy - 10, x + 1, gy, 0xFF251E14); g.fill(r.x + 90, gy - 9, r.x + 240, gy - 8, 0xFF251E14);
-    }
-    /** The nearest layer: drifting fog, dark silhouettes at the very front and soft darkening at the sides. */
-    private static void nearLayers(GuiGraphicsExtractor g, Row r, float sec, int gy) {
-        for (int i = 0; i < 3; i++) { int fx = r.x + Math.round(((sec * (2f + i) + i * 140f) % (r.w + 120f)) - 60f), fy = gy - 12 - i * 8; int x0 = Math.max(r.x + 6, fx), x1 = Math.min(r.x + r.w - 6, fx + 90); if (x1 > x0) g.fill(x0, fy, x1, fy + 6, 0x14B8A888); }
-        for (int[] s : new int[][]{{30, 18}, {r.w - 40, 22}}) { int fx = r.x + s[0], fh = s[1]; g.fill(fx, gy - fh + 8, fx + 3, gy + 3, 0xFF050403); g.fill(fx - 6, gy - fh + 8, fx + 9, gy - fh + 10, 0xFF050403); }
-        for (int x = r.x + 14; x < r.x + r.w - 10; x += 26) g.fill(x, gy + 1, x + 2, gy + 3, 0xFF070605);
-        for (int k = 0; k < 14; k++) { int a = Math.round(70 * (1f - k / 14f) * (1f - k / 14f)); g.fill(r.x + 6 + k, r.y + 12, r.x + 7 + k, gy + 3, Gfx.argb(a, 0x000000)); g.fill(r.x + r.w - 7 - k, r.y + 12, r.x + r.w - 6 - k, gy + 3, Gfx.argb(a, 0x000000)); }
-    }
-    private static void brick(GuiGraphicsExtractor g, int x, int y, int w, int h, int fade, boolean roof) {
-        int a = 255 - Math.max(0, Math.min(255, fade)); if (a <= 0) return;
-        int base = roof ? 0x9A3030 : 0xB5532E, lite = roof ? 0xC84848 : 0xD9703E, dark = roof ? 0x5A1818 : 0x7A3418;
-        g.fill(x, y, x + w, y + h, Gfx.argb(a, base)); g.fill(x, y, x + w, y + 1, Gfx.argb(a, lite)); g.fill(x + w - 1, y, x + w, y + h, Gfx.argb(a, dark)); g.fill(x, y + h - 1, x + w, y + h, Gfx.argb(a, dark));
-        if (!roof && w > 8) g.fill(x + w / 2, y + 1, x + w / 2 + 1, y + h - 1, Gfx.argb(a / 2, dark));
-    }
-    /** A tiny builder in a hard hat: pose 0 stands, 1 hammers, 2 panics, 3 shrugs, 4 runs. */
-    private static void worker(GuiGraphicsExtractor g, int x, int gy, int pose, float sec, float arm) {
-        int run = pose == 4 ? ((int) (sec * 10f)) % 2 : 0, bob = pose == 2 ? ((int) (sec * 12f)) % 2 : 0, y = gy - 20 - bob;
-        g.fill(x + 1, y, x + 7, y + 2, 0xFFFFD020); g.fill(x, y + 2, x + 8, y + 3, 0xFFE0B010); g.fill(x + 3, y - 1, x + 5, y, 0xFFFFE860);               // hard hat
-        g.fill(x + 2, y + 3, x + 6, y + 7, 0xFFE8B98A); g.fill(x + 3, y + 4, x + 4, y + 5, 0xFF2A1A10); g.fill(x + 5, y + 4, x + 6, y + 5, 0xFF2A1A10);     // face
-        g.fill(x + 1, y + 7, x + 7, y + 13, 0xFFF08A1C); g.fill(x + 1, y + 10, x + 7, y + 11, 0xFFF4F4C8); g.fill(x + 3, y + 7, x + 5, y + 13, 0xFFD87010);       // vest
-        g.fill(x + 1 + run, y + 13, x + 4, y + 20, 0xFF2E4A8A); g.fill(x + 4, y + 13, x + 7 - run, y + 20, 0xFF263E78); g.fill(x + run, y + 19, x + 4, y + 20, 0xFF3A2A1A); g.fill(x + 4, y + 19, x + 8 - run, y + 20, 0xFF3A2A1A);
-        switch (pose) {
-            case 1 -> { int sw = ((int) (sec * 4f)) % 2; g.fill(x + 7, y + 8 - sw * 4, x + 9, y + 11 - sw * 2, 0xFFE8B98A); g.fill(x + 8, y + 3 - sw * 4, x + 12, y + 6 - sw * 4, 0xFF8A8A94); g.fill(x + 9, y + 5 - sw * 4, x + 10, y + 10 - sw * 2, 0xFF8A5A2C); }   // hammer
-            case 5 -> { int up = Math.round(arm * 9f); g.fill(x + 7, y + 12 - up, x + 9, y + 14 - up + (up > 4 ? 0 : 0), 0xFFE8B98A); g.fill(x + 7, y + 8 + (up > 0 ? 0 : 3) - Math.min(up, 8) / 2, x + 8, y + 13 - up / 2, 0xFFE8B98A); g.fill(x, y + 8 + Math.round((1f - arm) * 3f), x + 1, y + 13, 0xFFE8B98A); }
-            case 2 -> { g.fill(x - 1, y + 3, x + 1, y + 9, 0xFFE8B98A); g.fill(x + 7, y + 3, x + 9, y + 9, 0xFFE8B98A); }
-            case 3 -> { g.fill(x - 1, y + 7, x + 1, y + 10, 0xFFE8B98A); g.fill(x + 7, y + 7, x + 9, y + 10, 0xFFE8B98A); }
-            default -> { g.fill(x, y + 8, x + 1, y + 13, 0xFFE8B98A); g.fill(x + 7, y + 8, x + 8, y + 13, 0xFFE8B98A); }
-        }
-    }
-    /** A speech bubble with "!" or "?" drawn in pixels. */
-    private static void glyph(GuiGraphicsExtractor g, int x, int y, char c, int col) {
-        g.fill(x - 2, y - 2, x + 7, y + 11, 0xFFF4F4F4); g.fill(x + 1, y + 11, x + 3, y + 13, 0xFFF4F4F4);
-        if (c == '!') { g.fill(x + 2, y, x + 4, y + 6, col); g.fill(x + 2, y + 8, x + 4, y + 10, col); }
-        else { g.fill(x, y, x + 5, y + 2, col); g.fill(x + 4, y + 2, x + 6, y + 5, col); g.fill(x + 2, y + 4, x + 5, y + 6, col); g.fill(x + 2, y + 6, x + 4, y + 7, col); g.fill(x + 2, y + 8, x + 4, y + 10, col); }
-    }
-    /** The skyline behind the site: dark blocks with a few lit windows and stars above, left and right of the "Coming Soon" tag. */
-    private static void skyline(GuiGraphicsExtractor g, Row r, float sec, int gy) {
-        for (int b = 0; b < 12; b++) g.fill(r.x + 4, gy - 4 - b * 4, r.x + r.w - 4, gy - b * 4, Gfx.argb(Math.round(34 * (1f - b / 12f) * (1f - b / 12f)), 0xFF9A3A));      // a warm haze lying on the horizon
-        int mx0 = r.x + Math.round(r.w * 0.70f), my0 = r.y + 22;                                          // the moon, with a soft halo
-        for (int h = 3; h >= 1; h--) g.fill(mx0 - 6 - h * 3, my0 - 6 - h * 3, mx0 + 6 + h * 3, my0 + 6 + h * 3, Gfx.argb(7 * (4 - h), 0xFFF2C0));
-        g.fill(mx0 - 4, my0 - 6, mx0 + 4, my0 + 6, 0xFFF4EBC8); g.fill(mx0 - 6, my0 - 4, mx0 + 6, my0 + 4, 0xFFF4EBC8); g.fill(mx0 - 2, my0 - 3, mx0 + 1, my0 - 1, 0xFFD8CCA0); g.fill(mx0 + 2, my0 + 1, mx0 + 4, my0 + 3, 0xFFD8CCA0);
-        for (int c = 0; c < 3; c++) {                                                                      // thin clouds drift at their own speeds (the far ones are slower)
-            float sp = 2.2f + c * 1.6f; int span = r.w + 60, cxp = r.x - 30 + Math.round((c * 97 + sec * sp) % span), cyp = r.y + 16 + c * 11;
-            for (int k = 0; k < 4; k++) g.fill(cxp + k * 5, cyp + (k % 2), cxp + k * 5 + 9, cyp + 2 + (k % 2), Gfx.argb(26 + c * 6, 0xC8D0E8));
-        }
-        { int off = Math.round(sec * 1.5f) % 64, x = r.x + 6 - off, n = 40;                              // the far skyline: paler and without lights, creeping by
-            while (x < r.x + r.w - 6) {
-                int w = 18 + (n * 11) % 17, h = 30 + (n * 7) % 24; n++;
-                int x0 = Math.max(r.x + 6, x), x1 = Math.min(r.x + r.w - 6, x + w);
-                if (x1 > x0) { g.fill(x0, gy - h, x1, gy, 0xFF1C1B22); if (x + 1 >= r.x + 6) g.fill(x0, gy - h, x1, gy - h + 1, 0xFF27262F); }
-                x += w + 3;
-            }
-        }
-        for (int i = 0; i < 22; i++) {                                                                  // stars
-            float h1 = ((i * 2654435761L) & 0xFFFF) / 65536f, h2 = ((i * 40503L + 7) & 0xFFFF) / 65536f; int sx = r.x + 8 + Math.round(h1 * (r.w - 16)), sy = r.y + 12 + Math.round(h2 * 40);
-            float tw = 0.4f + 0.6f * (float) Math.abs(Math.sin(sec * (0.8f + h1) + i));
-            g.fill(sx, sy, sx + 1, sy + 1, Gfx.argb(Math.round(150 * tw), 0xFFF2C0));
-        }
-        int x = r.x + 6, n = 0;
-        while (x < r.x + r.w - 12) {
-            int w = 12 + (n * 7) % 11, h = 16 + (n * 13) % 22; n++;
-            g.fill(x, gy - h, x + w, gy, 0xFF1F1B12); g.fill(x, gy - h, x + w, gy - h + 1, 0xFF2C2618);
-            for (int wy = gy - h + 4; wy < gy - 4; wy += 6) for (int wx2 = x + 2; wx2 < x + w - 3; wx2 += 4) {
-                int k = (wx2 * 31 + wy * 17 + n) % 7; boolean on = k < 2 && (int) (sec * 0.3f + k + wy) % 3 != 0;
-                if (on) g.fill(wx2, wy, wx2 + 2, wy + 2, 0xFF6A5A28);
-            }
-            x += w + 2;
-        }
-    }
-
-
 
     private void tabIcon(GuiGraphicsExtractor g, Tab t, int x, int y, long now, boolean lively) {
         switch (t) {
@@ -3405,7 +3119,6 @@ public class FancyScreen extends Screen {
                 int cyi = r.y + 32 + bob;
                 if (r.kind == HERO) { int shw = 10 - Math.abs(bob) * 2; g.fill(mid - shw, r.y + 49, mid + shw, r.y + 51, 0x30000000); }   // its shadow breathes with it
                 if (r.kind == PANEL) {
-                    skyline(g, r, sec, r.y + r.h - 12);
                     tape(g, r.x + 3, r.y + 3, r.w - 6, STILL ? 0 : (int) ((nw / 60L) % 16)); tape(g, r.x + 3, r.y + r.h - 9, r.w - 6, STILL ? 0 : 16 - (int) ((nw / 60L) % 16));
                 } else for (int i = 0; i < 5; i++) {                                    // sparkles orbiting the icon
                     double an = sec * 1.3 + i * Math.PI * 2 / 5; int sx2 = mid + (int) (Math.cos(an) * 30), sy2 = cyi + (int) (Math.sin(an) * 12);
@@ -3415,7 +3128,7 @@ public class FancyScreen extends Screen {
                 else if (r.icon != null) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Gfx.item(g, r.icon, 0, 0); Gfx.pop(g); }
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
                 if (r.kind == HERO) { int wy = r.y + 70; for (String ln : wrap(r.sub, cw - 60)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; } continue; }          // the words under the title
-                site(g, r, sec);
+                Site.draw(g, r.x, r.y, r.w, r.h, sec);
                 comingSoon(g, r, mid, sec);
                 continue;
             }

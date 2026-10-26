@@ -1,3 +1,7 @@
+## 0.4.36
+- The construction page now matches the mockup exactly: the same small builders, the finer brick house, the crane that rebuilds it, the unfinished buildings and their tiny workers, lamps, far cranes and fog. The old oversized builders and the corner road signs are gone.
+- The Coming Soon board no longer hides a letter (the flicker is gone) and its two builders are the small ones.
+
 ## 0.4.35
 - The "Coming Soon" tag is now a hanging marquee board: it swings from two chains under the top tape, bulbs chase round its double gold frame, the words glow with one flickering letter and a shine sweeps across. A builder hammers on top (with a paint tin) and a welder works from a plank hung underneath.
 - A lamp post moved so it does not stand under the board.
