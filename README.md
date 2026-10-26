@@ -8,7 +8,8 @@ Fabric mod (Minecraft 26.2) that plays a short animation when you drop something
 * `/fd simulate Farming <Rare Crops|Harvest Feast|Harvest Bounty|Pest Drops> <Drop> <overbloom>` - a pretend crop or pest drop
 * `/fd simulate Experiments <Drop> [Drop 2]` - a pretend Experimentation Table reward, one or two items
 * `/fd mute` and `/fd toggle` - sounds on or off, the whole mod on or off
-* `/fd help` - every command
+* `/fd help` - the commands; `/fd help simulate` lists every simulate command
+* `/fd <words>` - opens the menu with the search filled in (for example `/fd minos`)
 
 Mythological and Bosses have three animations: No Drops, Normal and RNG; Farming and the Experimentation Table have Normal and RNG (a crop or a book always drops something). Slayers and Experiments show two items side by side when two drop together. Each has its own length, position, size and sounds. Only RNG has the cinematic bars and blur. Chat announcements only go out on Hypixel, and the message format is filtered (no swearing, links or commands).
 

@@ -158,7 +158,8 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     private static LiteralArgumentBuilder<FabricClientCommandSource> buildRoot(String name) {
         return ClientCommands.literal(name)
             .executes(ctx -> { openMenu = true; return Command.SINGLE_SUCCESS; })          // opened next tick so the chat screen doesn't close it again
-            .then(ClientCommands.literal("help").executes(ctx -> help(ctx.getSource())))
+            .then(ClientCommands.literal("help").executes(ctx -> help(ctx.getSource()))
+                .then(ClientCommands.literal("simulate").executes(ctx -> helpSimulate(ctx.getSource()))))
             .then(ClientCommands.literal("mute").executes(ctx -> {                        // every sound on or off
                 FancyConfig c = FancyConfig.get(); c.sound = !c.sound; FancyConfig.save();
                 say(ctx.getSource(), c.sound ? "Sounds on (" + c.volume + "%)" : "Sounds muted");
@@ -169,7 +170,9 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                 say(ctx.getSource(), "FancyDrops " + (on ? "enabled" : "disabled") + " (animations and chat announcements)");
                 return Command.SINGLE_SUCCESS;
             }))
-            .then(simLiteral(ClientCommands.literal("simulate")));
+            .then(simLiteral(ClientCommands.literal("simulate")))
+            .then(ClientCommands.argument("search", StringArgumentType.greedyString())                // /fd <words>: opens the menu with the search filled in
+                .executes(ctx -> { String q = StringArgumentType.getString(ctx, "search").trim(); if (!q.isEmpty()) FancyScreen.pendingSearch = q; openMenu = true; return Command.SINGLE_SUCCESS; }));
     }
 
     /** /fd simulate <Mythological|Slayer|Farming|Experiments> ...: one literal per category, each with Tab completion. */
@@ -202,8 +205,16 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     private static int help(FabricClientCommandSource s) {
         s.sendFeedback(waveTitle("FancyDrops").copy().append(Chat.color("  \u00B7  Quick guide", Chat.DIM)));
         helpLine(s, "/fd", "Open the menu");
+        helpLine(s, "/fd <words>", "Open the menu and search for them (for example /fd minos)");
         helpLine(s, "/fd mute", "Turn every sound on or off");
         helpLine(s, "/fd toggle", "Turn the whole mod on or off");
+        helpLine(s, "/fd help simulate", "Category: every /fd simulate command");
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /** /fd help simulate: every simulate command. */
+    private static int helpSimulate(FabricClientCommandSource s) {
+        s.sendFeedback(waveTitle("FancyDrops").copy().append(Chat.color("  \u00B7  Simulate", Chat.DIM)));
         helpLine(s, "/fd simulate Mythological <Mob|Treasure> <Drop> <mf>", "Play a pretend drop through the real animation");
         helpLine(s, "/fd simulate Slayer <Boss> <Drop> [Drop 2] <mf>", "The same for a slayer boss: one or two drops (Nothing for no drop)");
         helpLine(s, "/fd simulate Farming <Rare Crops|Harvest Feast|Harvest Bounty|Pest Drops> <Drop> <overbloom>", "A pretend crop or pest drop");

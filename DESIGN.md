@@ -337,3 +337,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Name Icons now: Special (Bug, Code, Patreon), Beta (Beta), Legendary (King Minos, Lucky Dice), Rare (Treasure Chest, Anvil, Music Disc), Common (Fishing Rod, Tractor, Bell, Clock). Do not bring back the removed ones (Hammer, Griffin, Gold Coin, Minotaur, Sphinx, Harpy, Shovel, Wheat, Pickaxe, Dye Drop, Book).
 - Admin is the owner only. Do not add other admin IDs unless the author asks.
 - When an icon is removed, delete its strip, its chat sprite and its font entry too (tools/make_name_icons.py rewrites emoji.json).
+
+## Standing requirements added in 0.7.2
+- /fd help lists the main commands and categories; each category has its own page (/fd help simulate). New commands go in the matching category.
+- /fd <words> opens the menu with the search filled in. Real commands (help, mute, toggle, simulate) win over a search.
+- Experimentation Table list: non-books first, then books by level (IV, V, VI, VII), then by odds, then A to Z.

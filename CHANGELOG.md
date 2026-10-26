@@ -1,3 +1,8 @@
+## 0.7.2
+- `/fd help` now shows the main commands and a category, `/fd help simulate`, which lists every `/fd simulate` command.
+- `/fd <words>` opens the menu with the search filled in, for example `/fd minos`.
+- Experimentation Table list: other drops first, then the books by enchant level (IV, V, VI, VII), most common first inside each level.
+
 ## 0.7.1
 - Name Icons: removed Hammer, Griffin, Gold Coin, Minotaur, Sphinx, Harpy, Shovel, Wheat, Pickaxe, Dye Drop and Book. Contributors now get a new aqua Code (</>) icon, and Beta gets a new green Beta icon. 13 Name Icons are left.
 - The extra admin ID was removed again.

@@ -21,9 +21,9 @@ public final class ExperimentData {
     }
     private static DropData.Source first(File f) {
         DropData.Source s = f.sources.get(0);
-        s.drops.sort(java.util.Comparator.comparingInt((DropData.Drop d) -> bookLevel(d) > 0 ? 1 : 0)       // other drops first, by rarity; then the books: every V, then every VI, then every VII
+        s.drops.sort(java.util.Comparator.comparingInt((DropData.Drop d) -> bookLevel(d) > 0 ? 1 : 0)       // other drops first, by rarity; then the books by level (IV, V, VI, VII), most common first inside a level
                 .thenComparingInt(ExperimentData::bookLevel)
-                .thenComparingDouble(d -> bookLevel(d) > 0 ? 0 : DropData.oneIn(d))
+                .thenComparingDouble(DropData::oneIn)                                                        // inside a level: the most common first
                 .thenComparing(d -> d.name));
         return s;
     }
