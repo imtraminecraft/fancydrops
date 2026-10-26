@@ -2808,10 +2808,11 @@ public class FancyScreen extends Screen {
         rows.add(section("Settings"));
         int sp = Math.max(0, Math.min(2, c.mythSpade)), col = TreasureData.COLS[sp];
         Row pick = row(0, ":shovel:#" + String.format("%06X", col & 0xFFFFFF), "Spade", "Chain of " + (TreasureData.CHAIN[sp] + (c.mythErudite ? 2 : 0)) + " burrows  \u00B7  25% of burrows are treasure", col);
+        pick.iconId = new String[]{"ANCESTRAL_SPADE", "ARCHAIC_SPADE", "DEIFIC_SPADE"}[sp];                       // the spade you chose, as its own picture
         Dd dd = new Dd(() -> TreasureData.SPADES[Math.max(0, Math.min(2, c.mythSpade))], "dd_spade", 100); dd.col = () -> col;
         pick.ctls.add(dd); rows.add(pick);
         if (open.contains("dd_spade") && !searching) { Row pl = miniList(pick, dd, java.util.Arrays.asList(TreasureData.SPADES), sp, i -> { c.mythSpade = i; open.remove("dd_spade"); }); pl.pickCols = TreasureData.COLS; rows.add(pl); }
-        Row er = row(0, ":cos_aura:", "Erudite reforge", "From Daedalus' Notes. Two more burrows in a chain", Ui.ACCENT);
+        Row er = row(0, ":anvil_hit:", "Erudite reforge", "From Daedalus' Notes. Two more burrows in a chain", Ui.ACCENT);
         er.ctls.add(sw(() -> c.mythErudite, v -> c.mythErudite = v)); er.click = () -> c.mythErudite = !c.mythErudite; rows.add(er);
     }
     // ---- the placeholder buttons: four small buttons right beside the Message format field

@@ -1,3 +1,9 @@
+## 0.4.43
+- The Spade row on the Treasure page shows the spade you chose (Ancestral, Archaic or Deific) as its own picture.
+- The Erudite reforge icon is an anvil being struck by a hammer, sparks flying.
+- The Treasure icon is a spade in the ground beside the gold it dug up, a glint running over it.
+- Two unused icons (the iron sword and the cone) are removed.
+
 ## 0.4.42
 - The cinematic bars, side pillars and rounded corners are no longer tinted by the drop's colour (that was the brown/gold overlay at the screen edges). They are always the neutral bar colour, or the custom one you pick.
 

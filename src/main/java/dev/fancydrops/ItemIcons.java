@@ -335,6 +335,7 @@ public final class ItemIcons {
     /** Use the configured display name as the Wiki page title, not the internal SkyBlock id. */
     private static String wikiPageName(String id) {
         if ("MYTHOLOGICAL_RITUAL".equals(id)) return "Mythological Ritual";
+        if (id.endsWith("_SPADE")) return id.charAt(0) + id.substring(1, id.indexOf('_')).toLowerCase(java.util.Locale.ROOT) + " Spade";
         for (DropData.Source slayer : MythData.ALL) for (DropData.Drop drop : slayer.drops)
             if (drop.id.equalsIgnoreCase(id)) return drop.name;
         for (DropData.Source slayer : SlayerData.ALL) for (DropData.Drop drop : slayer.drops)

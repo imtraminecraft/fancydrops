@@ -170,18 +170,28 @@ final class IconArt {
                 glow(6, 8, 3, 0xFF5A2A, 0.35f * e); glow(10, 8, 3, 0xFF5A2A, 0.35f * e);
                 if (f > 0.6f && f < 0.85f) { px(8, 1, 0xFFFFFF); px(7, 2, 0x9FEFFF); px(8, 3, 0xFFFFFF); }
             }
-            case "treasure" -> {                                                             // a spade digging into the earth: dirt flies, then a gold glint
-                float dig = f < 0.4f ? f / 0.4f : f < 0.6f ? 1f : 1f - (f - 0.6f) / 0.4f;           // 0 high .. 1 in the ground
-                float sy = -5f * (1f - dig), sx = 1.5f * (1f - dig);
+            case "treasure" -> {                                                             // a spade stuck in the ground beside a heap of gold it just dug up, a glint running over the coins
                 fillMound();
-                ln(12 + sx, 0 + sy, 8 + sx, 8 + sy, 0x8A5A2C); ln(13 + sx, 0 + sy, 9 + sx, 8 + sy, 0x6B4423);
-                rect(11 + Math.round(sx), Math.max(0, Math.round(sy)), 3, 1, 0x3A2410);                // the T handle
-                poly(new float[]{6.2f + sx, 10.6f + sx, 10.4f + sx, 8.6f + sx, 7.2f + sx}, new float[]{8 + sy, 9 + sy, 11.5f + sy, 14.8f + sy, 11.8f + sy}, 0xA8B2C8);
-                quad(6.6f + sx, 8.2f + sy, 8.2f + sx, 8.5f + sy, 7.8f + sx, 12 + sy, 7f + sx, 11.4f + sy, 0xE8EEF8);
-                rect(Math.round(6 + sx), Math.round(8 + sy), 5, 1, 0x6B7488);
+                ln(4, 1, 6.5f, 9, 0x8A5A2C); ln(5, 1, 7.5f, 9, 0x6B4423); rect(3, 1, 3, 1, 0x3A2410);       // the spade, leaning, blade in the earth
+                poly(new float[]{5.4f, 9.4f, 8.2f, 7.8f}, new float[]{9, 9.6f, 12.4f, 14f}, 0xA8B2C8); quad(5.6f, 9.3f, 6.6f, 9.4f, 6.8f, 12.4f, 6.2f, 12f, 0xE8EEF8);
+                rect(10, 11, 5, 3, 0xE0A820); rect(11, 9, 3, 2, 0xF2C230); rect(12, 8, 1, 1, 0xFFE27A);      // the gold heap: stacked ingots and coins
+                rect(9, 13, 6, 1, 0xB07A12); px(10, 11, 0xFFF3B0); px(13, 10, 0xFFF3B0); px(11, 12, 0xB07A12); px(14, 12, 0xFFE27A);
                 outline();
-                if (f > 0.55f) { float u = (f - 0.55f) / 0.45f; for (int i = 0; i < 4; i++) pxa(Math.round(5 + i * 2.5f + u * (i - 1.5f) * 2f), Math.round(11 - u * (5 + (i % 2) * 3) + u * u * 6), i % 2 == 0 ? 0x8A5A2C : 0xB0793A, 1f - u * 0.5f); }
-                if (f > 0.7f) { px(3, 12, 0xFFD25A); px(4, 12, 0xFFF3B0); glint(4, 11, 1, 0xFFF3B0, (f - 0.7f) / 0.3f); }
+                float u = (f * 2f) % 1f; int gx = 10 + Math.round(u * 4f); px(gx, 9 + (gx % 2), 0xFFFFFF);
+                glint(12, 9, 1, 0xFFF3B0, 0.4f + 0.6f * t);
+                glow(12, 10, 5, 0xFFD25A, 0.14f + 0.12f * t);
+                float up = (f * 1.5f) % 1f; pxa(11, 7 - Math.round(up * 5), 0xFFE27A, 1f - up);             // a nugget glimmer floating up
+            }
+            case "anvil_hit" -> {                                                            // an anvil being struck: a hammer comes down, sparks fly off the hit
+                rect(2, 12, 12, 2, 0x4A4F5A); rect(4, 10, 8, 2, 0x5A606C); rect(6, 8, 4, 2, 0x6A7080);          // the foot, the waist
+                rect(1, 5, 14, 3, 0x7A8090); rect(1, 5, 14, 1, 0xB8C0D0); px(0, 6, 0x7A8090); px(15, 6, 0x5A606C);   // the face, with a horn at the left
+                rect(2, 8, 12, 1, 0x4A4F5A);
+                float h = f < 0.45f ? f / 0.45f : f < 0.55f ? 1f : 1f - (f - 0.55f) / 0.45f;                     // 0 raised .. 1 down
+                float hy = 5f - (1f - h) * 6f, hx = 8.5f + (1f - h) * 2f;
+                ln(hx + 4, hy - 4, hx + 1, hy - 1, 0x8A5A2C); ln(hx + 5, hy - 4, hx + 2, hy - 1, 0x6B4423);       // the handle
+                rect(Math.round(hx) - 2, Math.round(hy) - 3, 5, 3, 0xA8B2C8); rect(Math.round(hx) - 2, Math.round(hy) - 3, 5, 1, 0xE8EEF8);
+                outline();
+                if (f > 0.45f) { float u = (f - 0.45f) / 0.55f; for (int i = 0; i < 6; i++) { float an = -0.3f - i * 0.5f; pxa(Math.round(8 + (float) Math.cos(an) * u * (4 + i % 3 * 2) * (i % 2 == 0 ? 1 : -1)), Math.round(5 - (float) Math.sin(-an) * u * (5 + i % 2 * 3) + u * u * 4), i % 2 == 0 ? 0xFFE27A : 0xFFA030, 1f - u); } glint(8, 4, 1, 0xFFFFFF, 1f - (f - 0.45f) / 0.2f); }
             }
             case "slayers" -> {                                                              // a thin blade, a blood-red gem, a red glow
                 glow(8, 8, 8, 0xFF3A3A, 0.18f + 0.1f * t);
@@ -242,20 +252,6 @@ final class IconArt {
                 float u = f < 0.5f ? 0f : (f - 0.5f) * 2f;
                 if (u > 0f) { px(Math.round(8 + u * 4), Math.round(12 - 5 * (float) Math.sin(u * 3.14f)), 0x9A7A52); px(Math.round(9 + u * 5), Math.round(12 - 4 * (float) Math.sin(u * 3.14f)), 0x6B4A2B); }
                 outline();
-            }
-            case "sword" -> {                                                                // the iron sword: grey blade, dark guard, wooden grip
-                int[][] bl = {{14, 1}, {13, 2}, {12, 3}, {11, 4}, {10, 5}, {9, 6}, {8, 7}, {7, 8}, {6, 9}};
-                for (int i = 0; i < bl.length; i++) {
-                    int x = bl[i][0], y = bl[i][1];
-                    px(x, y, 0xD8DDE6); px(x - 1, y, 0xB4BBC8); px(x + 1, y, 0xF4F6FA); px(x, y - 1, i == 0 ? 0xFFFFFF : 0xE8ECF2);
-                    px(x - 1, y + 1, 0x8A93A6);
-                }
-                ln(3.5f, 8, 8.5f, 13, 0x6B7488); ln(3.5f, 9, 7.5f, 13, 0x4A5164);                      // the cross guard
-                px(4, 7, 0x8A93A6); px(9, 12, 0x8A93A6); px(8, 13, 0x4A5164);
-                ln(5, 10, 2, 13, 0x8A5A2C); ln(6, 11, 3, 14, 0x6B4423);                                 // the wooden grip
-                px(1, 14, 0x5A3418); px(2, 14, 0x5A3418); px(1, 15, 0x3A2410);
-                outline();
-                glint(12 - Math.round(f * 6), 3 + Math.round(f * 6), 1, 0xFFFFFF, 0.3f + 0.7f * t);
             }
             case "farm" -> {                                                                 // a farmer in a straw hat, hoeing the rows
                 float hoe = f < 0.5f ? f / 0.5f : 1f - (f - 0.5f) / 0.5f;                              // the swing: up then down
@@ -602,13 +598,6 @@ final class IconArt {
                 poly(new float[]{cx, cx + 6, cx + 6, cx}, new float[]{cy, cy - 3.5f, cy + 3.5f, cy + 7}, 0x2E88C8);
                 outline();
                 glint(5 + Math.round(f * 6), 4, 1, 0xFFFFFF, 0.7f);
-            }
-            case "cone" -> {                                                                 // a construction cone
-                quad(6, 2, 10, 2, 13, 12, 3, 12, 0xFF8A2A);
-                quad(5.2f, 6, 10.8f, 6, 11.5f, 8.2f, 4.5f, 8.2f, 0xF4F4F8);
-                bev(1, 12, 14, 2, 0xE06A1A);
-                outline();
-                glint(7, 4, 1, 0xFFFFFF, 0.4f + 0.6f * t);
             }
             case "griffin" -> {                                                              // a feather in the colour you give it
                 int col = tint != 0 ? tint : 0xFFD25A;
