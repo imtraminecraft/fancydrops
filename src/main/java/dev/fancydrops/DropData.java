@@ -54,4 +54,18 @@ public final class DropData {
     public static void load() { MythData.load(); SlayerData.load(); FarmData.load(); ExperimentData.load(); }
 
     private DropData() {}
+
+    /** Two item names that are the same item: equal ignoring case, or made of the same words ignoring brackets, symbols and "Enchanted Book" ("Smite VI" = "Enchanted Book (Smite VI)", "Quantum Bundle" = "Bundle (Quantum)"). */
+    public static boolean loose(String a, String b) {
+        if (a == null || b == null) return false;
+        if (a.trim().equalsIgnoreCase(b.trim())) return true;
+        java.util.Set<String> x = words(a);
+        return !x.isEmpty() && x.equals(words(b));
+    }
+    private static java.util.Set<String> words(String name) {
+        java.util.TreeSet<String> w = new java.util.TreeSet<>();
+        for (String t : name.toLowerCase(java.util.Locale.ROOT).replace("\u2019", "'").replaceAll("[^a-z0-9]+", " ").trim().split(" "))
+            if (!t.isEmpty() && !t.equals("enchanted") && !t.equals("book")) w.add(t);
+        return w;
+    }
 }

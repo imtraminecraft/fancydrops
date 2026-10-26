@@ -38,12 +38,12 @@ public final class FarmData {
     /** The drop with this name (a pet's rarity in front is ignored), or null. */
     public static DropData.Drop find(String name) {
         String n = stripRarity(name);
-        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (d.name.equalsIgnoreCase(n)) return d;
+        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (DropData.loose(d.name, n)) return d;
         return null;
     }
     public static DropData.Source sourceOf(String name) {
         String n = stripRarity(name);
-        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (d.name.equalsIgnoreCase(n)) return s;
+        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (DropData.loose(d.name, n)) return s;
         return null;
     }
     /** True for a "RARE CROP!" line, or a "RARE DROP!" line for an item only the Farming library lists. */

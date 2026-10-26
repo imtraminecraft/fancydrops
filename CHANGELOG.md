@@ -1,3 +1,7 @@
+## 0.7.7
+- Old rules back: a cocooned slayer boss ("... cocooned your slayer boss") makes the next slayer scene play 1.8x faster, and "Your Slayer Kill gave you ..." counts as a kill like "SLAYER QUEST COMPLETE!".
+- Slayers, Farming and the Experimentation Table all match item names loosely now (brackets, symbols, "Enchanted Book" and word order don't matter), and all read the new drop line format.
+
 ## 0.7.6
 - Slayer drop lines are read the way Hypixel writes them: `VERY RARE DROP! (353x  Flawed Opal Gemstone) (+299%  Magic Find)` and `RARE DROP! 5x Wisp's Ice-Flavored Water I Splash Potion) (+299%  Magic Find)` (double spaces, a missing bracket and an amount in front or inside the brackets are all fine).
 - The mod now reads `SLAYER BOSS! The ... spawned!` (so a shared drop like Paragon Shard goes to the boss you fought) and `SLAYER QUEST COMPLETE!` (when no rare drop came with the kill, the No Drops scene plays). Both lines stay in chat.

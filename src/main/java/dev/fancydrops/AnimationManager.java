@@ -38,6 +38,7 @@ public final class AnimationManager {
         final String group;                      // "myth", "treasure", "slayer", "crops", "feast", "bounty", "pests" or "exp"
         final int type;                          // NO_DROPS, NORMAL or RNG
         final long created = System.currentTimeMillis();
+        float speed = 1f;                        // 1.8 after a cocooned slayer boss
         boolean helios;                          // the Ray of Helios pest drop: a sunbeam instead of the vacuum
         long start; float lastT = -1f; int kind = -1;                  // kind: which Mythological creature to show (-1 = the one the drop belongs to)
         Anim(String group, int type, Item item) { this.group = group; this.type = type; this.item = type == NO_DROPS ? null : item; }
@@ -73,12 +74,12 @@ public final class AnimationManager {
     }
 
     /** How much faster than real time a scene plays: the scenes are built for at least 3.6 s, so a shorter length (3 s) squeezes that into the time asked for. */
-    static float pace(Anim a) { float s = Math.max(0.5f, a.secs()); return Math.max(3.6f, s) / s; }
+    static float pace(Anim a) { float s = Math.max(0.5f, a.secs()); return Math.max(3.6f, s) / s * a.speed; }
 
     /** Called every frame from the HUD. */
     public static void render(GuiGraphicsExtractor g) {
         long now = System.currentTimeMillis();
-        if (cur != null && (now - cur.start) / 1000f > cur.secs()) cur = null;
+        if (cur != null && (now - cur.start) / 1000f * pace(cur) > Math.max(3.6f, cur.secs()) + 0.001f) cur = null;
         if (cur == null && !QUEUE.isEmpty()) { cur = QUEUE.poll(); cur.start = now; DropListener.announceNow(cur.item); DropListener.announceNow(cur.item2); }          // the chat alert goes out together with the animation
         if (cur == null) return;
         Minecraft mc = Minecraft.getInstance();

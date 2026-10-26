@@ -139,6 +139,7 @@ public final class DropListener {
         boolean rng = false; for (Plan p : anim) if (p.type() == AnimationManager.RNG) rng = true;          // two drops play the bigger of their two animations
         Anim an = new Anim(group, rng ? AnimationManager.RNG : AnimationManager.NORMAL, anim.get(0).it());
         an.kind = kind; an.helios = helios;
+        if (group.equals("slayer") && takeCocoon()) an.speed = 1.8f;                 // a cocooned boss: the scene plays faster
         if (anim.size() > 1) an.item2 = anim.get(1).it();
         AnimationManager.play(an);
         return true;
@@ -155,11 +156,15 @@ public final class DropListener {
     private static ChatParser.Drop pendSlayer; private static long pendAt;
     private static DropData.Source bossSrc;                 // the boss that spawned last (decides the scene and which boss a shared drop belongs to)
     private static boolean killDrops;                       // a rare drop came since it spawned
-    private static long questDoneAt;                        // when "SLAYER QUEST COMPLETE!" was read (0 = none waiting)
+    private static long questDoneAt, lastQuestAt;           // when "SLAYER QUEST COMPLETE!" / "Your Slayer Kill gave you" was read (0 = none waiting), and the last time it counted
+    private static long cocoonAt;                           // "... cocooned your slayer boss": the next boss is already coming, so the next slayer scene plays faster
+    /** True once after the boss was cocooned. */
+    private static boolean takeCocoon() { boolean b = System.currentTimeMillis() - cocoonAt < 90_000; cocoonAt = 0; return b; }
 
     /** The two slayer lines that are not drops. Returns true when the line is one of them. */
     private static boolean slayerLine(String line, long now) {
         String up = line.toUpperCase(Locale.ROOT);
+        if (up.contains("COCOONED YOUR SLAYER BOSS")) { cocoonAt = now; dlog("boss cocooned"); return true; }
         if (up.contains("SLAYER BOSS!") && up.contains("SPAWNED")) {
             String low = line.toLowerCase(Locale.ROOT); DropData.Source found = null;
             for (DropData.Source s : SlayerData.ALL) {
@@ -170,7 +175,7 @@ public final class DropListener {
             dlog("slayer boss spawned: " + line.trim() + "  ->  " + (found == null ? "unknown boss" : found.boss));
             return true;
         }
-        if (up.contains("SLAYER QUEST COMPLETE")) { questDoneAt = now; dlog("slayer quest complete (rare drop heard since the spawn: " + killDrops + ")"); return true; }
+        if ((up.contains("SLAYER QUEST COMPLETE") || ChatParser.isKill(line)) && now - lastQuestAt > 8000) { lastQuestAt = now; questDoneAt = now; dlog("slayer quest complete (rare drop heard since the spawn: " + killDrops + ")"); return true; }
         return false;
     }
     /** A moment after the quest completes with no rare drop: the boss falls and nothing drops. */
@@ -180,6 +185,7 @@ public final class DropListener {
         FancyConfig c = FancyConfig.get();
         if (killDrops || bossSrc == null || !c.masterAnimate || !c.source(bossSrc.id).enabled) return;
         Anim a = new Anim("slayer", AnimationManager.NO_DROPS, null); a.kind = SlayerData.theme(bossSrc.id);
+        if (takeCocoon()) a.speed = 1.8f;
         AnimationManager.play(a);
     }
     /** The boss a drop belongs to: the one that spawned when it also drops this item (Paragon Shard, dyes), else the first that lists it. */

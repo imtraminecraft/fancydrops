@@ -27,17 +27,7 @@ public final class SlayerData {
 
     private static String norm(String name) { return name == null ? "" : name.trim().toLowerCase(Locale.ROOT); }
 
-    /** A name as the words it is made of, so "Enchanted Book (Smite VI)", "(Smite VI)", "Smite VI" and "Smite 6" are the same book and "Bundle (Quantum)" equals "Quantum Bundle". */
-    private static java.util.Set<String> words(String name) {
-        java.util.TreeSet<String> w = new java.util.TreeSet<>();
-        if (name == null) return w;
-        for (String t : name.toLowerCase(Locale.ROOT).replace("\u2019", "'").replaceAll("[^a-z0-9]+", " ").trim().split(" ")) {
-            if (t.isEmpty() || t.equals("enchanted") || t.equals("book") || t.equals("the")) continue;
-            w.add(t);
-        }
-        return w;
-    }
-    private static boolean same(String a, String b) { return norm(a).equals(norm(b)) || (!words(a).isEmpty() && words(a).equals(words(b))); }
+    private static boolean same(String a, String b) { return DropData.loose(a, b); }
 
     /** The drop with this name, or null. */
     public static DropData.Drop find(String name) {

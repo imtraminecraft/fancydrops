@@ -15,6 +15,9 @@ public final class ChatParser {
     }
 
     // "Your Slayer Kill gave you ..."  (also tolerates "Slayer Boss Kill")
+    private static final Pattern KILL = Pattern.compile("\\byour slayer (?:boss )?kill gave you\\b", Pattern.CASE_INSENSITIVE);
+    /** "Your Slayer Kill gave you ...": the boss is dead. */
+    public static boolean isKill(String line) { return line != null && KILL.matcher(line).find(); }
     // "RARE DROP! Scythe Blade (+120% ✯ Magic Find)"
     private static final Pattern DROP = Pattern.compile("(?:^|(?<=[\\s\\]>»:*]))((?:VERY |CRAZY )?RARE|CRAZY|INSANE|PET|SWEET|RNGESUS)\\s+(DROP|CROP)!\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern MF_ANY = Pattern.compile("\\(\\+([\\d.,]+)%");

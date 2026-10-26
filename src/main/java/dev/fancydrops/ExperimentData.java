@@ -37,7 +37,7 @@ public final class ExperimentData {
     private static String norm(String n) { return n == null ? "" : n.trim().toLowerCase(Locale.ROOT); }
     public static DropData.Drop find(String name) {
         String n = norm(name);
-        for (DropData.Drop d : SOURCE.drops) if (norm(d.name).equals(n)) return d;
+        for (DropData.Drop d : SOURCE.drops) if (DropData.loose(d.name, name)) return d;
         return null;
     }
     /** RNG items (pets, collectibles, dyes) get the longer book; the enchantment books and Extraordinary items get the normal one. */
