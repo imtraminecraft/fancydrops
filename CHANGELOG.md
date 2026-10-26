@@ -1,3 +1,6 @@
+## 0.4.57
+- Slayer places for the Sven Packmaster, Voidgloom Seraph and Riftstalker Bloodfiend are built around the middle: the moon or sun sits right behind the boss, and the trees, pillars, columns and islands are mirrored on both sides.
+
 ## 0.4.56
 - Slayer scene: the boss now stands before the first cut instead of after it.
 - The panel is see-through, smaller, and has rounded corners; trees, towers and stones in front of it break out over its frame. The Inferno fortress stays inside the panel.

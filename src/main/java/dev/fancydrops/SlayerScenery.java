@@ -107,20 +107,24 @@ final class SlayerScenery {
         fog(c, t, x0, x1, hz - 2, 6, 0x7A708C, a, 3);
     }
     private static void forest(Canvas c, float t, int x0, int y0, int x1, int y1, int hz, float a) {
-        moon(c, x0 + (x1 - x0) / 4, y0 + (hz - y0) / 3, 8, 0xEEF2FF, a);
-        ridge(c, x0, x1, hz, (hz - y0) * 0.32f, 0.04f, 2.1f, 0x0E1A30, a);
-        for (int i = 0; i < 12; i++) pine(c, x0 + 4 + i * (x1 - x0 - 8) / 11 + (int) (rnd(i) * 4), hz, 18 + (int) (rnd(i + 3) * 10), 0x0F2A2C, a);        // far trees
+        int cx = (x0 + x1) / 2, hw = (x1 - x0) / 2;
+        moon(c, cx, y0 + (hz - y0) / 3, 9, 0xEEF2FF, a * 0.8f);                                              // the moon hangs right behind the boss
+        for (int x = x0; x < x1; x++) { int h = (int) ((hz - y0) * 0.30f * (0.55f + 0.3f * Math.sin(Math.abs(x - cx) * 0.05f + 2.1f))); rect(c, x, hz - h, x + 1, hz, 0x0E1A30, a); }   // far hills, the same on both sides
+        for (int i = 0; i < 6; i++) { int off = 8 + i * (hw - 12) / 5, h = 18 + (int) (rnd(i + 3) * 10); pine(c, cx - off, hz, h, 0x0F2A2C, a); pine(c, cx + off, hz, h, 0x0F2A2C, a); }   // far trees, mirrored
         fog(c, t, x0, x1, hz - 7, 8, 0x9AB0D8, a, 5);
-        for (int i = 0; i < 7; i++) pine(c, x0 + 6 + i * (x1 - x0 - 12) / 6 + (int) (rnd(i + 9) * 6), hz + 4, 26 + (int) (rnd(i + 5) * 12), 0x123A30, a);   // nearer trees
+        for (int i = 0; i < 3; i++) { int off = 28 + i * (hw - 36) / 2, h = 24 + (int) (rnd(i + 5) * 10); pine(c, cx - off, hz + 4, h, 0x123A30, a); pine(c, cx + off, hz + 4, h, 0x123A30, a); }   // nearer trees, leaving the middle open
         floor(c, x0, y0, x1, y1, hz + 1, 0x2A5A34, 0x4A3A28, 0.35f, 31, a);
-        for (int i = 0; i < 30; i++) { int sx = x0 + (int) (rnd(i * 5) * (x1 - x0)), sy = hz + 2 + (int) (rnd(i * 5 + 1) * (y1 - hz - 3)); rect(c, sx, sy, sx + 2, sy + 1, 0xE8F0FF, a * 0.7f); }   // patches of snow
-        pine(c, x0 + 12, y1 + 2, 44, 0x0C2A22, a); pine(c, x1 - 14, y1 + 2, 48, 0x0A2420, a);                                                      // the two big trees at the sides
+        for (int i = 0; i < 12; i++) { int sx = x0 + (int) (rnd(i * 5) * (x1 - x0)), sy = hz + 3 + (int) (rnd(i * 5 + 1) * (y1 - hz - 4)); rect(c, sx, sy, sx + 2, sy + 1, 0xE8F0FF, a * 0.45f); }   // a few patches of snow
+        pine(c, x0 + 8, y1 + 2, 40, 0x0C2A22, a); pine(c, x1 - 9, y1 + 2, 40, 0x0C2A22, a);                                                       // the two big trees at the sides
     }
     private static void theEnd(Canvas c, float t, int x0, int y0, int x1, int y1, int hz, float a) {
-        for (int i = 0; i < 4; i++) { int ix = x0 + 10 + (int) (rnd(i * 3) * (x1 - x0 - 50)), iy = y0 + 12 + (int) (rnd(i + 11) * (hz - y0) * 0.45f), w = 18 + (int) (rnd(i + 7) * 20); int bob = Math.round((float) Math.sin(t * 0.6f + i) * 1.5f);
-            for (int k = 0; k < 6; k++) rect(c, ix + k, iy + bob + k, ix + w - k, iy + bob + k + 1, mix(0x3A3252, 0x0E0818, k / 6f), a); }                    // islands floating far away
-        for (int i = 0; i < 3; i++) { int px0 = x0 + 12 + i * (x1 - x0 - 24) / 2, ph = 30 + (int) (rnd(i) * 26); rect(c, px0, hz - ph, px0 + 6, hz, 0x0C0614, a); rect(c, px0, hz - ph, px0 + 1, hz, 0x2A1A44, a);
-            c.disc(px0 + 3, hz - ph - 3, 3, Ritual.A(a * (0.7f + 0.3f * (float) Math.sin(t * 3 + i)), 0xE060FF)); }                                      // obsidian pillars with crystals
+        int cx = (x0 + x1) / 2, hw = (x1 - x0) / 2;
+        for (int g = 4; g >= 1; g--) c.disc(cx, y0 + (hz - y0) / 2, 10 + g * 4, Ritual.A(a * 0.07f, 0xC060FF)); c.disc(cx, y0 + (hz - y0) / 2, 10, Ritual.A(a * 0.9f, 0x0A0414));   // a dark sun with a violet halo behind the boss
+        for (int i = 0; i < 2; i++) { int w = 16 + i * 8, iy = y0 + 14 + i * 12, off = hw / 2 + i * hw / 4, bob = Math.round((float) Math.sin(t * 0.6f + i) * 1.5f);
+            for (int side = -1; side <= 1; side += 2) for (int k = 0; k < 6; k++) rect(c, cx + side * off - w / 2 + k, iy + bob + k, cx + side * off + w / 2 - k, iy + bob + k + 1, mix(0x3A3252, 0x0E0818, k / 6f), a); }   // islands floating far away, one each side
+        for (int i = 0; i < 2; i++) { int off = hw / 3 + i * hw / 3, ph = 34 - i * 8;
+            for (int side = -1; side <= 1; side += 2) { int pxc = cx + side * off; rect(c, pxc - 3, hz - ph, pxc + 3, hz, 0x0C0614, a); rect(c, pxc - 3, hz - ph, pxc - 2, hz, 0x2A1A44, a);
+                c.disc(pxc, hz - ph - 3, 3, Ritual.A(a * (0.7f + 0.3f * (float) Math.sin(t * 3 + i + side)), 0xE060FF)); } }                                // obsidian pillars with crystals, mirrored
         floor(c, x0, y0, x1, y1, hz + 1, 0xD8D49A, 0xA8A468, 0.40f, 41, a);
         fog(c, t, x0, x1, hz - 1, 5, 0xB070FF, a, 9);
         for (int i = 0; i < 8; i++) { float f = (t * 0.25f + i * 0.13f) % 1f; px(c, x0 + (int) (rnd(i * 9) * (x1 - x0)), hz + 4 - (int) (f * (hz - y0) * 0.5f), 0xD060FF, a * (1f - f)); }   // particles drifting up
@@ -133,14 +137,16 @@ final class SlayerScenery {
         for (int i = 0; i < 14; i++) { float f = (t * 0.35f + i * 0.071f) % 1f; px(c, x0 + (int) (rnd(i * 5) * (x1 - x0)) + (int) (Math.sin(t + i) * 3), y1 - 2 - (int) (f * (y1 - y0 - 6)), 0xFFB030, a * (1f - f)); }   // embers rising
     }
     private static void ruins(Canvas c, float t, int x0, int y0, int x1, int y1, int hz, float a) {
-        moon(c, x0 + (x1 - x0) * 2 / 3, y0 + (hz - y0) / 3, 11, 0xE02840, a);
-        int cx = x0 + (x1 - x0) / 4; rect(c, cx, hz - 30, cx + 30, hz, 0x16060E, a); for (int k = 0; k < 4; k++) rect(c, cx + k * 9, hz - 40, cx + k * 9 + 5, hz - 30, 0x16060E, a);
-        for (int i = 0; i < 3; i++) { int sx = cx + 3 + i * 11; for (int k = 0; k < 12; k++) rect(c, sx + k / 6, hz - 52 + k - (i % 2) * 6, sx + 4 - k / 4, hz - 51 + k - (i % 2) * 6, 0x16060E, a); }    // a castle with spires
-        rect(c, cx + 8, hz - 20, cx + 11, hz - 12, 0xFFB050, a * 0.8f);
+        int cx = (x0 + x1) / 2, hw = (x1 - x0) / 2;
+        for (int x = x0; x < x1; x++) { int h = 4 + (int) (3 * Math.sin(Math.abs(x - cx) * 0.09f)); rect(c, x, hz - h, x + 1, hz, 0x16060E, a); }                                // low far hills
+        rect(c, cx - 17, hz - 34, cx + 17, hz, 0x16060E, a); for (int k = 0; k < 4; k++) rect(c, cx - 17 + k * 10, hz - 40, cx - 13 + k * 10, hz - 34, 0x16060E, a);               // the castle, in the middle
+        for (int side = -1; side <= 1; side += 2) for (int k = 0; k < 14; k++) rect(c, cx + side * 11 - 2 + (side * k) / 8, hz - 54 + k, cx + side * 11 + 2 - k / 5, hz - 53 + k, 0x16060E, a);       // two spires
+        rect(c, cx - 2, hz - 26, cx + 2, hz - 18, 0xFFB050, a * 0.8f);
+        moon(c, cx, y0 + (hz - y0) / 3, 11, 0xB82238, a * 0.8f);                                              // the red moon behind the castle
         for (int i = 0; i < 5; i++) { int bx = x0 + (int) ((t * 14 + i * 53) % (x1 - x0)), by = y0 + 10 + i * 6 + Math.round((float) Math.sin(t * 5 + i) * 3); boolean up = ((int) (t * 8 + i) % 2) == 0; px(c, bx, by, 0x050204, a); px(c, bx - 1, by - (up ? 1 : 0), 0x050204, a); px(c, bx + 1, by - (up ? 1 : 0), 0x050204, a); }   // bats
-        for (int i = 0; i < 3; i++) { int cx2 = x0 + 12 + i * (x1 - x0 - 24) / 2, ch = 24 + (int) (rnd(i) * 14); rect(c, cx2, hz - ch, cx2 + 4, hz + 2, 0x2A1820, a); rect(c, cx2 - 1, hz - ch, cx2 + 5, hz - ch + 2, 0x3A2028, a); }   // broken columns
+        for (int i = 0; i < 2; i++) { int off = hw * 2 / 3 - i * hw / 3, ch = 30 - i * 8;
+            for (int side = -1; side <= 1; side += 2) { int cx2 = cx + side * off; rect(c, cx2 - 2, hz - ch, cx2 + 2, hz + 2, 0x2A1820, a); rect(c, cx2 - 3, hz - ch, cx2 + 3, hz - ch + 2, 0x3A2028, a); } }   // broken columns, mirrored
         floor(c, x0, y0, x1, y1, hz + 1, 0x2A1A22, 0x4A0E1C, 0.30f, 67, a);
-        for (int y = hz + 2; y < y1; y += 4) rect(c, x0, y, x1, y + 1, 0x000000, a * 0.25f);
         fog(c, t, x0, x1, hz - 2, 6, 0xA03050, a, 4);
     }
 }
