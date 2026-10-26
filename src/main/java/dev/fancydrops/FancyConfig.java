@@ -18,7 +18,7 @@ public class FancyConfig {
     public static class SourceCfg { public boolean enabled = true; public Map<String, DropCfg> drops = new LinkedHashMap<>(); }
     /** The settings of one animation (key like "myth.rng"): how long, where, how big, and for RNG the bars and the blur. */
     public static class AnimCfg {
-        public float secs = 7f;          // 5..7
+        public float secs = 5f;          // 5..7 (5 by default)
         public int pos = 1;              // (unused now: the position is one setting for every animation, FancyConfig.animPos)
         public boolean bars = true, blur = true;   // RNG only
     }
@@ -149,6 +149,7 @@ public class FancyConfig {
         if (c.sounds == null) c.sounds = new LinkedHashMap<>();
         if (c.mcSounds == null) c.mcSounds = new LinkedHashMap<>();
         if (c.ver < 3) { c.ver = 3; c.sounds.clear(); c.mcSounds.clear(); save(); }          // the rewrite: old sound picks refer to sounds that no longer exist
+        if (c.ver < 4) { c.ver = 4; for (AnimCfg a : c.anims.values()) a.secs = 5f; save(); }          // 0.4.38: every animation is 5 seconds by default
         c.textScale = clamp(c.textScale, 0f, 1.1f); c.itemScale = clamp(c.itemScale, 0.5f, 1.1f);
         c.titleScale = clamp(c.titleScale, 0.5f, 1.5f); c.subScale = clamp(c.subScale, 0.5f, 1.5f); c.subDelay = clamp(c.subDelay, 0f, 3f);
         c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);

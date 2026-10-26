@@ -222,6 +222,7 @@ final class Ritual {
     /** Which creature the scene summons: the Mythological Mobs of the Animations page rotate through all twelve; a real drop calls its own. */
     static final String[] KINDS = {"minotaur", "minos_hunter", "siamese_lynxes", "stranded_nymph", "cretan_bull", "harpy", "gaia_construct", "minos_champion", "sphinx", "minos_inquisitor", "manticore", "king_minos"};
     private static final float[] SHAPE_TOP = {100, 90, 58, 76, 60, 90, 98, 100, 74, 104, 86, 108};
+    private static String upKey = ""; private static long upMs;
     static int kind = 0;
     static int kindOf(String sourceId) { for (int i = 0; i < KINDS.length; i++) if (KINDS[i].equals(sourceId)) return i; return 0; }
     private static final int DK = 0x070A14;
@@ -609,7 +610,7 @@ final class Ritual {
             tt = t < O ? ts * Math.max(0f, t) / O : ts + (t - O) * ((SlayerScene.length(q) - ts) / TAIL);
             SlayerScene.draw(SL_OUT, SL_L3, q, tt);
         }
-        float k = 2.2f * sz * (rng ? 1.15f : 1f);
+        float k = 1.9f * sz;                                                                      // the platform is as wide as the Mythological circle
         float ox = CW / 2f - 56f * k, oy = icy - 32f * k;                                       // the item rests at (56, 32) of the scene
         int[] src = SL_OUT.px, dst = cv.px;
         int y0 = Math.max(0, (int) Math.floor(oy)), y1 = Math.min(CH, (int) Math.ceil(oy + SlayerScene.H * k));
@@ -691,11 +692,26 @@ final class Ritual {
             }
             int[] edited = AnimFrames.override(a, t);                                         // a frame you edited in config/fancydrops/art/animations replaces the drawn one
             if (edited != null && edited.length == cv.px.length) System.arraycopy(edited, 0, cv.px, 0, edited.length);
-            else if (sl) paintSlayer(a, t, S, sz, icy);
-            else paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
-            SceneTexture.upload(cv);
+            else {
+                long nowMs = System.currentTimeMillis();
+                String id = a.group + a.type + "/" + a.kind + "/" + (it == null ? 0 : it.id.hashCode()) + "/" + TextFx.itemOnly;
+                boolean reuse = AnimationManager.previewing && id.equals(upKey) && nowMs - upMs < 33 && nowMs >= upMs;       // a menu preview repaints at ~30 fps: the picture it shows barely changes between frames
+                if (!reuse) {
+                    if (sl) paintSlayer(a, t, S, sz, icy);
+                    else paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
+                    SceneTexture.upload(cv); upKey = id; upMs = nowMs;
+                }
+            }
+            if (edited != null && edited.length == cv.px.length) SceneTexture.upload(cv);
             if (!SceneTexture.draw(g, cv, sx, sy, W, H, 1f)) { int cell = Math.max(1, Math.round((float) W / CW)); cv.flush((x0, y0, x1, y1, col) -> g.fill(x0 + sx, y0 + sy, x1 + sx, y1 + sy, col), 0, 0, cell, 1f); }
-            if (rng && p > 0 && p < 0.45f) g.fill(0, 0, W, H, Gfx.argb(Math.round(235 * (1f - p / 0.45f) * (1f - p / 0.45f)), 0xFFFFFF));                  // the flash
+            if (sl) {                                                                         // slayers: the light flashes when each sword slice lands, the last one biggest
+                float[] hit = {0.536f, 0.753f, 0.943f};
+                for (int k = 0; k < 3; k++) {
+                    float tau = t - hit[k] * O, dur = rng && k == 2 ? 0.45f : 0.18f; int amp = rng ? (k == 2 ? 235 : 90) : (k == 2 ? 40 : 26);
+                    if (tau > 0 && tau < dur) { float f = 1f - tau / dur; g.fill(0, 0, W, H, Gfx.argb(Math.round(amp * f * f), 0xFFFFFF)); }
+                }
+            }
+            else if (rng && p > 0 && p < 0.45f) g.fill(0, 0, W, H, Gfx.argb(Math.round(235 * (1f - p / 0.45f) * (1f - p / 0.45f)), 0xFFFFFF));                  // the flash
             else if (!tre && !rng) for (int k = 0; k < 3; k++) { float tau = t - 0.34f * O - k * 0.24f * O; if (tau > 0 && tau < 0.18f) g.fill(0, 0, W, H, Gfx.argb(Math.round(26 * (1f - tau / 0.18f)), 0xD8F6FF)); }
         }
 

@@ -45,7 +45,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
   - **Treasure**: the spade picker, the Erudite reforge and the treasure drops with their chances.
 - Redo all icons for Mythological, and make sure each one is correct.
 - Redo the Mythological scenes. Mobs keep the lightning idea. Treasure shows someone digging with a shovel until the treasure is found. As cool as possible within the rules above.
-- Mythological and Slayers are live (since 0.4.37). Dye, Farming, Experiments, Mining and Fishing are WIP: a WIP label in the sidebar and the construction-site page in Drop Library, Animations, Sounds and Chat. Their code stays, it is just hidden until each one is rebuilt.
+- Mythological and Bosses (Slayers inside it) are live (since 0.4.37). Dye, Farming, Experiments, Mining and Fishing are WIP: a WIP label in the sidebar and the construction-site page in Drop Library, Animations, Sounds and Chat. Their code stays, it is just hidden until each one is rebuilt.
 - Categories that are not finished keep the "Coming Soon" construction-site page (hazard tape, hard hats, crane, bulldozer). The author wants it kept but tidy: fixed layout on one ground line, few props, nothing overlapping, nothing interactive. (A crane-builds-then-explodes scene was an earlier idea; the author later said to keep this page.)
 
 ## Animation look (author feedback, Oct 25)
@@ -210,10 +210,15 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - The construction scene lives in Site.java, a port of the approved mockup in its own 421 x 169 grid (ground at y 150) that the page shifts onto the panel's ground line. When the mockup changes, change Site.java the same way. Builders are 12 px tall. No road signs at the top corners.
 
 ## Standing requirements added in 0.4.37
-- Slayers is a live category with one group, "Slayer Bosses" (types No Drops, Normal, RNG; keys `slayer.nodrops|normal|rng`). A category with a single group has no hub: its group page opens straight away and Back returns to the category list.
+- The main page is **Bosses** (id `bosses`), with one sub page **Slayers** (group `slayer`, types No Drops, Normal, RNG; keys `slayer.nodrops|normal|rng`) and the six bosses as sub sub pages. Future boss types (Rift, Nether...) are new groups of Bosses. Chat has one message for Bosses.
 - Slayer data lives in `slayers.json` (same shapes as `mythological.json`, loaded by `SlayerData`). Drop ranks come from the old odds names (Occasional 0, Rare 1, Extraordinary 2, Pray RNGesus / RNGesus Incarnate 3); rank 2 and up default to RNG.
 - The slayer scene is `SlayerScene` (112 x 96, software 3D, Sword style only, the Spirit style is gone) drawn by `Ritual.paintSlayer` into the shared 320 x 180 canvas. Its clock is warped so its three slices fill the opening and its tail fills TAIL: all three types pivot at the same moment as every other category. Ritual draws no item for slayers; the scene draws it with the Item Changes settings.
 - Bars, blur, flash, words and the HUD hiding come from Ritual like every other category. The boss decides the look (zombie, spider, wolf, enderman, blaze, vampire); Tarantula Broodfather has extra background effects, the others have depth layers (Depth.java).
 - The slayer sound bank is `slay_*` (slash, cleave, reveal, reveal_epic, glow, end). Slice cues sit at 0.536, 0.753 and 0.943 of the opening.
 - Every page of Slayers must describe slayer scenes (text on the Animations page says a sword slices the boss).
+
+## Standing requirements added in 0.4.38
+- Every animation is 5 seconds by default. The slayer scene is as wide as the Mythological circle (scale 1.9 x size). Its light flashes sit on the sword slices (0.536, 0.753, 0.943 of the opening).
+- WIP pages show the page's icon and name on a hanging sign at the top right (the Coming Soon board stays centred). Boss icons are `:boss_<id>:`, drawn by IconArt, never wiki pictures.
+- Menu previews repaint the scene at about 30 fps (`AnimationManager.previewing`).
 

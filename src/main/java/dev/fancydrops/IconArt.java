@@ -640,6 +640,7 @@ final class IconArt {
             default -> {
                 if (n.startsWith("cx_")) return generic(n, f);
                 if (n.startsWith("mob_")) { mob(n.substring(4), f); outline(); return true; }
+                if (n.startsWith("boss_")) { mob(n.substring(5), f); outline(); return true; }
                 if (n.startsWith("emblem")) return paint("emblem", tint, f);
                 return false;
             }

@@ -1405,6 +1405,20 @@ public class FancyScreen extends Screen {
         return false;
     }
     /** The "Coming Soon" board: it hangs on two chains from the top tape, its bulbs chase round the frame and one letter flickers while a builder hammers on top and another welds from a plank underneath. */
+    /** The page's own icon and name on a small sign hanging from the top tape at the right, like the Coming Soon board. */
+    private void nameBoard(GuiGraphicsExtractor g, Row r, float sec) {
+        String t = r.title == null ? "" : r.title; int tw = Gfx.w(font, t), bw = tw + 46, bh = 26;
+        int sway = Math.round((float) Math.sin(sec * 1.7f) * 1.2f);
+        int bx = r.x + r.w - bw - 22 + sway, by = r.y + 40;
+        for (int cx : new int[]{bx + 8, bx + bw - 9}) { g.fill(cx, r.y + 9, cx + 1, by, 0xFF8A8A92); for (int y = r.y + 11; y < by; y += 4) g.fill(cx - 1, y, cx + 2, y + 1, 0xFF6A6A72); }
+        g.fill(bx - 1, by - 1, bx + bw + 1, by + bh + 1, 0xFF0A0805); g.fill(bx, by, bx + bw, by + bh, 0xFF1A1508); g.fill(bx + 2, by + 2, bx + bw - 2, by + bh - 2, 0xFF120E06);
+        rout(g, bx, by, bw, bh, 0xFFC9A044); rout(g, bx + 2, by + 2, bw - 4, bh - 4, 0xFF8A6A28);
+        for (int[] rv : new int[][]{{1, 1}, {bw - 2, 1}, {1, bh - 2}, {bw - 2, bh - 2}}) g.fill(bx + rv[0], by + rv[1], bx + rv[0] + 1, by + rv[1] + 1, 0xFFFFE9A8);
+        if (r.iconId != null) ItemIcons.draw(g, r.iconId, r.icon, bx + 17, by + bh / 2, 0.9f);
+        else if (Icons.has(r.icon)) Icons.draw(g, r.icon, bx + 7, by + (bh - 16) / 2, System.currentTimeMillis());
+        Gfx.text(g, font, t, bx + 30, by + (bh - 8) / 2, 0xFFFFD678);
+    }
+
     private void comingSoon(GuiGraphicsExtractor g, Row r, int mid, float sec) {
         String wt = "Coming Soon", tm = "TM"; int tmw = Math.round(Gfx.w(font, tm) * 0.6f) + 1, wtw = Gfx.w(font, wt) + tmw, pw = wtw + 34, ph = 22, hx = mid - pw / 2, hy = r.y + 64;
         float gl = 0.75f + 0.25f * (float) Math.sin(sec * 3f);
@@ -2161,15 +2175,10 @@ public class FancyScreen extends Screen {
         if (landing() || (tab != Tab.ANIMATIONS && tab != Tab.SOUNDS)) return null;
         Categories.Cat cat = curCat();
         if (cat.wip()) return null;
-        if (dropSrc == null) return onlyGroup(cat);
+        if (dropSrc == null) return null;
         for (Categories.Group gr : cat.groups()) if (gr.id().equals(dropSrc)) return gr;
         return null;
     }
-    /** A category with a single group (Slayers) has no hub: its group page opens straight away. */
-    private static Categories.Group onlyGroup(Categories.Cat cat) { return cat.groups().size() == 1 ? cat.groups().get(0) : null; }
-    /** Back out of a group page: to the hub of the category, or to the list of categories when there is no hub. */
-    private void backToCat(Categories.Cat cat) { if (onlyGroup(cat) != null) openPage(-1, null, null); else openPage(curSub(), null, null); }
-    private static String backLabel(Categories.Cat cat, String what) { return onlyGroup(cat) != null ? "Back to all the categories" : "Back to the " + cat.name() + " " + what; }
     private static int edType = 1;                       // the animation type being edited: 0 No Drops, 1 Normal, 2 RNG
     private static String chatCat = "mythological";      // Chat: which category's message is being edited
     private void openPage(int sub, String src, String srcName) { subSel[tab.ordinal()] = sub; dropSrc = src; dropSrcName = srcName; scroll = 0; tabChanged = System.currentTimeMillis(); open.removeIf(o -> o.startsWith("dd_")); }
@@ -2190,13 +2199,15 @@ public class FancyScreen extends Screen {
     private Row backRow(String title, String sub, int accent, Runnable go) {
         Row b = row(0, ":back:", title, sub, accent); b.noSearch = true; b.backGo = go; b.backLabel = title; return b;
     }
+    /** A creature's menu icon (wiki head or drawn), or a slayer boss's drawn one. */
+    private static String srcIcon(DropData.Source s) { return SlayerData.byId(s.id) == s ? ":boss_" + s.id + ":" : ":mob_" + s.id + ":"; }
     private static String srcName(DropData.Source s) { return s.boss == null || s.boss.isEmpty() ? s.name : s.boss; }
     /** The tiles of every category: each opens its sub page. */
     private Row catTiles() {
         int n = Categories.ALL.size(); String[] lb = new String[n], sb = new String[n], ic = new String[n]; int[] co = new int[n]; boolean[] wp = new boolean[n];
         for (int i = 0; i < n; i++) {
             Categories.Cat k = Categories.ALL.get(i); lb[i] = k.name(); ic[i] = k.icon(); co[i] = k.color(); wp[i] = k.wip();
-            sb[i] = k.wip() ? "Soon™" : k.groups().size() == 1 ? k.sources().size() + " bosses" : k.groups().size() + " pages";
+            sb[i] = k.wip() ? "Soon™" : k.groups().size() + (k.groups().size() == 1 ? " page" : " pages");
         }
         Row r = picker("", "", lb, sb, ic, co, wp, 4, () -> -1, i -> openPage(i, null, null));
         r.pVert = true; r.pTh = 44; return fit(r);
@@ -2381,9 +2392,9 @@ public class FancyScreen extends Screen {
         // three levels: the category hub (Mythological Mobs / Treasure), a group page (the creatures), and one source page (a creature or the burrow)
         for (Categories.Group gr : cat.groups()) {
             srcList.add(new String[]{gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())});
-            if (gr.id().equals("myth") || gr.id().equals("slayer")) for (DropData.Source s : cat.sources(gr.id())) srcList.add(new String[]{gr.id() + "/" + s.id, srcName(s), ":mob_" + s.id + ":", String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
+            if (gr.id().equals("myth") || gr.id().equals("slayer")) for (DropData.Source s : cat.sources(gr.id())) srcList.add(new String[]{gr.id() + "/" + s.id, srcName(s), srcIcon(s), String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
         }
-        String ds = dropSrc == null ? (onlyGroup(cat) != null ? onlyGroup(cat).id() : "") : dropSrc;
+        String ds = dropSrc == null ? "" : dropSrc;
         String gid = ds.contains("/") ? ds.substring(0, ds.indexOf('/')) : ds;
         Categories.Group grp = null; for (Categories.Group gr : cat.groups()) if (gr.id().equals(gid)) grp = gr;
         if (grp == null) { dropsCategory(cat, c); return; }
@@ -2412,20 +2423,20 @@ public class FancyScreen extends Screen {
 
     /** Mythological Mobs: the pet that decides who can spawn, then the creatures. */
     private void dropsGroup(Categories.Cat cat, Categories.Group grp, List<DropData.Source> srcs, FancyConfig c) {
-        rows.add(backRow(onlyGroup(cat) != null ? "Drop Library" : cat.name(), onlyGroup(cat) != null ? "Back to all the categories" : "Back to all the " + cat.name() + " pages", cat.color(), () -> backToCat(cat)));
+        rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null)));
         int total = 0; for (DropData.Source s : srcs) total += s.drops.size();
         rows.add(hero(grp.icon(), grp.name(), srcs.size() + (grp.id().equals("slayer") ? (srcs.size() == 1 ? " Boss" : " Bosses") : srcs.size() == 1 ? " Mob" : " Mobs") + " \u2022 " + total + (total == 1 ? " Drop" : " Drops") + " listed", grp.color()));
         if (grp.id().equals("myth")) mythSettings(rows, c);
         rows.add(section(grp.id().equals("slayer") ? "Bosses" : "Creatures"));
         int n = srcs.size(); String[] lb = new String[n], sb = new String[n], mi = new String[n]; int[] co = new int[n];
-        for (int i = 0; i < n; i++) { lb[i] = srcName(srcs.get(i)); sb[i] = srcs.get(i).drops.size() + " drops"; co[i] = srcs.get(i).color(); mi[i] = ":mob_" + srcs.get(i).id + ":"; }
+        for (int i = 0; i < n; i++) { lb[i] = srcName(srcs.get(i)); sb[i] = srcs.get(i).drops.size() + " drops"; co[i] = srcs.get(i).color(); mi[i] = srcIcon(srcs.get(i)); }
         rows.add(picker("", "", lb, sb, mi, co, null, 3, () -> -1, i -> openPage(curSub(), grp.id() + "/" + srcs.get(i).id, lb[i])));
     }
 
     private void dropsSource(Categories.Cat cat, Categories.Group grp, DropData.Source s, FancyConfig c, boolean single) {
         String nm = srcName(s);
         FancyConfig.SourceCfg sc = c.source(s.id);
-        if (!single) { rows.add(backRow(grp.name(), "Back to all the " + grp.name(), grp.color(), () -> openPage(curSub(), grp.id(), grp.name()))); rows.add(hero(grp.id().equals("myth") || grp.id().equals("slayer") ? ":mob_" + s.id + ":" : s.icon, nm, s.drops.size() + " drops", s.color())); }
+        if (!single) { rows.add(backRow(grp.name(), "Back to all the " + grp.name(), grp.color(), () -> openPage(curSub(), grp.id(), grp.name()))); rows.add(hero(grp.id().equals("myth") || grp.id().equals("slayer") ? srcIcon(s) : s.icon, nm, s.drops.size() + " drops", s.color())); }
         Row cols = section(""); cols.dropCols = true; cols.h = 14; rows.add(cols);
         AnimAll aa = new AnimAll(); List<FancyConfig.DropCfg> all = new ArrayList<>();
         for (DropData.Drop d : s.drops) { FancyConfig.DropCfg dc = c.drop(s.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); aa.cfgs.add(dc); all.add(dc); }
@@ -2499,7 +2510,7 @@ public class FancyScreen extends Screen {
         Categories.Type ty = gr.types().get(ti);
         String key = gr.key(ty);
         FancyConfig.AnimCfg a = c.anim(key);
-        rows.add(backRow(onlyGroup(cat) != null ? "Animations" : cat.name(), backLabel(cat, "animations"), cat.color(), () -> backToCat(cat)));
+        rows.add(backRow(cat.name(), "Back to the " + cat.name() + " animations", cat.color(), () -> openPage(curSub(), null, null)));
         rows.add(typePicker(gr, c));
         rows.add(note(ty.blurb(), ty.color()));
         Row pl = row(0, ":play:", "Preview", "Plays it over the game, like a real drop", ty.color());
@@ -2562,7 +2573,7 @@ public class FancyScreen extends Screen {
         int ti = Math.max(0, Math.min(gr.types().size() - 1, edType));
         Categories.Type ty = gr.types().get(ti);
         final String scene = gr.key(ty);
-        rows.add(backRow(onlyGroup(cat) != null ? "Sounds" : cat.name(), backLabel(cat, "sounds"), cat.color(), () -> backToCat(cat)));
+        rows.add(backRow(cat.name(), "Back to the " + cat.name() + " sounds", cat.color(), () -> openPage(curSub(), null, null)));
         rows.add(typePicker(gr, c));
         if (!c.sound) { rows.add(note("Sounds are off. Turn them on from the Sounds page.", Ui.DIM)); return; }
         if (!c.customSounds) rows.add(note("The FancyDrops sound set is off: every animation uses Minecraft's own sounds. Your picks for them are saved separately.", Ui.DIM));
@@ -3130,12 +3141,15 @@ public class FancyScreen extends Screen {
                     double an = sec * 1.3 + i * Math.PI * 2 / 5; int sx2 = mid + (int) (Math.cos(an) * 30), sy2 = cyi + (int) (Math.sin(an) * 12);
                     int al = 120 + (int) (120 * Math.sin(sec * 5 + i)); g.fill(sx2, sy2, sx2 + 2, sy2 + 2, Gfx.argb(Math.max(0, Math.min(255, al)), i % 2 == 0 ? 0xFFC857 : 0x9DB2CC));
                 }
+                if (r.kind != PANEL) {
                 if (r.iconId != null) ItemIcons.draw(g, r.iconId, r.icon, mid, cyi, 1.8f); else if (Icons.has(r.icon)) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Icons.draw(g, r.icon, 0, 0, nw); Gfx.pop(g); }
                 else if (r.icon != null) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Gfx.item(g, r.icon, 0, 0); Gfx.pop(g); }
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
+                }
                 if (r.kind == HERO) { int wy = r.y + 70; for (String ln : wrap(r.sub, cw - 60)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; } continue; }          // the words under the title
                 Site.draw(g, r.x, r.y, r.w, r.h, sec);
                 comingSoon(g, r, mid, sec);
+                nameBoard(g, r, sec);
                 continue;
             }
             if (r.kind == TEXT) {                                                   // plain text: a heading and its paragraph, no card

@@ -121,7 +121,7 @@ public final class DropListener {
         if (dr == null || src == null) return false;
         FancyConfig.SourceCfg sc = c.source(src.id); FancyConfig.DropCfg dc = c.drop(src.id, dr.name);
         FancyConfig.initDrop(dc, dr.rank);
-        boolean animate = c.masterAnimate && sc.enabled && dc.anim != 3, announce = c.masterAnnounce && c.chatEnabled("slayers") && sc.enabled && dc.announce;
+        boolean animate = c.masterAnimate && sc.enabled && dc.anim != 3, announce = c.masterAnnounce && c.chatEnabled("bosses") && sc.enabled && dc.announce;
         dlog("slayer: " + dr.name + " from " + src.id + "  animate=" + animate + " announce=" + announce);
         if (!animate && !announce) return false;
         Item it = mythItem(src, dr, d.mf(), d.sim());
@@ -245,7 +245,7 @@ public final class DropListener {
     static String adv(String m) { String t = ADV + m; return t.length() > 250 ? t.substring(0, 250) : t; }
 
     /** The category (Categories.Cat id) a drop's chat message follows. */
-    static String catOf(Item it) { return it.source != null && SlayerData.byId(it.source.id) == it.source ? "slayers" : "mythological"; }
+    static String catOf(Item it) { return it.source != null && SlayerData.byId(it.source.id) == it.source ? "bosses" : "mythological"; }
 
     static String message(Item it, double price, String mf, String fmt) {
         FancyConfig c = FancyConfig.get();
@@ -270,7 +270,7 @@ public final class DropListener {
     /** What the message would look like for a sample drop (the Chat page shows this live under the format box). */
     public static String sample(String format, String cat) {
         Item it = new Item();
-        if ("slayers".equals(cat) && !SlayerData.ALL.isEmpty()) {
+        if ("bosses".equals(cat) && !SlayerData.ALL.isEmpty()) {
             DropData.Source b = SlayerData.ALL.get(0); it.source = b; it.name = b.drops.isEmpty() ? "Scythe Blade" : b.drops.get(b.drops.size() - 1).name;
             return message(it, 21_000_000, "+250%", format);
         }

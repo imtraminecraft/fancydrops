@@ -155,8 +155,11 @@ public final class AnimationManager {
         else if (TextFx.itemOnly || TextFx.barsOnly) t = pivot + 1.6f;                                // the Item editor shows the scene held, with the item living on its own clock
         else if (TextFx.textOnly) t = pivot + 1.6f;                                // the Text editor draws the words alone (they loop on the text clock)
         if (t > secs + 0.01f) return;
-        draw(g, Minecraft.getInstance().font, a, t, W, H);
+        previewing = true;
+        try { draw(g, Minecraft.getInstance().font, a, t, W, H); } finally { previewing = false; }
     }
+    /** True while a menu preview is being drawn (the scene may then be repainted at a lower rate). */
+    static boolean previewing;
 
     private AnimationManager() {}
 }

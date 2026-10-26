@@ -1,3 +1,11 @@
+## 0.4.38
+- The Slayers main page is now **Bosses**, with **Slayers** as a sub page and the six slayer bosses as sub sub pages. Animations, Sounds and Chat follow it (Chat has one "Bosses" message). More boss types (Rift, Nether...) can be added later as more sub pages.
+- Slayer boss icons are drawn by the mod (they showed wrong wiki pictures before).
+- The slayer scene is now the same size as the Mythological ones. The light flashes when each sword slice lands (the last one biggest) instead of after.
+- The construction page shows the page's icon and name on a small sign hanging from the top, at the right.
+- Menu previews repaint at about 30 fps and the edited-frames folder is checked every 5 s instead of every second, to cut the lag.
+- Every animation is 5 seconds by default (existing settings are reset to 5 s once).
+
 ## 0.4.37
 - Slayers is live (no more construction page) in Drop Library, Animations, Sounds and Chat. The six bosses (Revenant Horror, Tarantula Broodfather, Sven Packmaster, Voidgloom Seraph, Inferno Demonlord, Riftstalker Bloodfiend) list their rare drops, each with its animation state, Chat Alert and Play button.
 - Slayer animations: No Drops, Normal and RNG share the same opening (a sword slices the boss three times) and pivot together with the other categories, then the drop springs out. RNG has cinematic bars and blur and hides the hotbar. The scene's look follows the boss.

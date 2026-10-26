@@ -87,7 +87,7 @@ final class AnimFrames {
             long now = System.currentTimeMillis();
             Folder f = CACHE.computeIfAbsent(nm, k -> { Folder x = new Folder(); x.dir = DataFiles.art("animations").resolve(k); return x; });
             if (now >= f.next) {                                                      // look again once a second: a saved edit shows up at once
-                f.next = now + 1000L;
+                f.next = now + 5000L;
                 long st = 0; int n = 0;
                 if (Files.isDirectory(f.dir)) try (var s = Files.list(f.dir)) { for (Path p : (Iterable<Path>) s::iterator) { String fn = p.getFileName().toString(); if (fn.startsWith("frame_") && fn.endsWith(".png")) { n++; st += Files.getLastModifiedTime(p).toMillis() + Files.size(p); } } }
                 if (st != f.stamp || n != f.n) {
