@@ -1,5 +1,5 @@
 {
- "v": 1,
+ "v": 2,
  "sources": [
   {
    "id": "zombie",
@@ -653,7 +653,7 @@
      "name": "Wisp's Ice-Flavored Water I Splash Potion",
      "id": "WISP_S_ICE_FLAVORED_WATER_I_SPLASH_POTION",
      "icon": "potion",
-     "skull": true,
+     "skull": false,
      "amount": true,
      "odds": "Rare",
      "chance": "1 in 37.9 (T4)",
@@ -680,7 +680,7 @@
     {
      "name": "Scorched Books",
      "id": "SCORCHED_BOOKS",
-     "icon": "enchanted_book",
+     "icon": "book",
      "skull": false,
      "odds": "Rare",
      "chance": "1 in 47.4 (T4)",
@@ -762,8 +762,8 @@
     {
      "name": "Wilson's Engineering Plans",
      "id": "WILSON_S_ENGINEERING_PLANS",
-     "icon": "player_head",
-     "skull": true,
+     "icon": "paper",
+     "skull": false,
      "odds": "Pray RNGesus",
      "chance": "1 in 1,111 (T4)",
      "rank": 3
@@ -771,8 +771,8 @@
     {
      "name": "Subzero Inverter",
      "id": "SUBZERO_INVERTER",
-     "icon": "player_head",
-     "skull": true,
+     "icon": "redstone",
+     "skull": false,
      "odds": "Pray RNGesus",
      "chance": "1 in 1,111 (T4)",
      "rank": 3

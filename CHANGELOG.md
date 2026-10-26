@@ -1,3 +1,9 @@
+## 0.7.8
+- The slashes in the slayer preview are smooth, round strokes now (they were thin, jagged lines at small size).
+- The animation Length slider has a (Default) button (3 s for slayers, 5 s for the rest).
+- RNG drops are posted to public chat when the drop's animation is RNG (before, only drops that were naturally rare were, so Scorched Books with RNG on was skipped).
+- Icons: Wisp's Ice-Flavored Water I Splash Potion is a potion, Wilson's Engineering Plans is paper, Scorched Books and Subzero Inverter use their wiki pictures. Old cached icons refresh.
+
 ## 0.7.7
 - Old rules back: a cocooned slayer boss ("... cocooned your slayer boss") makes the next slayer scene play 1.8x faster, and "Your Slayer Kill gave you ..." counts as a kill like "SLAYER QUEST COMPLETE!".
 - Slayers, Farming and the Experimentation Table all match item names loosely now (brackets, symbols, "Enchanted Book" and word order don't matter), and all read the new drop line format.

@@ -100,7 +100,7 @@ public final class DropListener {
         if (!animate && !announce) return false;
         Item it = mythItem(src, dr, d.mf(), d.sim());
         it.amount = Math.max(1, d.amount());
-        it.announce = announce;
+        it.announce = announce; it.rngPick = dc.anim == 2 || dc.anim == 0 && it.rank >= 2;
         lookupPrice(it, announce && !animate);
         if (animate) AnimationManager.play(new Anim("myth", AnimationManager.typeOf(it, dc), it));
         return animate;
@@ -127,7 +127,7 @@ public final class DropListener {
         boolean animate = c.masterAnimate && sc.enabled && dc.anim != 3, announce = c.masterAnnounce && c.chatEnabled(chatCat) && sc.enabled && dc.announce;
         dlog(what + ": " + dr.name + " from " + src.id + "  animate=" + animate + " announce=" + announce);
         if (!animate && !announce) return null;
-        it.announce = announce;
+        it.announce = announce; it.rngPick = dc.anim == 2 || dc.anim == 0 && it.rank >= 2;
         return new Plan(it, animate, announce, animate ? AnimationManager.typeOf(it, dc) : -1);
     }
 
@@ -403,7 +403,7 @@ public final class DropListener {
         if (!animate && !announce) return false;
         Item it = treasureItem(dr);
         it.stateKey = cfgName;
-        it.announce = announce;
+        it.announce = announce; it.rngPick = dc.anim == 2 || dc.anim == 0 && it.rank >= 2;
         lookupPrice(it, announce && !animate);
         if (animate) AnimationManager.play(new Anim("treasure", AnimationManager.typeOf(it, dc), it));
         return animate;
@@ -443,7 +443,7 @@ public final class DropListener {
         if (c.channel.equals("OFF") || !onHypixel()) return;               // never talks outside Hypixel
         String m = message(it, price, it.mf != null ? it.mf : "0%", null);
         OUT.add(chan(c) + (c.channel.equals("ALL") ? adv(m) : m));
-        if (c.alsoAll && !c.channel.equals("ALL") && it.rank >= 2) OUT.add("ac " + adv(m));      // RNG drops also go to public chat, below the other one
+        if (c.alsoAll && !c.channel.equals("ALL") && it.rngPick) OUT.add("ac " + adv(m));      // RNG drops also go to public chat, below the other one
     }
 
     static final String ADV = "[FancyDrops] | ";

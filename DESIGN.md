@@ -360,3 +360,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.7.7
 - Pre-reset rules for slayers return: cocoon (`cocooned your slayer boss`) plays the next slayer scene at 1.8x (`Anim.speed`), and `Your Slayer Kill gave you` is a kill. Slayers, Farming and the Experimentation Table share the loose name match `DropData.loose` and the drop line parser.
 
+## Standing requirements added in 0.7.8
+- "Also post in public chat" sends a drop to public chat when its animation is RNG (`Item.rngPick`: the pick in the Drop Library, or RNG by rank when on Default), not by rank alone.
+- The Length slider of every animation has a (Default) button: 3 s for `slayer.*`, 5 s otherwise.
+- Drop icons follow the wiki: Wisp's potion = potion, Wilson's Engineering Plans = paper, Scorched Books and Subzero Inverter = flat wiki pictures (not books/heads).

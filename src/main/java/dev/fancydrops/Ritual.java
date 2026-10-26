@@ -45,6 +45,12 @@ final class Ritual {
         int n = (int) Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
         for (int i = 0; i <= n; i++) { float f = i / (float) n; dot(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, rgb, a); }
     }
+    /** A smooth stroke of radius r: overlapping filled discs along the line (no gaps or stair-steps when drawn small). */
+    static void stroke(float x0, float y0, float x1, float y1, float r, int rgb, float a) {
+        if (a <= 0.01f) return;
+        float len = (float) Math.hypot(x1 - x0, y1 - y0); int n = Math.max(1, (int) Math.ceil(len / Math.max(0.5f, r * 0.6f)));
+        for (int i = 0; i <= n; i++) { float f = i / (float) n; fillE(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, r, r, rgb, a * 0.6f); }
+    }
     /** An arc of an ellipse. from..to in radians (a full circle is 0..2pi), rot turns it, dash > 0 breaks it into dashes. */
     static void ringE(float cx, float cy, float rx, float ry, int rgb, float a, float from, float to, float rot, int dash) {
         int steps = Math.max(24, (int) (6.3f * Math.max(rx, ry) * 1.3f));
@@ -729,7 +735,8 @@ final class Ritual {
             float su = cl((tau - si * 0.08f) / 0.09f);
             float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk;
             float hx = lerp(x0, x1, su), hy = lerp(y0, y1, su);
-            for (int w = -1; w <= 1; w++) line(x0 + w * 0.7f, y0, hx + w * 0.7f, hy, w == 0 ? WHITE : rgb, (w == 0 ? 1f : 0.55f) * fade * a);
+            stroke(x0, y0, hx, hy, Math.max(1.6f, 2.6f * kk), rgb, 0.55f * fade * a);                     // round-capped strokes: the same look at any scale
+            stroke(x0, y0, hx, hy, Math.max(0.8f, 1.1f * kk), WHITE, fade * a);
             if (tau < 0.5f) glowE((x0 + hx) / 2, (y0 + hy) / 2, Math.abs(hx - x0) * 0.5f + 4, Math.abs(hy - y0) * 0.5f + 4, rgb, 0.35f * fade * a);
             if (su < 1f) {                                                                // the sword itself, leading the cut
                 float dx = x1 - x0, dy = y1 - y0, len = (float) Math.sqrt(dx * dx + dy * dy), ux = dx / len, uy = dy / len;
