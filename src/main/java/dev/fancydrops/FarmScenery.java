@@ -197,10 +197,6 @@ final class FarmScenery {
             int sx = bx + s * 14; rect(c, sx - 3, bb - 20, sx + 3, bb, 0xB8C0CC, a); rect(c, sx - 3, bb - 20, sx - 1, bb, 0xE0E6EE, a); for (int i = 0; i < 3; i++) rect(c, sx - 3 + i, bb - 23 + i, sx + 3 - i, bb - 22 + i, 0x8A93A8, a);
         }
         rows(c, x0, x1, hz + 1, y1, 0x6CC444, 0x58AE34, 0x2E7A22, t, a, true);
-        float prog = (t * 0.16f) % 1f, tx = x0 - 20 + prog * (x1 - x0 + 40), ty = hz + 15;                    // the tractor drives left to right, mowing as it goes
-        for (int y = (int) ty - 3; y < (int) ty + 1; y++) for (int x = x0; x < Math.min(x1, (int) tx - 9); x++) px(c, x, y, ((x / 4) % 2 == 0) ? 0xB8E064 : 0x9ACE4A, a * 0.8f);          // the mown strip it leaves
-        tractor(c, tx, ty, t, a);
-        for (int i = 0; i < 7; i++) { float f = (t * 0.6f + rnd(i) * 3) % 1f; px(c, (int) (tx - 8 - f * 22), (int) (ty - 4 - f * 6 + rnd(i + 2) * 3), 0x7CCB4F, a * (1f - f)); }         // cut grass flying behind
         motes(c, t, x0, hz, x1, y1, 0xFFF8B0, a * 0.8f, 10);
     }
     /** A little green tractor, seen from the side, wheels turning, exhaust puffing. Drawn with its rear wheel at x. */

@@ -107,7 +107,7 @@ public final class ItemIcons {
             Path cf = cacheFile(id);
             if (Files.exists(cf)) {
                 Cached old = GSON.fromJson(Files.readString(cf), Cached.class);
-                if (old != null && old.wikiVersion >= 12 && (old.wikiPixels != null || old.face != null) && (old.heads != null || (!skullFlag(id) && !"@COIN".equals(id)))) { ic.data = applyFolder(id, old); ic.ready = true; return; }
+                if (old != null && old.wikiVersion >= ver(id) && (old.wikiPixels != null || old.face != null) && (old.heads != null || (!skullFlag(id) && !"@COIN".equals(id)))) { ic.data = applyFolder(id, old); ic.ready = true; return; }
             }
         } catch (Exception ignored) {}
 
@@ -115,7 +115,7 @@ public final class ItemIcons {
             try { c.wikiPixels = fetchWikiPixels(page); if (c.wikiPixels != null) break; } catch (Exception ignored) {}
         }
         if (c.wikiPixels == null) try { c.wikiPixels = fetchWikiPixels(searchWiki(wikiPageName(id))); } catch (Exception ignored) {}   // a search can land on the wrong page (a pest for a crop), so farming items go without
-        c.wikiVersion = 12;
+        c.wikiVersion = ver(id);
         for (String cand : neuIds(id)) {
             if (c.heads != null) break;
             try {
@@ -324,6 +324,13 @@ public final class ItemIcons {
         return v;
     }
 
+    private static DropData.Drop farmDrop(String id) {
+        for (DropData.Source src : DropData.sources()) if (FarmData.byId(src.id) == src) for (DropData.Drop d : src.drops) if (d.id.equalsIgnoreCase(id)) return d;
+        return null;
+    }
+    /** Cache version: farming icons are 13, so the pictures cached from the old img pages are fetched again. */
+    private static int ver(String id) { return farmDrop(id) != null ? 13 : 12; }
+
     /** Use the configured display name as the Wiki page title, not the internal SkyBlock id. */
     private static String wikiPageName(String id) {
         if ("MYTHOLOGICAL_RITUAL".equals(id)) return "Mythological Ritual";
@@ -338,6 +345,8 @@ public final class ItemIcons {
     private static java.util.List<String> wikiPages(String id) {
         String n = wikiPageName(id);
         java.util.LinkedHashSet<String> l = new java.util.LinkedHashSet<>();
+        DropData.Drop fd = farmDrop(id);
+        if (fd != null) l.add(fd.name);                                       // a farming drop has a wiki page of its own: that picture first, the picture named in img only as a fallback
         l.add(n);
         l.add(n.replaceAll("\\s+(I{1,3}|IV|V|VI{0,3}|IX|X)$", ""));
         l.add(id.replace(';', ' ').replace('_', ' ').toLowerCase(java.util.Locale.ROOT).replaceAll("\\s+\\d+$", ""));

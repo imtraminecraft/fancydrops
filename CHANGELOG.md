@@ -1,3 +1,10 @@
+## 0.6.1
+- Harvest Bounty: the tractor now drives the whole field in one fast pass, and every crop falls the moment its mower passes it. The scythe sweeps are gone from this scene.
+- Pest Drops: the sack, crate and scattered grain are gone from the barn.
+- Experimentation Table: books are listed V first, then VI, then VII (A to Z inside each level); every VII book is now RNG. The pages turn later, and the flip sounds now play as each page lifts.
+- Harvest Feast and the other Farming drops load their own wiki picture first, and old cached pictures are fetched again.
+- Text: Bosses and Farming page descriptions reworded.
+
 ## 0.6.0
 - Farming scenes now play in a place of their own, like the slayer bosses: a golden-hour wheat field with two windmills (Rare Crops), a harvest night with a huge moon, lanterns and glowing pumpkins (Harvest Feast), the inside of a barn with light through the planks (Pest Drops), and a bright morning field where a tractor mows (Harvest Bounty).
 - The rings, dashed halos and lightning round a farming drop are gone: the item gets warm light, petals and leaves rising round it, and (RNG) a golden sunburst and a spray of petals.

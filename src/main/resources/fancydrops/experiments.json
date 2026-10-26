@@ -1,5 +1,5 @@
 {
- "v": 1,
+ "v": 2,
  "sources": [
   {
    "id": "exp",
@@ -291,7 +291,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Chance V",
@@ -315,7 +315,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Cubism VI",
@@ -347,7 +347,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "First Strike V",
@@ -363,7 +363,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Gravity VI",
@@ -379,7 +379,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Life Steal V",
@@ -403,7 +403,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Power VII",
@@ -411,7 +411,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Projectile Protection VII",
@@ -419,7 +419,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Prosecute VI",
@@ -435,7 +435,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Sharpness VII",
@@ -443,7 +443,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Snipe IV",
@@ -459,7 +459,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Triple-Strike V",
@@ -475,7 +475,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Thunderlord VII",
@@ -483,7 +483,7 @@
      "icon": "enchanted_book",
      "odds": "RNGesus Incarnate",
      "chance": "1 in 3,704 (0.027%)",
-     "rank": 1
+     "rank": 3
     },
     {
      "name": "Nadeshiko Dye",

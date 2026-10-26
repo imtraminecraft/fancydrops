@@ -19,12 +19,18 @@ final class BookScene {
     /** Ease in and out (smootherstep: gentler at both ends than smoothstep). */
     private static float ease(float v) { v = cl(v); return v * v * v * (v * (v * 6 - 15) + 10); }
 
-    /** The seconds at which each page lands (also where the Beat sound plays): three, for Normal and for RNG. */
+    /** The seconds at which each page starts to turn (also where the Beat sound plays): three, for Normal and for RNG. */
+    static float[] flipStarts(boolean rng, float O) {
+        return rng ? new float[]{0.34f * O, 0.54f * O, 0.74f * O} : new float[]{0.36f * O, 0.55f * O, 0.74f * O};
+    }
+    /** The seconds at which each page lands (it starts at flipStarts and takes flipLen). */
     static float[] flips(boolean rng, float O) {
-        return rng ? new float[]{0.30f * O, 0.54f * O, 0.78f * O} : new float[]{0.32f * O, 0.56f * O, 0.80f * O};
+        float[] s = flipStarts(rng, O); float len = flipLen(rng, O);
+        for (int i = 0; i < s.length; i++) s[i] += len;
+        return s;
     }
     /** How long one page takes to turn. */
-    static float flipLen(boolean rng) { return rng ? 0.62f : 0.72f; }
+    static float flipLen(boolean rng, float O) { return Math.min(rng ? 0.62f : 0.72f, 0.2f * O); }
     /** Where the middle of the book rests (canvas y). The drop rises out of this spot. */
     static float baseY(float icy, float sz) { return icy + 14 * sz; }
 
@@ -45,7 +51,7 @@ final class BookScene {
     /** The scene at time t. op = the opening clock (stops at O), p = seconds since the drop appeared, a = how visible it is. by = the book's resting centre. */
     static void paint(float t, float O, float p, float icx, float by0, float sz, float a, boolean rng) {
         if (a <= 0.01f) return;
-        float op = Math.min(t, O), fd = flipLen(rng);
+        float op = Math.min(t, O), fd = flipLen(rng, O);
         float[] fl = flips(rng, O); int K = fl.length;
         float appear = sm(t / (0.12f * O + 0.05f));
         float zIn = ease((op - 0.06f * O) / (0.30f * O)), zOut = p > 0f ? ease(p / 0.8f) : 0f;

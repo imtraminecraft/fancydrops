@@ -33,7 +33,7 @@ final class FarmScene {
         panel(t, icx, gy, sz, kind, a);
         if (kind != PEST && kind != HELIOS && kind != BOUNTY) soil(icx, gy, sz, kind, a, rumble);
         if (kind == PEST || kind == HELIOS) pestScene(t, O, op, p, icx, gy, sz, kind == HELIOS, a, rumble);
-        else cropScene(t, O, op, p, icx, gy, sz, kind == FEAST, a, rumble);
+        else cropScene(t, O, op, p, icx, gy, sz, kind == FEAST, kind == BOUNTY, a, rumble);
         if (p >= 0f) heave(p, icx, gy, sz, kind, a, rng);
         float warm = kind == FEAST ? 0.14f : 0.09f;                                                // the sun (or the lanterns) lying over the field
         if (kind != PEST && kind != HELIOS) Ritual.glowE(icx, gy - 8 * sz, 100 * sz, 36 * sz, kind == FEAST ? 0xFFA63A : 0xFFE9A0, warm * a);
@@ -76,7 +76,7 @@ final class FarmScene {
     // ------------------------------------------------------------------ crops
     private static final int WHEAT = 0, CARROT = 1, SUN = 2, CORN = 3, PUMPKIN = 4, MELON = 5;
 
-    private static void cropScene(float t, float O, float op, float p, float icx, float gy, float sz, boolean feast, float a, float rumble) {
+    private static void cropScene(float t, float O, float op, float p, float icx, float gy, float sz, boolean feast, boolean bounty, float a, float rumble) {
         float rx = fieldRx(sz), ry = fieldRy(sz), cy = gy + 2 * sz, sp = 11 * sz, xl = icx - rx * 0.9f, xr = icx + rx * 0.9f;
         float[] ts = {BEAT[0] * O, BEAT[1] * O, BEAT[2] * O};
         for (int r = 0; r < 3; r++) {
@@ -90,17 +90,31 @@ final class FarmScene {
                 float u = cl((x - xl) / (xr - xl)); int third = Math.min(2, (int) (u * 3f)); float within = cl(u * 3f - third);
                 boolean ltr = third % 2 == 0;
                 float tc = ts[third] + (ltr ? within : 1f - within) * 0.13f;
+                if (bounty) tc = tractorAt(x + 6f, xl, xr, O);                                              // each crop falls the moment the mower behind the tractor passes it
                 float age = op - tc;
                 float sway = (float) Math.sin(t * 1.9f + x * 0.21f + r) * 0.8f + rumble * (rnd(seed + (int) (t * 30)) - 0.5f) * 3f;
                 crop(type, x, yy, sz, sway, seed, a, age, ltr ? 1 : -1, t);
             }
         }
-        for (int k = 0; k < 3; k++) {                                                                       // the scythe sweeps
+        if (bounty) {                                                                                       // the tractor drives the whole field in one pass
+            float u = cl((op - TR0 * O) / ((TR1 - TR0) * O)), tx = (xl - 20) + u * ((xr + 20) - (xl - 20)), ty = rowY(gy, sz, 2) + 5 * sz;
+            if (op < TR1 * O + 0.6f) {
+                FarmScenery.tractor(Ritual.cv, tx, ty, t, a * (1f - sm((op - TR1 * O) / 0.6f)));
+                for (int i = 0; i < 8; i++) { float f = (t * 1.4f + rnd(i) * 3) % 1f; if (u > 0f && u < 1f) dot(tx - 10 - f * 14, ty - 5 - f * 9 + rnd(i + 2) * 3, i % 2 == 0 ? 0xE8D060 : 0x7CCB4F, a * (1f - f)); }
+            }
+        }
+        for (int k = 0; k < (bounty ? 0 : 3); k++) {                                                        // the scythe sweeps
             float tau = op - ts[k];
             if (tau < 0f) continue;
             float xa = xl + k * (xr - xl) / 3f - 5 * sz, xb = xl + (k + 1) * (xr - xl) / 3f + 5 * sz;
             sweep(tau, k % 2 == 0, xa, xb, gy - 13 * sz, sz, feast ? 0xFFC060 : 0xFFE27A, a);
         }
+    }
+
+    private static final float TR0 = 0.08f, TR1 = 0.76f;
+    /** When the tractor's mower reaches x: it drives from just left of the field to just right of it between TR0 and TR1 of the opening. */
+    private static float tractorAt(float x, float xl, float xr, float O) {
+        return (TR0 + (TR1 - TR0) * cl((x - (xl - 20)) / ((xr + 20) - (xl - 20)))) * O;
     }
 
     /** One crop. age < 0: standing; after that it is cut and falls (stalks tip over, fruit hops and sinks), leaving a short stub. */
@@ -222,7 +236,6 @@ final class FarmScene {
         float rx = fieldRx(sz), ry = fieldRy(sz), cy = gy + 2 * sz, sp = 12 * sz, xl = icx - rx * 0.86f, xr = icx + rx * 0.86f;
         float t1 = BEAT[0] * O, t2 = BEAT[1] * O, t3 = BEAT[2] * O;
         float pluck = sm((op - t2) / (t3 - t2)), gulp = op - t3;
-        barnProps(t, op, t1, t3, icx, gy, sz, a, rumble);
         float px = pestX(t, op, t1, icx, sz), py = gy + 3 * sz;                                              // where the pest is
         float vac = sm(op / (0.30f * O)) * (1f - sm((p - 0.2f) / 0.8f));                                      // the vacuum swings in, and out again after the drop
         float nx = icx + 36 * sz, ny = gy - 40 * sz;                                                         // the nozzle
@@ -237,29 +250,6 @@ final class FarmScene {
             if (gulp >= 0f) gulpCloud(px, py - 4 * sz, gulp, sz, a);
         } else {
             helios(t, op, t1, t2, t3, p, px, py, icx, gy, sz, a);
-        }
-    }
-
-    /** The floor of the barn in front of the pest: a torn grain sack with its spill on the left, a crate of carrots on the right; both shiver when the drop is near. */
-    private static void barnProps(float t, float op, float t1, float t3, float icx, float gy, float sz, float a, float rumble) {
-        float sh = rumble * (rnd((int) (t * 30)) - 0.5f) * 2f;
-        float fy = gy + 6 * sz;
-        for (int side = -1; side <= 1; side += 2) {
-            float bx = icx + side * 52 * sz + sh;
-            Ritual.fillE(bx, fy + 1.5f * sz, 11 * sz, 3 * sz, 0x000000, 0.35f * a);
-            if (side < 0) {                                                                                 // the sack: round belly, tied neck, a tear that spills grain
-                Ritual.fillE(bx, fy - 7 * sz, 8 * sz, 8 * sz, 0x8A6A3A, a); Ritual.fillE(bx - 2 * sz, fy - 8 * sz, 5.5f * sz, 6 * sz, 0xB8935A, a);
-                Ritual.line(bx - 3 * sz, fy - 14 * sz, bx + 3 * sz, fy - 14 * sz, 0x5A3E1E, a); Ritual.fillE(bx, fy - 15.5f * sz, 3 * sz, 2.2f * sz, 0x9A7A46, a);
-                for (int i = 0; i < 16; i++) { float ang = rnd(i * 5) * 3.14f, r = (3 + rnd(i * 3) * 9) * sz; Ritual.dot(bx + 5 * sz + (float) Math.cos(ang) * r, fy - 0.5f * sz - (float) Math.sin(ang) * r * 0.25f, i % 3 == 0 ? 0xFFE27A : 0xE0B84A, a); }
-            } else {                                                                                        // the crate with carrots and wheat
-                float w = 9 * sz, h = 9 * sz;
-                Ritual.fillE(bx, fy - h * 0.5f, w, h * 0.5f, 0x6A4220, a);
-                for (int i = 0; i < 5; i++) { float cx = bx - 6 * sz + i * 3 * sz; Ritual.line(cx, fy - h, cx + (i - 2) * 0.8f, fy - h - 5 * sz, i % 2 == 0 ? 0x5FB040 : 0x7CD05A, a); Ritual.dot(cx, fy - h + 0.5f, 0xFF8A2A, a); }
-                Ritual.line(bx - w, fy - h * 0.55f, bx + w, fy - h * 0.55f, 0x3A2210, a); Ritual.line(bx - w, fy - h * 0.15f, bx + w, fy - h * 0.15f, 0x3A2210, a);
-            }
-        }
-        if (op < t3) {                                                                                      // nibbled grain scattered where the pest runs
-            for (int i = 0; i < 9; i++) Ritual.dot(icx + (rnd(i * 7) - 0.5f) * 56 * sz, fy + (rnd(i * 3 + 1) - 0.2f) * 3 * sz, i % 2 == 0 ? 0xE8C860 : 0xB88A38, 0.9f * a);
         }
     }
 

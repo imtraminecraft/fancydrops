@@ -308,3 +308,11 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Experiments is called Rare Drops: Experimentation Table, Rare Mob Drops (WIP) and Events (WIP). Every page of a category appears on all four main pages (Drop Library, Animations, Sounds, Chat).
 - The Experimentation Table book turns exactly three pages in both animations; RNG is the same three pages made far more dramatic.
 - A new data file version is higher than every version ever shipped (farming.json is 10).
+
+## Standing requirements added in 0.6.1
+- Harvest Bounty: one tractor pass, fast; each crop falls exactly as the mower behind the tractor reaches it. No scythe sweeps.
+- Pest Drops: nothing on the barn floor but the pest.
+- Experimentation Table list: other drops first, then books by level (all V, then all VI, then all VII), A to Z inside a level. Every VII book is RNG.
+- Book flip sounds play when a page starts to turn, never before the animation.
+- Farming drops use their own wiki page for the picture; `img` is only the fallback. Farming icon caches are version 13.
+- Page descriptions stay short and have no "more later" notes.

@@ -88,7 +88,7 @@ public final class AnimationManager {
     static float[][] cueTimes(String scene, float secs) {
         float S = Math.max(3.6f, secs), O = S - Ritual.TAIL; boolean tre = scene.startsWith("treasure"), nod = scene.endsWith("nodrops");
         float[] beats = tre ? new float[]{0.215f * O, 0.505f * O, 0.795f * O} : new float[]{0.34f * O, 0.58f * O, 0.80f * O};
-        if (scene.startsWith("exp.")) beats = BookScene.flips(scene.endsWith("rng"), O);
+        if (scene.startsWith("exp.")) beats = BookScene.flipStarts(scene.endsWith("rng"), O);        // the sound plays as the page lifts, not when it lands
         return new float[][]{beats, {O}, nod ? new float[0] : new float[]{O + 0.25f}, {O + 1.0f}, {S - 1.4f}};
     }
 

@@ -72,11 +72,11 @@ final class Categories {
         new Cat("mythological", "Mythological", ":mytho:", 0xFF55D8FF, false, "Mythological Ritual is an event that occurs with the Mythological Ritual perk.", List.of(
             new Group("myth", "Mythological Mobs", ":mytho:", 0xFF55D8FF, "What plays when a ritual creature dies.", MYTH_TYPES),
             new Group("treasure", "Treasure", ":treasure:", 0xFFFFD25A, "What plays when a burrow holds treasure.", MYTH_TYPES))),
-        new Cat("bosses", "Bosses", ":slayers:", 0xFFFF5A5A, false, "Bosses of every kind and their rare drops. More boss types come later.", List.of(
+        new Cat("bosses", "Bosses", ":slayers:", 0xFFFF5A5A, false, "Bosses of every kind and their rare drops.", List.of(
             new Group("slayer", "Slayers", ":grp_slayers:", 0xFFFF5A5A, "What plays when a slayer boss drops something.", SLAYER_TYPES),
             new Group("rift", "The Rift", ":grp_rift:", 0xFFB56BFF, "A mirror dimension of the main server.", SLAYER_TYPES, true),
             new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "The Nether of Hypixel SkyBlock.", SLAYER_TYPES, true))),
-        new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, false, "Crops, pests and the rare drops of the Garden.", List.of(
+        new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, false, "Every rare drop you can find in the Garden.", List.of(
             new Group("crops", "Rare Crops", ":grp_crops:", 0xFF7CCB4F, "What plays when a crop turns out rare.", FARM_TYPES),
             new Group("feast", "Harvest Feast", ":grp_feast:", 0xFFFFA63A, "What plays when the Harvest Feast serves a rare crop.", FARM_TYPES),
             new Group("bounty", "Harvest Bounty", ":grp_bounty:", 0xFFB8E860, "What plays when a Harvest Bounty drops something.", FARM_TYPES),

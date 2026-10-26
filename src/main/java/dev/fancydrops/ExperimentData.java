@@ -21,8 +21,17 @@ public final class ExperimentData {
     }
     private static DropData.Source first(File f) {
         DropData.Source s = f.sources.get(0);
-        s.drops.sort(java.util.Comparator.comparingDouble(DropData::oneIn));
+        s.drops.sort(java.util.Comparator.comparingInt((DropData.Drop d) -> bookLevel(d) > 0 ? 1 : 0)       // other drops first, by rarity; then the books: every V, then every VI, then every VII
+                .thenComparingInt(ExperimentData::bookLevel)
+                .thenComparingDouble(d -> bookLevel(d) > 0 ? 0 : DropData.oneIn(d))
+                .thenComparing(d -> d.name));
         return s;
+    }
+
+    /** 5, 6 or 7 for an enchanted book (the number ends its id), 0 for anything else. */
+    private static int bookLevel(DropData.Drop d) {
+        if (d.id == null || !d.id.startsWith("ENCHANTMENT_")) return 0;
+        int i = d.id.lastIndexOf('_'); try { return Integer.parseInt(d.id.substring(i + 1)); } catch (Exception e) { return 0; }
     }
 
     private static String norm(String n) { return n == null ? "" : n.trim().toLowerCase(Locale.ROOT); }
