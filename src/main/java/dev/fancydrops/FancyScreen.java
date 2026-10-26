@@ -2521,7 +2521,7 @@ public class FancyScreen extends Screen {
 
     private void animationsLanding(FancyConfig c) {
         if (searching || "@changes".equals(dropSrc)) { animationChanges(c); return; }                  // (search also looks inside it)
-        rows.add(textRow(":animations:", "Animations", "Set the looks every animation shares, then open a category."));
+        rows.add(hero(":animations:", "Animations", "Set the looks every animation shares, then open a category.", Ui.ACCENT));
         int fxOn = 0; for (int i = 0; i < FX_N; i++) if (c.fx(i)) fxOn++;
         Row ac = row(0, ":settings:", "Animation Changes", "Bars, text, item, position and size  \u00B7  " + fxOn + " text effects on", Ui.ACCENT);
         ac.click = () -> openPage(-1, "@changes", "Animation Changes"); rows.add(ac);
@@ -2597,7 +2597,7 @@ public class FancyScreen extends Screen {
 
     private void soundsLanding(FancyConfig c) {
         if (searching || "@settings".equals(dropSrc)) { soundSettings(c); return; }
-        rows.add(textRow(":sounds:", "Sounds", "Edit each sound based on what you want."));
+        rows.add(hero(":sounds:", "Sounds", "Edit each sound based on what you want. Open a category to hear and change its sounds.", Ui.ACCENT));
         Row ss = row(0, ":settings:", "Sound Settings", (c.sound ? "On" : "Off") + "  \u00B7  volume " + c.volume + "%  \u00B7  " + (c.customSounds ? "FancyDrops sounds" : "Minecraft sounds"), Ui.ACCENT);
         ss.click = () -> openPage(-1, "@settings", "Sound Settings"); rows.add(ss);
         rows.add(section("Categories"));
@@ -2654,7 +2654,7 @@ public class FancyScreen extends Screen {
     }
 
     private void chatLanding(FancyConfig c) {
-        rows.add(textRow(":chat:", "Chat", "Tell people about the rare drop you just got. Pick where the messages go and what they say, and choose which kinds of drops are announced."));
+        rows.add(hero(":chat:", "Chat", "Tell people about the rare drop you just got. Pick where the messages go, what they say and which drops are announced.", Ui.ACCENT));
         int on = 0, all = 0;                                                                              // how many drops announce, for the tile and the status
         for (Categories.Cat cat : Categories.ALL) if (!cat.wip()) for (Categories.Group gr : cat.groups()) for (DropData.Source src : cat.sources(gr.id())) for (DropData.Drop d : src.drops) { FancyConfig.DropCfg dc = c.drop(src.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); all++; if (dc.announce) on++; }
         boolean off = c.channel.equals("OFF");
@@ -2731,7 +2731,7 @@ public class FancyScreen extends Screen {
     // ---- Settings
 
     private void settingsLanding() {
-        rows.add(textRow(":settings:", "Settings", "Change how the menu looks, your cosmetics, where prices come from and how the drop data loads."));
+        rows.add(hero(":settings:", "Settings", "Change how the menu looks, your cosmetics, where prices come from and how the drop data loads.", Ui.ACCENT));
         String[] lb = {"Menu", "Cosmetics", "Prices", "Drop Data"}, sb = {"How the menu looks", "Shown to you and others", "Where prices come from", "Reload the drop data"}, ic = {":menu:", ":cosmetics:", ":coin:", ":refresh:"};
         int[] co = {0xFFB0B6C2, 0xFFC77DFF, 0xFFFFC857, 0xFF56D8FF};
         rows.add(picker("", "", lb, sb, ic, co, null, 2, () -> -1, i -> openPage(i, null, null)));
@@ -3191,11 +3191,10 @@ public class FancyScreen extends Screen {
                 else if (r.icon != null) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Gfx.item(g, r.icon, 0, 0); Gfx.pop(g); }
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
                 }
-                if (r.kind == HERO && r.badge != null) {                                  // the counter: a number with its label, top right
-                    String[] bp = r.badge.split("\\|"); int bw = Math.max(Gfx.w(font, bp[0]) * 2, Gfx.w(font, bp[1])) + 14, bx = r.x + r.w - bw - 8, by = r.y + 8;
-                    g.fill(bx, by, bx + bw, by + 30, 0x80000000); g.fill(bx, by, bx + bw, by + 1, Ui.ACCENT); g.fill(bx, by + 29, bx + bw, by + 30, Ui.ACCENT);
-                    Gfx.push(g); Gfx.translate(g, bx + bw / 2f, by + 4); Gfx.scale(g, 2f); Gfx.textCentered(g, font, bp[0], 0, 0, 0xFFFFC857); Gfx.pop(g);
-                    Gfx.textCentered(g, font, bp[1], bx + bw / 2, by + 20, Ui.SUB);
+                if (r.kind == HERO && r.badge != null) {                                  // the counter: a small chip, number then label, top right
+                    String[] bp = r.badge.split("\\|"); int nw0 = Gfx.w(font, bp[0]), bw = nw0 + Gfx.w(font, bp[1]) + 19, bx = r.x + r.w - bw - 8, by = r.y + 8;
+                    pill(g, bx, by, bw, 15, Canvas.mix(Ui.PANEL2, Ui.ACCENT, 0.12f)); rout(g, bx, by, bw, 15, Gfx.argb(110, Ui.ACCENT & 0xFFFFFF));
+                    Gfx.text(g, font, bp[0], bx + 7, by + 4, 0xFFFFC857); Gfx.text(g, font, bp[1], bx + 12 + nw0, by + 4, Ui.SUB);
                 }
                 if (r.kind == HERO) { int wy = r.y + 70; for (String ln : wrap(r.sub, cw - 60)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; } continue; }          // the words under the title
                 Site.draw(g, r.x, r.y, r.w, r.h, sec);
