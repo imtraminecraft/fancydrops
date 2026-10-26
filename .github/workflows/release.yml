@@ -1,7 +1,7 @@
 name: Release FancyDrops
 
 # Only runs when you press "Run workflow" on the Actions tab. Pick the branch to release from (main = the Main build).
-# The release text is the matching section of CHANGELOG.md, so write the notes there first.
+# Releases have no description; the file is FancyDrops-<version>.jar.
 on:
   workflow_dispatch:
     inputs:
@@ -36,21 +36,6 @@ jobs:
             exit 1
           fi
 
-      - name: Write the release notes from CHANGELOG.md
-        shell: bash
-        run: |
-          set -euo pipefail
-          awk -v v="${{ inputs.version }}" '
-            $0 ~ "^## " v "[[:space:]]*$" { on = 1; next }
-            /^## / && on { exit }
-            on { print }
-          ' CHANGELOG.md > release-notes.md
-          if [ ! -s release-notes.md ]; then
-            echo "::error::No '## ${{ inputs.version }}' section with text in CHANGELOG.md"
-            exit 1
-          fi
-          cat release-notes.md
-
       - name: Set up Java 25
         uses: actions/setup-java@v6
         with:
@@ -69,7 +54,7 @@ jobs:
           mkdir -p release
           jar_file=$(find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-dev.jar' -print -quit)
           [ -n "$jar_file" ] || { echo "::error::No production JAR found in build/libs"; exit 1; }
-          cp "$jar_file" release/FancyDrops.jar
+          cp "$jar_file" "release/FancyDrops-${{ inputs.version }}.jar"
           ls -lh release
 
       - name: Publish the release
@@ -77,9 +62,9 @@ jobs:
         with:
           tag_name: v${{ inputs.version }}-${{ github.ref_name }}
           name: FancyDrops ${{ inputs.version }} [${{ github.ref_name == 'main' && 'Full' || 'Beta' }}]
-          body_path: release-notes.md
+          body: ""
           prerelease: ${{ inputs.prerelease || github.ref_name != 'main' }}
           make_latest: ${{ github.ref_name == 'main' && !inputs.prerelease }}
           files: |
-            release/FancyDrops.jar
+            release/FancyDrops-${{ inputs.version }}.jar
           fail_on_unmatched_files: false
