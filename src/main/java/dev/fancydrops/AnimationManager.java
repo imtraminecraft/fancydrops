@@ -58,7 +58,7 @@ public final class AnimationManager {
     /** True while the hotbar and hearts should slide away (a scene with cinematic bars). */
     public static boolean hidesHud() {
         if (cur == null || cur.type != RNG || !cur.cfg().bars) return false;
-        float t = (System.currentTimeMillis() - cur.start) / 1000f, S = Math.max(3.6f, cur.cfg().secs), O = S - Ritual.TAIL;
+        float t = (System.currentTimeMillis() - cur.start) / 1000f * pace(cur), S = Math.max(3.6f, cur.cfg().secs), O = S - Ritual.TAIL;
         return t >= O - 0.8f && t < S - 0.05f;                                           // only while the cinematic bars are on screen (they slide in at O - 0.8 s, out at the end)
     }
 
@@ -72,6 +72,9 @@ public final class AnimationManager {
         return it.rank >= 2 ? RNG : NORMAL;
     }
 
+    /** How much faster than real time a scene plays: the scenes are built for at least 3.6 s, so a shorter length (3 s) squeezes that into the time asked for. */
+    static float pace(Anim a) { float s = Math.max(0.5f, a.secs()); return Math.max(3.6f, s) / s; }
+
     /** Called every frame from the HUD. */
     public static void render(GuiGraphicsExtractor g) {
         long now = System.currentTimeMillis();
@@ -79,7 +82,7 @@ public final class AnimationManager {
         if (cur == null && !QUEUE.isEmpty()) { cur = QUEUE.poll(); cur.start = now; DropListener.announceNow(cur.item); DropListener.announceNow(cur.item2); }          // the chat alert goes out together with the animation
         if (cur == null) return;
         Minecraft mc = Minecraft.getInstance();
-        float t = (now - cur.start) / 1000f;
+        float t = (now - cur.start) / 1000f * pace(cur);                  // a scene shorter than its 3.6 s minimum plays a little faster
         cues(cur, cur.lastT, t); cur.lastT = t;
         draw(g, mc.font, cur, t, g.guiWidth(), g.guiHeight());
     }
@@ -119,7 +122,7 @@ public final class AnimationManager {
     public static float playingT(String key) {
         long now = System.currentTimeMillis();
         if (sndOn && key.equals(sndKey)) return (now - sndT0) / 1000f;
-        if (cur != null && key.equals(cur.key())) return (now - cur.start) / 1000f;
+        if (cur != null && key.equals(cur.key())) return (now - cur.start) / 1000f * pace(cur);
         return -1f;
     }
 

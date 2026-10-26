@@ -30,6 +30,7 @@ public final class DropListener {
         boolean drop = false;
         for (String line : raw.split("\\R")) {
             if (ChatParser.isPlayerChat(line)) { if (line.toUpperCase(java.util.Locale.ROOT).contains("DROP!")) dlog("ignored (looks like player chat): " + line.trim()); continue; }                   // a player pasting a drop line is just chat
+            if (slayerLine(line, now)) continue;                           // "SLAYER BOSS! The ... spawned!" and "SLAYER QUEST COMPLETE!": noted, never hidden
             if (expLine(line, now)) { drop = true; continue; }             // the Superpairs reward lines would show the items early
             if (playTreasureLine(line)) { drop = true; continue; }         // a treasure from a Mythological burrow
             ChatParser.Drop d = ChatParser.parseDrop(line);
@@ -38,7 +39,7 @@ public final class DropListener {
             dlog("heard: " + line.trim() + "  ->  " + d.kind() + " / " + d.name() + " x" + d.amount());
             if (FarmData.isFarm(d) && playFarm(d)) drop = true;             // farming drops have no kill: they play at once
             else if (MythData.isMyth(d) && playMyth(d)) drop = true;
-            else if (SlayerData.isSlayer(d) && queueSlayer(d, now)) drop = true;
+            else if (SlayerData.isSlayer(d)) { killDrops = true; if (queueSlayer(d, now)) drop = true; }
             else dlog("left in chat (not a listed drop): " + d.name());
         }
         return drop;
@@ -152,12 +153,47 @@ public final class DropListener {
     // ------------------------------------------------------------------ Slayer bosses
 
     private static ChatParser.Drop pendSlayer; private static long pendAt;
+    private static DropData.Source bossSrc;                 // the boss that spawned last (decides the scene and which boss a shared drop belongs to)
+    private static boolean killDrops;                       // a rare drop came since it spawned
+    private static long questDoneAt;                        // when "SLAYER QUEST COMPLETE!" was read (0 = none waiting)
+
+    /** The two slayer lines that are not drops. Returns true when the line is one of them. */
+    private static boolean slayerLine(String line, long now) {
+        String up = line.toUpperCase(Locale.ROOT);
+        if (up.contains("SLAYER BOSS!") && up.contains("SPAWNED")) {
+            String low = line.toLowerCase(Locale.ROOT); DropData.Source found = null;
+            for (DropData.Source s : SlayerData.ALL) {
+                String boss = s.boss == null ? "" : s.boss.toLowerCase(Locale.ROOT);
+                if (!boss.isEmpty() && (low.contains(boss) || low.contains(boss.split(" ")[0]))) found = s;
+            }
+            if (found != null) { bossSrc = found; killDrops = false; questDoneAt = 0; }
+            dlog("slayer boss spawned: " + line.trim() + "  ->  " + (found == null ? "unknown boss" : found.boss));
+            return true;
+        }
+        if (up.contains("SLAYER QUEST COMPLETE")) { questDoneAt = now; dlog("slayer quest complete (rare drop heard since the spawn: " + killDrops + ")"); return true; }
+        return false;
+    }
+    /** A moment after the quest completes with no rare drop: the boss falls and nothing drops. */
+    private static void flushQuest(long now) {
+        if (questDoneAt == 0 || now - questDoneAt < 1500) return;
+        questDoneAt = 0;
+        FancyConfig c = FancyConfig.get();
+        if (killDrops || bossSrc == null || !c.masterAnimate || !c.source(bossSrc.id).enabled) return;
+        Anim a = new Anim("slayer", AnimationManager.NO_DROPS, null); a.kind = SlayerData.theme(bossSrc.id);
+        AnimationManager.play(a);
+    }
+    /** The boss a drop belongs to: the one that spawned when it also drops this item (Paragon Shard, dyes), else the first that lists it. */
+    private static DropData.Source srcOf(String name) {
+        DropData.Source s = SlayerData.sourceOf(name, bossSrc);
+        return s;
+    }
+    private static DropData.Drop dropOf(String name) { return SlayerData.find(name, bossSrc); }
 
     /** A slayer drop waits a moment for its twin: two drops of one kill play as one animation. True when the line is taken (it plays now or in a moment). */
     private static boolean queueSlayer(ChatParser.Drop d, long now) {
         if (pendSlayer != null) { ChatParser.Drop first = pendSlayer; pendSlayer = null; return playSlayer(first, d); }
         FancyConfig c = FancyConfig.get();
-        DropData.Drop dr = SlayerData.find(d.name()); DropData.Source src = SlayerData.sourceOf(d.name());
+        DropData.Drop dr = dropOf(d.name()); DropData.Source src = srcOf(d.name());
         if (dr == null || src == null) return false;
         FancyConfig.SourceCfg sc = c.source(src.id); FancyConfig.DropCfg dc = c.drop(src.id, dr.name); FancyConfig.initDrop(dc, dr.rank);
         boolean wanted = c.masterAnimate && sc.enabled && dc.anim != 3 || c.masterAnnounce && c.chatEnabled("bosses") && sc.enabled && dc.announce;
@@ -175,13 +211,13 @@ public final class DropListener {
     /** One or two drops of one kill: a single animation (the boss decides the scene), the item or both springing out of it. */
     private static boolean playSlayer(ChatParser.Drop d, ChatParser.Drop d2) {
         Plan a = slayerPlan(d), b = d2 == null ? null : slayerPlan(d2);
-        DropData.Source src = SlayerData.sourceOf(d.name());
-        if (a == null && b != null) { a = b; b = null; src = SlayerData.sourceOf(d2.name()); }          // the first one has no animation or alert, the second does
+        DropData.Source src = srcOf(d.name());
+        if (a == null && b != null) { a = b; b = null; src = srcOf(d2.name()); }          // the first one has no animation or alert, the second does
         if (a == null || src == null) return false;
         return show("slayer", a, b, SlayerData.theme(src.id), false);
     }
     private static Plan slayerPlan(ChatParser.Drop d) {
-        DropData.Drop dr = SlayerData.find(d.name()); DropData.Source src = SlayerData.sourceOf(d.name());
+        DropData.Drop dr = dropOf(d.name()); DropData.Source src = srcOf(d.name());
         if (dr == null || src == null) return null;
         Item it = dropItem(src, dr, d.mf(), d.sim());
         it.chance = dr.chance; it.amount = Math.max(1, d.amount());
@@ -593,7 +629,7 @@ public final class DropListener {
     public static void tick(Minecraft mc) {
         long now = System.currentTimeMillis();
         releaseHeld(mc, now);
-        flushSlayer(now); flushExp(now);
+        flushSlayer(now); flushExp(now); flushQuest(now);
         if (cooldown > 0) { cooldown--; return; }
         if (mc.player == null || OUT.isEmpty()) return;
         String out = OUT.poll();

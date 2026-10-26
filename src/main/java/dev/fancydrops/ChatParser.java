@@ -67,6 +67,9 @@ public final class ChatParser {
         }
         String name = rest.replaceAll("[\\s!.:;,✯☘☠♣-]+$", "").trim();
         name = name.replaceFirst("(?i)^You (?:dug out|found|unearthed)\\s+(?:an?\\s+|some\\s+)?", "").trim();          // a Diana burrow: "You dug out a Griffin Feather"
+        name = name.replaceAll("\\s+", " ");                                      // "353x  Flawed Opal Gemstone" has two spaces
+        while (name.endsWith(")") && count(name, '(') < count(name, ')')) name = name.substring(0, name.length() - 1).trim();      // "5x Wisp's Potion)": the bracket was never opened
+        while (name.startsWith("(") && count(name, '(') > count(name, ')')) name = name.substring(1).trim();
         name = name.replaceFirst("^[^\\p{L}\\p{N}\\[(\"'+]+", "").trim();          // a leading symbol is not part of the name
         if (name.startsWith("(") && name.endsWith(")") && name.indexOf('(', 1) < 0) name = name.substring(1, name.length() - 1).trim();   // "(Duplex I)"
         if (name.isEmpty()) return null;
@@ -78,6 +81,7 @@ public final class ChatParser {
         return new Drop(kind, name, amount, mf);
     }
 
+    private static int count(String s, char c) { int n = 0; for (int i = 0; i < s.length(); i++) if (s.charAt(i) == c) n++; return n; }
     private static int amount(String raw) {
         try { return Math.max(1, Math.min(9999, Integer.parseInt(raw.replace(",", "")))); } catch (Exception e) { return 1; }
     }

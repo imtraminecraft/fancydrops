@@ -1,3 +1,8 @@
+## 0.7.6
+- Slayer drop lines are read the way Hypixel writes them: `VERY RARE DROP! (353x  Flawed Opal Gemstone) (+299%  Magic Find)` and `RARE DROP! 5x Wisp's Ice-Flavored Water I Splash Potion) (+299%  Magic Find)` (double spaces, a missing bracket and an amount in front or inside the brackets are all fine).
+- The mod now reads `SLAYER BOSS! The ... spawned!` (so a shared drop like Paragon Shard goes to the boss you fought) and `SLAYER QUEST COMPLETE!` (when no rare drop came with the kill, the No Drops scene plays). Both lines stay in chat.
+- Slayer scenes are 3 seconds by default (the Length slider now goes from 3 to 7 seconds). A scene shorter than 3.6 seconds plays slightly faster.
+
 ## 0.7.5
 - Slayer drops are matched by their words, so "(Smite VI)", "Enchanted Book (Smite VI)" and "Bundle (Quantum)" all find their drop and play the animation instead of staying in chat.
 - The drop log (`config/fancydrops/drop-log.txt`) now also says when a "DROP!" line could not be read or was skipped as player chat.

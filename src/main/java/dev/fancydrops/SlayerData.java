@@ -44,6 +44,15 @@ public final class SlayerData {
         for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (same(d.name, name)) return d;
         return null;
     }
+    /** Like find, but a boss that drops the item too (the one that just spawned) wins over the first one in the list. */
+    public static DropData.Drop find(String name, DropData.Source prefer) {
+        if (prefer != null) for (DropData.Drop d : prefer.drops) if (same(d.name, name)) return d;
+        return find(name);
+    }
+    public static DropData.Source sourceOf(String name, DropData.Source prefer) {
+        if (prefer != null) for (DropData.Drop d : prefer.drops) if (same(d.name, name)) return prefer;
+        return sourceOf(name);
+    }
     /** The boss that drops an item with this name, or null. */
     public static DropData.Source sourceOf(String name) {
         for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (same(d.name, name)) return s;

@@ -18,7 +18,7 @@ public class FancyConfig {
     public static class SourceCfg { public boolean enabled = true; public Map<String, DropCfg> drops = new LinkedHashMap<>(); }
     /** The settings of one animation (key like "myth.rng"): how long, where, how big, and for RNG the bars and the blur. */
     public static class AnimCfg {
-        public float secs = 5f;          // 5..7 (5 by default)
+        public float secs = 5f;          // 3..7 (5 by default, 3 for the slayer scenes)
         public int pos = 1;              // (unused now: the position is one setting for every animation, FancyConfig.animPos)
         public boolean bars = true, blur = true;   // RNG only
     }
@@ -48,7 +48,7 @@ public class FancyConfig {
     public Map<String, AnimCfg> anims = new LinkedHashMap<>();
     public AnimCfg anim(String key) {
         AnimCfg a = anims.get(key);
-        if (a == null) { a = new AnimCfg(); anims.put(key, a); }
+        if (a == null) { a = new AnimCfg(); if (key.startsWith("slayer.")) a.secs = 3f; anims.put(key, a); }
         return a;
     }
     // Bar changes
@@ -149,6 +149,7 @@ public class FancyConfig {
         if (c.mcSounds == null) c.mcSounds = new LinkedHashMap<>();
         if (c.ver < 3) { c.ver = 3; c.sounds.clear(); c.mcSounds.clear(); save(); }          // the rewrite: old sound picks refer to sounds that no longer exist
         if (c.ver < 4) { c.ver = 4; for (AnimCfg a : c.anims.values()) a.secs = 5f; save(); }          // 0.4.38: every animation is 5 seconds by default
+        if (c.ver < 5) { c.ver = 5; for (Map.Entry<String, AnimCfg> e : c.anims.entrySet()) if (e.getKey().startsWith("slayer.")) e.getValue().secs = 3f; save(); }          // 0.7.5: the slayer scenes are 3 seconds
         c.textScale = clamp(c.textScale, 0f, 1.1f); c.itemScale = clamp(c.itemScale, 0.5f, 1.1f);
         c.titleScale = clamp(c.titleScale, 0.5f, 1.5f); c.subScale = clamp(c.subScale, 0.5f, 1.5f); c.subDelay = clamp(c.subDelay, 0f, 3f);
         c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);
@@ -156,7 +157,7 @@ public class FancyConfig {
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
         c.animPos = Math.max(0, Math.min(2, c.animPos)); c.textPos = Math.max(0, Math.min(1, c.textPos));
-        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 5f, 7f); a.pos = Math.max(0, Math.min(2, a.pos)); }
+        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 3f, 7f); a.pos = Math.max(0, Math.min(2, a.pos)); }
     }
     private static float clamp(float v, float lo, float hi) { return Math.max(lo, Math.min(hi, v)); }
 
