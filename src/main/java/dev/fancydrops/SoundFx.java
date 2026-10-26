@@ -29,7 +29,7 @@ public final class SoundFx {
     }
 
     public static final String NONE = "none";
-    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng"};
+    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng", "crops.normal", "crops.rng", "feast.normal", "feast.rng", "pests.normal", "pests.rng", "exp.normal", "exp.rng"};
     public static final String[] SLOTS = {"chop", "split", "reveal", "linger", "end"};
 
     private static final Map<String, Fx> ALL = new LinkedHashMap<>();
@@ -58,6 +58,19 @@ public final class SoundFx {
         reg("slay_reveal_epic", "Slayer reveal (epic)", SoundEvents.BEACON_ACTIVATE, 0.9f);
         reg("slay_glow", "Ember hum", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
         reg("slay_end", "Slayer farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
+        reg("farm_cut", "Scythe", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);                         // the Farming bank: snip, heave, bloom, farewell
+        reg("farm_heave", "Heave", SoundEvents.CROP_BREAK, 0.9f);
+        reg("farm_bloom", "Bloom", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
+        reg("farm_bloom_big", "Bloom (big)", SoundEvents.BEACON_ACTIVATE, 0.9f);
+        reg("farm_end", "Harvest farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
+        reg("pest_vacuum", "Vacuum", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);                      // the Pest bank
+        reg("pest_gulp", "Gulp", SoundEvents.SLIME_SQUISH, 0.9f);
+        reg("pest_pop", "Pest pop", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
+        reg("exp_flip", "Page flip", SoundEvents.BOOK_PAGE_TURN, 0.9f);                           // the Experiment bank: pages, cover, rune chord, farewell
+        reg("exp_open", "Book open", SoundEvents.ENCHANTMENT_TABLE_USE, 0.9f);
+        reg("exp_reveal", "Rune chord", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
+        reg("exp_reveal_epic", "Rune chord (epic)", SoundEvents.BEACON_ACTIVATE, 0.9f);
+        reg("exp_end", "Book farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
     }
 
     // Minecraft's own sounds, picked to work as a set: bright notes for the stepping slices, a solid hit, a reward, a long glow, a soft close
@@ -113,7 +126,15 @@ public final class SoundFx {
             {"treasure.rng", "mc_harvest", "mc_anvil", "mc_fanfare", "mc_hum", "mc_powerdown"},
             {"slayer.nodrops", "mc_swish", "mc_smack", NONE, NONE, NONE},
             {"slayer.normal", "mc_swish", "mc_smack", "mc_crystal", "mc_hum", "mc_powerdown"},
-            {"slayer.rng", "mc_swish", "mc_smack", "mc_fanfare", "mc_hum", "mc_powerdown"}};
+            {"slayer.rng", "mc_swish", "mc_smack", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"crops.normal", "mc_swish", "mc_harvest", "mc_levelup", "mc_hum", "mc_powerdown"},
+            {"crops.rng", "mc_swish", "mc_harvest", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"feast.normal", "mc_swish", "mc_harvest", "mc_levelup", "mc_hum", "mc_powerdown"},
+            {"feast.rng", "mc_swish", "mc_harvest", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"pests.normal", "mc_squish", "mc_smack", "mc_orb", "mc_hum", "mc_powerdown"},
+            {"pests.rng", "mc_squish", "mc_smack", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"exp.normal", "mc_page", "mc_enchant", "mc_crystal", "mc_hum", "mc_powerdown"},
+            {"exp.rng", "mc_page", "mc_enchant", "mc_fanfare", "mc_hum", "mc_powerdown"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) MC_DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
@@ -129,7 +150,15 @@ public final class SoundFx {
             {"treasure.rng", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"},
             {"slayer.nodrops", "slay_slash", "slay_cleave", NONE, NONE, NONE},
             {"slayer.normal", "slay_slash", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
-            {"slayer.rng", "slay_slash", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"}};
+            {"slayer.rng", "slay_slash", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"},
+            {"crops.normal", "farm_cut", "farm_heave", "farm_bloom", "myth_glow", "farm_end"},
+            {"crops.rng", "farm_cut", "farm_heave", "farm_bloom_big", "myth_glow_big", "farm_end"},
+            {"feast.normal", "farm_cut", "farm_heave", "farm_bloom", "myth_glow", "farm_end"},
+            {"feast.rng", "farm_cut", "farm_heave", "farm_bloom_big", "myth_glow_big", "farm_end"},
+            {"pests.normal", "pest_vacuum", "pest_gulp", "pest_pop", "myth_glow", "farm_end"},
+            {"pests.rng", "pest_vacuum", "pest_gulp", "farm_bloom_big", "myth_glow_big", "farm_end"},
+            {"exp.normal", "exp_flip", "exp_open", "exp_reveal", "myth_glow", "exp_end"},
+            {"exp.rng", "exp_flip", "exp_open", "exp_reveal_epic", "myth_glow_big", "exp_end"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 

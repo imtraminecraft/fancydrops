@@ -126,5 +126,109 @@
         "stream": false
       }
     ]
+  },
+  "farm_cut": {
+    "sounds": [
+      {
+        "name": "fancydrops:farm_cut",
+        "stream": false
+      }
+    ]
+  },
+  "farm_heave": {
+    "sounds": [
+      {
+        "name": "fancydrops:farm_heave",
+        "stream": false
+      }
+    ]
+  },
+  "farm_bloom": {
+    "sounds": [
+      {
+        "name": "fancydrops:farm_bloom",
+        "stream": false
+      }
+    ]
+  },
+  "farm_bloom_big": {
+    "sounds": [
+      {
+        "name": "fancydrops:farm_bloom_big",
+        "stream": false
+      }
+    ]
+  },
+  "farm_end": {
+    "sounds": [
+      {
+        "name": "fancydrops:farm_end",
+        "stream": false
+      }
+    ]
+  },
+  "pest_vacuum": {
+    "sounds": [
+      {
+        "name": "fancydrops:pest_vacuum",
+        "stream": false
+      }
+    ]
+  },
+  "pest_gulp": {
+    "sounds": [
+      {
+        "name": "fancydrops:pest_gulp",
+        "stream": false
+      }
+    ]
+  },
+  "pest_pop": {
+    "sounds": [
+      {
+        "name": "fancydrops:pest_pop",
+        "stream": false
+      }
+    ]
+  },
+  "exp_flip": {
+    "sounds": [
+      {
+        "name": "fancydrops:exp_flip",
+        "stream": false
+      }
+    ]
+  },
+  "exp_open": {
+    "sounds": [
+      {
+        "name": "fancydrops:exp_open",
+        "stream": false
+      }
+    ]
+  },
+  "exp_reveal": {
+    "sounds": [
+      {
+        "name": "fancydrops:exp_reveal",
+        "stream": false
+      }
+    ]
+  },
+  "exp_reveal_epic": {
+    "sounds": [
+      {
+        "name": "fancydrops:exp_reveal_epic",
+        "stream": false
+      }
+    ]
+  },
+  "exp_end": {
+    "sounds": [
+      {
+        "name": "fancydrops:exp_end",
+        "stream": false
+      }
+    ]
   }
 }

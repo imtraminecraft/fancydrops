@@ -23,12 +23,16 @@ final class Categories {
             List<DropData.Source> l = new ArrayList<>();
             if (id.equals("mythological")) { l.addAll(sources("myth")); l.addAll(sources("treasure")); }
             if (id.equals("bosses")) l.addAll(sources("slayer"));
+            if (id.equals("farming")) for (Group g : groups) l.addAll(sources(g.id()));
+            if (id.equals("experiments")) l.addAll(sources("exp"));
             return l;
         }
         /** The sources inside one group: the creatures of "myth", the burrow of "treasure". */
         List<DropData.Source> sources(String groupId) {
             List<DropData.Source> l = new ArrayList<>();
             if (id.equals("bosses")) { if (groupId.equals("slayer")) l.addAll(SlayerData.ALL); return l; }
+            if (id.equals("farming")) { DropData.Source f = FarmData.byId(groupId); if (f != null) l.add(f); return l; }
+            if (id.equals("experiments")) { if (groupId.equals("exp") && !ExperimentData.SOURCE.id.isEmpty()) l.add(ExperimentData.SOURCE); return l; }
             if (!id.equals("mythological")) return l;
             if (groupId.equals("myth")) l.addAll(MythData.spawnable(FancyConfig.get().mythPet));
             if (groupId.equals("treasure")) {
@@ -48,6 +52,22 @@ final class Categories {
         new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: a sword slices the boss and the item springs out with its text."),
         new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a huge finishing slice."));
 
+    /** Farming and Experiments: each group has the normal and the RNG animation only (a crop or a book always drops something). */
+    private static final Type FARM_NORMAL = new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: the plant grows and the item blooms with its text.");
+    private static final Type FARM_RNG = new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a golden bloom.");
+    private static final List<Type> FARM_TYPES = List.of(FARM_NORMAL, FARM_RNG);
+    private static final List<Type> PEST_TYPES = List.of(
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: a pest pops out of the soil and the item springs out with its text."),
+        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a big finish."));
+    private static final List<Type> EXP_TYPES = List.of(
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A book opens and its pages flip: the items rise from it with their text."),
+        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "An RNG item: the book flips for longer, with cinematic bars and blur."));
+
+    /** True for a group whose Drop Library page is one list of drops (no creatures to pick first). */
+    static boolean single(Group g) { return !g.id().equals("myth") && !g.id().equals("slayer"); }
+    /** True for a group whose Drop Library page lists creatures, each with its own page. */
+    static boolean hasSubs(Group g) { return g.id().equals("myth") || g.id().equals("slayer"); }
+
     static final List<Cat> ALL = List.of(
         new Cat("mythological", "Mythological", ":mytho:", 0xFF55D8FF, false, "Mythological Ritual is an event that occurs with the Mythological Ritual perk.", List.of(
             new Group("myth", "Mythological Mobs", ":mytho:", 0xFF55D8FF, "What plays when a ritual creature dies.", MYTH_TYPES),
@@ -56,8 +76,12 @@ final class Categories {
             new Group("slayer", "Slayers", ":grp_slayers:", 0xFFFF5A5A, "What plays when a slayer boss drops something.", SLAYER_TYPES),
             new Group("rift", "The Rift", ":grp_rift:", 0xFFB56BFF, "A mirror dimension of the main server.", SLAYER_TYPES, true),
             new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "The Nether of Hypixel SkyBlock.", SLAYER_TYPES, true))),
-        new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, true, "Crops, pests and the rare drops of the Garden.", List.of()),
-        new Cat("experiments", "Experiments", ":experiments:", 0xFFB56BFF, true, "The Experimentation Table's rewards.", List.of()),
+        new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, false, "Crops, pests and the rare drops of the Garden.", List.of(
+            new Group("crops", "Rare Crops", ":grp_crops:", 0xFF7CCB4F, "What plays when a crop turns out rare.", FARM_TYPES),
+            new Group("feast", "Harvest Feast", ":grp_feast:", 0xFFFFA63A, "What plays when the Harvest Feast serves a rare crop.", FARM_TYPES),
+            new Group("pests", "Pest Drops", ":grp_pests:", 0xFFD2603F, "What plays when a pest drops something.", PEST_TYPES))),
+        new Cat("experiments", "Experiments", ":experiments:", 0xFFB56BFF, false, "The Experimentation Table's rewards.", List.of(
+            new Group("exp", "Experimentation Table", ":grp_exp:", 0xFFB56BFF, "What plays when the Table gives out rewards.", EXP_TYPES))),
         new Cat("mining", "Mining", ":mining:", 0xFF9AB8FF, true, "Rare finds underground.", List.of()),
         new Cat("fishing", "Fishing", ":fishing:", 0xFF4FC3FF, true, "Sea creatures and what they carry.", List.of()),
         new Cat("dyes", "Dyes", ":dye:", 0xFFFF72C6, true, "Every dye in the game.", List.of()));

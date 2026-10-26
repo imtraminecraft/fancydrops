@@ -291,3 +291,9 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.4.59
 - Only a moon's glow may leave the frame of a slayer place; everything else is clipped to it (4 px above, 2 px at the sides).
 
+## Standing requirements added in 0.5.0
+- Farming has three pages (Rare Crops, Harvest Feast, Pest Drops) and Experiments one; each has Normal and RNG animations only, and neither shows the construction sign any more.
+- Farming keeps its old drop lists and chat detection; Experiments is one group with Normal and RNG.
+- Slayers and Experiments support two items in one animation: side by side, scaled down, with stacked compact text. The type is RNG if either item is RNG.
+- /fd simulate reflects two drops for Slayer and Experiments.
+- Every new animation has its own sounds in the Sounds tab and its own hand-pixeled, animated icon.

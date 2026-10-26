@@ -180,8 +180,7 @@ public final class ItemIcons {
     }
 
     private static boolean isBook(String id) {
-        for (DropData.Source s : MythData.ALL) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
-        for (DropData.Source s : SlayerData.ALL) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
+        for (DropData.Source s : DropData.sources()) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
         return false;
     }
 
@@ -268,8 +267,7 @@ public final class ItemIcons {
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).endsWith("_DYE")) return true;          // every SkyBlock dye is a player head
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).startsWith("DYE_")) return true;
         if (TreasureData.headArt(id)) return true;
-        for (DropData.Source s : MythData.ALL) for (DropData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
-        for (DropData.Source s : SlayerData.ALL) for (DropData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
+        for (DropData.Source s : DropData.sources()) for (DropData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
         return false;
     }
 
@@ -330,10 +328,8 @@ public final class ItemIcons {
     private static String wikiPageName(String id) {
         if ("MYTHOLOGICAL_RITUAL".equals(id)) return "Mythological Ritual";
         if (id.endsWith("_SPADE")) return id.charAt(0) + id.substring(1, id.indexOf('_')).toLowerCase(java.util.Locale.ROOT) + " Spade";
-        for (DropData.Source slayer : MythData.ALL) for (DropData.Drop drop : slayer.drops)
-            if (drop.id.equalsIgnoreCase(id)) return drop.name;
-        for (DropData.Source slayer : SlayerData.ALL) for (DropData.Drop drop : slayer.drops)
-            if (drop.id.equalsIgnoreCase(id)) return drop.name;
+        for (DropData.Source src : DropData.sources()) for (DropData.Drop drop : src.drops)
+            if (drop.id.equalsIgnoreCase(id)) return drop.img.isBlank() || FarmData.byId(src.id) != src ? drop.name : drop.img;       // farming drops name their wiki picture
         if ("@COIN".equals(id)) return "Coins";
         return id.replace('_', ' ');
     }

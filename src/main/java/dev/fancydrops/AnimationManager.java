@@ -29,17 +29,25 @@ public final class AnimationManager {
     /** The three types every group has. */
     public static final int NO_DROPS = 0, NORMAL = 1, RNG = 2;
     static final String[] TYPE_IDS = {"nodrops", "normal", "rng"};
+    /** The type constant of a type id ("rng" -> RNG). */
+    static int typeIndex(String id) { for (int i = 0; i < TYPE_IDS.length; i++) if (TYPE_IDS[i].equals(id)) return i; return NORMAL; }
 
     public static final class Anim {
         final Item item;                         // null = nothing dropped
-        final String group;                      // "myth" or "treasure"
+        Item item2;                              // a second drop of the same kill / reward (Slayers and Experiments): both show side by side
+        final String group;                      // "myth", "treasure", "slayer", "crops", "feast", "pests" or "exp"
         final int type;                          // NO_DROPS, NORMAL or RNG
         final long created = System.currentTimeMillis();
+        boolean helios;                          // the Ray of Helios pest drop: a sunbeam instead of the vacuum
         long start; float lastT = -1f; int kind = -1;                  // kind: which Mythological creature to show (-1 = the one the drop belongs to)
         Anim(String group, int type, Item item) { this.group = group; this.type = type; this.item = type == NO_DROPS ? null : item; }
         String key() { return group + "." + TYPE_IDS[type]; }
         FancyConfig.AnimCfg cfg() { return FancyConfig.get().anim(key()); }
         float secs() { return cfg().secs; }
+        /** The drops this animation shows: none, one or two. */
+        int count() { return item == null ? 0 : item2 == null ? 1 : 2; }
+        /** The drop that decides the colour of the effects: the rarer of the two. */
+        Item lead() { return item2 != null && item2.rank > item.rank ? item2 : item; }
     }
 
     private static final ArrayDeque<Anim> QUEUE = new ArrayDeque<>();
@@ -68,7 +76,7 @@ public final class AnimationManager {
     public static void render(GuiGraphicsExtractor g) {
         long now = System.currentTimeMillis();
         if (cur != null && (now - cur.start) / 1000f > cur.secs()) cur = null;
-        if (cur == null && !QUEUE.isEmpty()) { cur = QUEUE.poll(); cur.start = now; DropListener.announceNow(cur.item); }          // the chat alert goes out together with the animation
+        if (cur == null && !QUEUE.isEmpty()) { cur = QUEUE.poll(); cur.start = now; DropListener.announceNow(cur.item); DropListener.announceNow(cur.item2); }          // the chat alert goes out together with the animation
         if (cur == null) return;
         Minecraft mc = Minecraft.getInstance();
         float t = (now - cur.start) / 1000f;
@@ -80,6 +88,7 @@ public final class AnimationManager {
     static float[][] cueTimes(String scene, float secs) {
         float S = Math.max(3.6f, secs), O = S - Ritual.TAIL; boolean tre = scene.startsWith("treasure"), nod = scene.endsWith("nodrops");
         float[] beats = tre ? new float[]{0.215f * O, 0.505f * O, 0.795f * O} : new float[]{0.34f * O, 0.58f * O, 0.80f * O};
+        if (scene.startsWith("exp.")) beats = BookScene.flips(scene.endsWith("rng"), O);
         return new float[][]{beats, {O}, nod ? new float[0] : new float[]{O + 0.25f}, {O + 1.0f}, {S - 1.4f}};
     }
 
@@ -128,6 +137,21 @@ public final class AnimationManager {
         }
         return SAMPLE;
     }
+    private static final java.util.Map<String, Item> SAMPLES = new java.util.HashMap<>();
+    /** A sample drop of a group for the menu preview: the Farming groups and the Table show one of their own drops (the rarest for RNG), the rest the stick. */
+    private static Item sampleFor(String group, int type) {
+        String k = group + type;
+        Item have = SAMPLES.get(k);
+        if (have != null && have.source != null) return have;
+        DropData.Source src = null;
+        for (DropData.Source x : DropData.sources()) if (x.id.equals(group)) src = x;
+        if (src == null || src.drops.isEmpty()) return sample();
+        DropData.Drop dr = type == RNG ? src.drops.get(src.drops.size() - 1) : src.drops.get(src.drops.size() / 3);
+        Item it = DropListener.dropItem(src, dr, group.equals("exp") ? null : "OB:+25", true);
+        it.price = 21_000_000; it.priceSource = "Auction House";
+        SAMPLES.put(k, it);
+        return it;
+    }
     private static Item SAMPLE_HEAD;
     /** The Item editor shows a 3D head (a flat icon cannot spin or show a glow turning), so the sliders can be seen working. */
     private static Item sampleHead() {
@@ -148,7 +172,7 @@ public final class AnimationManager {
         if (key == null || !key.contains(".")) key = "myth.normal";
         String group = key.substring(0, key.indexOf('.')), tid = key.substring(key.indexOf('.') + 1);
         int type = NORMAL; for (int i = 0; i < TYPE_IDS.length; i++) if (TYPE_IDS[i].equals(tid)) type = i;
-        Anim a = new Anim(group, type, TextFx.itemOnly ? sampleHead() : sample());
+        Anim a = new Anim(group, type, TextFx.itemOnly ? sampleHead() : sampleFor(group, type));
         a.kind = (int) (((System.currentTimeMillis() - (key.equals(previewKey) ? previewT0 : System.currentTimeMillis())) / 1000L) / Math.max(1, (long) (FancyConfig.get().anim(key).secs + 1f))) % Ritual.KINDS.length;      // the preview cycles through all twelve creatures
         long now = System.currentTimeMillis();
         if (!key.equals(previewKey)) { previewKey = key; previewT0 = now; }

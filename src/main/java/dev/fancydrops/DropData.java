@@ -35,16 +35,23 @@ public final class DropData {
         try { return Double.parseDouble(m.group(1).replace(",", "")); } catch (Exception e) { return Double.MAX_VALUE; }
     }
 
+    /** Every source of every library (mythological, slayers, farming, experiments). */
+    public static List<Source> sources() {
+        List<Source> l = new ArrayList<>(MythData.ALL);
+        l.addAll(SlayerData.ALL); l.addAll(FarmData.ALL);
+        if (!ExperimentData.SOURCE.id.isEmpty()) l.add(ExperimentData.SOURCE);
+        return l;
+    }
+
     /** Drops that can never be sold, so they have no price. */
     public static boolean untradeable(String id) {
         if (id == null) return false;
-        for (Source s : MythData.ALL) for (Drop d : s.drops) if (d.untradeable && d.id.equals(id)) return true;
-        for (Source s : SlayerData.ALL) for (Drop d : s.drops) if (d.untradeable && d.id.equals(id)) return true;
+        for (Source s : sources()) for (Drop d : s.drops) if (d.untradeable && d.id.equals(id)) return true;
         return false;
     }
 
     /** Loads every drop library. */
-    public static void load() { MythData.load(); SlayerData.load(); }
+    public static void load() { MythData.load(); SlayerData.load(); FarmData.load(); ExperimentData.load(); }
 
     private DropData() {}
 }

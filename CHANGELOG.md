@@ -1,3 +1,12 @@
+## 0.5.0
+- Farming is live, with three pages: Rare Crops, Harvest Feast and Pest Drops. Each has a Normal and an RNG animation (the old farming scenes, redrawn with more frames: the plant grows and blooms, the pest pops out of the soil), its own sounds, and the old drop lists and chat detection (RARE CROP!, Overbloom).
+- Experiments is live: one Experimentation Table page with a Normal and an RNG animation. A book opens, its pages flip with more frames, and the rewards rise from it.
+- Two item drops: Slayers and Experiments can show two items side by side, with stacked compact text. Slayer twin drops are paired automatically; Experiment rewards come two per book.
+- /fd simulate takes a second drop for Slayer and Experiments, and has new Farming and Experiments commands.
+- Drop Library, Animations, Sounds and Chat have pages for all four new groups; the editor Play button has a "2 items" preview for Slayers and Experiments.
+- 13 new sounds (scythe, heave, bloom, vacuum, gulp, page flip, book open, rune chord...) and 4 new animated icons.
+- Fixed: playing a preview of a drop set to Off crashed.
+
 ## 0.4.59
 - The moon's glow may spill past the frame again (the unique look); the trees and the rest of the scenery stay inside.
 

@@ -1,0 +1,499 @@
+{
+ "v": 1,
+ "sources": [
+  {
+   "id": "exp",
+   "name": "Experimentation Table",
+   "boss": "Experimentation Table",
+   "icon": "enchanting_table",
+   "color": "#B56BFF",
+   "cube": {
+    "base": "#B56BFF",
+    "dark": "#6A3AA8",
+    "eye": "#FFE066"
+   },
+   "drops": [
+    {
+     "name": "Titanic Experience Bottle",
+     "id": "TITANIC_EXP_BOTTLE",
+     "icon": "experience_bottle",
+     "odds": "Extraordinary",
+     "chance": "1 in 89 (1.1236%)",
+     "rank": 1
+    },
+    {
+     "name": "Experiment the Fish",
+     "id": "EXPERIMENT_THE_FISH",
+     "icon": "cod",
+     "odds": "Extraordinary",
+     "chance": "1 in 89 (1.1236%)",
+     "rank": 1
+    },
+    {
+     "name": "Metaphysical Serum",
+     "id": "METAPHYSICAL_SERUM",
+     "icon": "glass_bottle",
+     "odds": "Extraordinary",
+     "chance": "1 in 89 (1.1236%)",
+     "rank": 1
+    },
+    {
+     "name": "Guardian Pet",
+     "id": "GUARDIAN;4",
+     "icon": "prismarine_shard",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Scavenger V",
+     "id": "ENCHANTMENT_SCAVENGER_5",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Sharpness VI",
+     "id": "ENCHANTMENT_SHARPNESS_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Life Steal IV",
+     "id": "ENCHANTMENT_LIFE_STEAL_4",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Power VI",
+     "id": "ENCHANTMENT_POWER_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Ender Slayer VI",
+     "id": "ENCHANTMENT_ENDER_SLAYER_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Thunderbolt VI",
+     "id": "ENCHANTMENT_THUNDERBOLT_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Growth VI",
+     "id": "ENCHANTMENT_GROWTH_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Chance IV",
+     "id": "ENCHANTMENT_CHANCE_4",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Blast Protection VI",
+     "id": "ENCHANTMENT_BLAST_PROTECTION_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Respite III",
+     "id": "ENCHANTMENT_RESPITE_3",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Venomous VI",
+     "id": "ENCHANTMENT_VENOMOUS_6",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Projectile Protection VI",
+     "id": "ENCHANTMENT_PROJECTILE_PROTECTION_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Fire Protection VI",
+     "id": "ENCHANTMENT_FIRE_PROTECTION_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Woodsplitter VI",
+     "id": "ENCHANTMENT_WOODSPLITTER_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Giant Killer VI",
+     "id": "ENCHANTMENT_GIANT_KILLER_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Drain IV",
+     "id": "ENCHANTMENT_DRAIN_4",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Protection VI",
+     "id": "ENCHANTMENT_PROTECTION_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "Titan Killer VI",
+     "id": "ENCHANTMENT_TITAN_KILLER_6",
+     "icon": "enchanted_book",
+     "odds": "Rare",
+     "chance": "1 in 18 (5.618%)",
+     "rank": 1
+    },
+    {
+     "name": "A Beginner's Guide to Pesthunting",
+     "id": "PESTHUNTING_GUIDE",
+     "icon": "book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Chain of the End Times",
+     "id": "CHAIN_END_TIMES",
+     "icon": "string",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "End Stone Idol",
+     "id": "ENDSTONE_IDOL",
+     "icon": "end_stone",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Ensnared Snail",
+     "id": "ENSNARED_SNAIL",
+     "icon": "nautilus_shell",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Fateful Stinger",
+     "id": "FATEFUL_STINGER",
+     "icon": "spider_eye",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Gold Bottle Cap",
+     "id": "GOLD_BOTTLE_CAP",
+     "icon": "gold_nugget",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Golden Bounty",
+     "id": "GOLDEN_BOUNTY",
+     "icon": "gold_ingot",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Octopus Tendril",
+     "id": "OCTOPUS_TENDRIL",
+     "icon": "ink_sac",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Severed Hand",
+     "id": "SEVERED_HAND",
+     "icon": "bone",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Severed Pincer",
+     "id": "SEVERED_PINCER",
+     "icon": "iron_nugget",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Troubled Bubble",
+     "id": "TROUBLED_BUBBLE",
+     "icon": "heart_of_the_sea",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Vibrant Coral",
+     "id": "VIBRANT_CORAL",
+     "icon": "brain_coral",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 3
+    },
+    {
+     "name": "Blast Protection VII",
+     "id": "ENCHANTMENT_BLAST_PROTECTION_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Chance V",
+     "id": "ENCHANTMENT_CHANCE_5",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Cleave VI",
+     "id": "ENCHANTMENT_CLEAVE_6",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Critical VII",
+     "id": "ENCHANTMENT_CRITICAL_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Cubism VI",
+     "id": "ENCHANTMENT_CUBISM_6",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Drain V",
+     "id": "ENCHANTMENT_DRAIN_5",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Execute VI",
+     "id": "ENCHANTMENT_EXECUTE_6",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Fire Protection VII",
+     "id": "ENCHANTMENT_FIRE_PROTECTION_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "First Strike V",
+     "id": "ENCHANTMENT_FIRST_STRIKE_5",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Giant Killer VII",
+     "id": "ENCHANTMENT_GIANT_KILLER_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Gravity VI",
+     "id": "ENCHANTMENT_GRAVITY_6",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Growth VII",
+     "id": "ENCHANTMENT_GROWTH_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Life Steal V",
+     "id": "ENCHANTMENT_LIFE_STEAL_5",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Looting V",
+     "id": "ENCHANTMENT_LOOTING_5",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Luck VII",
+     "id": "ENCHANTMENT_LUCK_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Power VII",
+     "id": "ENCHANTMENT_POWER_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Projectile Protection VII",
+     "id": "ENCHANTMENT_PROJECTILE_PROTECTION_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Prosecute VI",
+     "id": "ENCHANTMENT_PROSECUTE_6",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Protection VII",
+     "id": "ENCHANTMENT_PROTECTION_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Sharpness VII",
+     "id": "ENCHANTMENT_SHARPNESS_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Snipe IV",
+     "id": "ENCHANTMENT_SNIPE_4",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Titan Killer VII",
+     "id": "ENCHANTMENT_TITAN_KILLER_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Triple-Strike V",
+     "id": "ENCHANTMENT_TRIPLE_STRIKE_5",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Thunderbolt VII",
+     "id": "ENCHANTMENT_THUNDERBOLT_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Thunderlord VII",
+     "id": "ENCHANTMENT_THUNDERLORD_7",
+     "icon": "enchanted_book",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 3,704 (0.027%)",
+     "rank": 1
+    },
+    {
+     "name": "Nadeshiko Dye",
+     "id": "DYE_NADESHIKO",
+     "icon": "pink_dye",
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 8,333 (0.012%)",
+     "rank": 3
+    }
+   ]
+  }
+ ]
+}

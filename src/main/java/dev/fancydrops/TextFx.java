@@ -41,6 +41,33 @@ final class TextFx {
         if (c.showMagicFind && it.mf != null) { lineDelay = 4f * c.subDelay; line(g, font, cx, dy + Math.round(9 * small * (facts ? 1.95f : 1f)) + 3, small, alpha, lit(mfText(it.mf)), mfColor(it.mf)); lineDelay = 0f; }
     }
 
+    // ---- two drops from one kill or reward: each gets its name and one detail line, one under the other
+    private static float entryHeight(Item it, float sc, FancyConfig c) {
+        float big = 1.5f * sc * c.titleScale, small = 1.1f * sc * c.subScale;
+        return 9 * big + 3 + (hasFacts(it, c) ? 9 * small : 0f);
+    }
+    static float blockHeight2(Item a, Item b, float sc, FancyConfig c) {
+        float small = 1.1f * sc * c.subScale;
+        return entryHeight(a, sc, c) + 5 + entryHeight(b, sc, c) + (c.showMagicFind && a.mf != null ? 3 + 9 * small : 0f);
+    }
+    /** Two drops: the first one's name and details, then the second's a moment later, then the shared Magic Find / Overbloom. */
+    static void block2(GuiGraphicsExtractor g, Font font, int cx, int y, float sc, Item a, Item b, FancyConfig c, int alpha) {
+        if (alpha <= 4) return;
+        float small = 1.1f * sc * c.subScale;
+        float step = c.subDelay / 0.35f;
+        int y2 = y;
+        for (int i = 0; i < 2; i++) {
+            Item it = i == 0 ? a : b;
+            float big = 1.5f * sc * c.titleScale;
+            lineDelay = i * 0.9f * step;
+            line(g, font, cx, y2, big, alpha, lit(it.title()).withStyle(ChatFormatting.BOLD), it.color());
+            if (hasFacts(it, c)) { lineDelay += 0.35f * step; detailAt(g, font, cx, y2 + Math.round(9 * big) + 3, small, it, c, alpha); }
+            y2 += Math.round(entryHeight(it, sc, c)) + 5;
+        }
+        if (c.showMagicFind && a.mf != null) { lineDelay = 1.9f * step; line(g, font, cx, y2 - 2, small, alpha, lit(mfText(a.mf)), mfColor(a.mf)); }
+        lineDelay = 0f;
+    }
+
     /** The looping words start again from the first letter (an effect was hovered or pressed). */
     /** Seconds into the looping words of the Text editor (0..period). */
     static float loopClock(float period) { return ((System.currentTimeMillis() - textT0) / 1000f) % period; }

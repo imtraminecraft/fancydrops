@@ -169,18 +169,20 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                 say(ctx.getSource(), "FancyDrops " + (on ? "enabled" : "disabled") + " (animations and chat announcements)");
                 return Command.SINGLE_SUCCESS;
             }))
-            .then(ClientCommands.literal("simulate")
-                .executes(ctx -> { say(ctx.getSource(), "Use " + SIM_USAGE); return Command.SINGLE_SUCCESS; })
-                .then(ClientCommands.literal("Mythological")
-                    .executes(ctx -> { say(ctx.getSource(), "Use " + SIM_USAGE); return Command.SINGLE_SUCCESS; })
-                    .then(ClientCommands.argument("args", StringArgumentType.greedyString())
-                        .suggests((ctx, b) -> suggestSim(b, false))
-                        .executes(ctx -> simulate(ctx.getSource(), StringArgumentType.getString(ctx, "args"), false))))
-                .then(ClientCommands.literal("Slayer")
-                    .executes(ctx -> { say(ctx.getSource(), "Use " + SIM_SLAYER); return Command.SINGLE_SUCCESS; })
-                    .then(ClientCommands.argument("args", StringArgumentType.greedyString())
-                        .suggests((ctx, b) -> suggestSim(b, true))
-                        .executes(ctx -> simulate(ctx.getSource(), StringArgumentType.getString(ctx, "args"), true)))));
+            .then(simLiteral(ClientCommands.literal("simulate")));
+    }
+
+    /** /fd simulate <Mythological|Slayer|Farming|Experiments> ...: one literal per category, each with Tab completion. */
+    private static LiteralArgumentBuilder<FabricClientCommandSource> simLiteral(LiteralArgumentBuilder<FabricClientCommandSource> sim) {
+        sim.executes(ctx -> { say(ctx.getSource(), "Use " + SIM_USAGE); return Command.SINGLE_SUCCESS; });
+        for (String mode : new String[]{"Mythological", "Slayer", "Farming", "Experiments"}) {
+            sim.then(ClientCommands.literal(mode)
+                .executes(ctx -> { say(ctx.getSource(), "Use " + usage(mode)); return Command.SINGLE_SUCCESS; })
+                .then(ClientCommands.argument("args", StringArgumentType.greedyString())
+                    .suggests((ctx, bd) -> suggestSim(bd, mode))
+                    .executes(ctx -> simulate(ctx.getSource(), StringArgumentType.getString(ctx, "args"), mode))));
+        }
+        return sim;
     }
 
     static final String DISCORD = "https://discord.gg/bum8VPbRPR";
@@ -203,7 +205,9 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         helpLine(s, "/fd mute", "Turn every sound on or off");
         helpLine(s, "/fd toggle", "Turn the whole mod on or off");
         helpLine(s, "/fd simulate Mythological <Mob|Treasure> <Drop> <mf>", "Play a pretend drop through the real animation");
-        helpLine(s, "/fd simulate Slayer <Boss> <Drop> <mf>", "The same for a slayer boss (Nothing for no drop)");
+        helpLine(s, "/fd simulate Slayer <Boss> <Drop> [Drop 2] <mf>", "The same for a slayer boss: one or two drops (Nothing for no drop)");
+        helpLine(s, "/fd simulate Farming <Rare Crops|Harvest Feast|Pest Drops> <Drop> <overbloom>", "A pretend crop or pest drop");
+        helpLine(s, "/fd simulate Experiments <Drop> [Drop 2]", "A pretend Experimentation Table reward: one or two items");
         s.sendFeedback(Component.literal(" "));
         s.sendFeedback(Chat.color("Example  ", Chat.DIM).append(Chat.color("/fd simulate Mythological Minos Hunter Daedalus Stick 250", Chat.COMMAND)));
         s.sendFeedback(Chat.color("Tab completes names. Use Nothing as the drop for a ritual that gave nothing. The magic find goes last and defaults to 250.", Chat.DIM));
@@ -226,9 +230,21 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         return out;
     }
 
-    private static final String SIM_USAGE = "/fd simulate Mythological <Mob|Treasure> <Drop> <mf>";
-    private static final String SIM_SLAYER = "/fd simulate Slayer <Boss> <Drop> <mf>";
-    private static final String[] MF_TIPS = {"0", "100", "250", "400"};
+    private static final String SIM_USAGE = "/fd simulate <Mythological|Slayer|Farming|Experiments> ...";
+    private static final String[] MF_TIPS = {"0", "100", "250", "400"}, OB_TIPS = {"0", "25", "100", "250"};
+
+    private static String usage(String mode) {
+        return switch (mode) {
+            case "Slayer" -> "/fd simulate Slayer <Boss> <Drop> [Drop 2] <mf>";
+            case "Farming" -> "/fd simulate Farming <Rare Crops|Harvest Feast|Pest Drops> <Drop> <overbloom>";
+            case "Experiments" -> "/fd simulate Experiments <Drop> [Drop 2]";
+            default -> "/fd simulate Mythological <Mob|Treasure> <Drop> <mf>";
+        };
+    }
+    /** The sources a mode lists by name (a boss, a mob, a farming page); the Table has none, its drops come straight after the word. */
+    private static java.util.List<DropData.Source> libOf(String mode) {
+        return switch (mode) { case "Slayer" -> SlayerData.ALL; case "Farming" -> FarmData.ALL; case "Experiments" -> java.util.List.of(); default -> MythData.ALL; };
+    }
 
     /** The text after a leading source name ("Minos Hunter Hilt of ..." -> "Hilt of ..."), or null when the text doesn't start with one. */
     private static String afterName(String t, String name) {
@@ -236,52 +252,63 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         return t.regionMatches(true, 0, name, 0, n) && (t.length() == n || Character.isWhitespace(t.charAt(n))) ? t.substring(n).trim() : null;
     }
 
-    /** /fd simulate Mythological <Mob|Treasure> <Drop> <mf>: the mob (or Treasure), one drop (Nothing for none), then the magic find, 250 by default. */
-    private static int simulate(FabricClientCommandSource source, String args, boolean slayer) {
-        String t = args.trim(); int mf = 250;
+    /** /fd simulate <mode> ...: the source (a mob, a boss, a farming page), one drop (two for Slayer and Experiments; Nothing for none), then the magic find or Overbloom. */
+    private static int simulate(FabricClientCommandSource source, String args, String mode) {
+        String t = args.trim(); boolean exp = mode.equals("Experiments"), farm = mode.equals("Farming");
+        int mf = farm ? 25 : 250;
         String[] w = t.split("\\s+");
-        if (w.length > 1 && w[w.length - 1].matches("\\d{1,5}")) { mf = Math.min(10000, Integer.parseInt(w[w.length - 1])); t = t.substring(0, t.length() - w[w.length - 1].length()).trim(); }
-        if (slayer) {
-            DropData.Source bs = null;
-            for (DropData.Source sl : SlayerData.ALL) if (afterName(t, sl.boss) != null && (bs == null || sl.boss.length() > bs.boss.length())) bs = sl;
-            if (bs == null) { say(source, "Pick a boss: " + String.join(", ", SlayerData.ALL.stream().map(sl -> sl.boss).toList())); return 0; }
-            DropListener.simulateSlayer(mf, t, m -> source.sendFeedback(Chat.msg(m)));
-            return Command.SINGLE_SUCCESS;
+        if (!exp && w.length > 1 && w[w.length - 1].matches("\\d{1,5}")) { mf = Math.min(10000, Integer.parseInt(w[w.length - 1])); t = t.substring(0, t.length() - w[w.length - 1].length()).trim(); }
+        java.util.function.Consumer<String> reply = m -> source.sendFeedback(Chat.msg(m));
+        if (exp) { DropListener.simulateExp(t, reply); return Command.SINGLE_SUCCESS; }
+        if (mode.equals("Mythological")) {
+            String rest = afterName(t, "Treasure");
+            if (rest != null) { DropListener.simulateTreasure(rest, mf, reply); return Command.SINGLE_SUCCESS; }
         }
-        String rest = afterName(t, "Treasure");
-        if (rest != null) { DropListener.simulateTreasure(rest, mf, m -> source.sendFeedback(Chat.msg(m))); return Command.SINGLE_SUCCESS; }
         DropData.Source best = null;
-        for (DropData.Source sl : MythData.ALL) if (afterName(t, sl.boss) != null && (best == null || sl.boss.length() > best.boss.length())) best = sl;
-        if (best == null) { say(source, "Pick a mob or Treasure: " + String.join(", ", MythData.ALL.stream().map(sl -> sl.boss).toList()) + ", Treasure"); return 0; }
-        DropListener.simulateMyth(mf, t, m -> source.sendFeedback(Chat.msg(m)));
+        for (DropData.Source sl : libOf(mode)) if (afterName(t, sl.boss) != null && (best == null || sl.boss.length() > best.boss.length())) best = sl;
+        if (best == null && !farm) {
+            say(source, "Pick a " + (mode.equals("Slayer") ? "boss: " : "mob or Treasure: ") + String.join(", ", libOf(mode).stream().map(sl -> sl.boss).toList()) + (mode.equals("Slayer") ? "" : ", Treasure"));
+            return 0;
+        }
+        switch (mode) {
+            case "Slayer" -> DropListener.simulateSlayer(mf, t, reply);
+            case "Farming" -> DropListener.simulateFarm(mf, t, reply);
+            default -> DropListener.simulateMyth(mf, t, reply);
+        }
         return Command.SINGLE_SUCCESS;
     }
 
-    /** Tab completion: the mob (or Treasure), then its drops (and Nothing), then the magic find. */
-    private static CompletableFuture<Suggestions> suggestSim(SuggestionsBuilder builder, boolean slayer) {
-        java.util.List<DropData.Source> lib = slayer ? SlayerData.ALL : MythData.ALL;
+    /** Tab completion: the source, then its drops (and Nothing), then the magic find. */
+    private static CompletableFuture<Suggestions> suggestSim(SuggestionsBuilder builder, String mode) {
+        boolean exp = mode.equals("Experiments"), farm = mode.equals("Farming"), slayer = mode.equals("Slayer"), myth = mode.equals("Mythological");
+        int maxDrops = slayer || exp ? 2 : 1;
+        java.util.List<DropData.Source> lib = libOf(mode);
         String rem = builder.getRemaining(); int lead = rem.length() - rem.stripLeading().length(); String t = rem.stripLeading();
-        java.util.List<String> names = new java.util.ArrayList<>(); for (DropData.Source sl : lib) names.add(sl.boss); if (!slayer) names.add("Treasure");
-        String owner = null; for (String nm : names) { String r = afterName(t, nm); if (r != null && t.length() > nm.length() && (owner == null || nm.length() > owner.length())) owner = nm; }
-        if (owner == null) {
-            SuggestionsBuilder b0 = builder.createOffset(builder.getStart() + lead);
-            for (String nm : names) if (nm.toLowerCase(Locale.ROOT).startsWith(t.toLowerCase(Locale.ROOT))) b0.suggest(nm);
-            return b0.buildFuture();
+        String owner = "";
+        if (!exp) {
+            java.util.List<String> names = new java.util.ArrayList<>(); for (DropData.Source sl : lib) names.add(sl.boss); if (myth) names.add("Treasure");
+            owner = null; for (String nm : names) { String r = afterName(t, nm); if (r != null && t.length() > nm.length() && (owner == null || nm.length() > owner.length())) owner = nm; }
+            if (owner == null) {
+                SuggestionsBuilder b0 = builder.createOffset(builder.getStart() + lead);
+                for (String nm : names) if (nm.toLowerCase(Locale.ROOT).startsWith(t.toLowerCase(Locale.ROOT))) b0.suggest(nm);
+                return b0.buildFuture();
+            }
         }
         java.util.List<String> pool = new java.util.ArrayList<>();
-        if (owner.equals("Treasure")) { java.util.Set<String> seen = new java.util.LinkedHashSet<>(); for (int sp = 0; sp < 3; sp++) for (DropData.Drop d : TreasureData.drops(sp)) seen.add(d.name); pool.addAll(seen); }
-        else { for (DropData.Source sl : lib) if (sl.boss.equals(owner)) for (DropData.Drop d : sl.drops) pool.add(d.name); pool.add("Nothing"); }
-        String after = t.substring(owner.length()).stripLeading();
-        int offset = rem.length() - after.length();
-        String dropDone = null; for (String nm : pool) if (after.length() > nm.length() && after.regionMatches(true, 0, nm, 0, nm.length()) && Character.isWhitespace(after.charAt(nm.length())) && (dropDone == null || nm.length() > dropDone.length())) dropDone = nm;
-        if (dropDone != null) {
-            String typed = after.substring(dropDone.length()).stripLeading();
-            SuggestionsBuilder b2 = builder.createOffset(builder.getStart() + rem.length() - typed.length());
-            for (String m : MF_TIPS) if (m.startsWith(typed)) b2.suggest(m);
-            return b2.buildFuture();
+        if (exp) for (DropData.Drop d : ExperimentData.SOURCE.drops) pool.add(d.name);
+        else if (owner.equals("Treasure")) { java.util.Set<String> seen = new java.util.LinkedHashSet<>(); for (int sp = 0; sp < 3; sp++) for (DropData.Drop d : TreasureData.drops(sp)) seen.add(d.name); pool.addAll(seen); }
+        else { for (DropData.Source sl : lib) if (sl.boss.equals(owner)) for (DropData.Drop d : sl.drops) pool.add(d.name); if (!farm) pool.add("Nothing"); }
+        String after = exp ? t : t.substring(owner.length()).stripLeading();
+        int done = 0;
+        while (done < maxDrops) {                                           // drops that are already typed in full
+            String hit = null;
+            for (String nm : pool) if (after.length() > nm.length() && after.regionMatches(true, 0, nm, 0, nm.length()) && Character.isWhitespace(after.charAt(nm.length())) && (hit == null || nm.length() > hit.length())) hit = nm;
+            if (hit == null) break;
+            after = after.substring(hit.length()).stripLeading(); done++;
         }
-        SuggestionsBuilder b1 = builder.createOffset(builder.getStart() + offset);
-        for (String nm : pool) if (nm.toLowerCase(Locale.ROOT).contains(after.toLowerCase(Locale.ROOT))) b1.suggest(nm);
+        SuggestionsBuilder b1 = builder.createOffset(builder.getStart() + rem.length() - after.length());
+        if (done < maxDrops) for (String nm : pool) if (nm.toLowerCase(Locale.ROOT).contains(after.toLowerCase(Locale.ROOT))) b1.suggest(nm);
+        if (!exp && done >= 1) for (String m : farm ? OB_TIPS : MF_TIPS) if (m.startsWith(after)) b1.suggest(m);
         return b1.buildFuture();
     }
 }

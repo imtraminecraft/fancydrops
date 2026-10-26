@@ -2307,7 +2307,7 @@ public class FancyScreen extends Screen {
                 Categories.Cat cat = Categories.ALL.get(ci); if (cat.wip()) continue;
                 for (Categories.Group gr : cat.groups()) {
                     if (gr.wip()) continue;
-                    boolean sub = gr.id().equals("myth") || gr.id().equals("slayer"); boolean grpHit = false;
+                    boolean sub = Categories.hasSubs(gr); boolean grpHit = false;
                     for (DropData.Source so : cat.sources(gr.id())) {
                         boolean hit = srcName(so).toLowerCase(Locale.ROOT).contains(q);
                         if (!hit) for (DropData.Drop d : so.drops) if (d.name.toLowerCase(Locale.ROOT).contains(q)) { hit = true; break; }
@@ -2451,7 +2451,7 @@ public class FancyScreen extends Screen {
         // three levels: the category hub (Mythological Mobs / Treasure), a group page (the creatures), and one source page (a creature or the burrow)
         for (Categories.Group gr : cat.groups()) {
             srcList.add(new String[]{gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())}); if (gr.wip()) srcWip.add(gr.id());
-            if (gr.id().equals("myth") || gr.id().equals("slayer")) for (DropData.Source s : cat.sources(gr.id())) srcList.add(new String[]{gr.id() + "/" + s.id, srcName(s), srcIcon(s), String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
+            if (Categories.hasSubs(gr)) for (DropData.Source s : cat.sources(gr.id())) srcList.add(new String[]{gr.id() + "/" + s.id, srcName(s), srcIcon(s), String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
         }
         String ds = dropSrc == null ? "" : dropSrc;
         String gid = ds.contains("/") ? ds.substring(0, ds.indexOf('/')) : ds;
@@ -2461,10 +2461,10 @@ public class FancyScreen extends Screen {
         List<DropData.Source> srcs = cat.sources(grp.id());
         DropData.Source open = null;
         if (ds.contains("/")) for (DropData.Source s : srcs) if (s.id.equals(ds.substring(ds.indexOf('/') + 1))) open = s;
-        if (open == null && grp.id().equals("treasure")) open = srcs.get(0);       // the burrow is one page: it opens straight away
+        if (open == null && Categories.single(grp) && !srcs.isEmpty()) open = srcs.get(0);       // the burrow, a crop list, the Table: one page, it opens straight away
         if (open == null) { dropsGroup(cat, grp, srcs, c); return; }
-        boolean single = grp.id().equals("treasure");
-        if (single) { rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null))); int tot = 0; for (DropData.Source ts : srcs) tot += ts.drops.size(); rows.add(hero(grp.icon(), grp.name(), tot + (tot == 1 ? " Drop" : " Drops") + " listed", grp.color())); treasureSettings(rows, c); }
+        boolean single = Categories.single(grp);
+        if (single) { rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null))); int tot = 0; for (DropData.Source ts : srcs) tot += ts.drops.size(); rows.add(hero(grp.icon(), grp.name(), tot + (tot == 1 ? " Drop" : " Drops") + " listed", grp.color())); if (grp.id().equals("treasure")) treasureSettings(rows, c); }
         final Categories.Group fg = grp;
         dropsSource(cat, fg, open, c, single);
     }
@@ -2498,7 +2498,7 @@ public class FancyScreen extends Screen {
     private void dropsSource(Categories.Cat cat, Categories.Group grp, DropData.Source s, FancyConfig c, boolean single) {
         String nm = srcName(s);
         FancyConfig.SourceCfg sc = c.source(s.id);
-        if (!single) { rows.add(backRow(grp.name(), "Back to all the " + grp.name(), grp.color(), () -> openPage(curSub(), grp.id(), grp.name()))); rows.add(hero(grp.id().equals("myth") || grp.id().equals("slayer") ? srcIcon(s) : s.icon, nm, s.drops.size() + " drops", s.color())); }
+        if (!single) { rows.add(backRow(grp.name(), "Back to all the " + grp.name(), grp.color(), () -> openPage(curSub(), grp.id(), grp.name()))); rows.add(hero(srcIcon(s), nm, s.drops.size() + " drops", s.color())); }
         Row cols = section(""); cols.dropCols = true; cols.h = 14; rows.add(cols);
         AnimAll aa = new AnimAll(); List<FancyConfig.DropCfg> all = new ArrayList<>();
         for (DropData.Drop d : s.drops) { FancyConfig.DropCfg dc = c.drop(s.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); aa.cfgs.add(dc); all.add(dc); }
@@ -2518,7 +2518,7 @@ public class FancyScreen extends Screen {
         dr.iconId = s == TreasureData.SOURCE && !TreasureData.headArt(d.id) ? null : d.id; dr.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds);
         dr.cell = CELL; dr.dcfg = dc; dr.dropRank = Math.max(0, d.rank);
         dr.ctls.add(new AnimBtn(dc));
-        dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (s == TreasureData.SOURCE) DropListener.playTreasureDrop(d); else if (SlayerData.byId(s.id) == s) DropListener.playSlayerDrop(s, d); else DropListener.playMythDrop(s, d); })));
+        dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> DropListener.playDrop(s, d))));
         dr.ctls.add(tog(() -> dc.announce, v -> { dc.announce = v; FancyConfig.save(); }, 0xFFD98A1F));
         return dr;
     }
@@ -2577,7 +2577,8 @@ public class FancyScreen extends Screen {
         rows.add(typePicker(gr, c));
         rows.add(note(ty.blurb(), ty.color()));
         Row pl = row(0, ":play:", "Preview", "Plays it over the game, like a real drop", ty.color());
-        pl.ctls.add(new Btn("▶ Play", GREEN, () -> play(() -> DropListener.playSample(gr.id(), ti)))); rows.add(pl);
+        pl.ctls.add(new Btn("▶ Play", GREEN, () -> play(() -> DropListener.playSample(gr.id(), AnimationManager.typeIndex(ty.id()), false))));
+        if (gr.id().equals("slayer") || gr.id().equals("exp")) pl.ctls.add(new Btn("▶ 2 items", GREEN, () -> play(() -> DropListener.playSample(gr.id(), AnimationManager.typeIndex(ty.id()), true)))); rows.add(pl);
         Row len = row(0, ":clock:", "Length", "Between 5 and 7 seconds. The first half is the same for every type", Ui.ACCENT);
         len.ctls.add(new Slider(5, 7, 0.1, () -> a.secs, v -> { a.secs = (float) (Math.round(v * 10) / 10.0); }, () -> String.format(Locale.ROOT, "%.1f s", a.secs))); rows.add(len);
         if (ty.id().equals("rng")) {                                         // only the big finish has cinematic bars and a blurred background
@@ -2732,8 +2733,8 @@ public class FancyScreen extends Screen {
                 List<FancyConfig.DropCfg> dcs = new ArrayList<>();
                 for (DropData.Drop d : s.drops) { FancyConfig.DropCfg dc = c.drop(s.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); dcs.add(dc); }
                 int on = 0; for (FancyConfig.DropCfg dc : dcs) if (dc.announce) on++;
-                String nm = gr.id().equals("treasure") ? gr.name() : srcName(s);
-                Row f = fold("ce_" + s.id, gr.id().equals("myth") || gr.id().equals("slayer") ? srcIcon(s) : s.icon, nm, gr.name() + "  ·  " + on + " of " + dcs.size() + " announce", s.color());
+                String nm = Categories.single(gr) ? gr.name() : srcName(s);
+                Row f = fold("ce_" + s.id, Categories.hasSubs(gr) ? srcIcon(s) : gr.id().equals("treasure") ? s.icon : gr.icon(), nm, gr.name() + "  ·  " + on + " of " + dcs.size() + " announce", s.color());
                 f.ctls.add(tog(() -> { for (FancyConfig.DropCfg dc : dcs) if (!dc.announce) return false; return !dcs.isEmpty(); }, v -> { for (FancyConfig.DropCfg dc : dcs) dc.announce = v; FancyConfig.save(); }, 0xFFD98A1F));
                 rows.add(f);
                 if (!f.open) continue;

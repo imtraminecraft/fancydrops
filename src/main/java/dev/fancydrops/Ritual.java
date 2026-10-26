@@ -24,7 +24,7 @@ final class Ritual {
 
     static final int CW = 320, CH = 180;
     private static final Canvas main = new Canvas(CW, CH), sil = new Canvas(CW, CH);
-    private static Canvas cv = main;                                                    // what the drawing helpers paint on
+    static Canvas cv = main;                                                    // what the drawing helpers paint on
 
     private static final int CYAN = 0x7FE8FF, GOLD = 0xFFD25A, EMBER = 0xFF8A3A, WHITE = 0xFFFFFF, GREY = 0x6A7388;
     private static final float[] POS = {0.30f, 0.46f, 0.66f};
@@ -40,13 +40,13 @@ final class Ritual {
     static int mixc(int a, int b, float f) { return Canvas.mix(0xFF000000 | a, 0xFF000000 | b, f) & 0xFFFFFF; }
 
     // ------------------------------------------------------------------ pixel drawing
-    private static void dot(float x, float y, int rgb, float a) { if (a > 0.01f) cv.set(Math.round(x), Math.round(y), A(a, rgb)); }
-    private static void line(float x0, float y0, float x1, float y1, int rgb, float a) {
+    static void dot(float x, float y, int rgb, float a) { if (a > 0.01f) cv.set(Math.round(x), Math.round(y), A(a, rgb)); }
+    static void line(float x0, float y0, float x1, float y1, int rgb, float a) {
         int n = (int) Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
         for (int i = 0; i <= n; i++) { float f = i / (float) n; dot(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, rgb, a); }
     }
     /** An arc of an ellipse. from..to in radians (a full circle is 0..2pi), rot turns it, dash > 0 breaks it into dashes. */
-    private static void ringE(float cx, float cy, float rx, float ry, int rgb, float a, float from, float to, float rot, int dash) {
+    static void ringE(float cx, float cy, float rx, float ry, int rgb, float a, float from, float to, float rot, int dash) {
         int steps = Math.max(24, (int) (6.3f * Math.max(rx, ry) * 1.3f));
         for (int i = 0; i <= steps; i++) {
             float ang = lerp(from, to, i / (float) steps);
@@ -55,7 +55,7 @@ final class Ritual {
             dot(cx + cs * rx, cy + sn * ry, rgb, a);
         }
     }
-    private static void fillE(float cx, float cy, float rx, float ry, int rgb, float a) {
+    static void fillE(float cx, float cy, float rx, float ry, int rgb, float a) {
         if (rx < 0.5f || ry < 0.5f) return;
         for (int y = (int) Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
             float v = (y + 0.5f - cy) / ry; if (v * v > 1f) continue;
@@ -64,7 +64,7 @@ final class Ritual {
         }
     }
     /** A soft elliptical glow: strongest in the middle, nothing at the edge. */
-    private static void glowE(float cx, float cy, float rx, float ry, int rgb, float strength) {
+    static void glowE(float cx, float cy, float rx, float ry, int rgb, float strength) {
         if (strength <= 0.01f || rx < 1 || ry < 1) return;
         for (int y = (int) Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (int x = (int) Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
             float dx = (x + 0.5f - cx) / rx, dy = (y + 0.5f - cy) / ry, d = (float) Math.sqrt(dx * dx + dy * dy);
@@ -73,7 +73,7 @@ final class Ritual {
             cv.set(x, y, A(strength * f, rgb));
         }
     }
-    private static void glint(float x, float y, int r, int rgb, float a) { if (a > 0.03f) cv.glint(Math.round(x), Math.round(y), r, rgb, cl(a)); }
+    static void glint(float x, float y, int r, int rgb, float a) { if (a > 0.03f) cv.glint(Math.round(x), Math.round(y), r, rgb, cl(a)); }
 
     /** A forked bolt of lightning from (x0,y0) to (x1,y1): a wide soft glow, a coloured body and a white core. */
     private static void bolt(float x0, float y0, float x1, float y1, int seed, int rgb, float a, int depth, boolean branches) {
@@ -155,7 +155,7 @@ final class Ritual {
     }
 
     /** A column of motes turning round and rising (the ritual's breath). */
-    private static void motes(float t, float cx, float cy, float rx, float ry, float height, int rgb, float a, int n) {
+    static void motes(float t, float cx, float cy, float rx, float ry, float height, int rgb, float a, int n) {
         for (int i = 0; i < n; i++) {
             float ph = rnd(i * 7 + 1), u = (t * (0.22f + 0.18f * rnd(i)) + ph) % 1f;
             float an = ph * 6.28f + t * (1.1f + rnd(i * 3) * 0.8f) * (i % 2 == 0 ? 1 : -1), rr = (0.85f - 0.55f * u) * (0.6f + 0.4f * rnd(i * 5));
@@ -540,7 +540,7 @@ final class Ritual {
     static void paint(float t, boolean tre, int type, float S, float sz, float isc, int rc, float icy, int blade, boolean itemBob, float bobAmp) {
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float O = S - TAIL, p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
-        int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : CYAN;
+        int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : farmMode ? FarmScene.ENERGY[farmKind] : expMode ? 0xB56BFF : CYAN;
         float bg = 1f - sm((p - 0.5f) / 0.9f);                                             // the background fades while the words show
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
         float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene                  // the item fades slowly at the end
@@ -549,7 +549,9 @@ final class Ritual {
         float op = Math.min(t, O);
 
         // ---- THE OPENING (the same for every type)
-        if (!tre) {
+        if (farmMode) FarmScene.paint(t, O, p, icx, gy, sz, farmKind, bg, rng);
+        else if (expMode) { gy = BookScene.baseY(icy, sz); BookScene.paint(t, O, p, icx, gy, sz, bg, rng); }
+        else if (!tre) {
             if (slayerMode) slPanel(t, icx, gy, icy, sz, isc, Math.min(sz, (gy - 4) / 98f), ry, energy, bg);
             float draw = sm(t / (0.35f * O));
             float sigA = nod ? 1f - cl(p / 0.9f) * 0.2f : 1f;
@@ -584,8 +586,8 @@ final class Ritual {
             float done = dig(op, O, icx, gy, rx, ry, sz, blade, Math.max(bg, 0f));
             if (done > 0.3f) motes(t, icx, gy, rx * 0.5f, ry * 0.5f, 60 * sz, GOLD, 0.9f * bg * done, 18);
         }
-        if (inh > 0f && p < 0.35f && !slayerMode) inhale(inh, icx, gy, icx, icy, rx, ry, energy, 1f - cl(p / 0.35f), sz);
-        if (p < 0 && inh > 0 && !slayerMode) glowE(icx, gy, rx * 0.8f * inh, ry * 1.2f * inh, energy, 0.5f * inh);
+        if (inh > 0f && p < 0.35f && !slayerMode && !farmMode && !expMode) inhale(inh, icx, gy, icx, icy, rx, ry, energy, 1f - cl(p / 0.35f), sz);
+        if (p < 0 && inh > 0 && !slayerMode && !farmMode && !expMode) glowE(icx, gy, rx * 0.8f * inh, ry * 1.2f * inh, energy, 0.5f * inh);
 
         // ---- THE PIVOT
         if (p < 0f) return;
@@ -599,6 +601,7 @@ final class Ritual {
         }
         float cx0 = icx, cy0 = itemY(t, p, gy, icy, sz, itemBob, bobAmp);
         float pulse = 0.85f + 0.15f * (float) Math.sin(t * 5f);
+        float[] offs = spread > 0f ? new float[]{-spread, spread} : new float[]{0f};                 // one centre per drop
         if (!rng) {                                                                        // ---- NORMAL: ascension rings, a glow, orbiting sparkles
             float sw = p / 0.8f; if (sw < 1f) ringE(icx, gy, rx * (0.5f + 1.5f * eo(sw)), ry * (0.5f + 1.5f * eo(sw)), mixc(rc, WHITE, 0.45f), (1f - sw) * 0.95f, 0, 6.2832f, 0, 0);
             for (int j = 0; j < 4; j++) {
@@ -607,10 +610,12 @@ final class Ritual {
                 ringE(icx, ry2, rr, rr * 0.26f, mixc(rc, WHITE, 0.3f), (1f - tau) * 0.9f, 0, 6.2832f, 0, 0);
                 ringE(icx, ry2 + 1, rr, rr * 0.26f, rc, (1f - tau) * 0.4f, 0, 6.2832f, 0, 0);
             }
-            glowE(cx0, cy0, 32 * sz * isc * pulse, 32 * sz * isc * pulse, rc, 0.5f * itemA);
-            glowE(cx0, cy0, 15 * sz * isc, 15 * sz * isc, WHITE, 0.22f * itemA);
-            orbit(t, cx0, cy0, 26 * sz * isc, 8 * sz * isc, -0.3f, 6, rc, 0.95f * itemA, 2.1f);
-            fountain(t, cx0, cy0 + 8, O + 0.15f, 14, rc, 0.8f * itemA, 1.3f, 0.45f);
+            for (float off : offs) {
+                glowE(cx0 + off, cy0, 32 * sz * isc * pulse, 32 * sz * isc * pulse, rc, 0.5f * itemA);
+                glowE(cx0 + off, cy0, 15 * sz * isc, 15 * sz * isc, WHITE, 0.22f * itemA);
+                orbit(t, cx0 + off, cy0, 26 * sz * isc, 8 * sz * isc, -0.3f, 6, rc, 0.95f * itemA, 2.1f);
+                fountain(t, cx0 + off, cy0 + 8, O + 0.15f, 14, rc, 0.8f * itemA, 1.3f, 0.45f);
+            }
             glowE(icx, gy, rx * 1.1f * (1f - cl(p / 0.9f)), ry * 1.6f * (1f - cl(p / 0.9f)), rc, 0.4f * bg);
             if (tre) { float cu = sm(p / 0.6f); chest(icx, gy - 13 * sz * cu - 2, sz * 1.0f, sm((p - 0.15f) / 0.35f), bg); }
             return;
@@ -624,23 +629,41 @@ final class Ritual {
         rays(cx0, cy0, t * 0.35f, 14, mixc(rc, WHITE, 0.5f), 0.55f * bg * sm(p / 0.6f), 190);
         rays(cx0, cy0, -t * 0.22f + 0.1f, 9, rc, 0.30f * bg * sm(p / 0.8f), 150);
         glowE(cx0, cy0, 70 * sz * pulse, 70 * sz * pulse, rc, 0.55f * (bg * 0.6f + 0.4f * itemA));
-        glowE(cx0, cy0, 26 * sz * isc, 26 * sz * isc, WHITE, 0.3f * itemA);
-        ringE(cx0, cy0, 36 * sz * isc, 36 * sz * isc, rc, 0.8f * itemA, 0, 6.2832f, t * 0.9f, 4);                   // turning halos
-        ringE(cx0, cy0, 45 * sz * isc, 45 * sz * isc, mixc(rc, WHITE, 0.5f), 0.55f * itemA, 0, 6.2832f, -t * 0.6f, 2);
-        orbit(t, cx0, cy0, 40 * sz * isc, 12 * sz * isc, 0.35f, 8, rc, 0.95f * itemA, 1.8f);
-        orbit(t, cx0, cy0, 34 * sz * isc, 10 * sz * isc, -0.5f, 6, WHITE, 0.8f * itemA, -2.4f);
-        for (int k = 0; k < 5; k++) {                                                      // lightning round the item, never the same twice
-            int seed = k * 17 + (int) (t * 14) * 5;
-            float an = rnd(seed) * 6.2832f, len = (26 + 24 * rnd(seed + 1)) * sz;
-            if (rnd(seed + 2) < 0.55f * itemA) bolt(cx0 + (float) Math.cos(an) * 14 * sz, cy0 + (float) Math.sin(an) * 14 * sz, cx0 + (float) Math.cos(an) * (14 * sz + len), cy0 + (float) Math.sin(an) * (14 * sz + len), seed, rc, 0.9f * itemA, 3, false);
+        for (float off : offs) {                                                           // each drop gets its own glow, halos, sparks and fountain
+            float cxo = cx0 + off;
+            glowE(cxo, cy0, 26 * sz * isc, 26 * sz * isc, WHITE, 0.3f * itemA);
+            ringE(cxo, cy0, 36 * sz * isc, 36 * sz * isc, rc, 0.8f * itemA, 0, 6.2832f, t * 0.9f, 4);                   // turning halos
+            ringE(cxo, cy0, 45 * sz * isc, 45 * sz * isc, mixc(rc, WHITE, 0.5f), 0.55f * itemA, 0, 6.2832f, -t * 0.6f, 2);
+            orbit(t, cxo, cy0, 40 * sz * isc, 12 * sz * isc, 0.35f, 8, rc, 0.95f * itemA, 1.8f);
+            orbit(t, cxo, cy0, 34 * sz * isc, 10 * sz * isc, -0.5f, 6, WHITE, 0.8f * itemA, -2.4f);
+            for (int k = 0; k < 5; k++) {                                                      // lightning round the item, never the same twice
+                int seed = k * 17 + (int) (t * 14) * 5;
+                float an = rnd(seed) * 6.2832f, len = (26 + 24 * rnd(seed + 1)) * sz;
+                if (rnd(seed + 2) < 0.55f * itemA) bolt(cxo + (float) Math.cos(an) * 14 * sz, cy0 + (float) Math.sin(an) * 14 * sz, cxo + (float) Math.cos(an) * (14 * sz + len), cy0 + (float) Math.sin(an) * (14 * sz + len), seed, rc, 0.9f * itemA, 3, false);
+            }
+            fountain(t, cxo, cy0 + 6, O + 0.1f, offs.length > 1 ? 34 : 50, rc, itemA, 1.5f, 0.85f);
         }
-        fountain(t, cx0, cy0 + 6, O + 0.1f, 50, rc, itemA, 1.5f, 0.85f);
         if (tre) { float cu = sm(p / 0.7f); chest(icx, gy - 15 * sz * cu - 2, sz * 1.5f, sm((p - 0.4f) / 0.4f), bg); }
     }
 
 
     // ------------------------------------------------------------------ the slayer bosses: the same ritual as Mythological, a sword slashes the boss instead of lightning
     static boolean slayerMode;                                                          // set by the caller: paint() draws a slayer scene
+    static boolean farmMode, expMode;                                                   // the Farming field (farmKind: 0 crops, 1 feast, 2 pest, 3 Ray of Helios) and the Experimentation Table book
+    static int farmKind;
+    static float spread;                                                                // canvas units between the middle and each of two drops (0 = one drop)
+
+    /** Sets the scene flags for an animation; end() clears them again. */
+    static void begin(Anim a, float sz, float isc) {
+        slayerMode = isSlayer(a); if (slayerMode) { kind = 12 + slTheme(a); slSeed = System.identityHashCode(a) & 0xFFFF; }
+        farmMode = a.group.equals("crops") || a.group.equals("feast") || a.group.equals("pests");
+        expMode = a.group.equals("exp");
+        farmKind = a.group.equals("feast") ? FarmScene.FEAST : a.group.equals("pests") ? (a.helios ? FarmScene.HELIOS : FarmScene.PEST) : FarmScene.CROPS;
+        spread = spreadOf(a, sz, isc);
+    }
+    /** Canvas units from the middle to each of two drops (0 for one). */
+    static float spreadOf(Anim a, float sz, float isc) { return a.count() == 2 ? 20 * sz * isc * (a.type == AnimationManager.RNG ? 1.15f : 1f) : 0f; }
+    static void end() { slayerMode = false; farmMode = false; expMode = false; spread = 0f; }
     /** The colour of each boss: zombie, spider, wolf, enderman, blaze, vampire. */
     private static final int[] SL_ENERGY = {0x7CD060, 0xE03030, 0xC8D4E8, 0xD060FF, 0xFFB030, 0xD01030};
     static boolean isSlayer(Anim a) { return a.group.equals("slayer"); }
@@ -708,7 +731,7 @@ final class Ritual {
 
     /** The scene canvas alone (320x180 ARGB) at time t: what AnimFrames writes out as pictures. */
     static int[] snapshot(Anim a, float t) {
-        FancyConfig c = FancyConfig.get(); FancyConfig.AnimCfg cfg = a.cfg(); Item it = a.item;
+        FancyConfig c = FancyConfig.get(); FancyConfig.AnimCfg cfg = a.cfg(); Item it = a.lead();
         boolean tre = a.group.equals("treasure"); kind = Math.max(0, a.kind); int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float S = Math.max(3.6f, cfg.secs), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale) * 1.5f;
@@ -717,16 +740,18 @@ final class Ritual {
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
         if (c.animPos == 0) icy = topIcy(sz, hi, rng && cfg.bars ? barH + 1 : 0f);
         if (rng && cfg.bars) icy = Math.max(c.animPos == 0 ? 0f : barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
-        slayerMode = isSlayer(a); if (slayerMode) { kind = 12 + slTheme(a); slSeed = System.identityHashCode(a) & 0xFFFF; }
-        try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { slayerMode = false; }
+        begin(a, sz, isc);
+        try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { end(); }
         return cv.px.clone();
     }
+
+    private static float textH(Anim a, Item it, float sc, FancyConfig c) { return a.count() == 2 ? TextFx.blockHeight2(a.item, a.item2, sc, c) : TextFx.blockHeight(it, sc, c); }
 
     /** Draws one animation at time t (seconds) in a W x H screen: the scene, the bars, the item and the words. */
     static void draw(GuiGraphicsExtractor g, Font font, Anim a, float t, int W, int H) {
         FancyConfig c = FancyConfig.get();
         FancyConfig.AnimCfg cfg = a.cfg();
-        Item it = a.item;
+        Item it = a.lead(), second = a.item2;
         boolean tre = a.group.equals("treasure"), sl = isSlayer(a);
         kind = a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? kindOf(a.item.source.id) : 0;
         if (sl) kind = 12 + slTheme(a);
@@ -763,11 +788,11 @@ final class Ritual {
             if (edited != null && edited.length == cv.px.length) System.arraycopy(edited, 0, cv.px, 0, edited.length);
             else {
                 long nowMs = System.currentTimeMillis();
-                String id = a.group + a.type + "/" + a.kind + "/" + (it == null ? 0 : it.id.hashCode()) + "/" + TextFx.itemOnly;
+                String id = a.group + a.type + "/" + a.kind + "/" + (it == null ? 0 : it.id.hashCode()) + "/" + a.count() + "/" + TextFx.itemOnly;
                 boolean reuse = AnimationManager.previewing && id.equals(upKey) && nowMs - upMs < 33 && nowMs >= upMs;       // a menu preview repaints at ~30 fps: the picture it shows barely changes between frames
                 if (!reuse) {
-                    slayerMode = sl; if (sl) slSeed = System.identityHashCode(a) & 0xFFFF;
-                    try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { slayerMode = false; }
+                    begin(a, sz, isc);
+                    try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { end(); }
                     SceneTexture.upload(cv); upKey = id; upMs = nowMs;
                 }
             }
@@ -801,16 +826,19 @@ final class Ritual {
 
         // ---- the item (flat icons stay flat, skulls are 3D and turn)
         if (it != null && p >= 0f && !nod && !TextFx.textOnly && !TextFx.barsOnly) {
+            int n = a.count(); float spr = spreadOf(a, sz, isc);
+            for (int ii = 0; ii < n; ii++) {
+            Item cur = ii == 0 ? a.item : a.item2;
             float grow = 0.25f + 0.75f * eob(p / 0.7f);
-            float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f);
-            float gcx = CW / 2f * W / CW + sx, gcy = itemY(tb, p, icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
+            float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f) * (n == 2 ? 0.85f : 1f);
+            float gcx = CW / 2f * W / CW + sx + (n == 2 ? (ii == 0 ? -spr : spr) * u : 0f), gcy = itemY(tb, p, a.group.equals("exp") ? BookScene.baseY(icy, sz) : icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
             if (c.itemGlow > 0.02f) {                                                          // the glow behind the item (Item changes > Glow), in the drop's colour
                 int gr = Math.round(s * 11f), gcol = mixc(rc, WHITE, 0.25f); float ga = Math.max(0f, Math.min(1f, itemA)) * Math.min(1f, c.itemGlow);
                 for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }
             }
             ItemIcons.spinSpeed = c.itemSpin; ItemIcons.spinRev = c.itemSpinRev;
             ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA)); boolean still0 = Icons.STILL_ICONS; Icons.STILL_ICONS = false;                 // the dropped item always turns, whatever the menu says
-            try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; ItemIcons.spinSpeed = 1f; ItemIcons.spinRev = false; }
+            try { ItemIcons.draw(g, cur.id, cur.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; ItemIcons.spinSpeed = 1f; ItemIcons.spinRev = false; }
             if (c.itemGlints && itemA > 0.05f) for (int i = 0; i < 9; i++) {                      // Item changes > Glints: little four-point sparks twinkle in and out round the item
                 float cyc = tb * 1.7f + i * 0.113f, ph = cyc - (float) Math.floor(cyc); int slot = (int) Math.floor(cyc) * 31 + i * 7;
                 float an = rnd(slot) * 6.2832f, rad = s * (9f + 8f * rnd(slot + 1)), tw = (float) Math.sin(Math.PI * ph);
@@ -819,18 +847,19 @@ final class Ritual {
                 g.fill(gx - arm, gy2, gx + arm + 1, gy2 + 1, col); g.fill(gx, gy2 - arm, gx + 1, gy2 + arm + 1, col);
                 g.fill(gx - 1, gy2 - 1, gx + 2, gy2 + 2, Gfx.argb(al / 2, rc));
             }
+            }
         }
 
         // ---- the words: below the animation (top and center), above it (bottom); never over the bars
         if (!TextFx.itemOnly && !TextFx.barsOnly && (textT > 0f || TextFx.textOnly)) {
             float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * (0.8f + 0.2f * csz); if (TextFx.textOnly) sc = c.textK() * Math.max(1.3f, Math.min(2.6f, W / 150f));          // the Text editor shows the words big enough to read
-            float th = TextFx.blockHeight(it, sc, c);
+            float th = textH(a, it, sc, c);
             float top = c.textAbove() ? (icy - hi - 14 * sz) * u - th : (icy + hi + 26 * sz) * u;
-            if (TextFx.textOnly) { while (th > H * 0.92f && sc > 0.8f) { sc *= 0.9f; th = TextFx.blockHeight(it, sc, c); } top = Math.max(2f, (H - th) / 2f); }       // the Text editor centres the words and fills the box
+            if (TextFx.textOnly) { while (th > H * 0.92f && sc > 0.8f) { sc *= 0.9f; th = textH(a, it, sc, c); } top = Math.max(2f, (H - th) / 2f); }       // the Text editor centres the words and fills the box
             if (barsOn) { float bhg = barH * u; top = Math.max(bhg + 6, Math.min(H - bhg - th - 6, top)); }
             float tl = TextFx.textOnly ? TextFx.loopClock(4.6f) : 0f;                                    // the Text editor replays the words on their own clock
             TextFx.revealT = TextFx.textOnly ? tl : textT; TextFx.waveT = TextFx.textOnly ? tl : t; TextFx.waveOut = TextFx.textOnly ? sm((tl - 2.9f) / 1.1f) : textOut; TextFx.lineDelay = 0f;
-            TextFx.block(g, font, W / 2, Math.round(top), sc, it, c, 255);
+            if (a.count() == 2) TextFx.block2(g, font, W / 2, Math.round(top), sc, a.item, a.item2, c, 255); else TextFx.block(g, font, W / 2, Math.round(top), sc, it, c, 255);
         }
     }
 }

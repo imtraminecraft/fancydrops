@@ -239,6 +239,62 @@ final class IconArt {
                 glow(8, 6, 8, 0xFF4A2A, 0.10f + 0.08f * t);
                 outline();
             }
+            case "grp_crops" -> {                                                            // Rare Crops: three golden wheat stalks swaying over dark soil, a gold glint on the tallest ear
+                glow(8, 6, 8, 0xFFD25A, 0.08f + 0.1f * t);
+                rect(1, 13, 14, 2, 0x5A3E22); rect(1, 13, 14, 1, 0x7A5A38); px(4, 14, 0x3A2410); px(10, 14, 0x3A2410); px(13, 13, 0x9A7A52);
+                int[] xs = {4, 8, 12}, tops = {5, 1, 4};
+                for (int k = 0; k < 3; k++) {
+                    int sw = Math.round(sn(f + k * 0.33f) * 0.9f);
+                    for (int y = tops[k] + 2; y < 13; y++) px(xs[k] + (y < tops[k] + 6 ? sw : 0), y, y % 3 == 0 ? 0x5E9A36 : 0x7CCB4F);
+                    int x0 = xs[k] + sw;
+                    for (int j = 0; j < 4; j++) { int y = tops[k] + j; px(x0 - 1, y, j % 2 == 0 ? 0xE8B83A : 0xC89428); px(x0 + 1, y, j % 2 == 0 ? 0xC89428 : 0xE8B83A); }
+                    px(x0, tops[k] - 1, 0xFFE27A); px(x0, tops[k], 0xF4C94A); px(x0, tops[k] + 1, 0xE8B83A);
+                }
+                ln(5, 11, 7, 9, 0x7CCB4F); ln(11, 10, 9, 8, 0x5E9A36);
+                outline();
+                glint(8 + Math.round(sn(f) * 0.9f), 1, 1, 0xFFFFFF, 0.3f + 0.7f * t);
+            }
+            case "grp_feast" -> {                                                            // Harvest Feast: a fat pumpkin on a plate, steam curling up
+                glow(8, 9, 8, 0xFFA63A, 0.10f + 0.08f * t);
+                rect(1, 13, 14, 1, 0xE8E4D8); rect(2, 14, 12, 1, 0xB8B4A8); rect(3, 12, 10, 1, 0xC8C4B8);
+                for (int y = 5; y < 13; y++) {
+                    float dy = (y - 8.5f) / 4f; int hw = Math.round((float) Math.sqrt(Math.max(0, 1 - dy * dy)) * 6.2f);
+                    for (int x = 8 - hw; x <= 7 + hw; x++) px(x, y, x < 6 ? 0xE8782A : x < 10 ? 0xFF9A3A : 0xD0621E);
+                }
+                for (int y = 5; y < 13; y++) { px(5, y, 0xC85A1A); px(10, y, 0xC85A1A); }
+                px(8, 5, 0xB04A14); px(8, 12, 0xB04A14); rect(7, 3, 2, 2, 0x5E9A36); px(7, 3, 0x7CCB4F); px(9, 4, 0x3E6A24);
+                px(6, 6, 0xFFC878); px(7, 6, 0xFFC878);
+                float d = f;                                                                       // two wisps of steam rise and fade
+                for (int k = 0; k < 2; k++) { float e = (d + k * 0.5f) % 1f; pxa(11 + Math.round(sn(e * 2 + k)), 2 - Math.round(e * 2) + 2, 0xFFFFFF, 0.6f * (1f - e)); pxa(3 + Math.round(sn(e * 2 + k)), 3 - Math.round(e * 2) + 1, 0xFFFFFF, 0.5f * (1f - e)); }
+                outline();
+            }
+            case "grp_pests" -> {                                                            // Pest Drops: a green beetle with red eyes, legs scuttling, antennae twitching
+                glow(8, 9, 7, 0x8AD84A, 0.06f + 0.06f * t);
+                int lg = Math.round(sn(f * 2) * 0.9f);
+                for (int k = 0; k < 3; k++) { int y = 7 + k * 2; int o = (k % 2 == 0) ? lg : -lg;
+                    ln(5, y, 2, y + 1 + o, 0x2A1A14); ln(10, y, 13, y + 1 - o, 0x2A1A14); px(2, y + 1 + o, 0x5A3A2A); px(13, y + 1 - o, 0x5A3A2A); }
+                for (int y = 4; y < 14; y++) {
+                    float dy = (y - 9f) / 5f; int hw = Math.round((float) Math.sqrt(Math.max(0, 1 - dy * dy)) * 4.2f);
+                    for (int x = 8 - hw; x <= 7 + hw; x++) px(x, y, x < 7 ? 0x4E9A2E : 0x6CC444);
+                }
+                rect(7, 5, 2, 8, 0x2E6A1C); px(5, 8, 0xA8F070); px(10, 11, 0x2E6A1C); px(5, 11, 0x2E6A1C);
+                rect(6, 2, 4, 3, 0x2E4A22); px(6, 3, 0xFF3A3A); px(9, 3, 0xFF3A3A);
+                int an = Math.round(sn(f * 3)); ln(6, 2, 4 + an, 0, 0x2A1A14); ln(9, 2, 11 - an, 0, 0x2A1A14);
+                outline();
+                glint(5, 6, 1, 0xFFFFFF, 0.2f + 0.8f * t);
+            }
+            case "grp_exp" -> {                                                              // Experiments: an open spell book, a violet rune floating above it, a page mid-flip
+                glow(8, 7, 8, 0xB56BFF, 0.12f + 0.12f * t);
+                rect(1, 8, 14, 6, 0x4A2A7A); rect(1, 13, 14, 1, 0x2E1A4E); rect(7, 8, 2, 6, 0x2E1A4E);
+                rect(2, 8, 5, 4, 0xF2E8D0); rect(9, 8, 5, 4, 0xF2E8D0); rect(2, 12, 5, 1, 0xD8CCB0); rect(9, 12, 5, 1, 0xD8CCB0);
+                for (int k = 0; k < 3; k++) { rect(3, 9 + k, 3 - (k == 2 ? 1 : 0), 1, 0x8A7AA8); rect(10, 9 + k, 3 - (k == 1 ? 1 : 0), 1, 0x8A7AA8); }
+                int pf = Math.round(tri(f) * 3);                                                   // the right page lifts and turns
+                if (pf > 0) { rect(9, 8 - pf, 5 - pf, pf + 1, 0xFFF6E0); px(9 + 4 - pf, 8 - pf, 0xD8CCB0); }
+                int ry = 2 + Math.round(sn(f) * 0.9f); int rc = mix(0xD8B0FF, 0xFFFFFF, t);
+                px(8, ry, rc); px(7, ry + 1, 0xB56BFF); px(8, ry + 1, rc); px(9, ry + 1, 0xB56BFF); px(8, ry + 2, 0xB56BFF); px(8, ry - 1, 0x8A5AD8);
+                outline();
+                glint(4 + Math.round(f * 8), 3 + Math.round(sn(f * 2)), 1, 0xFFFFFF, 0.3f + 0.7f * t);
+            }
             case "shovel" -> {                                                               // a digging shovel (the blade takes the spade's colour): it dips into the ground and flicks up a lump of dirt
                 int bl = tint != 0 ? tint : 0xC9D1E0;
                 float dip = t * 2f;
