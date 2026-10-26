@@ -1361,13 +1361,14 @@ public class FancyScreen extends Screen {
             iconBack(g, b[0] + 14, b[1] + 11, 9, hit || hov, tabCol(t));
             tabIcon(g, t, b[0] + 6, b[1] + 3, hit || hov ? now : 2400L, hit || hov);
             Gfx.text(g, font, t.label, b[0] + 28, b[1] + 7, hit ? Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.35f) : Canvas.mix(Canvas.mix(0xFF8A8A96, tabCol(t), 0.45f), 0xFFFFFFFF, hv * 0.4f));
-            searchSide.add(new int[]{ti, -1, b[0], b[1], b[2], b[3]});
+            searchSide.add(new int[]{ti, -1, b[0], b[1], b[2], b[3], -1});
             y += 24;
             String[] sn = subNames(t);
             for (int k = 0; k < sn.length; k++) {
-                if (!hit && !sn[k].toLowerCase(Locale.ROOT).contains(q)) continue;      // only the sub pages that match (all of them when the page's own name matches)
+                boolean held = t == Tab.DROPS && searchCats.contains(k);                // this category holds a matching drop or creature
+                if (!hit && !held && !sn[k].toLowerCase(Locale.ROOT).contains(q)) continue;      // only the sub pages that match (all of them when the page's own name matches)
                 int[] sb = {px + 16, y, px + sw - 6, y + rowH};
-                boolean sh = inSide(mx, my) && mx >= sb[0] && mx < sb[2] && my >= sb[1] && my < sb[3], sHit = sn[k].toLowerCase(Locale.ROOT).contains(q);
+                boolean sh = inSide(mx, my) && mx >= sb[0] && mx < sb[2] && my >= sb[1] && my < sb[3], sHit = held || sn[k].toLowerCase(Locale.ROOT).contains(q);
                 float shv = anim("ssub|" + ti + "|" + k, sh ? 1f : 0f, 48f);
                 int sc2 = subCol(t);
                 if (sHit) { pill(g, sb[0], sb[1], sb[2] - sb[0], sb[3] - sb[1], Canvas.mix(Ui.ROW, sc2, 0.22f)); g.fill(sb[0], sb[1] + 2, sb[0] + 2, sb[3] - 2, sc2); }
@@ -1376,8 +1377,18 @@ public class FancyScreen extends Screen {
                 iconBack(g, sb[0] + 10, sb[1] + rowH / 2, 6, sHit, sc2);
                 Gfx.push(g); Gfx.translate(g, sb[0] + 5, sb[1] + (rowH - 13) / 2); Gfx.scale(g, 0.7f); Icons.draw(g, ic, 0, 0, sHit || sh ? now : 2400L); Gfx.pop(g);
                 Gfx.text(g, font, sn[k], sb[0] + 21, sb[1] + (rowH - 8) / 2, sHit ? Ui.TEXT : Canvas.mix(Canvas.mix(0xFF8A8A96, sc2, 0.4f), 0xFFFFFFFF, shv * 0.4f));
-                searchSide.add(new int[]{ti, k, sb[0], sb[1], sb[2], sb[3]});
+                searchSide.add(new int[]{ti, k, sb[0], sb[1], sb[2], sb[3], -1});
                 y += rowH + 1;
+                if (held) for (int si = 0; si < searchSrcs.size(); si++) {                // the pages inside it that hold the match
+                    String[] se = searchSrcs.get(si); if (Integer.parseInt(se[0]) != k) continue;
+                    int[] ob = {px + 26, y, px + sw - 6, y + rowH}; int oc = Integer.parseInt(se[4]);
+                    boolean oh = inSide(mx, my) && mx >= ob[0] && mx < ob[2] && my >= ob[1] && my < ob[3];
+                    pill(g, ob[0], ob[1], ob[2] - ob[0], ob[3] - ob[1], Canvas.mix(Ui.ROW, oc, oh ? 0.34f : 0.22f)); g.fill(ob[0], ob[1] + 2, ob[0] + 2, ob[3] - 2, oc);
+                    Gfx.push(g); Gfx.translate(g, ob[0] + 5, ob[1] + (rowH - 13) / 2); Gfx.scale(g, 0.7f); Icons.draw(g, se[3], 0, 0, now); Gfx.pop(g);
+                    Gfx.text(g, font, Gfx.fit(font, se[2], ob[2] - ob[0] - 24), ob[0] + 20, ob[1] + (rowH - 8) / 2, Ui.TEXT);
+                    searchSide.add(new int[]{ti, k, ob[0], ob[1], ob[2], ob[3], si});
+                    y += rowH + 1;
+                }
             }
             y += 2;
         }
@@ -2298,7 +2309,22 @@ public class FancyScreen extends Screen {
         else {
             String q = query.trim().toLowerCase(Locale.ROOT);
             Tab keepTab = tab; int[] keepSub = subSel.clone(); String keepSrc = dropSrc, keepName = dropSrcName;
-            java.util.Arrays.fill(searchVis, false);
+            java.util.Arrays.fill(searchVis, false); searchCats.clear(); searchSrcs.clear();
+            for (int ci = 0; ci < Categories.ALL.size(); ci++) {                 // the Drop Library pages that hold a match (a creature's name or one of its drops)
+                Categories.Cat cat = Categories.ALL.get(ci); if (cat.wip()) continue;
+                for (Categories.Group gr : cat.groups()) {
+                    if (gr.wip()) continue;
+                    boolean sub = gr.id().equals("myth") || gr.id().equals("slayer"); boolean grpHit = false;
+                    for (DropData.Source so : cat.sources(gr.id())) {
+                        boolean hit = srcName(so).toLowerCase(Locale.ROOT).contains(q);
+                        if (!hit) for (DropData.Drop d : so.drops) if (d.name.toLowerCase(Locale.ROOT).contains(q)) { hit = true; break; }
+                        if (!hit) continue;
+                        grpHit = true; searchCats.add(ci); searchVis[Tab.DROPS.ordinal()] = true;
+                        if (sub) searchSrcs.add(new String[]{String.valueOf(ci), gr.id() + "/" + so.id, srcName(so), srcIcon(so), String.valueOf(so.color())});
+                    }
+                    if (grpHit && !sub) searchSrcs.add(new String[]{String.valueOf(ci), gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())});
+                }
+            }
             List<Row> pages = new ArrayList<>(), res = new ArrayList<>();
             java.util.Set<String> shown = new java.util.HashSet<>();
             int pageCount = 0;
@@ -2870,6 +2896,8 @@ public class FancyScreen extends Screen {
     }
     private static final int[] subSel = new int[Tab.values().length];
     static { java.util.Arrays.fill(subSel, -1); }   // the chosen sub page of every tab
+    private final java.util.Set<Integer> searchCats = new java.util.HashSet<>();     // while searching: the Drop Library categories that hold a matching drop or creature
+    private final List<String[]> searchSrcs = new ArrayList<>();                    // ... and those pages inside them: {category index, page key, name, icon, colour}
     private final boolean[] searchVis = new boolean[Tab.values().length];      // while searching: which pages have something that matches
     private final List<int[]> searchSide = new ArrayList<>();               // the sidebar entries of the last frame while searching: {tab, sub (-1 = the page itself), x0, y0, x1, y1}
     private int searchSideH;
@@ -3466,7 +3494,8 @@ public class FancyScreen extends Screen {
         }
         if (!query.isBlank()) {
             if (button == 0 && inSide(mx, my)) for (int[] e : searchSide) if (mx >= e[2] && mx < e[4] && my >= e[3] && my < e[5]) {
-                dropSrc = null; waveKey = null; SoundFx.stopPreviews();
+                dropSrc = null; dropSrcName = null; waveKey = null; SoundFx.stopPreviews();
+                if (e.length > 6 && e[6] >= 0 && e[6] < searchSrcs.size()) { dropSrc = searchSrcs.get(e[6])[1]; dropSrcName = searchSrcs.get(e[6])[2]; }
                 tab = Tab.values()[e[0]]; subSel[e[0]] = e[1]; query = ""; clearSearch(); scroll = 0; sideScroll = 0; tabChanged = System.currentTimeMillis();
                 open.removeIf(o -> o.startsWith("dd_"));
                 return true;

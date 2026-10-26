@@ -267,3 +267,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - A slayer scene plays on an opaque panel, the same size as the Mythological scene; its three cuts split the hologram into pieces.
 - A hand-drawn stand-in icon is never saved to the icons folder; only real loaded art is.
 - A source has the same icon on every page (Drop Library, Chat Enabled, sidebar).
+
+## Standing requirements added in 0.4.53
+- While searching, the left menu lists every page that holds a match (categories and the pages inside them) and highlights it; a click opens that page.
