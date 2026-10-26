@@ -372,3 +372,5 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Pets with several drop rarities have one Drop Library entry per rarity ("Epic Slug Pet", "Legendary Slug Pet", "Legendary Rat Pet"), each with its own chance and George price. A chat rarity in front picks the entry.
 
 - Releases have no description text, and the downloaded file is `FancyDrops-<version>.jar` (release.yml no longer reads CHANGELOG.md).
+
+- Commits carry no `Co-Authored-By` or `Claude-Session` trailers (author decision, Oct 27). Author them as tra only.
