@@ -16,35 +16,26 @@ final class CosmeticData {
     static final List<SetDef> SETS = List.of(
         new SetDef("sparkle", "Special", "Only given to special people.", 0xFFB48CFF, "sparkle", "sparklefx", "sparkleaura", 4),
         new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, "bug", "glitch", "glitchaura", 4),
-        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "hammer", "contribfx", "stardust", 4),
+        new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "code", "contribfx", "stardust", 4),
         new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFB400, "patron", "royal", "patronaura", 4),
-        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, null, "pulse", null, 2));
+        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "betamark", "pulse", null, 2));
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
-    private static final String BETA_HOW = "Downloaded the mod before v1.0", RARE_HOW = "Rare: given to the first players of the mod";
+    private static final String BETA_HOW = "Downloaded the mod before v1.0";
     static final List<Def> ALL = List.of(
         // Beta: kept by everyone who had the mod before 1.0
         new Def("pulse", "Pulse", Line.BETA, Kind.NAME, BETA_HOW, 0xFFFF9AC8, "beta"),
         // Name Icons: Special (Bug Finder, Contributors, Patreon only), Legendary, Rare, Common. Unlock rules for the last three come later.
         new Def("bug", "Bug", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFFF5A36, "bugfinder"),
-        new Def("hammer", "Hammer", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFF55D8FF, "contributors"),
+        new Def("code", "Code", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFF55D8FF, "contributors"),
         new Def("patron", "Patreon", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFFFB400, "patreon"),
+        new Def("betamark", "Beta", Line.BETA, Kind.SUFFIX, "Downloaded the mod before v1.0", 0xFF3FD16A, "beta"),
         new Def("minos", "King Minos", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF2B01E),
-        new Def("griffin", "Griffin", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFE8B030),
         new Def("dice", "Lucky Dice", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF4F6FB),
-        new Def("coin", "Gold Coin", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF2B01E),
-        new Def("minotaur", "Minotaur", Line.RARE, Kind.SUFFIX, "Rare", 0xFF8A5A2C),
-        new Def("sphinx", "Sphinx", Line.RARE, Kind.SUFFIX, "Rare", 0xFFE8C060),
-        new Def("harpy", "Harpy", Line.RARE, Kind.SUFFIX, "Rare", 0xFF9AA8D8),
         new Def("chest", "Treasure Chest", Line.RARE, Kind.SUFFIX, "Rare", 0xFF8A5A2C),
         new Def("anvil", "Anvil", Line.RARE, Kind.SUFFIX, "Rare", 0xFF9AA3B5),
         new Def("disc", "Music Disc", Line.RARE, Kind.SUFFIX, "Rare", 0xFF22242E),
-        new Def("shovel", "Shovel", Line.FREE, Kind.SUFFIX, "Common", 0xFFB8C0CC),
-        new Def("wheat", "Wheat", Line.FREE, Kind.SUFFIX, "Common", 0xFFF0CE50),
-        new Def("pickaxe", "Pickaxe", Line.FREE, Kind.SUFFIX, "Common", 0xFFB8C0CC),
         new Def("rod", "Fishing Rod", Line.FREE, Kind.SUFFIX, "Common", 0xFF8A5A2C),
-        new Def("dye", "Dye Drop", Line.FREE, Kind.SUFFIX, "Common", 0xFF3D8CFF),
-        new Def("book", "Book", Line.FREE, Kind.SUFFIX, "Common", 0xFF6A3AC8),
         new Def("tractor", "Tractor", Line.FREE, Kind.SUFFIX, "Common", 0xFF3AA848),
         new Def("bell", "Bell", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2B01E),
         new Def("clock", "Clock", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2F4FA),

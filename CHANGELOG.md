@@ -1,3 +1,8 @@
+## 0.7.1
+- Name Icons: removed Hammer, Griffin, Gold Coin, Minotaur, Sphinx, Harpy, Shovel, Wheat, Pickaxe, Dye Drop and Book. Contributors now get a new aqua Code (</>) icon, and Beta gets a new green Beta icon. 13 Name Icons are left.
+- The extra admin ID was removed again.
+- Unused Name Icon pictures and font entries were deleted.
+
 ## 0.7.0
 - 22 new animated Name Icons: Special (Bug, Hammer, Patreon: for Bug Finder, Contributors and Patreon only), Legendary (King Minos, Griffin, Lucky Dice, Gold Coin), Rare (Minotaur, Sphinx, Harpy, Treasure Chest, Anvil, Music Disc) and Common (Shovel, Wheat, Pickaxe, Fishing Rod, Dye Drop, Book, Tractor, Bell, Clock). They show in chat, the tab list and the Cosmetics page.
 - New Legendary rarity (gold), between Beta and Special. Legendary, Rare and Common icons are locked for everyone except admins until their unlock rules are set.

@@ -27,31 +27,21 @@ final class Cosmetics {
     static final Suffix[] SUFFIXES = {
         new Suffix("sparkle", "Sparkle", "Original", fr(0xE020)),
         new Suffix("bug", "Bug", "Name Icon", fr(0xE100)),
-        new Suffix("hammer", "Hammer", "Name Icon", fr(0xE110)),
+        new Suffix("code", "Code", "Name Icon", fr(0xE110)),
         new Suffix("patron", "Patreon", "Name Icon", fr(0xE120)),
-        new Suffix("minos", "King Minos", "Name Icon", fr(0xE130)),
-        new Suffix("griffin", "Griffin", "Name Icon", fr(0xE140)),
+        new Suffix("betamark", "Beta", "Name Icon", fr(0xE130)),
+        new Suffix("minos", "King Minos", "Name Icon", fr(0xE140)),
         new Suffix("dice", "Lucky Dice", "Name Icon", fr(0xE150)),
-        new Suffix("coin", "Gold Coin", "Name Icon", fr(0xE160)),
-        new Suffix("minotaur", "Minotaur", "Name Icon", fr(0xE170)),
-        new Suffix("sphinx", "Sphinx", "Name Icon", fr(0xE180)),
-        new Suffix("harpy", "Harpy", "Name Icon", fr(0xE190)),
-        new Suffix("chest", "Treasure Chest", "Name Icon", fr(0xE1A0)),
-        new Suffix("anvil", "Anvil", "Name Icon", fr(0xE1B0)),
-        new Suffix("disc", "Music Disc", "Name Icon", fr(0xE1C0)),
-        new Suffix("shovel", "Shovel", "Name Icon", fr(0xE1D0)),
-        new Suffix("wheat", "Wheat", "Name Icon", fr(0xE1E0)),
-        new Suffix("pickaxe", "Pickaxe", "Name Icon", fr(0xE1F0)),
-        new Suffix("rod", "Fishing Rod", "Name Icon", fr(0xE200)),
-        new Suffix("dye", "Dye Drop", "Name Icon", fr(0xE210)),
-        new Suffix("book", "Book", "Name Icon", fr(0xE220)),
-        new Suffix("tractor", "Tractor", "Name Icon", fr(0xE230)),
-        new Suffix("bell", "Bell", "Name Icon", fr(0xE240)),
-        new Suffix("clock", "Clock", "Name Icon", fr(0xE250))};
+        new Suffix("chest", "Treasure Chest", "Name Icon", fr(0xE160)),
+        new Suffix("anvil", "Anvil", "Name Icon", fr(0xE170)),
+        new Suffix("disc", "Music Disc", "Name Icon", fr(0xE180)),
+        new Suffix("rod", "Fishing Rod", "Name Icon", fr(0xE190)),
+        new Suffix("tractor", "Tractor", "Name Icon", fr(0xE1A0)),
+        new Suffix("bell", "Bell", "Name Icon", fr(0xE1B0)),
+        new Suffix("clock", "Clock", "Name Icon", fr(0xE1C0))};
     /** Who owns cosmetics. Everyone with the mod sees their suffix; only they can open the Cosmetics page. */
     /** Owners are stored as SHA-256 codes of their UUID, never as the UUID itself. This one is built in; more come from cosmetics.json. */
     static final String OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8";
-    static final String ADMIN2 = "b7d2115142cf5666872280381967453bb85505fb1ce2270e13225355898d38fa";
     private static final Map<UUID, String> CODES = new HashMap<>();
     static String code(UUID u) { return u == null ? "" : CODES.computeIfAbsent(u, k -> { try { var md = java.security.MessageDigest.getInstance("SHA-256"); StringBuilder b = new StringBuilder(); for (byte x : md.digest(k.toString().toLowerCase(Locale.ROOT).getBytes(java.nio.charset.StandardCharsets.UTF_8))) b.append(String.format("%02x", x)); return b.toString(); } catch (Exception e) { return ""; } }); }
     private static final Map<UUID, Component> TAB_BASE = new HashMap<>();
@@ -59,12 +49,12 @@ final class Cosmetics {
     private static final Map<UUID, String> TAB_ID = new HashMap<>();
     /** What the owners picked, read from cosmetics.json in the GitHub repo so everybody with the mod sees the same thing. */
     private static final String REMOTE_URL = "https://raw.githubusercontent.com/imtraminecraft/fancydrops/main/cosmetics.json";
-    private static final Map<String, Set<String>> BUILTIN = Map.of(OWNER, Set.of("sparkle"), ADMIN2, Set.of("sparkle"));          // the admins have the Special Set
+    private static final Map<String, Set<String>> BUILTIN = Map.of(OWNER, Set.of("sparkle"));          // the owner has the Special Set
     private static long remoteAt, remoteOkAt;
     static volatile String remoteRaw;                                   // the cosmetics.json text as last fetched (the Admin Panel edits a copy of it)
     /** The owner of the mod: can see everything in the Cosmetics menu and use the Admin Panel. */
     /** The owner and the other admins, as SHA-256 codes of their UUIDs. */
-    static final java.util.Set<String> ADMINS = java.util.Set.of(OWNER, ADMIN2);
+    static final java.util.Set<String> ADMINS = java.util.Set.of(OWNER);
     static boolean isAdminCode(String code) { return code != null && ADMINS.contains(code); }
     static boolean isAdmin() { return ADMINS.contains(code(me())); }
     static { CosmeticData.grants = new HashMap<>(BUILTIN); }
