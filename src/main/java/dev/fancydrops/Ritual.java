@@ -45,11 +45,18 @@ final class Ritual {
         int n = (int) Math.max(1, Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))));
         for (int i = 0; i <= n; i++) { float f = i / (float) n; dot(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, rgb, a); }
     }
-    /** A smooth stroke of radius r: overlapping filled discs along the line (no gaps or stair-steps when drawn small). */
-    static void stroke(float x0, float y0, float x1, float y1, float r, int rgb, float a) {
+    /** A smooth, tapered, anti-aliased cut from (x0,y0) to (x1,y1): w is the half-width in the middle, the ends come to a point (one straight clean line, never a zig-zag). */
+    static void stroke(float x0, float y0, float x1, float y1, float w, int rgb, float a) {
         if (a <= 0.01f) return;
-        float len = (float) Math.hypot(x1 - x0, y1 - y0); int n = Math.max(1, (int) Math.ceil(len / Math.max(0.5f, r * 0.6f)));
-        for (int i = 0; i <= n; i++) { float f = i / (float) n; fillE(x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, r, r, rgb, a * 0.6f); }
+        float dx = x1 - x0, dy = y1 - y0, len2 = Math.max(0.0001f, dx * dx + dy * dy), reach = w + 1f;
+        int ax = (int) Math.floor(Math.min(x0, x1) - reach), bx = (int) Math.ceil(Math.max(x0, x1) + reach), ay = (int) Math.floor(Math.min(y0, y1) - reach), by = (int) Math.ceil(Math.max(y0, y1) + reach);
+        for (int y = ay; y <= by; y++) for (int x = ax; x <= bx; x++) {
+            float px = x + 0.5f - x0, py = y + 0.5f - y0, t = cl((px * dx + py * dy) / len2);
+            float qx = px - dx * t, qy = py - dy * t, d = (float) Math.sqrt(qx * qx + qy * qy);
+            float half = w * (float) Math.sqrt(Math.sin(Math.PI * t));                              // thickest in the middle, pointed at both ends
+            float cov = cl(half + 0.5f - d); if (cov <= 0.02f) continue;
+            cv.set(x, y, A(a * cov, rgb));
+        }
     }
     /** An arc of an ellipse. from..to in radians (a full circle is 0..2pi), rot turns it, dash > 0 breaks it into dashes. */
     static void ringE(float cx, float cy, float rx, float ry, int rgb, float a, float from, float to, float rot, int dash) {
@@ -736,8 +743,8 @@ final class Ritual {
             float su = cl((tau - si * 0.08f) / 0.09f);
             float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk;
             float hx = lerp(x0, x1, su), hy = lerp(y0, y1, su);
-            stroke(x0, y0, hx, hy, Math.max(1.1f, 1.7f * kk), rgb, 0.4f * fade * a);                     // round-capped strokes: the same look at any scale
-            stroke(x0, y0, hx, hy, Math.max(0.55f, 0.75f * kk), WHITE, fade * a);
+            stroke(x0, y0, hx, hy, 0.9f + 0.9f * kk, rgb, 0.32f * fade * a);                     // one smooth tapered cut, thin at any scale
+            stroke(x0, y0, hx, hy, 0.4f + 0.3f * kk, WHITE, fade * a);
             if (tau < 0.5f) glowE((x0 + hx) / 2, (y0 + hy) / 2, Math.abs(hx - x0) * 0.5f + 4, Math.abs(hy - y0) * 0.5f + 4, rgb, 0.35f * fade * a);
             if (su < 1f) {                                                                // the sword itself, leading the cut
                 float dx = x1 - x0, dy = y1 - y0, len = (float) Math.sqrt(dx * dx + dy * dy), ux = dx / len, uy = dy / len;
@@ -745,7 +752,7 @@ final class Ritual {
                 line(bx, by, hx, hy, 0xE8EEF8, a); line(bx + 1, by, hx + 1, hy, 0x9AA8C0, a * 0.8f);
                 line(hx - ux * 20 * kk - uy * 4 * kk, hy - uy * 20 * kk + ux * 4 * kk, hx - ux * 20 * kk + uy * 4 * kk, hy - uy * 20 * kk - ux * 4 * kk, 0xE8C040, a);
                 line(bx, by, bx - ux * 7 * kk, by - uy * 7 * kk, 0x6A4A2A, a);
-                glint(hx, hy, 3, WHITE, a);
+                glint(hx, hy, 2, WHITE, a * 0.8f);
             }
         }
     }

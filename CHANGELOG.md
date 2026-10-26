@@ -1,6 +1,6 @@
 ## 0.7.10
 - Pets show what George pays as their Value (with "George" as the source), instead of an auction price.
-- The slayer preview slashes are thinner and cleaner (the 0.7.9 ones were too fat at small size).
+- Slayer slashes are one thin, smooth, pointed cut (in the preview they looked like lightning, and they were too thick in the animation).
 
 ## 0.7.9
 - Cosmetics: the Special tiles have their animated backgrounds again (they had slipped onto Legendary), Legendary has none. King Minos and Fishing Rod are removed.
