@@ -1,3 +1,6 @@
+## 0.4.59
+- The moon's glow may spill past the frame again (the unique look); the trees and the rest of the scenery stay inside.
+
 ## 0.4.58
 - Slayer places: the scenery (the Revenant's moon glow, trees and so on) may spill only 4 px above the frame and 2 px at its sides, and never below it.
 

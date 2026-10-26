@@ -14,6 +14,7 @@ final class SlayerScenery {
 
     /** Paints the whole place inside [x0,x1) x [y0,y1); `hz` is the horizon row, `a` the fade of the scene, `t` seconds for the little movements. */
     static void paint(Canvas c, int theme, float t, int x0, int y0, int x1, int y1, int hz, float a, int frameRgb) {
+        MOONS.clear();
         int[] sky = switch (theme) {
             case 0 -> new int[]{0x0B0E1E, 0x3A3354};   case 1 -> new int[]{0x07060C, 0x1B1626};   case 2 -> new int[]{0x050B1E, 0x24406A};
             case 3 -> new int[]{0x05020C, 0x2A1448};   case 4 -> new int[]{0x2A0504, 0x9A3412};   default -> new int[]{0x12040A, 0x5A1424};
@@ -34,6 +35,7 @@ final class SlayerScenery {
             boolean rowOut = y < y0 - 4 || y >= y1;
             for (int x = 0; x < c.w; x++) if (rowOut || x < x0 - 2 || x >= x1 + 2) c.px[y * c.w + x] = 0;
         }
+        moonSpill(c);
     }
 
     /** The rounded frame (erase = false), or the clearing of everything outside its four round corners (erase = true). */
@@ -81,9 +83,28 @@ final class SlayerScenery {
         rect(c, x, base - 3, x + 1, base, mix(rgb, 0x3B2A1A, 0.5f), a);
         for (int i = 0; i < h; i++) { int w = 1 + (int) ((i / (float) h) * h * 0.38f); rect(c, x - w / 2, base - h + i - 2, x + (w + 1) / 2, base - h + i - 1, mix(rgb, 0xFFFFFF, i % 4 == 0 ? 0.08f : 0f), a); }
     }
+    private static final java.util.List<int[]> MOONS = new java.util.ArrayList<>();       // the moons of this frame: {x, y, radius, rgb, alpha in 1/1000}
     private static void moon(Canvas c, int cx, int cy, int r, int rgb, float a) {
+        MOONS.add(new int[]{cx, cy, r, rgb, Math.round(a * 1000)});
         for (int g = 3; g >= 1; g--) c.disc(cx, cy, r + g * 3, Ritual.A(a * 0.06f, rgb));
         c.disc(cx, cy, r, Ritual.A(a, rgb));
+    }
+    /** The glow of a moon is allowed to spill past the frame (the rest of the scenery is not): paint it again, only where nothing is. */
+    private static void moonSpill(Canvas c) {
+        if (MOONS.isEmpty()) return;
+        boolean[] empty = new boolean[c.px.length]; for (int i = 0; i < empty.length; i++) empty[i] = (c.px[i] >>> 24) == 0;      // (decided before any moon is drawn, so its glow still layers)
+        for (int[] m : MOONS) {
+            float a = m[4] / 1000f;
+            for (int g = 3; g >= 0; g--) {
+                int rad = g == 0 ? m[2] : m[2] + g * 3, col = Ritual.A(g == 0 ? a : a * 0.06f, m[3]);
+                for (int y = -rad; y <= rad; y++) for (int x = -rad; x <= rad; x++) {
+                    int xx = m[0] + x, yy = m[1] + y;
+                    if (x * x + y * y > rad * rad || xx < 0 || yy < 0 || xx >= c.w || yy >= c.h || !empty[yy * c.w + xx]) continue;
+                    c.set(xx, yy, col);
+                }
+            }
+        }
+        MOONS.clear();
     }
     private static void fog(Canvas c, float t, int x0, int x1, int y, int h, int rgb, float a, int seed) {
         for (int x = x0; x < x1; x++) { float w = 0.5f + 0.5f * (float) Math.sin(x * 0.05f + t * 0.4f + seed); rect(c, x, y, x + 1, y + h, rgb, a * w * 0.18f); }
