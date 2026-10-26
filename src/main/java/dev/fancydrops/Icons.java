@@ -36,7 +36,6 @@ final class Icons {
         if (name.startsWith("mob_")) ItemIcons.prefetch("MOB_" + name.substring(4));
         if (name.startsWith("boss_")) {
             String bid = name.substring(5);
-            if (bid.equals("zombie")) { Gfx.item(g, "zombie_head", x, y); return; }                    // Minecraft's own zombie head
             ItemIcons.draw(g, SlayerData.headId(bid), SlayerData.headFallback(bid), x + 8, y + 8, 1.15f); return;
         }      // a slayer boss: its skull
         if (name.equals("sparkle") || Cosmetics.byId(name) != null) { Cosmetics.drawIcon(g, name, x, y, now); return; }      // the one suffix we have: shaded, six frames

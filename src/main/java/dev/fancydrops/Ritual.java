@@ -537,7 +537,7 @@ final class Ritual {
                 float tau = op - ts[k];
                 if (tau < 0) continue;
                 strikes++;
-                if (slayerMode && tau < 0.5f) slash(tau, k, icx, gy - 2, kkS, energy, bg);
+                if (slayerMode) slash(tau, k, icx, gy - 2, kkS, energy, bg, nod ? 1f - cl(p / 0.9f) : 1f - cl(p / 0.5f));
                 if (tau < 0.30f) {
                     int seed = k * 101 + (int) (op * 28);
                     float fl = (rnd(seed) > 0.3f ? 1f : 0.45f) * (1f - tau / 0.30f), x0 = icx + (rnd(k * 9) - 0.5f) * 36;
@@ -552,7 +552,7 @@ final class Ritual {
                 float sw = tau / 0.75f;
                 if (sw < 1f) ringE(icx, gy, rx * (0.4f + 1.4f * eo(sw)), ry * (0.4f + 1.4f * eo(sw)), mixc(energy, WHITE, 0.5f), (1f - sw) * 0.9f * bg, 0, 6.2832f, 0, 0);
             }
-            cracks(op, icx, gy, rx, ry, strikes * 3, strikes > 0 ? cl(1f - (op - ts[strikes - 1]) / 0.8f) : 0f, bg * (nod ? 1f - cl(p / 0.9f) : 1f));
+            if (!slayerMode) cracks(op, icx, gy, rx, ry, strikes * 3, strikes > 0 ? cl(1f - (op - ts[strikes - 1]) / 0.8f) : 0f, bg * (nod ? 1f - cl(p / 0.9f) : 1f));
             motes(t, icx, gy, rx, ry, 70 * sz, energy, 0.9f * bg, 26);
         } else {
             float done = dig(op, O, icx, gy, rx, ry, sz, blade, Math.max(bg, 0f));
@@ -621,17 +621,29 @@ final class Ritual {
     static int slTheme(Anim a) { return Math.floorMod(a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? SlayerData.theme(a.item.source.id) : 0, 6); }
 
     /** One sword slash across the boss: the blade sweeps along a line, a bright trail stays and fades. k = 0, 1 (the two diagonals) or 2 (a double cut). */
-    private static void slash(float tau, int k, float cx, float gy, float kk, int rgb, float a) {
-        if (tau < 0f || tau > 0.5f) return;
-        float[][] segs = k == 0 ? new float[][]{{-38, -86, 38, -4}} : k == 1 ? new float[][]{{38, -86, -38, -4}} : new float[][]{{-40, -80, 40, -8}, {40, -80, -40, -8}};
-        float u = cl(tau / 0.09f), fade = 1f - cl((tau - 0.09f) / 0.4f);
+    static int slSeed;                                                                  // set by the caller: makes the cuts of this drop differ from the next
+    private static void slash(float tau, int k, float cx, float gy, float kk, int rgb, float a, float keep) {
+        if (tau < 0f) return;
+        int n = k == 2 ? 2 : 1;
+        float[][] segs = new float[n][4];
+        for (int si = 0; si < n; si++) {                                                  // a random line through the body: its angle, centre and length all differ per drop
+            int sd = slSeed * 31 + k * 7 + si * 3;
+            float base = (k == 1 || si == 1) ? 2.2f : 0.95f;                              // down-right, or down-left
+            float ang = base + (rnd(sd + 1) - 0.5f) * 0.9f, len = 50 + rnd(sd + 2) * 22;
+            float mx = (rnd(sd + 3) - 0.5f) * 24, my = -44 + (rnd(sd + 4) - 0.5f) * 20;
+            float ux = (float) Math.cos(ang), uy = (float) Math.sin(ang);
+            segs[si] = new float[]{mx - ux * len, my - uy * len, mx + ux * len, my + uy * len};
+        }
+        float fade = tau < 0.09f ? 1f : Math.max(1f - cl((tau - 0.09f) / 0.4f), 0.55f * keep);   // the glow fades, the cut stays
+        if (fade <= 0.01f) return;
         for (int si = 0; si < segs.length; si++) {
             float[] sg = segs[si];
-            float su = cl((tau - si * 0.08f) / 0.09f); if (tau < si * 0.08f) continue;
+            if (tau < si * 0.08f) continue;
+            float su = cl((tau - si * 0.08f) / 0.09f);
             float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk;
             float hx = lerp(x0, x1, su), hy = lerp(y0, y1, su);
             for (int w = -1; w <= 1; w++) line(x0 + w * 0.7f, y0, hx + w * 0.7f, hy, w == 0 ? WHITE : rgb, (w == 0 ? 1f : 0.55f) * fade * a);
-            glowE((x0 + hx) / 2, (y0 + hy) / 2, Math.abs(hx - x0) * 0.5f + 4, Math.abs(hy - y0) * 0.5f + 4, rgb, 0.35f * fade * a);
+            if (tau < 0.5f) glowE((x0 + hx) / 2, (y0 + hy) / 2, Math.abs(hx - x0) * 0.5f + 4, Math.abs(hy - y0) * 0.5f + 4, rgb, 0.35f * fade * a);
             if (su < 1f) {                                                                // the sword itself, leading the cut
                 float dx = x1 - x0, dy = y1 - y0, len = (float) Math.sqrt(dx * dx + dy * dy), ux = dx / len, uy = dy / len;
                 float bx = hx - ux * 20 * kk, by = hy - uy * 20 * kk;
@@ -669,7 +681,7 @@ final class Ritual {
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
         if (rng && cfg.bars) icy = Math.max(barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
-        slayerMode = isSlayer(a); if (slayerMode) kind = 12 + slTheme(a);
+        slayerMode = isSlayer(a); if (slayerMode) { kind = 12 + slTheme(a); slSeed = System.identityHashCode(a) & 0xFFFF; }
         try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { slayerMode = false; }
         return cv.px.clone();
     }
@@ -717,7 +729,7 @@ final class Ritual {
                 String id = a.group + a.type + "/" + a.kind + "/" + (it == null ? 0 : it.id.hashCode()) + "/" + TextFx.itemOnly;
                 boolean reuse = AnimationManager.previewing && id.equals(upKey) && nowMs - upMs < 33 && nowMs >= upMs;       // a menu preview repaints at ~30 fps: the picture it shows barely changes between frames
                 if (!reuse) {
-                    slayerMode = sl;
+                    slayerMode = sl; if (sl) slSeed = System.identityHashCode(a) & 0xFFFF;
                     try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { slayerMode = false; }
                     SceneTexture.upload(cv); upKey = id; upMs = nowMs;
                 }

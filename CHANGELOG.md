@@ -1,3 +1,10 @@
+## 0.4.45
+- Revenant Horror and Inferno Demonlord now show real spinning 3D heads: a green zombie head and a yellow blaze head.
+- Slayer animation: the ground no longer cracks. The boss hologram is slashed instead, and the cuts stay on it until it shatters.
+- Every slayer drop slashes at different angles, positions and lengths.
+- The Drop Library shows a "Tracked Drops" counter at the top right.
+- Scrolling text on long tiles moves in sync: every line pans for the same time, eased, with the same pause.
+
 ## 0.4.44
 - Fixed a compile error in the Animations and Sounds pages (the WIP tag on the sub page list).
 

@@ -233,3 +233,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.4.41
 - Text that does not fit a tile pans (marquee: slide, pause, slide back) rather than being cut or shrunk (`FancyScreen.scrollText`).
 
+## Standing requirements added in 0.4.45
+- Slayer bosses use heads the mod draws itself (`@HEAD_ZOMBIE`, `@HEAD_BLAZE`) as 3D spinning icons, never a flat item.
+- Slayer scenes never crack the ground; the hologram is slashed, with random cuts per drop that stay until the shatter.
+- The Drop Library landing shows a "Tracked Drops" counter (top right of the hero).
+- Marquee text on long tiles moves in sync: fixed duration, eased, same wait.

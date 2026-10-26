@@ -209,6 +209,7 @@ public class FancyScreen extends Screen {
 
         int kind = NORMAL, indent, accent = Ui.ACCENT, h = 28, x, y, w;
         String icon, iconId, title = "", sub = "";
+        String badge;                  // HERO rows: a small tag at the top right (a number and what it counts)
         FancyConfig.DropCfg dcfg;      // drop rows: the switches, so the Drop Library "Show" filter can hide rows
         String spriteId;               // a creature picture that replaces the drawn icon once it has downloaded
         int pbw;                       // PREVIEW rows: draw at this width, left aligned (the dock)
@@ -728,8 +729,8 @@ public class FancyScreen extends Screen {
     private void scrollText(GuiGraphicsExtractor g, String text, int x, int y, int maxW, float scale, int color, long now) {
         float w = Gfx.w(font, text) * scale, over = w - maxW;
         if (over <= 0.5f) { Gfx.push(g); Gfx.translate(g, x, y); Gfx.scale(g, scale); Gfx.text(g, font, text, 0, 0, color); Gfx.pop(g); return; }
-        float move = over / 22f, wait = 0.9f, cyc = 2f * (move + wait), u = (now % 3600000L) / 1000f % cyc, off;     // 22 px a second, a pause at each end
-        if (u < wait) off = 0f; else if (u < wait + move) off = over * (u - wait) / move; else if (u < 2f * wait + move) off = over; else off = over * (1f - (u - 2f * wait - move) / move);
+        float move = 2.2f, wait = 1.0f, cyc = 2f * (move + wait), u = (now % 3600000L) / 1000f % cyc, off;     // a fixed time for every text: they all start, stop and turn together
+        if (u < wait) off = 0f; else if (u < wait + move) off = over * Ritual.sm((u - wait) / move); else if (u < 2f * wait + move) off = over; else off = over * (1f - Ritual.sm((u - 2f * wait - move) / move));
         g.enableScissor(x, y - 2, x + maxW, y + 12);
         Gfx.push(g); Gfx.translate(g, x - off, y); Gfx.scale(g, scale); Gfx.text(g, font, text, 0, 0, color); Gfx.pop(g);
         g.disableScissor();
@@ -2418,7 +2419,9 @@ public class FancyScreen extends Screen {
             return;
         }
         if (landing()) {
-            rows.add(hero(":dropped:", "Drop Library", "Every drop, sorted by where it comes from. Open a category and choose the animation each drop plays and whether it is announced in chat.", Ui.ACCENT));
+            Row lib = hero(":dropped:", "Drop Library", "Every drop, sorted by where it comes from. Open a category and choose the animation each drop plays and whether it is announced in chat.", Ui.ACCENT);
+            int tracked = 0; for (Categories.Cat k : Categories.ALL) if (!k.wip()) for (Categories.Group g : k.groups()) if (!g.wip()) for (DropData.Source so : k.sources(g.id())) tracked += so.drops.size();
+            lib.badge = tracked + "|Tracked Drops"; rows.add(lib);
             rows.add(catTiles());
             return;
         }
@@ -3188,6 +3191,12 @@ public class FancyScreen extends Screen {
                 if (r.iconId != null) ItemIcons.draw(g, r.iconId, r.icon, mid, cyi, 1.8f); else if (Icons.has(r.icon)) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Icons.draw(g, r.icon, 0, 0, nw); Gfx.pop(g); }
                 else if (r.icon != null) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Gfx.item(g, r.icon, 0, 0); Gfx.pop(g); }
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
+                }
+                if (r.kind == HERO && r.badge != null) {                                  // the counter: a number with its label, top right
+                    String[] bp = r.badge.split("\\|"); int bw = Math.max(Gfx.w(font, bp[0]) * 2, Gfx.w(font, bp[1])) + 14, bx = r.x + r.w - bw - 8, by = r.y + 8;
+                    g.fill(bx, by, bx + bw, by + 30, 0x80000000); g.fill(bx, by, bx + bw, by + 1, Ui.ACCENT); g.fill(bx, by + 29, bx + bw, by + 30, Ui.ACCENT);
+                    Gfx.push(g); Gfx.translate(g, bx + bw / 2f, by + 4); Gfx.scale(g, 2f); Gfx.textCentered(g, font, bp[0], 0, 0, 0xFFFFC857); Gfx.pop(g);
+                    Gfx.textCentered(g, font, bp[1], bx + bw / 2, by + 20, Ui.SUB);
                 }
                 if (r.kind == HERO) { int wy = r.y + 70; for (String ln : wrap(r.sub, cw - 60)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; } continue; }          // the words under the title
                 Site.draw(g, r.x, r.y, r.w, r.h, sec);

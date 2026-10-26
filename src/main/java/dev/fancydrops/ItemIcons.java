@@ -92,6 +92,10 @@ public final class ItemIcons {
         if ("GRIFFIN_FEATHER".equals(id) || "BRAIDED_GRIFFIN_FEATHER".equals(id)) {             // a real feather, never the Griffin pet the wiki page shows first
             Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = applyFolder(id, b); ic.ready = true; return;
         }
+        if (id.startsWith("@HEAD_")) {                                                           // a boss's head drawn by the mod (a zombie, a blaze): six 8 x 8 faces
+            Cached b = new Cached(); b.wikiVersion = 12; b.heads = bossHead(id.substring(6)); b.face = b.heads[4];
+            ic.data = applyFolder(id, b); ic.ready = true; return;
+        }
         if (id.startsWith("MOB_") && MOB_SKINS.containsKey(id.substring(4))) {                   // a creature's head
             Cached b = new Cached(); b.wikiVersion = 12;
             try { if (!Files.exists(headDir().resolve(id.replaceAll("[^A-Za-z0-9_]", "_") + "_head.png"))) { b.heads = fetchHead(MOB_SKINS.get(id.substring(4))); b.face = b.heads[4]; } } catch (Exception e) { log(id + ": head failed: " + e); }
@@ -506,6 +510,33 @@ public final class ItemIcons {
             p[y * 16 + x] = Canvas.shade(0xFF000000 | rgb, lit);
         }
         return p;
+    }
+
+
+    /** The six faces (+x, -x, +y, -y, +z, -z) of a head we draw ourselves. */
+    private static int[][] bossHead(String kind) {
+        boolean blaze = kind.equals("BLAZE");
+        int base = blaze ? 0xF0B830 : 0x5E9E52, dark = blaze ? 0xC07818 : 0x3F7038, lite = blaze ? 0xFFD860 : 0x7DBB6C;
+        int[][] f = new int[6][64];
+        for (int face = 0; face < 6; face++) for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) {
+            int h = (x * 7 + y * 13 + face * 5) * 2654435761L % 5 == 0 ? 1 : (x * 11 + y * 3 + face) % 7 == 0 ? 2 : 0;
+            int c = h == 1 ? dark : h == 2 ? lite : base;
+            if (face == 2 && !blaze) c = (y < 3 || h == 1) ? 0x2E5A2A : dark;                                         // the top of a zombie's head: darker, like hair
+            if (blaze && face < 4) c = (y == 1 || y == 5) ? dark : c;                                                 // the sides of a blaze head: banded
+            f[face][y * 8 + x] = 0xFF000000 | c;
+        }
+        int[] fr = f[4];
+        if (blaze) {
+            for (int[] e : new int[][]{{1, 3}, {2, 3}, {5, 3}, {6, 3}}) fr[e[1] * 8 + e[0]] = 0xFF2A1408;                 // black eyes
+            for (int x = 2; x < 6; x++) fr[5 * 8 + x] = 0xFF4A2808;                                                   // a flat mouth
+            fr[3 * 8 + 1] = 0xFFFFE070; fr[3 * 8 + 6] = 0xFFFFE070;
+        } else {
+            for (int[] e : new int[][]{{1, 3}, {2, 3}, {5, 3}, {6, 3}}) fr[e[1] * 8 + e[0]] = 0xFF1B2748;                 // dark blue eyes
+            fr[3 * 8 + 2] = 0xFF4A6AA8; fr[3 * 8 + 5] = 0xFF4A6AA8;
+            for (int x = 2; x < 6; x++) fr[6 * 8 + x] = 0xFF2A4A22;                                                   // a slack mouth
+            fr[4 * 8 + 3] = 0xFF3F7038; fr[4 * 8 + 4] = 0xFF3F7038;
+        }
+        return f;
     }
 
     /** The 3D model of this item for the scene (null while the art is still loading). */
