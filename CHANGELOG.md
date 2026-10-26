@@ -1,3 +1,6 @@
+## 0.4.47
+- The hotbar and hearts now slide away only when the cinematic bars slide in, and come back when they leave (they used to go as soon as the animation started).
+
 ## 0.4.46
 - The Chat main page no longer has the "Your message" row.
 - The Chat Enabled tile reads "79 / 132 drops are live".

@@ -48,7 +48,11 @@ public final class AnimationManager {
     public static void play(Anim a) { if (a != null) QUEUE.add(a); }
     public static boolean isPlaying() { return cur != null || !QUEUE.isEmpty(); }
     /** True while the hotbar and hearts should slide away (a scene with cinematic bars). */
-    public static boolean hidesHud() { return cur != null && cur.type == RNG && cur.cfg().bars; }
+    public static boolean hidesHud() {
+        if (cur == null || cur.type != RNG || !cur.cfg().bars) return false;
+        float t = (System.currentTimeMillis() - cur.start) / 1000f, S = Math.max(3.6f, cur.cfg().secs), O = S - Ritual.TAIL;
+        return t >= O - 0.8f && t < S - 0.05f;                                           // only while the cinematic bars are on screen (they slide in at O - 0.8 s, out at the end)
+    }
 
     /** Which type a drop plays: its own pick in the Drop Library, else RNG for rare drops (rank 2 up, or worth the RNG price), else Normal. -1 = it has no animation. */
     public static int typeOf(Item it, FancyConfig.DropCfg dc) {

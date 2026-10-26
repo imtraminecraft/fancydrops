@@ -242,3 +242,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.4.46
 - The Chat main page has no "Your message" row; the live message preview lives on the sub pages.
 - Leaving a search through the side menu always clears the box and drops its focus.
+
+## Standing requirements added in 0.4.47
+- The hotbar and status bars are hidden only while the cinematic bars are on screen, never earlier.
