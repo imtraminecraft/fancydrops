@@ -98,9 +98,10 @@ final class FarmScene {
         }
         if (bounty) {                                                                                       // the tractor drives the whole field in one pass
             float u = cl((op - TR0 * O) / ((TR1 - TR0) * O)), tx = (xl - 20) + u * ((xr + 20) - (xl - 20)), ty = rowY(gy, sz, 2) + 5 * sz;
-            if (op < TR1 * O + 0.6f) {
-                FarmScenery.tractor(Ritual.cv, tx, ty, t, a * (1f - sm((op - TR1 * O) / 0.6f)));
-                for (int i = 0; i < 8; i++) { float f = (t * 1.4f + rnd(i) * 3) % 1f; if (u > 0f && u < 1f) dot(tx - 10 - f * 14, ty - 5 - f * 9 + rnd(i + 2) * 3, i % 2 == 0 ? 0xE8D060 : 0x7CCB4F, a * (1f - f)); }
+            float vis = sm(u / 0.08f) * (1f - sm((u - 0.9f) / 0.1f));                                   // it drives in, and is gone before it leaves the panel
+            if (u < 0.995f && vis > 0.01f) {
+                FarmScenery.tractor(Ritual.cv, tx, ty, t, a * vis);
+                for (int i = 0; i < 8; i++) { float f = (t * 1.4f + rnd(i) * 3) % 1f; if (u > 0f && u < 0.9f) dot(tx - 10 - f * 14, ty - 5 - f * 9 + rnd(i + 2) * 3, i % 2 == 0 ? 0xE8D060 : 0x7CCB4F, a * (1f - f)); }
             }
         }
         for (int k = 0; k < (bounty ? 0 : 3); k++) {                                                        // the scythe sweeps

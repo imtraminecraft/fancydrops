@@ -1,3 +1,7 @@
+## 0.6.2
+- Harvest Bounty: the tractor now fades out before it reaches the edge, so it never stays on screen.
+- Farming icons: pictures saved earlier in config/fancydrops/art/items were overriding the fixed ones. They are now replaced once with the picture from each drop's own wiki page.
+
 ## 0.6.1
 - Harvest Bounty: the tractor now drives the whole field in one fast pass, and every crop falls the moment its mower passes it. The scythe sweeps are gone from this scene.
 - Pest Drops: the sack, crate and scattered grain are gone from the barn.

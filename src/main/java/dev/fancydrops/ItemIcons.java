@@ -116,6 +116,7 @@ public final class ItemIcons {
         }
         if (c.wikiPixels == null) try { c.wikiPixels = fetchWikiPixels(searchWiki(wikiPageName(id))); } catch (Exception ignored) {}   // a search can land on the wrong page (a pest for a crop), so farming items go without
         c.wikiVersion = ver(id);
+        if (farmDrop(id) != null) try { Files.deleteIfExists(texDir().resolve(id.replaceAll("[^A-Za-z0-9_]", "_") + ".png")); } catch (Exception ignored) {}      // the picture saved from an older, wrong page would override this one
         for (String cand : neuIds(id)) {
             if (c.heads != null) break;
             try {
@@ -328,8 +329,8 @@ public final class ItemIcons {
         for (DropData.Source src : DropData.sources()) if (FarmData.byId(src.id) == src) for (DropData.Drop d : src.drops) if (d.id.equalsIgnoreCase(id)) return d;
         return null;
     }
-    /** Cache version: farming icons are 13, so the pictures cached from the old img pages are fetched again. */
-    private static int ver(String id) { return farmDrop(id) != null ? 13 : 12; }
+    /** Cache version: farming icons are 14, so the pictures cached from the old img pages are fetched again. */
+    private static int ver(String id) { return farmDrop(id) != null ? 14 : 12; }
 
     /** Use the configured display name as the Wiki page title, not the internal SkyBlock id. */
     private static String wikiPageName(String id) {

@@ -314,5 +314,9 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Pest Drops: nothing on the barn floor but the pest.
 - Experimentation Table list: other drops first, then books by level (all V, then all VI, then all VII), A to Z inside a level. Every VII book is RNG.
 - Book flip sounds play when a page starts to turn, never before the animation.
-- Farming drops use their own wiki page for the picture; `img` is only the fallback. Farming icon caches are version 13.
+- Farming drops use their own wiki page for the picture; `img` is only the fallback. Farming icon caches are version 14 (a refetch also replaces the saved art/items picture).
 - Page descriptions stay short and have no "more later" notes.
+
+## Standing requirements added in 0.6.2
+- The Harvest Bounty tractor is never visible after its pass.
+- A farming icon refetch replaces the picture saved in art/items, so a stale file cannot override the right one.
