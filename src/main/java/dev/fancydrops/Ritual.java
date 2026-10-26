@@ -566,7 +566,7 @@ final class Ritual {
         if (p < 0f) return;
         if (nod) {
             float fz = cl(p / 0.5f);
-            if (p < 0.4f) { int seed = (int) (p * 20) + 900; float fl = (rnd(seed) > 0.4f ? 0.8f : 0.25f) * (1f - p / 0.4f); bolt(icx + 8, 18 * sz, icx, gy, seed, GREY, fl, 4, false); }
+            if (p < 0.4f && !slayerMode) { int seed = (int) (p * 20) + 900; float fl = (rnd(seed) > 0.4f ? 0.8f : 0.25f) * (1f - p / 0.4f); bolt(icx + 8, 18 * sz, icx, gy, seed, GREY, fl, 4, false); }
             glowE(icx, gy - 4, (22 - 14 * fz) * sz, (14 - 8 * fz) * sz, tre ? GOLD : EMBER, 0.55f * (1f - fz) * bg);
             smoke(p, icx, gy, rx, sz, bg);
             if (tre) bone(p, icx, gy, sz);
