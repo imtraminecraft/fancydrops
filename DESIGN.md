@@ -320,3 +320,10 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.6.2
 - The Harvest Bounty tractor is never visible after its pass.
 - A farming icon refetch replaces the picture saved in art/items, so a stale file cannot override the right one.
+
+## Standing requirements added in 0.6.3
+- Draw 16x16 pictures with PixTex (one quad); never one fill per pixel run in a list. Anything asked every frame (skullFlag, isBook, unlocked) is remembered.
+- Pictures saved on disk load on the FAST pool, downloads on the pool of six.
+- Every name effect is ONE main colour plus white. Starlight is pale blue, Critical red, Aqua Flow aqua, Royal gold; Beta keeps the name's own colour. No other colours, no darkening.
+- "Suffix" is called "Name Icon" in all visible text (the code keeps the old name).
+- Name Icons are grouped Special (Bug Finder, Contributors, Patreon only), Legendary, Rare, Common. The list is shown to the author for approval before any icon is added.

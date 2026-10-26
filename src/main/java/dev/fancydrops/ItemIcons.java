@@ -43,8 +43,12 @@ public final class ItemIcons {
     private static final Map<String, Icon> CACHE = new ConcurrentHashMap<>();
     private static final Gson GSON = new Gson();
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
-    private static final ExecutorService POOL = Executors.newFixedThreadPool(2, r -> {
+    /** Pictures already saved on disk load on their own two threads, so they never wait behind a download; downloads run six at a time. */
+    private static final ExecutorService POOL = Executors.newFixedThreadPool(6, r -> {
         Thread t = new Thread(r, "FancyDrops-Icons"); t.setDaemon(true); return t;
+    });
+    private static final ExecutorService FAST = Executors.newFixedThreadPool(2, r -> {
+        Thread t = new Thread(r, "FancyDrops-IconCache"); t.setDaemon(true); return t;
     });
     private static final Pattern VALUE = Pattern.compile("Value:\"([A-Za-z0-9+/=]+)\"");
     private static final String REPO = "https://raw.githubusercontent.com/NotEnoughUpdates/NotEnoughUpdates-REPO/master/items/";
@@ -56,7 +60,8 @@ public final class ItemIcons {
             Icon prev = CACHE.putIfAbsent(id, ic);
             if (prev != null) return prev;
             final Icon fi = ic;
-            POOL.execute(() -> load(id, fi));
+            boolean saved; try { saved = Files.exists(cacheFile(id)); } catch (Exception e) { saved = false; }
+            (saved ? FAST : POOL).execute(() -> load(id, fi));
         }
         return ic;
     }
@@ -118,7 +123,7 @@ public final class ItemIcons {
         c.wikiVersion = ver(id);
         if (farmDrop(id) != null) try { Files.deleteIfExists(texDir().resolve(id.replaceAll("[^A-Za-z0-9_]", "_") + ".png")); } catch (Exception ignored) {}      // the picture saved from an older, wrong page would override this one
         for (String cand : neuIds(id)) {
-            if (c.heads != null) break;
+            if (c.heads != null || (c.wikiPixels != null && !skullFlag(id))) break;           // a flat item with its wiki picture needs nothing from NEU
             try {
             JsonObject j = JsonParser.parseString(httpString(REPO + URLEncoder.encode(cand, StandardCharsets.UTF_8) + ".json")).getAsJsonObject();
             c.legacy = j.has("itemid") ? j.get("itemid").getAsString().replace("minecraft:", "") : null;
@@ -181,6 +186,11 @@ public final class ItemIcons {
     }
 
     private static boolean isBook(String id) {
+        if (id == null) return false;
+        Boolean m = BOOK_MEMO.get(id); if (m != null) return m;
+        boolean v = isBook0(id); BOOK_MEMO.put(id, v); return v;
+    }
+    private static boolean isBook0(String id) {
         for (DropData.Source s : DropData.sources()) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
         return false;
     }
@@ -263,7 +273,14 @@ public final class ItemIcons {
         try { Files.writeString(DataFiles.dir().resolve("icon-log.txt"), s + "\n", java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND); } catch (Exception ignored) {}
     }
 
+    private static final Map<String, Boolean> SKULL_MEMO = new ConcurrentHashMap<>(), BOOK_MEMO = new ConcurrentHashMap<>();
+    /** Asked for every icon every frame, so the answer is remembered (the drop lists never change while the game runs). */
     private static boolean skullFlag(String id) {
+        if (id == null || "@COIN".equals(id)) return skullFlag0(id);
+        Boolean m = SKULL_MEMO.get(id); if (m != null) return m;
+        boolean v = skullFlag0(id); SKULL_MEMO.put(id, v); return v;
+    }
+    private static boolean skullFlag0(String id) {
         if ("@COIN".equals(id)) { Icon ic = CACHE.get(id); return ic != null && ic.data != null && ic.data.heads != null; }       // the Hypixel coin is a head once it has loaded (the drawn coin stays flat)
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).endsWith("_DYE")) return true;          // every SkyBlock dye is a player head
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).startsWith("DYE_")) return true;
@@ -657,6 +674,7 @@ public final class ItemIcons {
         int[] pix = spun != null ? spun : d == null ? null : d.iso != null && d.heads == null && skullFlag(id) ? d.iso : head ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : d.wikiPixels != null ? d.wikiPixels : d.heads != null ? (d.iso != null ? d.iso : (d.iso = isoCube(d.heads))) : null;
         if (pix != null) {
             Gfx.scale(g, scale); if (bobY != 0) Gfx.translate(g, 0, bobY);
+            if (PixTex.draw(g, pix, -8, -8, 16, 16, (Math.max(0, Math.min(255, Math.round(drawAlpha * 255))) << 24) | 0xFFFFFF)) { Gfx.pop(g); return; }      // one quad
             for (int y = 0; y < 16; y++) {                         // one fill per run of the same colour, not per pixel (far fewer draw calls)
                 int x = 0;
                 while (x < 16) {

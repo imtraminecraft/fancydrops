@@ -12,11 +12,11 @@ import java.util.Map;
 
 /**
  * A smooth, real 3D head block. Each skull gets one small texture (N x N) that is ray-traced from its six 8x8 faces at the current turn angle
- * (3x3 samples per pixel, so the edges are soft instead of jumping from pixel to pixel) and drawn as one quad.
- * The turn is quantised to 96 steps, so it looks continuous. If a texture can't be made the caller falls back to the old 16x16 sprite.
+ * (2x2 samples per pixel, so the edges are soft instead of jumping from pixel to pixel) and drawn as one quad.
+ * The turn is quantised to 64 steps, so it looks continuous. If a texture can't be made the caller falls back to the old 16x16 sprite.
  */
 final class SkullSpin {
-    private static final int N = 128, SS = 2, STEPS = 96;
+    private static final int N = 64, SS = 2, STEPS = 64;
     private static final class Entry { DynamicTexture tex; Identifier id; int step = -1; volatile int[] done; volatile int doneStep = -1; volatile boolean busy; }
     private static final Map<String, Entry> MAP = new HashMap<>();
     private static boolean failed;

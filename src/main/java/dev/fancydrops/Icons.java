@@ -107,6 +107,7 @@ final class Icons {
     }
     /** One fill per run of the same colour, not per pixel. */
     private static void blit(GuiGraphicsExtractor g, int[] pix, int x, int y) {
+        if (PixTex.draw(g, pix, x, y, 16, 16, 0xFFFFFFFF)) return;
         for (int yy = 0; yy < 16; yy++) {
             int xx = 0;
             while (xx < 16) {

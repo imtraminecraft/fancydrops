@@ -1,3 +1,9 @@
+## 0.6.3
+- Faster menu: every icon and item picture is now one textured quad instead of dozens of small rectangles, skull heads are traced at a quarter of the work, the item lookups the menu asked for every frame are remembered, and the page rows are rebuilt less often.
+- Faster loading: pictures already saved on your PC load on their own threads and never wait behind downloads, downloads run six at a time instead of two, and flat items no longer ask NEU for a skull they don't have.
+- Name effects now use only the name's main colour and white. Starlight is pale starlight blue with a white comet and twinkles, Critical is red with white, Aqua Flow is aqua with white foam, Royal is gold with a white glint, and Beta (Pulse) no longer darkens or changes colour: it breathes between your name's colour and white.
+- "Suffix" is now called "Name Icon" everywhere in the menu.
+
 ## 0.6.2
 - Harvest Bounty: the tractor now fades out before it reaches the edge, so it never stays on screen.
 - Farming icons: pictures saved earlier in config/fancydrops/art/items were overriding the fixed ones. They are now replaced once with the picture from each drop's own wiki page.

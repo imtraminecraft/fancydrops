@@ -25,7 +25,7 @@ public class FancyScreen extends Screen {
         CHAT("Chat", "writable_book", "Announce rare drops to your party or co-op"),
         GENERAL("Settings", "comparator", "Menu, prices and data"),
         STATS("Stats", "map", "WIP: profit and drops are being rebuilt"),
-        COSMETICS("Cosmetics", "nether_star", "Suffixes, name effects and auras");
+        COSMETICS("Cosmetics", "nether_star", "Name icons, name effects and auras");
         final String label, icon, sub;
         Tab(String l, String i, String s) { label = l; icon = i; sub = s; }
     }
@@ -911,20 +911,15 @@ public class FancyScreen extends Screen {
     private static String effectNote(CosmeticData.Def d) {
         if (d.kind() != CosmeticData.Kind.NAME) return "";
         return switch (d.id()) {
-            case "shimmer" -> "A band of light sweeps over your name. ";
-            case "pulse" -> "Your name breathes, dim to bright. ";
-            case "wave" -> "Waves of light run along your name. ";
-            case "glow" -> "A warm glow that slowly brightens. ";
-            case "fresh" -> "A mint name with a light green that drifts along it. ";
-            case "sparklefx" -> "Gold with a white comet and twinkling letters. ";
-            case "glitch" -> "Hot red-orange, a warning stripe sweeps over it, and a letter flashes white. ";
-            case "contribfx" -> "Flowing water with foam and a sweeping light. ";
-            case "royal" -> "Liquid gold with a running glint. ";
-            case "rainbow" -> "The whole spectrum rolls along your name. ";
-            case "aurora" -> "Green, teal and violet curtains drift through it. ";
-            case "ember" -> "Glowing coals with flickers rising through the letters. ";
-            case "frost" -> "Pale ice with a cold glint, and a letter that frosts over. ";
-            case "neon" -> "Cyan and magenta trade places like a sign, with a flicker. ";
+            case "shimmer" -> "A band of white sweeps over your name. ";
+            case "pulse" -> "Your name breathes between its colour and white. ";
+            case "wave" -> "White waves run along your name. ";
+            case "glow" -> "A soft white glow that slowly brightens. ";
+            case "fresh" -> "A lighter shade drifts along your name. ";
+            case "sparklefx" -> "Starlight blue with a white comet and twinkling letters. ";
+            case "glitch" -> "Red with a white band, a flashing letter and a siren blink. ";
+            case "contribfx" -> "Aqua with waves of white foam. ";
+            case "royal" -> "Gold with a running white glint. ";
             default -> "";
         };
     }
@@ -968,11 +963,11 @@ public class FancyScreen extends Screen {
     private void cosmeticsPage() {
         if (!cosPanels() && query.isBlank()) { Row cp = new Row(); cp.kind = COSPREV; cp.noSearch = true; cp.h = 150; rows.add(cp); }          // small screens keep the previews inside the page
         CosmeticData.Kind[] kinds = {CosmeticData.Kind.SUFFIX, CosmeticData.Kind.NAME, CosmeticData.Kind.AURA};
-        String[] heads = {"SUFFIX", "NAME EFFECT", "AURA"}, subs = {"A little icon after your name.", "Your name in moving colours.", "Particles around your character."};
+        String[] heads = {"NAME ICON", "NAME EFFECT", "AURA"}, subs = {"A little icon after your name.", "Your name in its colour and white.", "Particles around your character."};
         int[] accents = {0xFFFFC857, 0xFFFF9AC8, 0xFF8FD0FF};
         // --- sets: the rarest first
         int ownedSets = 0; for (CosmeticData.SetDef sd : CosmeticData.SETS) if (CosmeticData.unlocked(CosmeticData.members(sd).get(0))) ownedSets++;
-        rows.add(catHeader("SETS", "A suffix and a name effect that go together, and an aura for most.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
+        rows.add(catHeader("SETS", "A name icon and a name effect that go together, and an aura for most.", ownedSets + " / " + CosmeticData.SETS.size(), 0xFFC77DFF));
         List<Object> st = new ArrayList<>(); for (int r2 = 3; r2 >= 0; r2--) for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == r2) st.add(sd);
         rows.add(grid(st, 3));
         // --- one section per kind, ordered by rarity (special, then beta, then common); a set's items keep the set's colours
@@ -1129,7 +1124,7 @@ public class FancyScreen extends Screen {
             adminHits.add(new Object[]{x, Math.max(top, yy), x + tw, Math.min(bot, yy + 24), (Runnable) () -> adminToggleSet(sd)}); i++;
         }
         y += ((i + cols - 1) / cols) * 28 + 8;
-        String[] heads = {"SUFFIXES", "NAME EFFECTS", "AURAS"};
+        String[] heads = {"NAME ICONS", "NAME EFFECTS", "AURAS"};
         for (CosmeticData.Kind k : CosmeticData.Kind.values()) {
             g.fill(x0, y - 4, x0 + iw, y - 3, 0x1CFFFFFF);
             Gfx.text(g, font, heads[k.ordinal()], x0, y, 0xFFFFC857); y += 13; i = 0;
@@ -1504,7 +1499,7 @@ public class FancyScreen extends Screen {
     /** True while the search is about cosmetics: the Cosmetics button then glows and points at itself. */
     private boolean cosHint() {
         String q = query.trim().toLowerCase(Locale.ROOT); if (q.length() < 2) return false;
-        return "cosmetics".startsWith(q) || q.contains("cosmetic") || "suffix".startsWith(q) || "aura".startsWith(q) || q.contains("name effect") || "name effects".startsWith(q);
+        return "cosmetics".startsWith(q) || q.contains("cosmetic") || "suffix".startsWith(q) || "name icon".startsWith(q) || "icon".startsWith(q) || "aura".startsWith(q) || q.contains("name effect") || "name effects".startsWith(q);
     }
     private boolean masterLast; private long masterAt;
     private int[] masterBox() { int top = FancyConfig.get().previewAt == 0 ? Math.round((dockH() + DOCK_GAP) * dockK) : 0; int w = 100, y = Math.max(2, py - top - 25); return new int[]{px, y, px + w, y + 22}; }
@@ -2776,13 +2771,13 @@ public class FancyScreen extends Screen {
                 rows.add(toggle(":bell:", "Pop-up notices", "Small notices under the menu (saved, discarded, links) instead of chat messages", () -> c.popups, v -> c.popups = v));
                 rows.add(section("Cosmetics"));
                 rows.add(section("You"));
-                rows.add(toggle(":cos_suffix:", "Your suffix", "The little icon after your name", () -> c.selfSuffix, v -> { c.selfSuffix = v; CosmeticData.changed(); }));
+                rows.add(toggle(":cos_suffix:", "Your name icon", "The little icon after your name", () -> c.selfSuffix, v -> { c.selfSuffix = v; CosmeticData.changed(); }));
                 rows.add(toggle(":cos_name:", "Your name effect", "Moving colours on your name", () -> c.selfName, v -> { c.selfName = v; CosmeticData.changed(); }));
                 rows.add(toggle(":cos_aura:", "Your aura", "Particles around you", () -> c.selfAura, v -> { c.selfAura = v; CosmeticData.changed(); }));
                 rows.add(toggle(":cos_aura:", "Calm mode", "Names stay still and auras slow down", () -> c.cosCalm, v -> { c.cosCalm = v; CosmeticData.changed(); }));
                 rows.add(toggle(":cos_aura:", "Hide my aura in first person", "It still shows in F5 and to others", () -> c.cosHideFirst, v -> { c.cosHideFirst = v; CosmeticData.changed(); }));
                 rows.add(section("Other players"));
-                rows.add(toggle(":cos_suffix:", "Their suffixes", "The little icon after other players' names", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }));
+                rows.add(toggle(":cos_suffix:", "Their name icons", "The little icon after other players' names", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }));
                 rows.add(toggle(":cos_name:", "Their name effects", "Moving colours on other players' names", () -> c.othersName, v -> { c.othersName = v; CosmeticData.changed(); }));
                 rows.add(toggle(":cos_aura:", "Their auras", "Particles around other players", () -> c.othersAura, v -> { c.othersAura = v; CosmeticData.changed(); }));
                 Row cr = row(0, ":cos_aura:", "Show within", "Players further away look normal", Ui.ACCENT);
@@ -2983,7 +2978,7 @@ public class FancyScreen extends Screen {
         int viewH = lb - lt;
         long pf0 = System.nanoTime();
         long nb = System.currentTimeMillis(), bsig = ((((long) scroll * 31 + lt) * 31 + lb) * 31 + cw) * 31 + px * 7L + pw + tab.ordinal() + query.hashCode() * 3L;
-        if (dirty || bsig != lastSig || nb - lastBuild > 120) { build(); dirty = false; lastSig = bsig; lastBuild = nb; }          // the rows are rebuilt on input, when the layout moves, or ten times a second, not on every frame
+        if (dirty || bsig != lastSig || nb - lastBuild > 350) { build(); dirty = false; lastSig = bsig; lastBuild = nb; }          // the rows are rebuilt on input, when the layout moves, or ten times a second, not on every frame
         int scroll0 = scroll;
         scroll = Math.max(0, Math.min(scroll, Math.max(0, totalH - viewH)));
         if (scroll != scroll0) build();                                          // only again when the scroll position had to move
