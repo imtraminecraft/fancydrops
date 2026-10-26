@@ -1,3 +1,8 @@
+## 0.4.46
+- The Chat main page no longer has the "Your message" row.
+- The Chat Enabled tile reads "79 / 132 drops are live".
+- Clicking a result in the side menu while searching now fully resets the search box (no stray caret, no focus left behind).
+
 ## 0.4.45
 - Revenant Horror and Inferno Demonlord now show real spinning 3D heads: a green zombie head and a yellow blaze head.
 - Slayer animation: the ground no longer cracks. The boss hologram is slashed instead, and the cuts stay on it until it shatters.

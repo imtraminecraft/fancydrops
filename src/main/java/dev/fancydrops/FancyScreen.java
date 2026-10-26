@@ -38,7 +38,7 @@ public class FancyScreen extends Screen {
     private boolean cosWin() { return tab == Tab.COSMETICS; }
     private int[] cosBtn() { int x = Math.max(2, px - 28), y = py + ph - 22; return new int[]{x, y, x + 22, y + 22}; }          // outside the menu, bottom right, under the community buttons
     private int[] adminBtn() { int[] c = cosBtn(); return new int[]{c[0], c[1] - 28, c[2], c[3] - 28}; }          // admin only: just above the Cosmetics button
-    private void openCos() { if (tab != Tab.COSMETICS) prevTab = tab; tab = Tab.COSMETICS; query = ""; searchField.setValue(""); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
+    private void openCos() { if (tab != Tab.COSMETICS) prevTab = tab; tab = Tab.COSMETICS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
     private void closeCos() { tab = prevTab == Tab.COSMETICS ? Tab.HOME : prevTab; scroll = 0; selY = Float.NaN; tabChanged = System.currentTimeMillis(); }
     private static int vi(int ord) { return switch (Tab.values()[ord]) { case HOME -> 0; case DROPS -> 1; case ANIMATIONS -> 2; case SOUNDS -> 3; case CHAT -> 4; case STATS -> 5; default -> 0; }; }          // the sidebar list: Settings sits pinned at the bottom, Cosmetics and Resources have their own doors
     private static int tabCol(Tab t) { return TAB_COL[t.ordinal()]; }
@@ -246,6 +246,8 @@ public class FancyScreen extends Screen {
     private boolean searching;
     private Runnable hdrBack; private String hdrBackLabel = ""; private int[] hdrBackBox;
     private EditBox searchField;
+    /** Empties the search box and takes the keyboard focus off it, so a click into the side menu never leaves a stray caret behind. */
+    private void clearSearch() { searchField.setValue(""); searchField.moveCursorToStart(false); searchField.setFocused(false); setFocused(null); }
     private static final Identifier ICON = Identifier.fromNamespaceAndPath("fancydrops", "textures/gui/icon.png");
     private final List<Row> rows = new ArrayList<>();
     private String lastFormatOk = "";
@@ -2314,7 +2316,7 @@ public class FancyScreen extends Screen {
                     Row head = section(t.label + (k >= 0 ? "  >  " + sn[k] : "")); head.noSearch = true;
                     pages.add(head);
                     final Tab tt = t; final int kk = k;
-                    Runnable go = () -> { tab = tt; subSel[tt.ordinal()] = kk; dropSrc = null; dropSrcName = null; query = ""; searchField.setValue(""); scroll = 0; };      // a button inside a search result first moves to the page it belongs to, then does its job
+                    Runnable go = () -> { tab = tt; subSel[tt.ordinal()] = kk; dropSrc = null; dropSrcName = null; query = ""; clearSearch(); scroll = 0; };      // a button inside a search result first moves to the page it belongs to, then does its job
                     for (Row r : rows) {
                         if (r.click != null && r.fkey == null) { Runnable o = r.click; r.click = () -> { go.run(); o.run(); }; }
                         if (r.pSet != null && r.pSel != null && r.pSel.getAsInt() < 0) { IntConsumer o = r.pSet; r.pSet = i -> { go.run(); o.accept(i); }; }
@@ -2657,16 +2659,13 @@ public class FancyScreen extends Screen {
         for (Categories.Cat cat : Categories.ALL) if (!cat.wip()) for (Categories.Group gr : cat.groups()) for (DropData.Source src : cat.sources(gr.id())) for (DropData.Drop d : src.drops) { FancyConfig.DropCfg dc = c.drop(src.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); all++; if (dc.announce) on++; }
         boolean off = c.channel.equals("OFF");
         String chn = c.channel.equals("PARTY") ? "party" : c.channel.equals("COOP") ? "co-op" : "public";
-        String[] lb = {"Message & Channel", "Chat Enabled"}, sb = {off ? "Off  ·  pick a channel" : "Posts in " + chn + " chat", c.masterAnnounce ? on + " of " + all + " drops announce" : "All alerts are off"}, ic = {":format:", ":bell:"};
+        String[] lb = {"Message & Channel", "Chat Enabled"}, sb = {off ? "Off  ·  pick a channel" : "Posts in " + chn + " chat", c.masterAnnounce ? on + " / " + all + " drops are live" : "All alerts are off"}, ic = {":format:", ":bell:"};
         int[] co = {0xFFFFC857, 0xFF7BE05A};
         rows.add(picker("", "", lb, sb, ic, co, null, 2, () -> -1, i -> openPage(i, null, null)));
         boolean live = !off && c.masterAnnounce && on > 0;
         Row st = row(0, off ? ":chan_off:" : c.channel.equals("PARTY") ? ":chan_party:" : c.channel.equals("COOP") ? ":chan_coop:" : ":chan_public:", live ? "Announcing" : "Not announcing",
             off ? "No channel is picked" : !c.masterAnnounce ? "Chat alerts are switched off" : on == 0 ? "No drop has a chat alert" : "In " + chn + " chat" + (c.alsoAll && !c.channel.equals("ALL") ? " and public chat" : ""), live ? 0xFF62E6A8 : 0xFFFF7777);
         st.noSearch = true; st.subColor = live ? 0xFF62E6A8 : 0xFFFF9A9A; rows.add(st);
-        String ex = DropListener.sample(c.formatFor(chatCat), chatCat);
-        Row em = row(0, ":send:", "Your message", ex == null ? "" : ex, 0xFFFFC857);
-        em.noSearch = true; rows.add(em);
         rows.add(section("Test"));
         Row tr = row(0, ":send:", "Send a test message", "Posts the " + Categories.byId(chatCat).name() + " message to your " + (off ? "chat (turn a channel on first)" : chn + " chat"), Ui.ACCENT);
         tr.ctls.add(new Btn("Test", GREEN, () -> DropListener.testChat(msg -> { chatStatus = msg; chatStatusColor = msg.startsWith("Sent") ? 0xFF62E6A8 : 0xFFFF7777; toast(msg, msg.startsWith("Sent") ? 0xFF62E6A8 : DropListener.NOT_ON_HYPIXEL.equals(msg) ? 0xFFFFB86B : 0xFFFF7777); }, chatCat)));
@@ -3469,7 +3468,7 @@ public class FancyScreen extends Screen {
         if (!query.isBlank()) {
             if (button == 0 && inSide(mx, my)) for (int[] e : searchSide) if (mx >= e[2] && mx < e[4] && my >= e[3] && my < e[5]) {
                 dropSrc = null; waveKey = null; SoundFx.stopPreviews();
-                tab = Tab.values()[e[0]]; subSel[e[0]] = e[1]; query = ""; searchField.setValue(""); scroll = 0; sideScroll = 0; tabChanged = System.currentTimeMillis();
+                tab = Tab.values()[e[0]]; subSel[e[0]] = e[1]; query = ""; clearSearch(); scroll = 0; sideScroll = 0; tabChanged = System.currentTimeMillis();
                 open.removeIf(o -> o.startsWith("dd_"));
                 return true;
             }

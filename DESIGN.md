@@ -238,3 +238,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Slayer scenes never crack the ground; the hologram is slashed, with random cuts per drop that stay until the shatter.
 - The Drop Library landing shows a "Tracked Drops" counter (top right of the hero).
 - Marquee text on long tiles moves in sync: fixed duration, eased, same wait.
+
+## Standing requirements added in 0.4.46
+- The Chat main page has no "Your message" row; the live message preview lives on the sub pages.
+- Leaving a search through the side menu always clears the box and drops its focus.
