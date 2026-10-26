@@ -1,3 +1,6 @@
+## 0.4.42
+- The cinematic bars, side pillars and rounded corners are no longer tinted by the drop's colour (that was the brown/gold overlay at the screen edges). They are always the neutral bar colour, or the custom one you pick.
+
 ## 0.4.41
 - Names and small lines that are too long for a tile (Tarantula Broodfather, Riftstalker Bloodfiend...) now slide left, wait, then slide back instead of being cut off.
 

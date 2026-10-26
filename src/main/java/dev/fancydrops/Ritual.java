@@ -731,7 +731,7 @@ final class Ritual {
         // ---- the bars
         if (barsOn && barSlide > 0.01f && !TextFx.textOnly && !TextFx.itemOnly) {
             int bh = Math.round(barH * u * barSlide), oa = Math.round(255 * c.barOpacity / 100f);
-            int bc = c.barCustom ? (c.barColor & 0xFFFFFF) : mixc(0x05060C, rc, 0.10f);
+            int bc = c.barCustom ? (c.barColor & 0xFFFFFF) : 0x05060C;          // never tinted by the drop colour
             g.fill(0, 0, W, bh, Gfx.argb(oa, bc)); g.fill(0, H - bh, W, H, Gfx.argb(oa, bc));
              if (c.barPillars) { int pw = bh;   g.fill(0, bh, pw, H - bh, Gfx.argb(oa, bc)); g.fill(W - pw, bh, W, H - bh, Gfx.argb(oa, bc)); if (c.barLine) { int lc = Gfx.argb(Math.round(210 * barSlide), mixc(rc, WHITE, 0.3f)); g.fill(pw, bh, pw + 1, H - bh, lc); g.fill(W - pw - 1, bh, W - pw, H - bh, lc); } }
             if (c.barCurve > 0 && bh > 2) {                                                              // curved corners: the four inner corners of the picture are rounded off in the bar colour
