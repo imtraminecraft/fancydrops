@@ -29,11 +29,11 @@ public final class DropListener {
         if (echoHold(message, raw, now)) return true;                      // your own drop message waits until the animation is over
         boolean drop = false;
         for (String line : raw.split("\\R")) {
-            if (ChatParser.isPlayerChat(line)) continue;                   // a player pasting a drop line is just chat
+            if (ChatParser.isPlayerChat(line)) { if (line.toUpperCase(java.util.Locale.ROOT).contains("DROP!")) dlog("ignored (looks like player chat): " + line.trim()); continue; }                   // a player pasting a drop line is just chat
             if (expLine(line, now)) { drop = true; continue; }             // the Superpairs reward lines would show the items early
             if (playTreasureLine(line)) { drop = true; continue; }         // a treasure from a Mythological burrow
             ChatParser.Drop d = ChatParser.parseDrop(line);
-            if (d == null) continue;
+            if (d == null) { if (line.toUpperCase(java.util.Locale.ROOT).contains("DROP!")) dlog("not a drop line I can read: " + line.trim()); continue; }
             { FancyConfig fc = FancyConfig.get(); if (fc.dropsSeen < 100000) { fc.dropsSeen++; FancyConfig.save(); } }          // counts toward the cosmetics that unlock by drops
             dlog("heard: " + line.trim() + "  ->  " + d.kind() + " / " + d.name() + " x" + d.amount());
             if (FarmData.isFarm(d) && playFarm(d)) drop = true;             // farming drops have no kill: they play at once

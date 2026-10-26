@@ -1,3 +1,7 @@
+## 0.7.5
+- Slayer drops are matched by their words, so "(Smite VI)", "Enchanted Book (Smite VI)" and "Bundle (Quantum)" all find their drop and play the animation instead of staying in chat.
+- The drop log (`config/fancydrops/drop-log.txt`) now also says when a "DROP!" line could not be read or was skipped as player chat.
+
 ## 0.7.4
 - The Discord button now opens the new FancyDrops server.
 
