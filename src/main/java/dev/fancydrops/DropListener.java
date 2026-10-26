@@ -588,15 +588,15 @@ public final class DropListener {
 
     private static List<DropData.Drop> pickDrops(List<DropData.Drop> pool, String text, int max, String what, Consumer<String> reply) {
         List<DropData.Drop> out = new ArrayList<>();
-        String rest = text.replace(",", " ").trim();
+        String rest = text.replaceAll("^[\\s,]+", "").trim();                                      // commas inside a name ("1,000,000 Coins") stay; commas between drops separate them
         while (!rest.isBlank()) {
             DropData.Drop best = null;
             for (DropData.Drop d : pool) {
                 int n = d.name.length();
-                if (rest.regionMatches(true, 0, d.name, 0, n) && (rest.length() == n || Character.isWhitespace(rest.charAt(n))) && (best == null || n > best.name.length())) best = d;
+                if (rest.regionMatches(true, 0, d.name, 0, n) && (rest.length() == n || Character.isWhitespace(rest.charAt(n)) || rest.charAt(n) == ',' && !(n + 1 < rest.length() && Character.isDigit(rest.charAt(n + 1)))) && (best == null || n > best.name.length())) best = d;
             }
             if (best == null) { reply.accept("\"" + rest + "\" isn't " + what + ". Press Tab to see them."); return null; }
-            out.add(best); rest = rest.substring(best.name.length()).trim();
+            out.add(best); rest = rest.substring(best.name.length()).replaceAll("^[\\s,]+", "");
         }
         if (out.size() > max) { reply.accept("At most " + max + " drop" + (max == 1 ? "" : "s") + " here."); return null; }
         return out;
