@@ -221,7 +221,7 @@ final class Ritual {
     // ------------------------------------------------------------------ the creatures: one silhouette for each of the twelve
     /** Which creature the scene summons: the Mythological Mobs of the Animations page rotate through all twelve; a real drop calls its own. */
     static final String[] KINDS = {"minotaur", "minos_hunter", "siamese_lynxes", "stranded_nymph", "cretan_bull", "harpy", "gaia_construct", "minos_champion", "sphinx", "minos_inquisitor", "manticore", "king_minos"};
-    private static final float[] SHAPE_TOP = {100, 90, 58, 76, 60, 90, 98, 100, 74, 104, 86, 108};
+    private static final float[] SHAPE_TOP = {100, 90, 58, 76, 60, 90, 98, 100, 74, 104, 86, 108, 70, 52, 66, 82, 90, 84};
     private static String upKey = ""; private static long upMs;
     static int kind = 0;
     static int kindOf(String sourceId) { for (int i = 0; i < KINDS.length; i++) if (KINDS[i].equals(sourceId)) return i; return 0; }
@@ -320,6 +320,46 @@ final class Ritual {
                 fe(cx, gy, k, 0, -78, 10, 2);
                 ln2(cx, gy, k, 38, -8, 38, -98, 3); fe(cx, gy, k, 38, -102, 5, 5);
                 return new float[]{cx - 4.7f * k, gy - 72.5f * k, cx + 4.7f * k, gy - 72.5f * k};
+            }
+            case 12 -> {                                                                      // Revenant Horror: a hunched zombie, arms stretched out
+                fe(cx, gy, k, -5, -9, 4, 10); fe(cx, gy, k, 5, -9, 4, 10); fe(cx, gy, k, 0, -32, 11, 17); fe(cx, gy, k, 1, -56, 8, 9);
+                ln2(cx, gy, k, -9, -44, -28, -50, 3); ln2(cx, gy, k, 9, -44, 28, -50, 3); fe(cx, gy, k, -30, -50, 3.5f, 3.5f); fe(cx, gy, k, 30, -50, 3.5f, 3.5f);
+                fe(cx, gy, k, -6, -22, 3, 6);
+                return new float[]{cx - 3 * k, gy - 57 * k, cx + 4 * k, gy - 57 * k};
+            }
+            case 13 -> {                                                                      // Tarantula Broodfather: a huge spider, eight legs, a swollen back
+                fe(cx, gy, k, 12, -26, 17, 13); fe(cx, gy, k, -10, -24, 10, 9); fe(cx, gy, k, -17, -24, 5, 6);
+                for (int sd = 0; sd < 2; sd++) for (int i = 0; i < 4; i++) {
+                    float bx = -12 + i * 6 + sd * 3, ex = -34 + i * 18 + sd * 5, ky = -44 - (i % 2) * 8 - sd * 4;
+                    ln2(cx, gy, k, bx, -26, ex * 0.6f + bx * 0.4f, ky, 2); ln2(cx, gy, k, ex * 0.6f + bx * 0.4f, ky, ex, -1, 2);
+                }
+                return new float[]{cx - 19 * k, gy - 27 * k, cx - 14 * k, gy - 27 * k};
+            }
+            case 14 -> {                                                                      // Sven Packmaster: a wolf mid-snarl, ears up
+                fe(cx, gy, k, -4, -26, 22, 11); fe(cx, gy, k, 17, -30, 9, 12);
+                for (int i = 0; i < 4; i++) fe(cx, gy, k, -17 + i * 11, -8, 3, 9);
+                fe(cx, gy, k, 23, -42, 5, 9); fe(cx, gy, k, 29, -50, 7, 6); fe(cx, gy, k, 37, -47, 7, 3);
+                ln2(cx, gy, k, 25, -54, 24, -64, 2); ln2(cx, gy, k, 32, -54, 33, -64, 2);
+                ln2(cx, gy, k, -25, -30, -38, -42, 3); ln2(cx, gy, k, -38, -42, -39, -32, 2);
+                return new float[]{cx + 28 * k, gy - 51 * k, cx + 33 * k, gy - 51 * k};
+            }
+            case 15 -> {                                                                      // Voidgloom Seraph: a very tall dark figure, long arms
+                ln2(cx, gy, k, -3, -2, -3, -46, 3); ln2(cx, gy, k, 3, -2, 3, -46, 3);
+                fe(cx, gy, k, 0, -56, 6, 11); ln2(cx, gy, k, -7, -62, -10, -22, 2); ln2(cx, gy, k, 7, -62, 10, -22, 2);
+                fe(cx, gy, k, 0, -76, 7, 6);
+                return new float[]{cx - 3 * k, gy - 76 * k, cx + 3 * k, gy - 76 * k};
+            }
+            case 16 -> {                                                                      // Inferno Demonlord: a blaze, a head ringed by rods over a smoky body
+                fe(cx, gy, k, 0, -66, 9, 9); fe(cx, gy, k, 0, -44, 6, 9); fe(cx, gy, k, 0, -30, 4, 7);
+                for (int i = 0; i < 4; i++) { float x = -26 + i * 17; ln2(cx, gy, k, x, -42 - (i % 2) * 6, x, -84 + (i % 2) * 6, 2); }
+                ln2(cx, gy, k, -6, -78, -8, -88, 2); ln2(cx, gy, k, 6, -78, 8, -88, 2);
+                return new float[]{cx - 4 * k, gy - 66 * k, cx + 4 * k, gy - 66 * k};
+            }
+            case 17 -> {                                                                      // Riftstalker Bloodfiend: a caped vampire, wings of cloth, a high collar
+                fe(cx, gy, k, 0, -28, 15, 27); fe(cx, gy, k, 0, -58, 13, 6); fe(cx, gy, k, 0, -68, 7, 8);
+                ln2(cx, gy, k, -14, -54, -32, -22, 3); ln2(cx, gy, k, 14, -54, 32, -22, 3); fe(cx, gy, k, -26, -26, 7, 11); fe(cx, gy, k, 26, -26, 7, 11);
+                ln2(cx, gy, k, -5, -74, -8, -82, 2); ln2(cx, gy, k, 5, -74, 8, -82, 2);
+                return new float[]{cx - 3 * k, gy - 68 * k, cx + 3 * k, gy - 68 * k};
             }
             default -> {                                                                      // Minotaur: a horned brute
                 fe(cx, gy, k, -8, -10, 7, 12); fe(cx, gy, k, 8, -10, 7, 12); fe(cx, gy, k, 0, -34, 17, 25); fe(cx, gy, k, 0, -54, 27, 11);
@@ -476,7 +516,7 @@ final class Ritual {
     static void paint(float t, boolean tre, int type, float S, float sz, float isc, int rc, float icy, int blade, boolean itemBob, float bobAmp) {
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float O = S - TAIL, p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
-        int energy = tre ? GOLD : CYAN;
+        int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : CYAN;
         float bg = 1f - sm((p - 0.5f) / 0.9f);                                             // the background fades while the words show
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
         float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene                  // the item fades slowly at the end
@@ -489,7 +529,7 @@ final class Ritual {
             float draw = sm(t / (0.35f * O));
             float sigA = nod ? 1f - cl(p / 0.9f) * 0.2f : 1f;
             sigil(t, draw, icx, gy, rx, ry, rng && p > 0 ? mixc(CYAN, rc, sm(p / 0.4f)) : energy, bg * sigA, nod && p > 0 ? cl(p / 0.8f) : 0f);
-            float kk = Math.min(sz, (gy - 4) / 98f), rev = sm((t - 0.30f * O) / (0.55f * O));
+            float kk = Math.min(sz, (gy - 4) / 98f), kkS = kk, rev = sm((t - 0.30f * O) / (0.55f * O));
             minotaur(icx, gy - 2, kk, rev, p < 0 ? -1f : p, nod, rc, nod ? GREY : mixc(energy, rc, rng || p > 0 ? 0.5f : 0f), nod && p > 0 ? 1f : bg > 0.2f ? 1f : 0f, t);
             int strikes = 0;
             float[] ts = {0.34f * O, 0.58f * O, 0.80f * O};
@@ -497,11 +537,12 @@ final class Ritual {
                 float tau = op - ts[k];
                 if (tau < 0) continue;
                 strikes++;
+                if (slayerMode && tau < 0.5f) slash(tau, k, icx, gy - 2, kkS, energy, bg);
                 if (tau < 0.30f) {
                     int seed = k * 101 + (int) (op * 28);
                     float fl = (rnd(seed) > 0.3f ? 1f : 0.45f) * (1f - tau / 0.30f), x0 = icx + (rnd(k * 9) - 0.5f) * 36;
-                    bolt(x0, -4, icx + (rnd(k * 5) - 0.5f) * 5, gy, seed, energy, fl, 5, true);
-                    if (k == 2) bolt(x0 - 22, -4, icx - 6, gy, seed + 400, energy, fl * 0.7f, 4, false);
+                    if (!slayerMode) { bolt(x0, -4, icx + (rnd(k * 5) - 0.5f) * 5, gy, seed, energy, fl, 5, true);
+                    if (k == 2) bolt(x0 - 22, -4, icx - 6, gy, seed + 400, energy, fl * 0.7f, 4, false); }
                     glowE(icx, gy, 46 * sz * (1f - tau / 0.3f * 0.5f), 20 * sz, WHITE, 0.85f * fl);
                 }
                 if (tau < 0.7f) for (int j = 0; j < 12; j++) {                              // sparks thrown off the impact
@@ -572,58 +613,36 @@ final class Ritual {
     }
 
 
-    // ------------------------------------------------------------------ the slayer scene (a sword slices the boss, the drop springs out)
-    private static final Canvas SL_OUT = new Canvas(SlayerScene.W, SlayerScene.H), SL_L3 = new Canvas(SlayerScene.W, SlayerScene.H);
-    private static SlayerScene.Params slP; private static String slKey = "";
-    /** Boss colours: base, dark, eye for zombie, spider, wolf, enderman, blaze, vampire. */
-    private static final int[][] SL_COL = {{0x5E9E52, 0x3D6B36, 0x10200E}, {0x4A3F42, 0x2A2325, 0xE03030}, {0x8A9099, 0x565B63, 0xC03030}, {0x241B30, 0x0E0A14, 0xD060FF}, {0xE8A020, 0xB05010, 0xFFF080}, {0xB8A4A8, 0x6A2634, 0xD01030}};
+    // ------------------------------------------------------------------ the slayer bosses: the same ritual as Mythological, a sword slashes the boss instead of lightning
+    static boolean slayerMode;                                                          // set by the caller: paint() draws a slayer scene
+    /** The colour of each boss: zombie, spider, wolf, enderman, blaze, vampire. */
+    private static final int[] SL_ENERGY = {0x7CD060, 0xE03030, 0xC8D4E8, 0xD060FF, 0xFFB030, 0xD01030};
     static boolean isSlayer(Anim a) { return a.group.equals("slayer"); }
     static int slTheme(Anim a) { return Math.floorMod(a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? SlayerData.theme(a.item.source.id) : 0, 6); }
 
-    /** The Params of the slayer scene for this drop (rebuilt when the boss, the type or the item's art changes). */
-    private static SlayerScene.Params slParams(int theme, int type, Item it) {
-        ItemModel im = it == null ? null : ItemIcons.model(it.id, it.color() & 0xFFFFFF);
-        String key = theme + "/" + type + "/" + (it == null ? "-" : it.id + (im != null ? "+" : "?"));
-        if (slP != null && key.equals(slKey)) return slP;
-        boolean has = type != AnimationManager.NO_DROPS && it != null;
-        SlayerScene.Params q = new SlayerScene.Params(type == AnimationManager.RNG ? 2 : 0, has);
-        int[] col = SL_COL[theme];
-        q.theme = theme; q.base = 0xFF000000 | col[0]; q.dark = 0xFF000000 | col[1]; q.eye = 0xFF000000 | col[2];
-        q.seed = it != null && it.source != null ? Math.abs(it.source.id.hashCode() % 97) : 7 + theme; q.cutSeed = q.seed; q.style = 0;
-        if (has) {
-            q.rarity = 0xFF000000 | (it.color() & 0xFFFFFF);
-            if (im == null) { int[] gem = ItemIcons.gem(q.rarity & 0xFFFFFF); q.item = new SlayerScene.Model(PuffyItem.of(gem, 16, 16, true), gem); }
-            else q.item = im.parts != null ? new SlayerScene.Model(im.parts, im.natural, im.pitchK) : new SlayerScene.Model(im.puffy, im.sprite);
-        }
-        slP = q; slKey = key; return q;
-    }
-
-    /** Paints the slayer scene into the canvas. The scene has its own clock: its opening is stretched over the opening of the animation and its tail over TAIL, so the pivot lines up. */
-    static void paintSlayer(Anim a, float t, float S, float sz, float icy) {
-        cv.clear();
-        int type = a.type; boolean rng = type == AnimationManager.RNG;
-        SlayerScene.Params q = slParams(slTheme(a), type, a.item);
-        float O = S - TAIL, ts = SlayerScene.splitTime(q), tt;
-        if (TextFx.itemOnly) {
-            SlayerScene.drawItemOnly(SL_OUT, SL_L3, q, (System.currentTimeMillis() % 4000L) / 1000f);
-        } else {
-            tt = t < O ? ts * Math.max(0f, t) / O : ts + (t - O) * ((SlayerScene.length(q) - ts) / TAIL);
-            SlayerScene.draw(SL_OUT, SL_L3, q, tt);
-        }
-        float k = 1.9f * sz;                                                                      // the platform is as wide as the Mythological circle
-        float ox = CW / 2f - 56f * k, oy = icy - 32f * k;                                       // the item rests at (56, 32) of the scene
-        int[] src = SL_OUT.px, dst = cv.px;
-        int y0 = Math.max(0, (int) Math.floor(oy)), y1 = Math.min(CH, (int) Math.ceil(oy + SlayerScene.H * k));
-        int x0 = Math.max(0, (int) Math.floor(ox)), x1 = Math.min(CW, (int) Math.ceil(ox + SlayerScene.W * k));
-        for (int y = y0; y < y1; y++) {
-            int sy = (int) ((y + 0.5f - oy) / k); if (sy < 0 || sy >= SlayerScene.H) continue;
-            for (int x = x0; x < x1; x++) {
-                int sx = (int) ((x + 0.5f - ox) / k); if (sx < 0 || sx >= SlayerScene.W) continue;
-                int v = src[sy * SlayerScene.W + sx];
-                if ((v >>> 24) != 0) dst[y * CW + x] = v;
+    /** One sword slash across the boss: the blade sweeps along a line, a bright trail stays and fades. k = 0, 1 (the two diagonals) or 2 (a double cut). */
+    private static void slash(float tau, int k, float cx, float gy, float kk, int rgb, float a) {
+        if (tau < 0f || tau > 0.5f) return;
+        float[][] segs = k == 0 ? new float[][]{{-38, -86, 38, -4}} : k == 1 ? new float[][]{{38, -86, -38, -4}} : new float[][]{{-40, -80, 40, -8}, {40, -80, -40, -8}};
+        float u = cl(tau / 0.09f), fade = 1f - cl((tau - 0.09f) / 0.4f);
+        for (int si = 0; si < segs.length; si++) {
+            float[] sg = segs[si];
+            float su = cl((tau - si * 0.08f) / 0.09f); if (tau < si * 0.08f) continue;
+            float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk;
+            float hx = lerp(x0, x1, su), hy = lerp(y0, y1, su);
+            for (int w = -1; w <= 1; w++) line(x0 + w * 0.7f, y0, hx + w * 0.7f, hy, w == 0 ? WHITE : rgb, (w == 0 ? 1f : 0.55f) * fade * a);
+            glowE((x0 + hx) / 2, (y0 + hy) / 2, Math.abs(hx - x0) * 0.5f + 4, Math.abs(hy - y0) * 0.5f + 4, rgb, 0.35f * fade * a);
+            if (su < 1f) {                                                                // the sword itself, leading the cut
+                float dx = x1 - x0, dy = y1 - y0, len = (float) Math.sqrt(dx * dx + dy * dy), ux = dx / len, uy = dy / len;
+                float bx = hx - ux * 20 * kk, by = hy - uy * 20 * kk;
+                line(bx, by, hx, hy, 0xE8EEF8, a); line(bx + 1, by, hx + 1, hy, 0x9AA8C0, a * 0.8f);
+                line(hx - ux * 20 * kk - uy * 4 * kk, hy - uy * 20 * kk + ux * 4 * kk, hx - ux * 20 * kk + uy * 4 * kk, hy - uy * 20 * kk - ux * 4 * kk, 0xE8C040, a);
+                line(bx, by, bx - ux * 7 * kk, by - uy * 7 * kk, 0x6A4A2A, a);
+                glint(hx, hy, 3, WHITE, a);
             }
         }
     }
+
 
     /** Where the item is (canvas units, y): it springs out of the ground, overshoots, then bobs gently. */
     /** A flat round disc, one fill per row (the soft glow is a few of these stacked). */
@@ -650,8 +669,8 @@ final class Ritual {
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
         if (rng && cfg.bars) icy = Math.max(barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
-        if (isSlayer(a)) paintSlayer(a, t, S, sz, icy);
-        else paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
+        slayerMode = isSlayer(a); if (slayerMode) kind = 12 + slTheme(a);
+        try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { slayerMode = false; }
         return cv.px.clone();
     }
 
@@ -662,6 +681,7 @@ final class Ritual {
         Item it = a.item;
         boolean tre = a.group.equals("treasure"), sl = isSlayer(a);
         kind = a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? kindOf(a.item.source.id) : 0;
+        if (sl) kind = 12 + slTheme(a);
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;
@@ -683,7 +703,7 @@ final class Ritual {
         float shake = rng && p > 0 && p < 0.5f ? (1f - p / 0.5f) * 3f : 0f;
         int sx = Math.round((rnd((int) (t * 60)) - 0.5f) * 2f * shake * u), sy = Math.round((rnd((int) (t * 60) + 77) - 0.5f) * 2f * shake * u);
 
-        boolean sceneOff = (TextFx.textOnly || TextFx.itemOnly || TextFx.barsOnly) && !(sl && TextFx.itemOnly);            // the Changes previews show only the part being edited (the slayer scene draws the item itself)
+        boolean sceneOff = TextFx.textOnly || TextFx.itemOnly || TextFx.barsOnly;            // the Changes previews show only the part being edited
         if (!sceneOff) {
             // ---- the blur: the world dims and softens at the edges (RNG, switchable)
             if (blurOn && barSlide > 0.01f) {
@@ -697,21 +717,14 @@ final class Ritual {
                 String id = a.group + a.type + "/" + a.kind + "/" + (it == null ? 0 : it.id.hashCode()) + "/" + TextFx.itemOnly;
                 boolean reuse = AnimationManager.previewing && id.equals(upKey) && nowMs - upMs < 33 && nowMs >= upMs;       // a menu preview repaints at ~30 fps: the picture it shows barely changes between frames
                 if (!reuse) {
-                    if (sl) paintSlayer(a, t, S, sz, icy);
-                    else paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
+                    slayerMode = sl;
+                    try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { slayerMode = false; }
                     SceneTexture.upload(cv); upKey = id; upMs = nowMs;
                 }
             }
             if (edited != null && edited.length == cv.px.length) SceneTexture.upload(cv);
             if (!SceneTexture.draw(g, cv, sx, sy, W, H, 1f)) { int cell = Math.max(1, Math.round((float) W / CW)); cv.flush((x0, y0, x1, y1, col) -> g.fill(x0 + sx, y0 + sy, x1 + sx, y1 + sy, col), 0, 0, cell, 1f); }
-            if (sl) {                                                                         // slayers: the light flashes when each sword slice lands, the last one biggest
-                float[] hit = {0.536f, 0.753f, 0.943f};
-                for (int k = 0; k < 3; k++) {
-                    float tau = t - hit[k] * O, dur = rng && k == 2 ? 0.45f : 0.18f; int amp = rng ? (k == 2 ? 235 : 90) : (k == 2 ? 40 : 26);
-                    if (tau > 0 && tau < dur) { float f = 1f - tau / dur; g.fill(0, 0, W, H, Gfx.argb(Math.round(amp * f * f), 0xFFFFFF)); }
-                }
-            }
-            else if (rng && p > 0 && p < 0.45f) g.fill(0, 0, W, H, Gfx.argb(Math.round(235 * (1f - p / 0.45f) * (1f - p / 0.45f)), 0xFFFFFF));                  // the flash
+            if (rng && p > 0 && p < 0.45f) g.fill(0, 0, W, H, Gfx.argb(Math.round(235 * (1f - p / 0.45f) * (1f - p / 0.45f)), 0xFFFFFF));                  // the flash
             else if (!tre && !rng) for (int k = 0; k < 3; k++) { float tau = t - 0.34f * O - k * 0.24f * O; if (tau > 0 && tau < 0.18f) g.fill(0, 0, W, H, Gfx.argb(Math.round(26 * (1f - tau / 0.18f)), 0xD8F6FF)); }
         }
 
@@ -738,7 +751,7 @@ final class Ritual {
         }
 
         // ---- the item (flat icons stay flat, skulls are 3D and turn)
-        if (it != null && !sl && p >= 0f && !nod && !TextFx.textOnly && !TextFx.barsOnly) {
+        if (it != null && p >= 0f && !nod && !TextFx.textOnly && !TextFx.barsOnly) {
             float grow = 0.25f + 0.75f * eob(p / 0.7f);
             float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f);
             float gcx = CW / 2f * W / CW + sx, gcy = itemY(tb, p, icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;

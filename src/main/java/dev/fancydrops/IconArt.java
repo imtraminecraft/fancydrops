@@ -193,6 +193,42 @@ final class IconArt {
                 outline();
                 glint(13 - Math.round(f * 7), 2 + Math.round(f * 7), 1, 0xFFFFFF, 0.35f + 0.65f * t);
             }
+            case "grp_slayers" -> {                                                          // two crossed swords over a skull with burning red eyes, a spark at the cross
+                glow(8, 8, 8, 0xFF3A3A, 0.12f + 0.1f * t);
+                rect(5, 7, 6, 5, 0xE8E4D8); rect(6, 6, 4, 1, 0xE8E4D8); rect(6, 12, 4, 2, 0xC8C4B8); rect(5, 7, 6, 1, 0xFFFFFF);
+                px(7, 13, 0x6A6A68); px(9, 13, 0x6A6A68);
+                rect(5, 8, 2, 2, 0x1A1014); rect(9, 8, 2, 2, 0x1A1014); int ey = mix(0xC82A2A, 0xFF8A6A, t); px(6, 9, ey); px(10, 9, ey);
+                px(8, 10, 0x6A5A58);
+                ln(1, 1, 14, 14, 0xE8EEF8); ln(2, 1, 14, 13, 0x9AA4C0); ln(14, 1, 1, 14, 0xE8EEF8); ln(13, 1, 1, 13, 0x9AA4C0);
+                ln(2.5f, 5, 5.5f, 2, 0xD8A02A); ln(13.5f, 5, 10.5f, 2, 0xD8A02A);
+                px(1, 0, 0x5A1A22); px(14, 0, 0x5A1A22); px(0, 1, 0x7A2A32); px(15, 1, 0x7A2A32);
+                outline();
+                glint(8, 8, 2, 0xFFFFFF, 0.2f + 0.8f * t);
+            }
+            case "grp_rift" -> {                                                             // the Rift: a violet mirror standing in the dark, its reflection rippling, a tower mirrored upside down
+                glow(8, 8, 8, 0xB56BFF, 0.14f + 0.1f * t);
+                for (int y = 1; y < 15; y++) {
+                    float dy = (y - 7.5f) / 7f; int hw = Math.round((float) Math.sqrt(Math.max(0, 1 - dy * dy)) * 5.2f);
+                    for (int x = 8 - hw; x <= 7 + hw; x++) px(x, y, mix(0x2A1A52, 0x6A4AB8, 0.25f + 0.5f * (y / 14f) + 0.15f * sn(f + y * 0.15f)));
+                    px(8 - hw - 1, y, 0xB56BFF); px(7 + hw + 1, y, 0xB56BFF);
+                }
+                px(7, 0, 0xD8B0FF); px(8, 0, 0xD8B0FF); px(7, 15, 0x8A5AD8); px(8, 15, 0x8A5AD8);
+                rect(6, 8, 4, 1, 0x8A7AC8); rect(7, 4, 2, 4, 0xC8B8F0); rect(7, 5, 2, 1, 0x4A3A88);              // a tower and, below the water line, its mirror image
+                rect(7, 9, 2, 4, 0x6A58A8); rect(7, 11, 2, 1, 0x3A2A68);
+                int sy = 2 + Math.round(f * 11); for (int x = 4; x < 12; x++) pxa(x, sy, 0xFFFFFF, 0.35f);        // a glint sweeps down the glass
+                glint(11, 3, 1, 0xFFFFFF, 0.3f + 0.7f * t);
+            }
+            case "grp_crimson" -> {                                                          // the Crimson Isle: a floating chunk of netherrack, lava dripping, a crimson fungus, flames
+                rect(2, 9, 12, 3, 0x7A2A2A); rect(3, 12, 10, 2, 0x5A1A1E); rect(5, 14, 6, 1, 0x3A1014); rect(2, 9, 12, 1, 0xA84040);
+                px(3, 10, 0x4A1418); px(8, 11, 0x4A1418); px(11, 10, 0x9A3636);
+                float d = (f * 2) % 1f; px(6, 12, 0xFF8A20); pxa(6, 13 + Math.round(d * 2), 0xFFB030, 1f - d);
+                rect(7, 4, 2, 5, 0x8A3A3A); rect(7, 4, 2, 1, 0xA85050);
+                rect(4, 1, 8, 3, 0xC82A32); rect(3, 3, 10, 1, 0xA01E28); rect(5, 0, 6, 1, 0xE0484E);
+                px(5, 2, 0xFFB0A0); px(9, 1, 0xFFB0A0); px(11, 2, 0x701018);
+                float fl = sn(f) * 0.8f; px(2, 8, 0xFF7A20); px(Math.round(2 + fl), 7, 0xFFC040); px(13, 8, 0xFF7A20); px(Math.round(13 - fl), 7, 0xFFC040);
+                glow(8, 6, 8, 0xFF4A2A, 0.10f + 0.08f * t);
+                outline();
+            }
             case "shovel" -> {                                                               // a digging shovel (the blade takes the spade's colour): it dips into the ground and flicks up a lump of dirt
                 int bl = tint != 0 ? tint : 0xC9D1E0;
                 float dip = t * 2f;
@@ -640,7 +676,6 @@ final class IconArt {
             default -> {
                 if (n.startsWith("cx_")) return generic(n, f);
                 if (n.startsWith("mob_")) { mob(n.substring(4), f); outline(); return true; }
-                if (n.startsWith("boss_")) { mob(n.substring(5), f); outline(); return true; }
                 if (n.startsWith("emblem")) return paint("emblem", tint, f);
                 return false;
             }
@@ -770,59 +805,6 @@ final class IconArt {
                 rect(4, 3, 8, 2, 0xE8C040); px(4, 2, 0xE8C040); px(7, 1, 0xE8C040); px(8, 1, 0xE8C040); px(11, 2, 0xE8C040);
                 px(7, 4, 0xE84A4A); px(5, 3, mix(0x4A9AFF, 0xFFFFFF, t)); px(10, 3, mix(0x4AD86A, 0xFFFFFF, 1f - t)); px(8, 2, 0xFFF3B0);
                 glint(8, 1, 1, 0xFFFFFF, t);
-            }
-            case "zombie" -> {                                                               // Revenant Horror: a rotting green head, one arm reaching, a drip of ooze
-                float sway = s * 0.6f;
-                rect(3, 2, 10, 9, 0x5E9E52); rect(4, 1, 8, 1, 0x5E9E52); rect(3, 2, 10, 1, 0x7FBF70); rect(3, 10, 10, 1, 0x3D6B36);
-                rect(4, 5, 3, 2, 0x10200E); rect(9, 5, 3, 2, 0x10200E);
-                int ey = mix(0xC03020, 0xFF8A50, t); px(5, 6, ey); px(10, 6, ey);
-                rect(5, 9, 6, 1, 0x20120E); px(6, 9, 0xD8D0A8); px(8, 9, 0xD8D0A8); px(10, 9, 0xD8D0A8);
-                px(3, 4, 0x3D6B36); px(12, 7, 0x3D6B36); px(7, 3, 0x3D6B36); px(8, 3, 0x7C3A30);
-                rect(5, 11, 6, 2, 0x4A6EA8); rect(3, 12, 2, 2, 0x5E9E52); rect(1 + Math.round(sway), 12, 2, 2, 0x5E9E52); rect(11, 12, 4, 2, 0x5E9E52);
-                float d = (f * 3) % 1f; pxa(7, 11 + Math.round(d * 4), 0x8CE060, 1f - d);
-            }
-            case "spider" -> {                                                               // Tarantula Broodfather: a hairy body, eight legs that creep, a red eye cluster
-                float cr = s * 0.9f;
-                for (int k = 0; k < 4; k++) {
-                    float y0 = 5 + k * 1.6f, w = (k % 2 == 0 ? cr : -cr);
-                    ln(6, y0 + 1, 2, y0 - 2 + w, 0x2A2325); ln(2, y0 - 2 + w, 0.5f, y0 + 3, 0x2A2325);
-                    ln(10, y0 + 1, 14, y0 - 2 - w, 0x2A2325); ln(14, y0 - 2 - w, 15.5f, y0 + 3, 0x2A2325);
-                }
-                ball(8, 11, 3.8f, 0x4A3F42); ball(8, 6.5f, 2.9f, 0x5A4D50);
-                px(7, 4, 0x6A5A5E); px(5, 10, 0x6A5A5E); px(10, 11, 0x3A2F32); px(9, 13, 0x2A2325);
-                int ey = mix(0xE03030, 0xFF9A7A, t); px(6, 6, ey); px(9, 6, ey); px(7, 5, 0xB02020); px(8, 5, 0xB02020);
-                px(7, 8, 0xE8E0D0); px(8, 8, 0xE8E0D0);
-            }
-            case "wolf" -> {                                                                 // Sven Packmaster: a grey wolf head, ears up, a snarl, eyes that flash
-                tri(2, 8, 3, 0, 7, 5, 0x565B63); tri(14, 8, 13, 0, 9, 5, 0x565B63); px(3, 2, 0xC8A0A0); px(12, 2, 0xC8A0A0);
-                rect(3, 5, 10, 6, 0x8A9099); rect(4, 4, 8, 1, 0x8A9099); rect(2, 7, 1, 3, 0x6A7078); rect(13, 7, 1, 3, 0x6A7078);
-                rect(5, 9, 6, 5, 0xB8BEC6); rect(6, 13, 4, 1, 0x565B63); rect(7, 8, 2, 2, 0x20242A);
-                int ey = t > 0.5f ? 0xFF4040 : 0xC03030; px(4, 6, ey); px(5, 6, ey); px(10, 6, ey); px(11, 6, ey);
-                px(5, 11, 0xFFFFFF); px(10, 11, 0xFFFFFF); px(7, 11, 0x20242A); px(8, 11, 0x20242A);
-                px(7, 4, 0x6A7078); px(8, 4, 0x6A7078);
-                if (t > 0.6f) { px(1, 5, 0xE8EEF4); px(14, 5, 0xE8EEF4); }
-            }
-            case "enderman" -> {                                                             // Voidgloom Seraph: a tall dark shape, violet eyes, drifting void motes
-                rect(5, 1, 6, 5, 0x241B30); rect(4, 6, 8, 1, 0x241B30); rect(6, 7, 4, 7, 0x1A1424); rect(3, 7, 1, 7, 0x241B30); rect(12, 7, 1, 7, 0x241B30);
-                rect(6, 14, 1, 2, 0x241B30); rect(9, 14, 1, 2, 0x241B30); px(5, 1, 0x3A2C4A); px(6, 1, 0x3A2C4A);
-                int ey = mix(0xD060FF, 0xF0C8FF, t); rect(5, 3, 2, 1, ey); rect(9, 3, 2, 1, ey); px(5, 4, 0x8A3AC0); px(10, 4, 0x8A3AC0);
-                for (int i = 0; i < 4; i++) { float a = (f + i * 0.25f) % 1f; pxa(Math.round(1 + i * 4 + sn(f + i * 0.3f) * 1.5f), Math.round(14 - a * 13), 0xD060FF, 1f - a); }
-                glow(8, 3, 6, 0xD060FF, 0.14f * t);
-            }
-            case "blaze" -> {                                                                // Inferno Demonlord: a fiery head ringed by turning blaze rods
-                for (int i = 0; i < 4; i++) { float a = (f + i * 0.25f) * TAU; int rx = Math.round(8 + (float) Math.cos(a) * 6), ry = Math.round(8 + (float) Math.sin(a) * 2.2f * 1.6f); rect(rx, ry - 1, 1, 3, i % 2 == 0 ? 0xFFD040 : 0xE8A020); px(rx, ry - 1, 0xFFF080); }
-                rect(4, 4, 8, 8, 0xE8A020); rect(5, 3, 6, 1, 0xE8A020); rect(5, 12, 6, 1, 0xB05010); rect(4, 4, 8, 1, 0xFFD040);
-                rect(5, 6, 2, 2, 0x401808); rect(9, 6, 2, 2, 0x401808); px(5, 6, 0xFFF080); px(10, 6, 0xFFF080);
-                rect(6, 10, 4, 1, 0x401808); px(6, 9, 0xB05010); px(9, 9, 0xB05010);
-                float fl = s * 1.2f; px(6, 2, 0xFF7A20); px(Math.round(8 + fl), 1, 0xFFD040); px(10, 2, 0xFF7A20); px(8, 2, 0xFF7A20);
-                glow(8, 8, 7, 0xFF8A20, 0.12f * t);
-            }
-            case "vampire" -> {                                                              // Riftstalker Bloodfiend: a pale face, fangs, a high crimson collar, a drip of blood
-                tri(0, 15, 2, 6, 6, 15, 0x6A2634); tri(16, 15, 14, 6, 10, 15, 0x6A2634); rect(5, 12, 6, 3, 0xA03048);
-                rect(5, 2, 6, 9, 0xB8A4A8); rect(4, 3, 8, 7, 0xC8B8BC); rect(4, 2, 8, 2, 0x20141C); px(8, 4, 0x20141C); px(7, 4, 0x20141C);
-                int ey = mix(0xD01030, 0xFF6070, t); px(6, 6, ey); px(9, 6, ey); px(5, 6, 0x6A2634); px(10, 6, 0x6A2634);
-                rect(6, 9, 4, 1, 0x7A2A38); px(6, 10, 0xFFFFFF); px(9, 10, 0xFFFFFF);
-                float d = (f * 2) % 1f; pxa(6, 11 + Math.round(d * 3), 0xD01030, 1f - d * 0.8f);
             }
             default -> ball(8, 8, 4, 0x8890A0);
         }

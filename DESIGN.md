@@ -212,13 +212,16 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.4.37
 - The main page is **Bosses** (id `bosses`), with one sub page **Slayers** (group `slayer`, types No Drops, Normal, RNG; keys `slayer.nodrops|normal|rng`) and the six bosses as sub sub pages. Future boss types (Rift, Nether...) are new groups of Bosses. Chat has one message for Bosses.
 - Slayer data lives in `slayers.json` (same shapes as `mythological.json`, loaded by `SlayerData`). Drop ranks come from the old odds names (Occasional 0, Rare 1, Extraordinary 2, Pray RNGesus / RNGesus Incarnate 3); rank 2 and up default to RNG.
-- The slayer scene is `SlayerScene` (112 x 96, software 3D, Sword style only, the Spirit style is gone) drawn by `Ritual.paintSlayer` into the shared 320 x 180 canvas. Its clock is warped so its three slices fill the opening and its tail fills TAIL: all three types pivot at the same moment as every other category. Ritual draws no item for slayers; the scene draws it with the Item Changes settings.
-- Bars, blur, flash, words and the HUD hiding come from Ritual like every other category. The boss decides the look (zombie, spider, wolf, enderman, blaze, vampire); Tarantula Broodfather has extra background effects, the others have depth layers (Depth.java).
-- The slayer sound bank is `slay_*` (slash, cleave, reveal, reveal_epic, glow, end). Slice cues sit at 0.536, 0.753 and 0.943 of the opening.
+- The slayer scene uses the Mythological ritual engine in `Ritual.java` (`slayerMode`): the same ground circle, boss silhouette (kinds 12..17: zombie, spider, wolf, enderman, blaze, vampire), strike beats, shatter and item pivot, with a sword slashing the boss instead of lightning (`slash`). No backdrop or platform: the screen behind stays visible. The old software-3D SlayerScene, Depth and Tex are gone.
+- The slayer sound bank is `slay_*` (slash, cleave, reveal, reveal_epic, glow, end). The sword cues sit on the Mythological strike beats (0.34, 0.58, 0.80 of the opening).
 - Every page of Slayers must describe slayer scenes (text on the Animations page says a sword slices the boss).
 
 ## Standing requirements added in 0.4.38
 - Every animation is 5 seconds by default. The slayer scene is as wide as the Mythological circle (scale 1.9 x size). Its light flashes sit on the sword slices (0.536, 0.753, 0.943 of the opening).
 - WIP pages show the page's icon and name on a hanging sign at the top right (the Coming Soon board stays centred). Boss icons are `:boss_<id>:`, drawn by IconArt, never wiki pictures.
 - Menu previews repaint the scene at about 30 fps (`AnimationManager.previewing`).
+
+## Standing requirements added in 0.4.39
+- Boss icons are skull items (`:boss_<id>:`: zombie head, then the Spider, Wolf, Enderman, Blaze and Bat pet heads), never drawn art. The Bosses page has three sub pages: Slayers (live), The Rift (a mirror dimension of the main server) and Crimson Isle (the Nether of SkyBlock), the last two WIP. Each has its own hand-pixeled animated icon (`grp_slayers`, `grp_rift`, `grp_crimson`). Future boss types are more groups of Bosses.
+- A WIP page shows only the page's icon and name on the hanging sign (no "drops" / "animations" suffix).
 

@@ -1,3 +1,9 @@
+## 0.4.39
+- The slayer animations are rebuilt on the Mythological ritual: the same ground circle and strike beats, with the boss in silhouette (zombie, spider, wolf, enderman, blaze, vampire) and a sword slashing it three times before it shatters and the drop appears. No backdrop, so the game behind stays visible. Same size as the Mythological ones.
+- Boss icons are skulls (zombie head, spider, wolf, enderman, blaze and bat pet heads).
+- Bosses now has three sub pages: Slayers, The Rift and Crimson Isle (the last two are WIP) in Drop Library, Animations and Sounds, with new animated icons.
+- WIP pages show only the icon and page name on the hanging sign.
+
 ## 0.4.38
 - The Slayers main page is now **Bosses**, with **Slayers** as a sub page and the six slayer bosses as sub sub pages. Animations, Sounds and Chat follow it (Chat has one "Bosses" message). More boss types (Rift, Nether...) can be added later as more sub pages.
 - Slayer boss icons are drawn by the mod (they showed wrong wiki pictures before).

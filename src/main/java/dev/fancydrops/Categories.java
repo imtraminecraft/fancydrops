@@ -11,7 +11,8 @@ final class Categories {
     /** One animation type of a group: what the Animation Editor lets you edit (No Drops, Normal, RNG...). */
     record Type(String id, String name, String icon, int color, String blurb) {}
     /** One thing that has its own animations: "Mythological Mobs", "Treasure". Its keys look like "myth.rng". */
-    record Group(String id, String name, String icon, int color, String blurb, List<Type> types) {
+    record Group(String id, String name, String icon, int color, String blurb, List<Type> types, boolean wip) {
+        Group(String id, String name, String icon, int color, String blurb, List<Type> types) { this(id, name, icon, color, blurb, types, false); }
         String key(Type t) { return id + "." + t.id(); }
         Type type(String typeId) { for (Type t : types) if (t.id().equals(typeId)) return t; return types.get(0); }
     }
@@ -52,7 +53,9 @@ final class Categories {
             new Group("myth", "Mythological Mobs", ":mytho:", 0xFF55D8FF, "What plays when a ritual creature dies.", MYTH_TYPES),
             new Group("treasure", "Treasure", ":treasure:", 0xFFFFD25A, "What plays when a burrow holds treasure.", MYTH_TYPES))),
         new Cat("bosses", "Bosses", ":slayers:", 0xFFFF5A5A, false, "Bosses of every kind and their rare drops. More boss types come later.", List.of(
-            new Group("slayer", "Slayers", ":slayers:", 0xFFFF5A5A, "What plays when a slayer boss drops something.", SLAYER_TYPES))),
+            new Group("slayer", "Slayers", ":grp_slayers:", 0xFFFF5A5A, "What plays when a slayer boss drops something.", SLAYER_TYPES),
+            new Group("rift", "The Rift", ":grp_rift:", 0xFFB56BFF, "A mirror dimension of the main server.", SLAYER_TYPES, true),
+            new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "The Nether of Hypixel SkyBlock.", SLAYER_TYPES, true))),
         new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, true, "Crops, pests and the rare drops of the Garden.", List.of()),
         new Cat("experiments", "Experiments", ":experiments:", 0xFFB56BFF, true, "The Experimentation Table's rewards.", List.of()),
         new Cat("mining", "Mining", ":mining:", 0xFF9AB8FF, true, "Rare finds underground.", List.of()),
