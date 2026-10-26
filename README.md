@@ -2,6 +2,8 @@
 
 Fabric mod (Minecraft 26.2) that plays a short animation when you drop something on Hypixel SkyBlock, and can announce it in chat. Mythological Rituals (creatures and Griffin burrow treasure) are live. Bosses (the six slayers), Farming (Rare Crops, Harvest Feast, Harvest Bounty, Pest Drops) and Rare Drops (the Experimentation Table; Rare Mob Drops and Events are coming) are live too. Dyes, Mining and Fishing follow.
 
+Join the Discord: https://discord.gg/xeBfsVRfkT
+
 * `/fancydrops` or `/fd` - settings menu (Home, Drop Library, Animations, Sounds, Chat, Stats, Settings)
 * `/fd simulate Mythological <Mob|Treasure> <Drop> <mf>` - plays a pretend drop through the real animation
 * `/fd simulate Slayer <Boss> <Drop|Nothing> [Drop 2] <mf>` - the same for a slayer boss, with one or two drops

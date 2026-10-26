@@ -1,3 +1,6 @@
+## 0.7.4
+- The Discord button now opens the new FancyDrops server.
+
 ## 0.7.3
 - Slayer boss icons are now all the same flat 2D style. Revenant Horror, Inferno Demonlord and Riftstalker Bloodfiend (which had no icon) have new hand-pixeled figures to match Tarantula, Sven and Voidgloom.
 - The Mythological mobs keep their heads.

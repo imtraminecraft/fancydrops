@@ -347,3 +347,5 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - All six slayer boss icons are flat 2D mob pictures in one style (the wiki renders for Tarantula, Sven, Voidgloom; hand-pixeled, outline-free ones for Revenant Horror, Inferno Demonlord, Riftstalker Bloodfiend, in `ItemIcons.bossSprite`). No 3D skulls for slayer bosses.
 - The Mythological mobs stay as 3D heads (author decision, Oct 26).
 
+## Standing requirements added in 0.7.4
+- The Discord community button opens https://discord.gg/xeBfsVRfkT (`FancyDropsMod.DISCORD`); the README links it too. The #releases channel is fed by a GitHub release webhook.
