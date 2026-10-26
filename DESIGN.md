@@ -278,3 +278,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.4.55
 - Nothing unused stays: when a feature or icon goes, its code, config field, resources and menu entry go with it.
 
+## Standing requirements added in 0.4.56
+- A slayer boss is fully standing before the first cut.
+- The slayer panel is translucent, compact and rounded; only scenery in front of it may cross the frame, and never far.
+

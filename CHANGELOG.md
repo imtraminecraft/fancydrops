@@ -1,3 +1,7 @@
+## 0.4.56
+- Slayer scene: the boss now stands before the first cut instead of after it.
+- The panel is see-through, smaller, and has rounded corners; trees, towers and stones in front of it break out over its frame. The Inferno fortress stays inside the panel.
+
 ## 0.4.55
 - Cleanup: removed the unused "cube" icon, 15 methods and 7 fields nothing used any more, and the Outline and 3D items settings (their code, config fields and editor state). Every sound, texture and font in the mod is referenced, so none were deleted.
 

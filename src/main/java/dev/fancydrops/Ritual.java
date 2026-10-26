@@ -203,10 +203,9 @@ final class Ritual {
     /** The opaque panel a slayer scene plays on: the place the boss stands in (see SlayerScenery), framed by a thin line in the boss's colour. */
     private static void slPanel(float t, float icx, float gy, float icy, float sz, float isc, float kk, float ry, int energy, float a) {
         float al = a * sm(t / 0.25f); if (al <= 0.01f) return;
-        float hi = 16 * sz * isc, halfW = 140 * sz, top = Math.min(gy - 2 - 86 * kk, icy - hi) - 22, bot = gy + ry + 22;
+        float hi = 16 * sz * isc, halfW = 118 * sz, top = Math.min(gy - 2 - 86 * kk, icy - hi) - 16, bot = gy + ry + 18;
         int x0 = Math.max(0, Math.round(icx - halfW)), x1 = Math.min(CW, Math.round(icx + halfW)), y0 = Math.max(0, Math.round(top)), y1 = Math.min(CH, Math.round(bot));
-        SlayerScenery.paint(cv, Math.floorMod(kind - 12, 6), t, x0, y0, x1, y1, Math.round(gy - ry * 0.5f), al);
-        int fr = energy; cv.rect(x0, y0, x1, y0 + 1, A(al * 0.7f, fr)); cv.rect(x0, y1 - 1, x1, y1, A(al * 0.7f, fr)); cv.rect(x0, y0, x0 + 1, y1, A(al * 0.7f, fr)); cv.rect(x1 - 1, y0, x1, y1, A(al * 0.7f, fr));
+        SlayerScenery.paint(cv, Math.floorMod(kind - 12, 6), t, x0, y0, x1, y1, Math.round(gy - ry * 0.5f), al * 0.62f, energy);                   // see-through: the world shows behind it
         glowE(icx, gy, 26 * kk * 2f, 7 * kk * 2f, energy, 0.35f * al);                                    // the hologram's light on the ground under its feet
     }
     private static void minotaur(float cx, float gy, float k, float reveal, float breakT, boolean crumble, int rc, int rim, float a, float t) {
@@ -555,7 +554,7 @@ final class Ritual {
             float draw = sm(t / (0.35f * O));
             float sigA = nod ? 1f - cl(p / 0.9f) * 0.2f : 1f;
             if (!slayerMode) sigil(t, draw, icx, gy, rx, ry, rng && p > 0 ? mixc(CYAN, rc, sm(p / 0.4f)) : energy, bg * sigA, nod && p > 0 ? cl(p / 0.8f) : 0f);
-            float kk = Math.min(sz, (gy - 4) / 98f), kkS = kk, rev = sm((t - 0.30f * O) / (0.55f * O));
+            float kk = Math.min(sz, (gy - 4) / 98f), kkS = kk, rev = slayerMode ? sm((t - 0.04f * O) / (0.20f * O)) : sm((t - 0.30f * O) / (0.55f * O));      // a slayer stands before the first cut
             if (slayerMode) { float[] tsl = {0.34f * O, 0.58f * O, 0.80f * O}; for (int c0 = 0; c0 < 3; c0++) slCut[c0] = op >= tsl[c0] ? op - tsl[c0] : -1f; }
             minotaur(icx, gy - 2, kk, rev, p < 0 ? -1f : p, nod, rc, nod ? GREY : mixc(energy, rc, rng || p > 0 ? 0.5f : 0f), nod && p > 0 ? 1f : bg > 0.2f ? 1f : 0f, t);
             int strikes = 0;

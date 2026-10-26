@@ -13,13 +13,14 @@ final class SlayerScenery {
     private static void rect(Canvas c, int x0, int y0, int x1, int y1, int rgb, float a) { c.rect(x0, y0, x1, y1, Ritual.A(a, rgb)); }
 
     /** Paints the whole place inside [x0,x1) x [y0,y1); `hz` is the horizon row, `a` the fade of the scene, `t` seconds for the little movements. */
-    static void paint(Canvas c, int theme, float t, int x0, int y0, int x1, int y1, int hz, float a) {
+    static void paint(Canvas c, int theme, float t, int x0, int y0, int x1, int y1, int hz, float a, int frameRgb) {
         int[] sky = switch (theme) {
             case 0 -> new int[]{0x0B0E1E, 0x3A3354};   case 1 -> new int[]{0x07060C, 0x1B1626};   case 2 -> new int[]{0x050B1E, 0x24406A};
             case 3 -> new int[]{0x05020C, 0x2A1448};   case 4 -> new int[]{0x2A0504, 0x9A3412};   default -> new int[]{0x12040A, 0x5A1424};
         };
         for (int y = y0; y < y1; y++) rect(c, x0, y, x1, y + 1, mix(sky[0], sky[1], (y - y0) / (float) Math.max(1, hz - y0)), a);   // the sky, dark above and lighter at the horizon
         if (theme != 1 && theme != 4) for (int i = 0; i < 22; i++) { int sx = x0 + 3 + (int) (rnd(i * 7) * (x1 - x0 - 6)), sy = y0 + 3 + (int) (rnd(i * 13 + 1) * (hz - y0) * 0.55f); px(c, sx, sy, 0xFFFFFF, a * (0.35f + 0.4f * (float) Math.sin(t * 2f + i))); }
+        corners(c, x0, y0, x1, y1, 7, frameRgb, a, false);                                             // the frame goes down first: the trees, towers and stones that stand in front of it break out of it
         switch (theme) {
             case 0 -> graveyard(c, t, x0, y0, x1, y1, hz, a);
             case 1 -> cave(c, t, x0, y0, x1, y1, hz, a);
@@ -27,6 +28,24 @@ final class SlayerScenery {
             case 3 -> theEnd(c, t, x0, y0, x1, y1, hz, a);
             case 4 -> nether(c, t, x0, y0, x1, y1, hz, a);
             default -> ruins(c, t, x0, y0, x1, y1, hz, a);
+        }
+        corners(c, x0, y0, x1, y1, 7, frameRgb, a, true);                                              // round off the corners of the panel itself
+    }
+
+    /** The rounded frame (erase = false), or the clearing of everything outside its four round corners (erase = true). */
+    private static void corners(Canvas c, int x0, int y0, int x1, int y1, int r, int rgb, float a, boolean erase) {
+        if (!erase) {
+            for (int x = x0 + r; x < x1 - r; x++) { px(c, x, y0, rgb, a * 0.85f); px(c, x, y1 - 1, rgb, a * 0.85f); }
+            for (int y = y0 + r; y < y1 - r; y++) { px(c, x0, y, rgb, a * 0.85f); px(c, x1 - 1, y, rgb, a * 0.85f); }
+        }
+        for (int q = 0; q < 4; q++) {
+            int cx = q % 2 == 0 ? x0 + r : x1 - r, cy = q < 2 ? y0 + r : y1 - r;
+            for (int dy = 0; dy < r; dy++) for (int dx = 0; dx < r; dx++) {
+                int x = q % 2 == 0 ? cx - 1 - dx : cx + dx, y = q < 2 ? cy - 1 - dy : cy + dy;
+                double d = Math.hypot(dx + 0.5, dy + 0.5);
+                if (erase) { if (d > r + 0.8) c.px[y * c.w + x] = 0; }
+                else if (Math.abs(d - r) < 0.8) px(c, x, y, rgb, a * 0.85f);
+            }
         }
     }
 
@@ -108,7 +127,7 @@ final class SlayerScenery {
     }
     private static void nether(Canvas c, float t, int x0, int y0, int x1, int y1, int hz, float a) {
         for (int x = x0; x < x1; x++) { float f = 0.5f + 0.5f * (float) Math.sin(x * 0.07f + t * 1.4f); rect(c, x, hz - 4 - (int) (3 * f), x + 1, hz, 0xFF7A18, a * 0.35f); }                  // the glow of the lava lake far away
-        int fx = x0 + (x1 - x0) / 5; for (int b = 0; b < 5; b++) { int bw = 18 + (int) (rnd(b) * 12), bh = 18 + (int) (rnd(b + 4) * 30); rect(c, fx, hz - bh, fx + bw, hz, 0x240808, a); for (int k = 0; k < bw; k += 4) rect(c, fx + k, hz - bh - 3, fx + k + 2, hz - bh, 0x240808, a); rect(c, fx + bw / 2 - 1, hz - bh / 2, fx + bw / 2 + 1, hz - bh / 2 + 4, 0xFFB030, a * 0.7f); fx += bw + 4 + (int) (rnd(b + 8) * 10); }   // a fortress
+        int fx = x0 + (x1 - x0) / 5; for (int b = 0; b < 5; b++) { int bw = 18 + (int) (rnd(b) * 12), bh = 18 + (int) (rnd(b + 4) * 30); if (fx + bw > x1 - 3) break; rect(c, fx, hz - bh, fx + bw, hz, 0x240808, a); for (int k = 0; k < bw; k += 4) rect(c, fx + k, hz - bh - 3, fx + k + 2, hz - bh, 0x240808, a); rect(c, fx + bw / 2 - 1, hz - bh / 2, fx + bw / 2 + 1, hz - bh / 2 + 4, 0xFFB030, a * 0.7f); fx += bw + 4 + (int) (rnd(b + 8) * 10); }   // a fortress
         floor(c, x0, y0, x1, y1, hz + 1, 0x5A1C1C, 0x2A0C0E, 0.40f, 53, a);
         for (int i = 0; i < 6; i++) { int lx = x0 + 6 + (int) (rnd(i * 4) * (x1 - x0 - 12)), ly = hz + 3 + (int) (rnd(i * 4 + 1) * (y1 - hz - 5)); float p = 0.6f + 0.4f * (float) Math.sin(t * 2 + i); rect(c, lx, ly, lx + 6, ly + 2, 0xFF8A20, a * p); rect(c, lx + 1, ly + 1, lx + 5, ly + 2, 0xFFE070, a * p * 0.8f); }   // lava pools in the floor
         for (int i = 0; i < 14; i++) { float f = (t * 0.35f + i * 0.071f) % 1f; px(c, x0 + (int) (rnd(i * 5) * (x1 - x0)) + (int) (Math.sin(t + i) * 3), y1 - 2 - (int) (f * (y1 - y0 - 6)), 0xFFB030, a * (1f - f)); }   // embers rising
