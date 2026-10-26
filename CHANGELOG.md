@@ -1,3 +1,7 @@
+## 0.4.35
+- The "Coming Soon" tag is now a hanging marquee board: it swings from two chains under the top tape, bulbs chase round its double gold frame, the words glow with one flickering letter and a shine sweeps across. A builder hammers on top (with a paint tin) and a welder works from a plank hung underneath.
+- A lamp post moved so it does not stand under the board.
+
 ## 0.4.34
 - The "Coming Soon" construction site is redone: the house trembles, a loose brick falls, then it collapses in a cloud of dust with a small shake. The foreman panics and shrugs, then the crane lifts the pile in three loads and rebuilds the house row by row until the window lights up. The loop is 14 s.
 - More lamp posts along the site, a work light on the crane jib, unfinished steel-frame buildings with tiny workers (hammering, walking planks, welding), far cranes with blinking lights, a water tank, fence, fog and darker edges for depth.

@@ -1411,7 +1411,7 @@ public class FancyScreen extends Screen {
         g.fill(r.x + 6, gy, r.x + r.w - 6, gy + 1, 0x33FFFFFF);                                    // the ground line everything stands on
         g.fill(r.x + 6, gy + 1, r.x + r.w - 6, gy + 3, 0xFF211C10);
         farLayers(g, r, sec, gy); frames(g, r, sec, gy);                                                // far cranes and unfinished buildings with tiny workers behind the site
-        lamp(g, r.x + Math.round(r.w * 0.27f), gy, sec + 1.1f); lamp(g, r.x + Math.round(r.w * 0.50f), gy, sec + 2.3f); lamp(g, r.x + Math.round(r.w * 0.76f), gy, sec + 3.4f);   // more lamp posts along the site
+        lamp(g, r.x + Math.round(r.w * 0.27f), gy, sec + 1.1f); lamp(g, r.x + Math.round(r.w * 0.35f), gy, sec + 2.3f); lamp(g, r.x + Math.round(r.w * 0.76f), gy, sec + 3.4f);   // more lamp posts along the site
         int laneL = 12, laneR = mid - 50;
         if (laneR - laneL >= 84) build(g, r, sec, gy, laneL, laneR);                               // left: a little house goes up brick by brick... then it all comes down
         int rx = r.w - 44;                                                                          // right edge: barrel, crate on a pallet, cone
@@ -1426,6 +1426,46 @@ public class FancyScreen extends Screen {
         for (int f = 0; f < 6; f++) {                                                               // fireflies
             float fx = r.x + r.w * (0.52f + 0.4f * ((f * 53) % 10) / 10f) + (float) Math.sin(sec * 0.7f + f * 2.1f) * 9f, fy = gy - 34 - ((f * 29) % 7) * 5 + (float) Math.sin(sec * 1.1f + f) * 5f;
             g.fill(Math.round(fx), Math.round(fy), Math.round(fx) + 1, Math.round(fy) + 1, Gfx.argb(Math.round(200 * (0.5f + 0.5f * (float) Math.sin(sec * 2.4f + f * 1.7f))), 0xFFE066));
+        }
+    }
+
+    /** The "Coming Soon" board: it hangs on two chains from the top tape, its bulbs chase round the frame and one letter flickers while a builder hammers on top and another welds from a plank underneath. */
+    private void comingSoon(GuiGraphicsExtractor g, Row r, int mid, float sec) {
+        String wt = "Coming Soon", tm = "TM"; int tmw = Math.round(Gfx.w(font, tm) * 0.6f) + 1, wtw = Gfx.w(font, wt) + tmw, pw = wtw + 34, ph = 22, hx = mid - pw / 2, hy = r.y + 64;
+        float gl = 0.75f + 0.25f * (float) Math.sin(sec * 3f);
+        for (int cx : new int[]{hx + 8, hx + pw - 9}) { g.fill(cx, r.y + 9, cx + 1, hy, 0xFF8A8A92); for (int y = r.y + 11; y < hy; y += 4) g.fill(cx - 1, y, cx + 2, y + 1, 0xFF6A6A72); }
+        // the board: a dark plate in a double gold frame with rivets
+        g.fill(hx - 1, hy - 1, hx + pw + 1, hy + ph + 1, 0xFF0A0805); g.fill(hx, hy, hx + pw, hy + ph, 0xFF1A1508); g.fill(hx + 2, hy + 2, hx + pw - 2, hy + ph - 2, 0xFF120E06);
+        int fc = Gfx.argb(Math.round(255 * (0.55f + 0.35f * gl)), 0xFFC857); rout(g, hx, hy, pw, ph, fc); rout(g, hx + 2, hy + 2, pw - 4, ph - 4, fc);
+        for (int[] rv : new int[][]{{1, 1}, {pw - 2, 1}, {1, ph - 2}, {pw - 2, ph - 2}}) g.fill(hx + rv[0], hy + rv[1], hx + rv[0] + 1, hy + rv[1] + 1, 0xFFFFE9A8);
+        int k = 0;                                                                                       // marquee bulbs: a bright pair runs round the frame
+        java.util.List<int[]> per = new java.util.ArrayList<>();
+        for (int x = hx + 4; x < hx + pw - 3; x += 5) per.add(new int[]{x, hy - 2});
+        for (int y = hy + 3; y < hy + ph - 1; y += 5) per.add(new int[]{hx + pw + 1, y});
+        for (int x = hx + pw - 4; x > hx + 3; x -= 5) per.add(new int[]{x, hy + ph + 1});
+        for (int y = hy + ph - 3; y > hy + 1; y -= 5) per.add(new int[]{hx - 2, y});
+        for (int[] b : per) { float q = ((k++ - sec * 14f) % 7f + 7f) % 7f; boolean on = q < 2.2f; if (on) g.fill(b[0] - 1, b[1] - 1, b[0] + 3, b[1] + 3, 0x2EFFDC78); g.fill(b[0], b[1], b[0] + 2, b[1] + 2, on ? 0xFFFFF2B8 : 0xFF6A5420); }
+        // the words: a soft glow behind, a flicker on one letter, a shine sweeping across
+        int tx = hx + (pw - wtw) / 2, ty = hy + (ph - 8) / 2, tc = Gfx.argb(Math.round(255 * (0.88f + 0.12f * gl)), 0xFFD678), gc = Gfx.argb(Math.round(40 * gl), 0xFFBE46);
+        for (int[] o : new int[][]{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}) Gfx.text(g, font, wt, tx + o[0], ty + o[1], gc);
+        Gfx.text(g, font, wt, tx, ty, tc);
+        Gfx.push(g); Gfx.translate(g, tx + Gfx.w(font, wt) + 1, ty - 1); Gfx.scale(g, 0.6f); Gfx.text(g, font, tm, 0, 0, tc); Gfx.pop(g);
+        if (!(Math.sin(sec * 23f) > 0.2 || Math.sin(sec * 7f) > 0.6)) { int sx = tx + Gfx.w(font, "Coming "); g.fill(sx, ty - 1, sx + Gfx.w(font, "S"), ty + 9, 0xFF120E06); }
+        g.enableScissor(hx + 3, hy + 3, hx + pw - 3, hy + ph - 3);
+        int sh = Math.round((sec * 40f) % 160f - 30f); for (int row = 0; row < ph - 6; row++) g.fill(hx + sh - row / 2, hy + 3 + row, hx + sh - row / 2 + 6, hy + 4 + row, 0x38FFF0C8);
+        g.disableScissor();
+        // a builder on top hammers beside a tin of paint
+        worker(g, hx + 14, hy, 1, sec, 0f);
+        int tn = hx + pw - 20; g.fill(tn, hy - 6, tn + 5, hy, 0xFF5A7A9A); g.fill(tn, hy - 6, tn + 5, hy - 5, 0xFF7A9ABA); g.fill(tn - 1, hy - 7, tn + 6, hy - 6, 0xFF3A5A7A);
+        // a welder on a plank hung under the board, torch up at the frame
+        int py = hy + ph + 22, wxp = mid - 4;
+        for (int cx : new int[]{hx + 14, hx + pw - 15}) { g.fill(cx, hy + ph + 1, cx + 1, py, 0xFF8A8A92); }
+        g.fill(hx + 8, py, hx + pw - 8, py + 2, 0xFF7A5A30);
+        worker(g, wxp, py, 0, sec, 0f);
+        g.fill(wxp + 7, py - 20, wxp + 9, py - 11, 0xFFE8B98A); g.fill(wxp + 6, hy + ph + 1, wxp + 9, hy + ph + 4, 0xFF707078);
+        if (Math.sin(sec * 10f) > -0.3) {
+            int fx = wxp + 8, fy = hy + ph + 3; g.fill(fx - 6, fy - 4, fx + 7, fy + 5, 0x28BEE1FF); g.fill(fx - 1, fy - 1, fx + 2, fy + 2, 0xFFFFFFFF);
+            for (int q = 0; q < 8; q++) { double an = ((int) (sec * 14f) + q * 5) * 1.3; int rr = 2 + (q * 3 + (int) (sec * 14f)) % 7; int sx2 = fx + (int) (Math.cos(an) * rr), sy2 = fy + 1 + (int) (Math.abs(Math.sin(an)) * rr); g.fill(sx2, sy2, sx2 + 1, sy2 + 1, q % 2 == 0 ? 0xFFFFE08A : 0xFFFFFFFF); }
         }
     }
 
@@ -3375,13 +3415,8 @@ public class FancyScreen extends Screen {
                 else if (r.icon != null) { Gfx.push(g); Gfx.translate(g, mid - 16, cyi - 16); Gfx.scale(g, 2f); Gfx.item(g, r.icon, 0, 0); Gfx.pop(g); }
                 Gfx.textCentered(g, font, r.title, mid, r.y + 56, Ui.TEXT);
                 if (r.kind == HERO) { int wy = r.y + 70; for (String ln : wrap(r.sub, cw - 60)) { Gfx.textCentered(g, font, ln, mid, wy, Ui.SUB); wy += 11; } continue; }          // the words under the title
-                String wt = "Coming Soon", tm = "TM"; int tmw = Math.round(Gfx.w(font, tm) * 0.6f) + 1, wtw = Gfx.w(font, wt) + tmw, pw2 = wtw + 20, hx = mid - pw2 / 2, hy = r.y + 68;
-                int gl = 170 + (int) (80 * Math.sin(sec * 3));
-                pill(g, hx, hy, pw2, 16, 0xFF1A1710); rout(g, hx, hy, pw2, 16, Gfx.argb(gl, 0xFFC857));
-                int tc = Gfx.argb(Math.min(255, gl + 40), 0xFFC857);
-                Gfx.text(g, font, wt, hx + 10, hy + 4, tc);
-                Gfx.push(g); Gfx.translate(g, hx + 10 + Gfx.w(font, wt) + 1, hy + 3); Gfx.scale(g, 0.6f); Gfx.text(g, font, tm, 0, 0, tc); Gfx.pop(g);
                 site(g, r, sec);
+                comingSoon(g, r, mid, sec);
                 continue;
             }
             if (r.kind == TEXT) {                                                   // plain text: a heading and its paragraph, no card
