@@ -1,7 +1,8 @@
 ## 0.7.8
 - The slashes in the slayer preview are smooth, round strokes now (they were thin, jagged lines at small size).
-- The animation Length slider has a (Default) button (3 s for slayers, 5 s for the rest).
+- The animation Length slider has a (Default) button (5 s).
 - RNG drops are posted to public chat when the drop's animation is RNG (before, only drops that were naturally rare were, so Scorched Books with RNG on was skipped).
+- Every animation is 5 seconds by default again, slayers too (slayers you had set to 3 s go back to 5 s).
 - Icons: Wisp's Ice-Flavored Water I Splash Potion is a potion, Wilson's Engineering Plans is paper, Scorched Books and Subzero Inverter use their wiki pictures. Old cached icons refresh.
 
 ## 0.7.7

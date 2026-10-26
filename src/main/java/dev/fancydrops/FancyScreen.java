@@ -2577,7 +2577,7 @@ public class FancyScreen extends Screen {
         if (gr.id().equals("slayer") || gr.id().equals("exp")) pl.ctls.add(new Btn("▶ 2 items", GREEN, () -> play(() -> DropListener.playSample(gr.id(), AnimationManager.typeIndex(ty.id()), true)))); rows.add(pl);
         Row len = row(0, ":clock:", "Length", "Between 3 and 7 seconds. The first half is the same for every type", Ui.ACCENT);
         len.ctls.add(new Slider(3, 7, 0.1, () -> a.secs, v -> { a.secs = (float) (Math.round(v * 10) / 10.0); }, () -> String.format(Locale.ROOT, "%.1f s", a.secs)));
-        float defSecs = key.startsWith("slayer.") ? 3f : 5f;
+        float defSecs = 5f;
         len.ctls.add(new Btn("(Default)", Ui.ACCENT, () -> { a.secs = defSecs; FancyConfig.save(); })); rows.add(len);
         if (ty.id().equals("rng")) {                                         // only the big finish has cinematic bars and a blurred background
             rows.add(section("Cinematic"));
