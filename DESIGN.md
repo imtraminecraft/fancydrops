@@ -252,3 +252,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## Standing requirements added in 0.4.49
 - The page title never moves when a sub page opens: main and sub pages draw it at the same height.
+
+## Standing requirements added in 0.4.50
+- Slayer boss icons use the creature's real texture (zombie, blaze) as a 3D head; the hand-drawn head is only the fallback.
+- A slayer scene has exactly three cuts, and every cut opens the hologram.
+- Item Changes has no Outline or 3D items buttons; Glints draws sparks around the item.

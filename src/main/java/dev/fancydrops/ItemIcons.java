@@ -515,6 +515,13 @@ public final class ItemIcons {
 
     /** The six faces (+x, -x, +y, -y, +z, -z) of a head we draw ourselves. */
     private static int[][] bossHead(String kind) {
+        try {                                                                              // the real head of the creature, straight out of the game's own picture
+            net.minecraft.resources.Identifier tex = net.minecraft.resources.Identifier.withDefaultNamespace(kind.equals("BLAZE") ? "textures/entity/blaze.png" : "textures/entity/zombie/zombie.png");
+            try (java.io.InputStream in = net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(tex).orElseThrow().open()) {
+                java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(in);
+                if (img != null && img.getWidth() >= 32) return facesOf(img);
+            }
+        } catch (Throwable e) { log("boss head " + kind + ": " + e); }
         boolean blaze = kind.equals("BLAZE");
         int base = blaze ? 0xF0B830 : 0x5E9E52, dark = blaze ? 0xC07818 : 0x3F7038, lite = blaze ? 0xFFD860 : 0x7DBB6C;
         int[][] f = new int[6][64];
@@ -544,12 +551,12 @@ public final class ItemIcons {
         Icon ic = get(id);
         if (!ic.ready) return null;
         Cached d = ic.data;
-        if (d != null && d.heads != null && FancyConfig.get().show3d) {
+        if (d != null && d.heads != null ) {
             Render3D.Box b = new Render3D.Box(4, 4, 4);
             for (int f = 0; f < 6; f++) b.face(f, d.heads[f], 8);
             return new ItemModel(new Render3D.Obj[]{b}, 8, 0.6);
         }
-        if (d != null && d.heads == null && d.wikiPixels != null && skullFlag(id) && FancyConfig.get().show3d && !isBook(id)) {   // no skin found: rebuild the cube from the head's picture so it still spins as a real block
+        if (d != null && d.heads == null && d.wikiPixels != null && skullFlag(id)  && !isBook(id)) {   // no skin found: rebuild the cube from the head's picture so it still spins as a real block
             int[][] cube = isoHead(d.wikiPixels);
             if (cube != null) {
                 Render3D.Box b = new Render3D.Box(4, 4, 4);
@@ -558,7 +565,7 @@ public final class ItemIcons {
             }
         }
         int[] px = d != null && d.wikiPixels != null ? d.wikiPixels : d != null && d.face != null ? upscale(d.face) : gem(tint & 0xFFFFFF);
-        if (skullFlag(id) && FancyConfig.get().show3d) return new ItemModel(PuffyItem.of(px, 16, 16, true, 2.2f), null);   // a skull whose skin we could not find still spins in 3D
+        if (skullFlag(id) ) return new ItemModel(PuffyItem.of(px, 16, 16, true, 2.2f), null);   // a skull whose skin we could not find still spins in 3D
         return new ItemModel(PuffyItem.of(px, 16, 16, true), px);
     }
 

@@ -537,6 +537,7 @@ final class Ritual {
                 float tau = op - ts[k];
                 if (tau < 0) continue;
                 strikes++;
+                if (slayerMode) cutOpen(tau, k, icx, gy - 2, kkS);
                 if (slayerMode) slash(tau, k, icx, gy - 2, kkS, energy, bg, nod ? 1f - cl(p / 0.9f) : 1f - cl(p / 0.5f));
                 if (tau < 0.30f) {
                     int seed = k * 101 + (int) (op * 28);
@@ -622,18 +623,31 @@ final class Ritual {
 
     /** One sword slash across the boss: the blade sweeps along a line, a bright trail stays and fades. k = 0, 1 (the two diagonals) or 2 (a double cut). */
     static int slSeed;                                                                  // set by the caller: makes the cuts of this drop differ from the next
+    /** The line of cut number k through the body (silhouette units): its angle, centre and length differ for every drop. */
+    private static float[] slashSeg(int k) {
+        int sd = slSeed * 31 + k * 7;
+        float base = k == 1 ? 2.2f : k == 2 ? 1.57f : 0.95f;                              // down-right, down-left, then straight down the middle
+        float ang = base + (rnd(sd + 1) - 0.5f) * 0.9f, len = 54 + rnd(sd + 2) * 22;
+        float mx = (rnd(sd + 3) - 0.5f) * 24, my = -44 + (rnd(sd + 4) - 0.5f) * 20;
+        float ux = (float) Math.cos(ang), uy = (float) Math.sin(ang);
+        return new float[]{mx - ux * len, my - uy * len, mx + ux * len, my + uy * len};
+    }
+    /** Opens the hologram along cut k: the pixels along the line are taken out, the gap widening a little after the blade passes. */
+    private static void cutOpen(float tau, int k, float cx, float gy, float kk) {
+        float su = cl(tau / 0.09f); if (su < 1f && tau < 0.05f) return;
+        float[] sg = slashSeg(k); float w = 0.5f + 2.4f * sm(tau / 0.5f);
+        float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk, dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
+        int bx0 = Math.max(0, (int) (cx - 42 * kk)), bx1 = Math.min(CW - 1, (int) (cx + 42 * kk)), by0 = Math.max(0, (int) (gy - 90 * kk)), by1 = Math.min(CH - 1, (int) (gy - 3 * kk));   // only the body, not the ground
+        float reach = su;                                                                  // the cut opens from where the blade started towards where it is now
+        for (int y = by0; y <= by1; y++) for (int x = bx0; x <= bx1; x++) {
+            float u = ((x - x0) * dx + (y - y0) * dy) / l2; if (u < -0.02f || u > reach + 0.02f) continue;
+            float px = x0 + u * dx - x, py = y0 + u * dy - y;
+            if (px * px + py * py < w * w) { int i = y * CW + x; cv.px[i] = 0; }
+        }
+    }
     private static void slash(float tau, int k, float cx, float gy, float kk, int rgb, float a, float keep) {
         if (tau < 0f) return;
-        int n = k == 2 ? 2 : 1;
-        float[][] segs = new float[n][4];
-        for (int si = 0; si < n; si++) {                                                  // a random line through the body: its angle, centre and length all differ per drop
-            int sd = slSeed * 31 + k * 7 + si * 3;
-            float base = (k == 1 || si == 1) ? 2.2f : 0.95f;                              // down-right, or down-left
-            float ang = base + (rnd(sd + 1) - 0.5f) * 0.9f, len = 50 + rnd(sd + 2) * 22;
-            float mx = (rnd(sd + 3) - 0.5f) * 24, my = -44 + (rnd(sd + 4) - 0.5f) * 20;
-            float ux = (float) Math.cos(ang), uy = (float) Math.sin(ang);
-            segs[si] = new float[]{mx - ux * len, my - uy * len, mx + ux * len, my + uy * len};
-        }
+        float[][] segs = {slashSeg(k)};
         float fade = tau < 0.09f ? 1f : Math.max(1f - cl((tau - 0.09f) / 0.4f), 0.55f * keep);   // the glow fades, the cut stays
         if (fade <= 0.01f) return;
         for (int si = 0; si < segs.length; si++) {
@@ -772,9 +786,17 @@ final class Ritual {
                 for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }
             }
             ItemIcons.spinSpeed = c.itemSpin; ItemIcons.spinRev = c.itemSpinRev;
-            ItemIcons.outlineRgb = c.itemOutline ? mixc(rc, WHITE, 0.45f) & 0xFFFFFF : -1;
+            ItemIcons.outlineRgb = -1;
             ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA)); boolean still0 = Icons.STILL_ICONS; Icons.STILL_ICONS = false;                 // the dropped item always turns, whatever the menu says
             try { ItemIcons.draw(g, it.id, it.icon, Math.round(gcx), Math.round(gcy), s); } finally { ItemIcons.drawAlpha = 1f; Icons.STILL_ICONS = still0; ItemIcons.spinSpeed = 1f; ItemIcons.spinRev = false; ItemIcons.outlineRgb = -1; }
+            if (c.itemGlints && itemA > 0.05f) for (int i = 0; i < 9; i++) {                      // Item changes > Glints: little four-point sparks twinkle in and out round the item
+                float cyc = tb * 1.7f + i * 0.113f, ph = cyc - (float) Math.floor(cyc); int slot = (int) Math.floor(cyc) * 31 + i * 7;
+                float an = rnd(slot) * 6.2832f, rad = s * (9f + 8f * rnd(slot + 1)), tw = (float) Math.sin(Math.PI * ph);
+                int gx = Math.round(gcx + (float) Math.cos(an) * rad), gy2 = Math.round(gcy + (float) Math.sin(an) * rad * 0.85f), arm = Math.max(1, Math.round((1.5f + s * 0.6f * rnd(slot + 2)) * tw));
+                int al = Math.round(255 * tw * Math.min(1f, itemA)), col = Gfx.argb(al, i % 2 == 0 ? 0xFFFFFF : mixc(rc, WHITE, 0.6f));
+                g.fill(gx - arm, gy2, gx + arm + 1, gy2 + 1, col); g.fill(gx, gy2 - arm, gx + 1, gy2 + arm + 1, col);
+                g.fill(gx - 1, gy2 - 1, gx + 2, gy2 + 2, Gfx.argb(al / 2, rc));
+            }
         }
 
         // ---- the words: below the animation (top and center), above it (bottom); never over the bars

@@ -1844,8 +1844,8 @@ public class FancyScreen extends Screen {
             if (in(mx, my, eAuto())) { c.barCustom = false; return; }
             for (int i = 0; i < PRESETS.length; i++) if (in(mx, my, ePreset(i))) { eSetColor(PRESETS[i]); return; }
         } else if (editor == 3) {
-            for (int k = 0; k < 5; k++) if (in(mx, my, e3Box(k))) {
-                if (k == 0) c.itemBob = !c.itemBob; else if (k == 1) c.itemOutline = !c.itemOutline; else if (k == 2) c.itemGlints = !c.itemGlints; else if (k == 3) c.show3d = !c.show3d; else c.itemSpinRev = !c.itemSpinRev;
+            for (int k = 0; k < 3; k++) if (in(mx, my, e3Box(k))) {
+                if (k == 0) c.itemBob = !c.itemBob; else if (k == 1) c.itemGlints = !c.itemGlints; else c.itemSpinRev = !c.itemSpinRev;
                 TextFx.restartText(); return;
             }
         } else if (editor == 2) {
@@ -2001,8 +2001,8 @@ public class FancyScreen extends Screen {
                 Gfx.text(g, font, il[i], b[0], b[1] - 11, Ui.SUB);
                 ss3[i].x0 = b[0]; ss3[i].x1 = b[0] + b[2]; ss3[i].draw(g, b[1], b[3], in(mx, my, new int[]{b[0], b[1] - 2, b[2], 18}));
             }
-            String[] tl = {"Floating", "Outline", "Glints", "3D items", "Spin back"}; String[] ti3 = {":speed:", ":size:", ":sparkle:", ":cube:", ":switch:"}; boolean[] tv = {c.itemBob, c.itemOutline, c.itemGlints, c.show3d, c.itemSpinRev};
-            for (int i = 0; i < 5; i++) {
+            String[] tl = {"Floating", "Glints", "Spin back"}; String[] ti3 = {":speed:", ":sparkle:", ":switch:"}; boolean[] tv = {c.itemBob, c.itemGlints, c.itemSpinRev};
+            for (int i = 0; i < 3; i++) {
                 int[] b = e3Box(i); boolean on = tv[i], hv = in(mx, my, b);
                 tile(g, b, on, hv);
                 Gfx.push(g); Gfx.translate(g, b[0] + 5, b[1] + 1); Gfx.scale(g, 0.875f); Icons.draw(g, ti3[i], 0, 0, hv || on ? System.currentTimeMillis() : 2400L); Gfx.pop(g);

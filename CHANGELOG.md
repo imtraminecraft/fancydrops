@@ -1,3 +1,9 @@
+## 0.4.50
+- Revenant Horror and Inferno Demonlord show the creatures' own heads, read from the game's zombie and blaze pictures, as spinning 3D skulls.
+- Slayer animation: three cuts, not four. Each cut now opens the hologram along its line, and the gap widens after the blade passes. The lightning at the end of "No Drops" is gone for slayers.
+- Item Changes: the Outline and 3D items buttons are removed (items are always 3D).
+- Glints now work: little four-point sparks twinkle in and out around the dropped item.
+
 ## 0.4.49
 - The page title at the top of the menu stays in the same place on main pages and sub pages (main pages moved up to match).
 
