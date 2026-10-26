@@ -186,6 +186,35 @@ final class Ritual {
 
     // ------------------------------------------------------------------ the summoned creature
     /** The minotaur the ritual calls: a dark horned shape that materialises from the ground up, glares, then shatters (shards fly) or crumbles (ash falls). */
+    /** Slayer scenes: how long ago each of the three cuts happened (-1 = not yet), so the hologram can fall apart along them. */
+    private static final float[] slCut = {-1f, -1f, -1f};
+    private static float slOx, slOy;
+    /** Where a pixel of the hologram sits once the cuts have opened: every piece is pushed away from each cut line it lies beside. */
+    private static void slPiece(int x, int y, float cx, float gy, float k) {
+        slOx = 0f; slOy = 0f;
+        for (int c = 0; c < 3; c++) {
+            if (slCut[c] < 0f) continue;
+            float[] sg = slashSeg(c); float x0 = cx + sg[0] * k, y0 = gy + sg[1] * k, dx = sg[2] * k - sg[0] * k, dy = sg[3] * k - sg[1] * k, len = (float) Math.sqrt(dx * dx + dy * dy);
+            float side = ((x - x0) * dy - (y - y0) * dx) / len;                          // which side of the line, and how far
+            float gap = (0.7f + 3.6f * sm(slCut[c] / 0.7f)) * (k / 0.6f) * 0.5f, sgn = side >= 0 ? 1f : -1f;
+            slOx += sgn * (-dy / len) * gap; slOy += sgn * (dx / len) * gap + (side > 0 ? 0.6f : 0f) * sm(slCut[c] / 1.2f);
+        }
+    }
+    /** The opaque panel a slayer scene plays on: a dark box tinted by the boss's colour, framed by a thin line, with the ground a little lighter. */
+    private static void slPanel(float t, float icx, float gy, float icy, float sz, float isc, float kk, float ry, int energy, float a) {
+        float al = a * sm(t / 0.25f); if (al <= 0.01f) return;
+        float hi = 16 * sz * isc, halfW = 140 * sz, top = Math.min(gy - 2 - 86 * kk, icy - hi) - 12, bot = gy + ry + 16;
+        int x0 = Math.round(icx - halfW), x1 = Math.round(icx + halfW), y0 = Math.max(0, Math.round(top)), y1 = Math.min(CH, Math.round(bot)), r = 6;
+        for (int y = y0; y < y1; y++) {
+            float f = (y - y0) / (float) Math.max(1, y1 - y0 - 1); int in = 0;
+            if (y - y0 < r) in = r - (int) Math.round(Math.sqrt(Math.max(0.0, r * r - (double) (r - (y - y0) - 0.5) * (r - (y - y0) - 0.5)))); else if (y1 - 1 - y < r) { int yy = y1 - 1 - y; in = r - (int) Math.round(Math.sqrt(Math.max(0.0, r * r - (double) (r - yy - 0.5) * (r - yy - 0.5)))); }
+            boolean ground = y >= gy - ry * 0.4f;
+            int col = ground ? mixc(mixc(0x0A0C16, energy, 0.20f), 0x05060C, 1f - f) : mixc(mixc(0x05060C, energy, 0.05f), mixc(0x0B0E1A, energy, 0.14f), f);
+            cv.rect(x0 + in, y, x1 - in, y + 1, A(al, col));
+            cv.set(x0 + in, y, A(al * 0.7f, energy)); cv.set(x1 - 1 - in, y, A(al * 0.7f, energy));
+            if (y == y0 || y == y1 - 1) cv.rect(x0 + in, y, x1 - in, y + 1, A(al * 0.7f, energy));
+        }
+    }
     private static void minotaur(float cx, float gy, float k, float reveal, float breakT, boolean crumble, int rc, int rim, float a, float t) {
         if (reveal <= 0f || a <= 0.01f) return;
         Canvas saved = cv; cv = sil; sil.clear();
@@ -201,7 +230,9 @@ final class Ritual {
             if (breakT < 0f) {                                                          // standing: appears from the ground upward, dissolving in
                 float hgt = (gy - y) / top; if (hgt > reveal * 1.08f || h > 0.35f + 0.65f * cl(reveal * 1.4f - hgt * 0.5f)) continue;
                 float flick = 0.88f + 0.12f * (float) Math.sin(t * 9f + y * 0.3f);
-                if (body) cv.set(x, y, A(a * 0.92f, mixc(0x070A14, rim, 0.06f))); else cv.set(x, y, A(a * 0.85f * flick, rim));
+                if (slayerMode) slPiece(x, y, cx, gy, k);
+                int qx = Math.round(x + slOx), qy = Math.round(y + slOy);
+                if (body) cv.set(qx, qy, A(a * 0.92f, mixc(0x070A14, rim, 0.06f))); else cv.set(qx, qy, A(a * 0.85f * flick, rim));
             } else if (h < 0.55f && (x + y) % 2 == 0) {                                   // breaking: every other pixel is a shard
                 float dx = x - cx, dy = y - cy0, len = (float) Math.max(1, Math.sqrt(dx * dx + dy * dy));
                 float sp0 = crumble ? 4f + 10f * h : 30f + 80f * rnd(x * 3 + y * 17);
@@ -526,10 +557,12 @@ final class Ritual {
 
         // ---- THE OPENING (the same for every type)
         if (!tre) {
+            if (slayerMode) slPanel(t, icx, gy, icy, sz, isc, Math.min(sz, (gy - 4) / 98f), ry, energy, bg);
             float draw = sm(t / (0.35f * O));
             float sigA = nod ? 1f - cl(p / 0.9f) * 0.2f : 1f;
             sigil(t, draw, icx, gy, rx, ry, rng && p > 0 ? mixc(CYAN, rc, sm(p / 0.4f)) : energy, bg * sigA, nod && p > 0 ? cl(p / 0.8f) : 0f);
             float kk = Math.min(sz, (gy - 4) / 98f), kkS = kk, rev = sm((t - 0.30f * O) / (0.55f * O));
+            if (slayerMode) { float[] tsl = {0.34f * O, 0.58f * O, 0.80f * O}; for (int c0 = 0; c0 < 3; c0++) slCut[c0] = op >= tsl[c0] ? op - tsl[c0] : -1f; }
             minotaur(icx, gy - 2, kk, rev, p < 0 ? -1f : p, nod, rc, nod ? GREY : mixc(energy, rc, rng || p > 0 ? 0.5f : 0f), nod && p > 0 ? 1f : bg > 0.2f ? 1f : 0f, t);
             int strikes = 0;
             float[] ts = {0.34f * O, 0.58f * O, 0.80f * O};
@@ -537,7 +570,6 @@ final class Ritual {
                 float tau = op - ts[k];
                 if (tau < 0) continue;
                 strikes++;
-                if (slayerMode) cutOpen(tau, k, icx, gy - 2, kkS);
                 if (slayerMode) slash(tau, k, icx, gy - 2, kkS, energy, bg, nod ? 1f - cl(p / 0.9f) : 1f - cl(p / 0.5f));
                 if (tau < 0.30f) {
                     int seed = k * 101 + (int) (op * 28);
@@ -631,19 +663,6 @@ final class Ritual {
         float mx = (rnd(sd + 3) - 0.5f) * 24, my = -44 + (rnd(sd + 4) - 0.5f) * 20;
         float ux = (float) Math.cos(ang), uy = (float) Math.sin(ang);
         return new float[]{mx - ux * len, my - uy * len, mx + ux * len, my + uy * len};
-    }
-    /** Opens the hologram along cut k: the pixels along the line are taken out, the gap widening a little after the blade passes. */
-    private static void cutOpen(float tau, int k, float cx, float gy, float kk) {
-        float su = cl(tau / 0.09f); if (su < 1f && tau < 0.05f) return;
-        float[] sg = slashSeg(k); float w = 0.5f + 2.4f * sm(tau / 0.5f);
-        float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk, dx = x1 - x0, dy = y1 - y0, l2 = dx * dx + dy * dy;
-        int bx0 = Math.max(0, (int) (cx - 42 * kk)), bx1 = Math.min(CW - 1, (int) (cx + 42 * kk)), by0 = Math.max(0, (int) (gy - 90 * kk)), by1 = Math.min(CH - 1, (int) (gy - 3 * kk));   // only the body, not the ground
-        float reach = su;                                                                  // the cut opens from where the blade started towards where it is now
-        for (int y = by0; y <= by1; y++) for (int x = bx0; x <= bx1; x++) {
-            float u = ((x - x0) * dx + (y - y0) * dy) / l2; if (u < -0.02f || u > reach + 0.02f) continue;
-            float px = x0 + u * dx - x, py = y0 + u * dy - y;
-            if (px * px + py * py < w * w) { int i = y * CW + x; cv.px[i] = 0; }
-        }
     }
     private static void slash(float tau, int k, float cx, float gy, float kk, int rgb, float a, float keep) {
         if (tau < 0f) return;

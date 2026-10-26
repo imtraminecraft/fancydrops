@@ -50,7 +50,7 @@ public final class SlayerData {
 
     /** The skull each boss uses as its icon: a SkyBlock head (a pet's) where there is no Minecraft one, and the vanilla item shown until it loads. */
     public static String headId(String id) {
-        return switch (id) { case "spider" -> "SPIDER;4"; case "wolf" -> "WOLF;4"; case "enderman" -> "ENDERMAN;4"; case "blaze" -> "@HEAD_BLAZE"; case "vampire" -> "BAT;4"; default -> "@HEAD_ZOMBIE"; };
+        return switch (id) { case "spider" -> "SPIDER;4"; case "wolf" -> "WOLF;4"; case "enderman" -> "ENDERMAN;4"; case "blaze" -> "@BOSS_BLAZE"; case "vampire" -> "BAT;4"; default -> "@BOSS_ZOMBIE"; };
     }
     public static String headFallback(String id) { return id.equals("zombie") ? "zombie_head" : "player_head"; }
 

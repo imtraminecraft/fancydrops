@@ -262,3 +262,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Top Center places the highest point of the animation at the top edge (below the top bar when bars show).
 - Text position is locked by animation position: Top = below, Above Action Bar = above, Center = free; the blocked button explains why.
 - Soft edge on the bars is a smooth gradient of thin rows, never a few thick steps.
+
+## Standing requirements added in 0.4.52
+- A slayer scene plays on an opaque panel, the same size as the Mythological scene; its three cuts split the hologram into pieces.
+- A hand-drawn stand-in icon is never saved to the icons folder; only real loaded art is.
+- A source has the same icon on every page (Drop Library, Chat Enabled, sidebar).

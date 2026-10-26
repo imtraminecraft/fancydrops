@@ -92,9 +92,10 @@ public final class ItemIcons {
         if ("GRIFFIN_FEATHER".equals(id) || "BRAIDED_GRIFFIN_FEATHER".equals(id)) {             // a real feather, never the Griffin pet the wiki page shows first
             Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = applyFolder(id, b); ic.ready = true; return;
         }
-        if (id.startsWith("@HEAD_")) {                                                           // a boss's head drawn by the mod (a zombie, a blaze): six 8 x 8 faces
-            Cached b = new Cached(); b.wikiVersion = 12; b.heads = bossHead(id.substring(6)); b.face = b.heads[4];
-            ic.data = applyFolder(id, b); ic.ready = true; return;
+        if (id.startsWith("@BOSS_")) {                                                           // a boss's own head (a zombie, a blaze), from the game's picture of the creature
+            Cached b = new Cached(); b.wikiVersion = 12; int[][] real = realBossHead(id.substring(6));
+            b.heads = real != null ? real : bossHead(id.substring(6)); b.face = b.heads[4];
+            ic.data = real != null ? applyFolder(id, b) : b; ic.ready = true; return;                // (the drawn stand-in is never saved to the icons folder)
         }
         if (id.startsWith("MOB_") && MOB_SKINS.containsKey(id.substring(4))) {                   // a creature's head
             Cached b = new Cached(); b.wikiVersion = 12;
@@ -514,7 +515,7 @@ public final class ItemIcons {
 
 
     /** The six faces (+x, -x, +y, -y, +z, -z) of a head we draw ourselves. */
-    private static int[][] bossHead(String kind) {
+    private static int[][] realBossHead(String kind) {
         try {                                                                              // the real head of the creature, straight out of the game's own picture
             net.minecraft.resources.Identifier tex = net.minecraft.resources.Identifier.withDefaultNamespace(kind.equals("BLAZE") ? "textures/entity/blaze.png" : "textures/entity/zombie/zombie.png");
             try (java.io.InputStream in = net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(tex).orElseThrow().open()) {
@@ -522,6 +523,9 @@ public final class ItemIcons {
                 if (img != null && img.getWidth() >= 32) return facesOf(img);
             }
         } catch (Throwable e) { log("boss head " + kind + ": " + e); }
+        return null;
+    }
+    private static int[][] bossHead(String kind) {
         boolean blaze = kind.equals("BLAZE");
         int base = blaze ? 0xF0B830 : 0x5E9E52, dark = blaze ? 0xC07818 : 0x3F7038, lite = blaze ? 0xFFD860 : 0x7DBB6C;
         int[][] f = new int[6][64];

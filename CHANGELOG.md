@@ -1,3 +1,10 @@
+## 0.4.52
+- Slayer scene rebuilt on an opaque, boss-coloured panel the same size as the Mythological scene. The three cuts split the hologram into pieces that drift apart along each cut line, then shatter. The cuts land on the same beats as before, so the sounds still match.
+- Zombie and blaze skulls: the first drawn heads were saved to your icons folder and kept being reused. They now use a new id and load the real zombie and blaze textures. The drawn stand-in is never saved.
+- Position Changes: the locked and open buttons were swapped. Top Center locks "Above the animation", Above Action Bar locks "Below the animation".
+- Bar Changes preview: removed the faint band across the ground that showed as horizontal lines.
+- Chat > Chat Enabled: the Mythological and Slayer rows use the same creature and boss icons as the Drop Library.
+
 ## 0.4.51
 - Bar Changes > Soft edge is a smooth fade now (the four visible lines are gone).
 - Position Changes > Top Center puts the top of the animation at the very top of the screen, or just under the top cinematic bar when the bars are on.

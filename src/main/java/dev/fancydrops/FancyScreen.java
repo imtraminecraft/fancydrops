@@ -1632,7 +1632,7 @@ public class FancyScreen extends Screen {
     private int[] ePosBox(int i) { return new int[]{eRx(), eY() + 56 + i * 24, eRw(), 21}; }
     private int[] eTxtBox(int j) { return new int[]{eRx(), eY() + 56 + 3 * 24 + 26 + j * 24, eRw(), 21}; }
     /** Words above: only when the animation is in the Center or above the action bar. Words below: only when it is in the Center or at the top. */
-    private boolean textChoiceOpen(FancyConfig c, int j) { return c.animPos == 1 || (j == 0 ? c.animPos == 0 : c.animPos == 2); }
+    private boolean textChoiceOpen(FancyConfig c, int j) { return c.animPos == 1 || (j == 0 ? c.animPos == 2 : c.animPos == 0); }
     private void drawPosPage(GuiGraphicsExtractor g, int mx, int my) {
         FancyConfig c = FancyConfig.get();
         Gfx.text(g, font, "Animation Position", eRx(), eY() + 42, Ui.TEXT);
@@ -2714,7 +2714,7 @@ public class FancyScreen extends Screen {
                 for (DropData.Drop d : s.drops) { FancyConfig.DropCfg dc = c.drop(s.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); dcs.add(dc); }
                 int on = 0; for (FancyConfig.DropCfg dc : dcs) if (dc.announce) on++;
                 String nm = gr.id().equals("treasure") ? gr.name() : srcName(s);
-                Row f = fold("ce_" + s.id, s.icon, nm, gr.name() + "  ·  " + on + " of " + dcs.size() + " announce", s.color());
+                Row f = fold("ce_" + s.id, gr.id().equals("myth") || gr.id().equals("slayer") ? srcIcon(s) : s.icon, nm, gr.name() + "  ·  " + on + " of " + dcs.size() + " announce", s.color());
                 f.ctls.add(tog(() -> { for (FancyConfig.DropCfg dc : dcs) if (!dc.announce) return false; return !dcs.isEmpty(); }, v -> { for (FancyConfig.DropCfg dc : dcs) dc.announce = v; FancyConfig.save(); }, 0xFFD98A1F));
                 rows.add(f);
                 if (!f.open) continue;

@@ -41,7 +41,6 @@ final class BackdropTex {
             c.rect(0, hor, w, hor + 1, 0x40FFFFFF);
         } else {
             c.rect(0, 0, w, h, 0x22C8D6FF);
-            c.rect(0, hor - h / 12, w, hor + h / 12, 0x1AFFFFFF);
         }
     }
 
