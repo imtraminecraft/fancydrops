@@ -482,8 +482,9 @@ public final class ItemIcons {
 
     private static final int[][] SKIN_SRC = {{16, 8}, {0, 8}, {8, 0}, {16, 0}, {8, 8}, {24, 8}};    // +x, -x, +y, -y, +z, -z (x, y of each 8x8 region)
     /** A skin picture -> the six faces of the head (hat layer merged on top). */
-    private static int[][] facesOf(java.awt.image.BufferedImage img) {
-        boolean hat = img.getWidth() >= 64 && img.getHeight() >= 16;
+    private static int[][] facesOf(java.awt.image.BufferedImage img) { return facesOf(img, true); }
+    private static int[][] facesOf(java.awt.image.BufferedImage img, boolean withHat) {
+        boolean hat = withHat && img.getWidth() >= 64 && img.getHeight() >= 16;
         int[][] src = SKIN_SRC;
         int[][] faces = new int[6][64];
         for (int f = 0; f < 6; f++) for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) {
@@ -516,13 +517,18 @@ public final class ItemIcons {
 
     /** The six faces (+x, -x, +y, -y, +z, -z) of a head we draw ourselves. */
     private static int[][] realBossHead(String kind) {
-        try {                                                                              // the real head of the creature, straight out of the game's own picture
-            net.minecraft.resources.Identifier tex = net.minecraft.resources.Identifier.withDefaultNamespace(kind.equals("BLAZE") ? "textures/entity/blaze.png" : "textures/entity/zombie/zombie.png");
-            try (java.io.InputStream in = net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(tex).orElseThrow().open()) {
-                java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(in);
-                if (img != null && img.getWidth() >= 32) return facesOf(img);
-            }
-        } catch (Throwable e) { log("boss head " + kind + ": " + e); }
+        String[] paths = kind.equals("BLAZE") ? new String[]{"textures/entity/blaze/blaze.png", "textures/entity/blaze.png"} : new String[]{"textures/entity/zombie/zombie.png", "textures/entity/zombie.png"};
+        for (String path : paths) {                                                        // the real head of the creature, straight out of the game's own picture (the file moved between versions, so every known place is tried)
+            try {
+                net.minecraft.resources.Identifier tex = net.minecraft.resources.Identifier.withDefaultNamespace(path);
+                var res = net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(tex);
+                if (res.isEmpty()) continue;
+                try (java.io.InputStream in = res.get().open()) {
+                    java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(in);
+                    if (img != null && img.getWidth() >= 32) return facesOf(img, false);
+                }
+            } catch (Throwable e) { log("boss head " + kind + " " + path + ": " + e); }
+        }
         return null;
     }
     private static int[][] bossHead(String kind) {

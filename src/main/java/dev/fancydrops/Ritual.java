@@ -200,20 +200,14 @@ final class Ritual {
             slOx += sgn * (-dy / len) * gap; slOy += sgn * (dx / len) * gap + (side > 0 ? 0.6f : 0f) * sm(slCut[c] / 1.2f);
         }
     }
-    /** The opaque panel a slayer scene plays on: a dark box tinted by the boss's colour, framed by a thin line, with the ground a little lighter. */
+    /** The opaque panel a slayer scene plays on: the place the boss stands in (see SlayerScenery), framed by a thin line in the boss's colour. */
     private static void slPanel(float t, float icx, float gy, float icy, float sz, float isc, float kk, float ry, int energy, float a) {
         float al = a * sm(t / 0.25f); if (al <= 0.01f) return;
-        float hi = 16 * sz * isc, halfW = 140 * sz, top = Math.min(gy - 2 - 86 * kk, icy - hi) - 12, bot = gy + ry + 16;
-        int x0 = Math.round(icx - halfW), x1 = Math.round(icx + halfW), y0 = Math.max(0, Math.round(top)), y1 = Math.min(CH, Math.round(bot)), r = 6;
-        for (int y = y0; y < y1; y++) {
-            float f = (y - y0) / (float) Math.max(1, y1 - y0 - 1); int in = 0;
-            if (y - y0 < r) in = r - (int) Math.round(Math.sqrt(Math.max(0.0, r * r - (double) (r - (y - y0) - 0.5) * (r - (y - y0) - 0.5)))); else if (y1 - 1 - y < r) { int yy = y1 - 1 - y; in = r - (int) Math.round(Math.sqrt(Math.max(0.0, r * r - (double) (r - yy - 0.5) * (r - yy - 0.5)))); }
-            boolean ground = y >= gy - ry * 0.4f;
-            int col = ground ? mixc(mixc(0x0A0C16, energy, 0.20f), 0x05060C, 1f - f) : mixc(mixc(0x05060C, energy, 0.05f), mixc(0x0B0E1A, energy, 0.14f), f);
-            cv.rect(x0 + in, y, x1 - in, y + 1, A(al, col));
-            cv.set(x0 + in, y, A(al * 0.7f, energy)); cv.set(x1 - 1 - in, y, A(al * 0.7f, energy));
-            if (y == y0 || y == y1 - 1) cv.rect(x0 + in, y, x1 - in, y + 1, A(al * 0.7f, energy));
-        }
+        float hi = 16 * sz * isc, halfW = 140 * sz, top = Math.min(gy - 2 - 86 * kk, icy - hi) - 22, bot = gy + ry + 22;
+        int x0 = Math.max(0, Math.round(icx - halfW)), x1 = Math.min(CW, Math.round(icx + halfW)), y0 = Math.max(0, Math.round(top)), y1 = Math.min(CH, Math.round(bot));
+        SlayerScenery.paint(cv, Math.floorMod(kind - 12, 6), t, x0, y0, x1, y1, Math.round(gy - ry * 0.5f), al);
+        int fr = energy; cv.rect(x0, y0, x1, y0 + 1, A(al * 0.7f, fr)); cv.rect(x0, y1 - 1, x1, y1, A(al * 0.7f, fr)); cv.rect(x0, y0, x0 + 1, y1, A(al * 0.7f, fr)); cv.rect(x1 - 1, y0, x1, y1, A(al * 0.7f, fr));
+        glowE(icx, gy, 26 * kk * 2f, 7 * kk * 2f, energy, 0.35f * al);                                    // the hologram's light on the ground under its feet
     }
     private static void minotaur(float cx, float gy, float k, float reveal, float breakT, boolean crumble, int rc, int rim, float a, float t) {
         if (reveal <= 0f || a <= 0.01f) return;
@@ -232,7 +226,7 @@ final class Ritual {
                 float flick = 0.88f + 0.12f * (float) Math.sin(t * 9f + y * 0.3f);
                 if (slayerMode) slPiece(x, y, cx, gy, k);
                 int qx = Math.round(x + slOx), qy = Math.round(y + slOy);
-                if (body) cv.set(qx, qy, A(a * 0.92f, mixc(0x070A14, rim, 0.06f))); else cv.set(qx, qy, A(a * 0.85f * flick, rim));
+                if (body) cv.set(qx, qy, slayerMode ? A(a * (y % 3 == 0 ? 0.55f : 0.78f), mixc(0x0A1020, rim, 0.42f)) : A(a * 0.92f, mixc(0x070A14, rim, 0.06f)));      // (a slayer is a hologram: lighter and see-through, with scan lines) else cv.set(qx, qy, A(a * 0.85f * flick, rim));
             } else if (h < 0.55f && (x + y) % 2 == 0) {                                   // breaking: every other pixel is a shard
                 float dx = x - cx, dy = y - cy0, len = (float) Math.max(1, Math.sqrt(dx * dx + dy * dy));
                 float sp0 = crumble ? 4f + 10f * h : 30f + 80f * rnd(x * 3 + y * 17);
@@ -560,7 +554,7 @@ final class Ritual {
             if (slayerMode) slPanel(t, icx, gy, icy, sz, isc, Math.min(sz, (gy - 4) / 98f), ry, energy, bg);
             float draw = sm(t / (0.35f * O));
             float sigA = nod ? 1f - cl(p / 0.9f) * 0.2f : 1f;
-            sigil(t, draw, icx, gy, rx, ry, rng && p > 0 ? mixc(CYAN, rc, sm(p / 0.4f)) : energy, bg * sigA, nod && p > 0 ? cl(p / 0.8f) : 0f);
+            if (!slayerMode) sigil(t, draw, icx, gy, rx, ry, rng && p > 0 ? mixc(CYAN, rc, sm(p / 0.4f)) : energy, bg * sigA, nod && p > 0 ? cl(p / 0.8f) : 0f);
             float kk = Math.min(sz, (gy - 4) / 98f), kkS = kk, rev = sm((t - 0.30f * O) / (0.55f * O));
             if (slayerMode) { float[] tsl = {0.34f * O, 0.58f * O, 0.80f * O}; for (int c0 = 0; c0 < 3; c0++) slCut[c0] = op >= tsl[c0] ? op - tsl[c0] : -1f; }
             minotaur(icx, gy - 2, kk, rev, p < 0 ? -1f : p, nod, rc, nod ? GREY : mixc(energy, rc, rng || p > 0 ? 0.5f : 0f), nod && p > 0 ? 1f : bg > 0.2f ? 1f : 0f, t);
@@ -583,16 +577,16 @@ final class Ritual {
                     dot(icx + vx * tau, gy + vy * tau + 220 * tau * tau, j % 3 == 0 ? WHITE : energy, (1f - tau / 0.7f) * 0.95f);
                 }
                 float sw = tau / 0.75f;
-                if (sw < 1f) ringE(icx, gy, rx * (0.4f + 1.4f * eo(sw)), ry * (0.4f + 1.4f * eo(sw)), mixc(energy, WHITE, 0.5f), (1f - sw) * 0.9f * bg, 0, 6.2832f, 0, 0);
+                if (sw < 1f && !slayerMode) ringE(icx, gy, rx * (0.4f + 1.4f * eo(sw)), ry * (0.4f + 1.4f * eo(sw)), mixc(energy, WHITE, 0.5f), (1f - sw) * 0.9f * bg, 0, 6.2832f, 0, 0);
             }
             if (!slayerMode) cracks(op, icx, gy, rx, ry, strikes * 3, strikes > 0 ? cl(1f - (op - ts[strikes - 1]) / 0.8f) : 0f, bg * (nod ? 1f - cl(p / 0.9f) : 1f));
-            motes(t, icx, gy, rx, ry, 70 * sz, energy, 0.9f * bg, 26);
+            if (!slayerMode) motes(t, icx, gy, rx, ry, 70 * sz, energy, 0.9f * bg, 26);
         } else {
             float done = dig(op, O, icx, gy, rx, ry, sz, blade, Math.max(bg, 0f));
             if (done > 0.3f) motes(t, icx, gy, rx * 0.5f, ry * 0.5f, 60 * sz, GOLD, 0.9f * bg * done, 18);
         }
-        if (inh > 0f && p < 0.35f) inhale(inh, icx, gy, icx, icy, rx, ry, energy, 1f - cl(p / 0.35f), sz);
-        if (p < 0 && inh > 0) glowE(icx, gy, rx * 0.8f * inh, ry * 1.2f * inh, energy, 0.5f * inh);
+        if (inh > 0f && p < 0.35f && !slayerMode) inhale(inh, icx, gy, icx, icy, rx, ry, energy, 1f - cl(p / 0.35f), sz);
+        if (p < 0 && inh > 0 && !slayerMode) glowE(icx, gy, rx * 0.8f * inh, ry * 1.2f * inh, energy, 0.5f * inh);
 
         // ---- THE PIVOT
         if (p < 0f) return;

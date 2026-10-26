@@ -1,3 +1,7 @@
+## 0.4.54
+- Slayer animation: no runes, rings or circle any more. Each boss is a hologram standing in its own place on an opaque panel, with a far and a near layer for depth: a graveyard of grass, dirt and gravestones for the Revenant Horror, a web-hung cave for the Tarantula Broodfather, a snowy pine forest for the Sven Packmaster, the End for the Voidgloom Seraph, the Nether for the Inferno Demonlord and gothic ruins for the Riftstalker Bloodfiend.
+- The Inferno blaze skull is looked up under every place the game has kept the picture.
+
 ## 0.4.53
 - Search: the left menu now lists every Drop Library page that holds a match (the category, and under it the creature, boss or group page), highlighted. Clicking one opens that exact page.
 
