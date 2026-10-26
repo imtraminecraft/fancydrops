@@ -342,3 +342,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - /fd help lists the main commands and categories; each category has its own page (/fd help simulate). New commands go in the matching category.
 - /fd <words> opens the menu with the search filled in. Real commands (help, mute, toggle, simulate) win over a search.
 - Experimentation Table list: non-books first, then books by level (IV, V, VI, VII), then by odds, then A to Z.
+
+## Standing requirements added in 0.7.3
+- All six slayer boss icons are flat 2D mob pictures in one style (the wiki renders for Tarantula, Sven, Voidgloom; hand-pixeled, outline-free ones for Revenant Horror, Inferno Demonlord, Riftstalker Bloodfiend, in `ItemIcons.bossSprite`). No 3D skulls for slayer bosses.
+- The Mythological mobs stay as 3D heads (author decision, Oct 26).
+

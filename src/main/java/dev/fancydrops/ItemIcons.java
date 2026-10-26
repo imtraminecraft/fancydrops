@@ -97,6 +97,9 @@ public final class ItemIcons {
         if ("GRIFFIN_FEATHER".equals(id) || "BRAIDED_GRIFFIN_FEATHER".equals(id)) {             // a real feather, never the Griffin pet the wiki page shows first
             Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = featherSprite("BRAIDED_GRIFFIN_FEATHER".equals(id)); ic.data = applyFolder(id, b); ic.ready = true; return;
         }
+        if (id.startsWith("@BOSS2D_")) {                                                         // a slayer boss drawn flat, like the wiki's Tarantula, Sven and Voidgloom
+            Cached b = new Cached(); b.wikiVersion = 12; b.wikiPixels = bossSprite(id.substring(8)); ic.data = applyFolder(id, b); ic.ready = true; return;
+        }
         if (id.startsWith("@BOSS_")) {                                                           // a boss's own head (a zombie, a blaze), from the game's picture of the creature
             Cached b = new Cached(); b.wikiVersion = 12; int[][] real = realBossHead(id.substring(6));
             b.heads = real != null ? real : bossHead(id.substring(6)); b.face = b.heads[4];
@@ -246,6 +249,69 @@ public final class ItemIcons {
         ".oSoGGGGo.......",
         "oSo.oooo........"};
     /** A hand-drawn feather (the braided one is gold), 16x16. */
+    /** The three slayer bosses with no wiki picture: small hand-pixeled 2D figures in the same flat style as the wiki's Tarantula, Sven and Voidgloom. */
+    static int[] bossSprite(String kind) {
+        String[] rows = null; java.util.function.IntUnaryOperator pal = null;
+        if ("ZOMBIE".equals(kind)) { rows = new String[] {
+            "................",
+            "....Gggggggl....",
+            "....gggggggG....",
+            "....ge.gg.egG...",
+            "....gggmmggg....",
+            ".....GgmmgG.....",
+            "................",
+            ".gG..sssSssS.Gg.",
+            ".gG..sSssssS.Gg.",
+            ".gg..sssbssS.gg.",
+            ".....sssSsssS...",
+            ".....ssSppSS....",
+            ".....ppP..Pp....",
+            ".....ppP..Pp....",
+            ".....PPP..PP....",
+            "................" };
+            pal = c -> switch ((char) c) { case 'G' -> 0xFF3E682C; case 'P' -> 0xFF282868; case 'S' -> 0xFF1E6276; case 'b' -> 0xFF821A1A; case 'e' -> 0xFF141414; case 'g' -> 0xFF5E8E3E; case 'l' -> 0xFF80B05A; case 'm' -> 0xFF283A22; case 'p' -> 0xFF3C3C96; case 's' -> 0xFF2C8AA0; default -> 0; }; }
+        if ("BLAZE".equals(kind)) { rows = new String[] {
+            "..q..........q..",
+            "..Rq........qR..",
+            "...R..yyyyy.....",
+            ".....yyyyyyY....",
+            ".....ykYYkyY....",
+            ".....yYYYYYy....",
+            ".....YkkkkkY....",
+            "..y..........y..",
+            ".yYd.wd..dw.yYd.",
+            ".yYd.yd..dy.yYd.",
+            ".dY..yRRRRd..Yd.",
+            "..y..dRqqRY..y..",
+            "..d..yRRRRd..d..",
+            ".....dYqqYd.....",
+            "......dRRd......",
+            "................" };
+            pal = c -> switch ((char) c) { case 'R' -> 0xFFC83214; case 'Y' -> 0xFFE0961E; case 'd' -> 0xFFB45A14; case 'k' -> 0xFF3C180A; case 'q' -> 0xFF78180E; case 'w' -> 0xFFFFEE96; case 'y' -> 0xFFFAC83C; default -> 0; }; }
+        if ("VAMPIRE".equals(kind)) { rows = new String[] {
+            "................",
+            ".....xxxxxx.....",
+            "....xfFfffFx....",
+            "....fFfffffF....",
+            "....frfffffr....",
+            "....FffWfWff....",
+            ".....fFvvFf.....",
+            ".....CvCCvC.....",
+            ".Cv.CvfFfFvC.vC.",
+            ".vVCCvCvvCvCCVv.",
+            ".vVCCCvVVvCCCVv.",
+            ".CV.CCvVVvCC.VC.",
+            "..C.CCvVVvCC.C..",
+            "...CCVvVVvVCC...",
+            ".....CCvvCC.....",
+            "................" };
+            pal = c -> switch ((char) c) { case 'C' -> 0xFF1E0E1A; case 'F' -> 0xFFBEAAB0; case 'V' -> 0xFF64101E; case 'W' -> 0xFFFAFAFA; case 'f' -> 0xFFE4D6D6; case 'r' -> 0xFFBE3228; case 'v' -> 0xFF961828; case 'x' -> 0xFF181018; default -> 0; }; }
+        if (rows == null) return null;
+        int[] p = new int[256];
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) p[y * 16 + x] = pal.applyAsInt(rows[y].charAt(x));
+        return p;
+    }
+
     static int[] featherSprite(boolean braided) {
         int[] p = new int[256];
         for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {

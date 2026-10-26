@@ -1,3 +1,7 @@
+## 0.7.3
+- Slayer boss icons are now all the same flat 2D style. Revenant Horror, Inferno Demonlord and Riftstalker Bloodfiend (which had no icon) have new hand-pixeled figures to match Tarantula, Sven and Voidgloom.
+- The Mythological mobs keep their heads.
+
 ## 0.7.2
 - `/fd help` now shows the main commands and a category, `/fd help simulate`, which lists every `/fd simulate` command.
 - `/fd <words>` opens the menu with the search filled in, for example `/fd minos`.
