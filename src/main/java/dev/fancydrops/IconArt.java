@@ -309,23 +309,7 @@ final class IconArt {
                 outline();
                 glint(11 - Math.round(f * 4), 8 + Math.round((float) Math.sin(f * 6.28f) * 1.5f), 1, 0xFFE9A0, 0.3f + 0.7f * t);
             }
-            case "dice" -> {                                                                 // a 3D die hops, tumbles and lands on a 6 (short: it has landed by half the loop)
-                float roll = Math.min(1f, f / 0.5f);
-                int dyy = roll < 1f ? -Math.round((float) Math.abs(Math.sin(roll * 6.283f)) * 4f * (1f - roll)) : 0;
-                float lean = roll < 1f ? (float) Math.sin(roll * 14f) * 1.6f * (1f - roll) : 0f;
-                int dx = Math.round((1f - roll) * -2f);
-                int top = 0xFFFFFF, front = 0xFFEFF5, side = 0xC9B4CC, edge = 0xB02A6A;
-                quad(3 + dx + lean, 6 + dyy, 12 + dx + lean, 6 + dyy, 14 + dx + lean, 4 + dyy, 5 + dx + lean, 4 + dyy, top);
-                quad(12 + dx + lean, 6 + dyy, 14 + dx + lean, 4 + dyy, 14 + dx + lean, 12 + dyy, 12 + dx + lean, 14 + dyy, side);
-                rect(3 + dx + Math.round(lean), 6 + dyy, 9, 8, front);
-                rect(3 + dx + Math.round(lean), 14 + dyy, 11, 1, dark(side, 0.3f));
-                int nn = roll >= 1f ? 6 : 1 + (int) (roll * 14f) % 6;
-                int[][] pp = {{}, {7, 10}, {5, 8, 9, 12}, {5, 8, 7, 10, 9, 12}, {5, 8, 9, 8, 5, 12, 9, 12}, {5, 8, 9, 8, 7, 10, 5, 12, 9, 12}, {5, 8, 5, 10, 5, 12, 9, 8, 9, 10, 9, 12}};
-                for (int i = 0; i + 1 < pp[nn].length; i += 2) { int qx = pp[nn][i] + dx + Math.round(lean), qy = pp[nn][i + 1] + dyy; rect(qx, qy, 2, 1, edge); px(qx, qy + 1, dark(edge, 0.3f)); px(qx + 1, qy + 1, dark(edge, 0.3f)); }
-                outline();
-                if (roll >= 1f) { glint(13, 3, 2, 0xFFFFFF, 1f - (f - 0.5f) * 2f); px(2, 2, 0xFFE27A); }
-                else { pxa(1, 15, 0xB8C0D4, 0.6f); pxa(0, 14, 0xB8C0D4, 0.35f); }
-            }
+            case "dice" -> dice(f);
             case "emblem", "emblem_special" -> {                                             // a set badge: a heraldic shield (13 wide, centred on column 8) with a star, in the set's colour
                 boolean sp = n.equals("emblem_special");
                 int col = tint != 0 ? tint : sp ? 0xB48CFF : 0x55D8FF;
@@ -794,6 +778,57 @@ final class IconArt {
     /** The big A with a colour per pixel: col(x, y) gets the pixel's place in the letter. */
     private interface Tint { int at(int x, int y); }
     private static void bigA(int x, int y, Tint t) { for (int j = 0; j < 7; j++) for (int i = 0; i < 5; i++) if (BIG_A[j].charAt(i) == '#') px(x + i, y + j, t.at(i, j)); }
+
+    /** A white die with black pips (a red 1) that hops, tumbles in the air and settles on a 6, with its shadow below. A real cube is turned and drawn face by face. */
+    private static void dice(float f) {
+        float fl = f < 0.62f ? f / 0.62f : 1f, e = 1f - (1f - fl) * (1f - fl) * (1f - fl);
+        float ang = (1f - e) * TAU * 1.75f;
+        float hh = f < 0.38f ? (float) Math.sin(f / 0.38f * Math.PI) * 3.2f : f < 0.62f ? (float) Math.sin((f - 0.38f) / 0.24f * Math.PI) * 1.4f : 0f;
+        float cy = 7.9f - hh, cx = 8f, sc = 3.45f;
+        // shadow on the ground: it shrinks and fades as the die rises
+        float sh = 1f - hh / 6f;
+        for (int y = 12; y <= 15; y++) for (int x = 0; x < 16; x++) { float dx = (x + 0.5f - 8) / (6.4f * sh), dy = (y + 0.5f - 13.8f) / (1.7f * sh); if (dx * dx + dy * dy <= 1f) pxa(x, y, 0x8C93AE, 0.42f * sh); }
+        // rotation: a turn about a slanted axis (shrinking to nothing as it lands), then the fixed view from above
+        double[] ax = {0.62, 0.70, 0.35}; double n = Math.sqrt(ax[0] * ax[0] + ax[1] * ax[1] + ax[2] * ax[2]); ax[0] /= n; ax[1] /= n; ax[2] /= n;
+        double ca = Math.cos(ang), sa = Math.sin(ang), ic = 1 - ca;
+        double[][] r1 = {{ca + ax[0] * ax[0] * ic, ax[0] * ax[1] * ic - ax[2] * sa, ax[0] * ax[2] * ic + ax[1] * sa}, {ax[1] * ax[0] * ic + ax[2] * sa, ca + ax[1] * ax[1] * ic, ax[1] * ax[2] * ic - ax[0] * sa}, {ax[2] * ax[0] * ic - ax[1] * sa, ax[2] * ax[1] * ic + ax[0] * sa, ca + ax[2] * ax[2] * ic}};
+        double ty = 0.7854, tx = 0.6155;                                                      // yaw, then tilt
+        double[][] ry = {{Math.cos(ty), 0, Math.sin(ty)}, {0, 1, 0}, {-Math.sin(ty), 0, Math.cos(ty)}}, rx = {{1, 0, 0}, {0, Math.cos(tx), -Math.sin(tx)}, {0, Math.sin(tx), Math.cos(tx)}};
+        double[][] m = mul(rx, mul(ry, r1));
+        int[][] pips = {{}, {0, 0}, {-1, -1, 1, 1}, {-1, -1, 0, 0, 1, 1}, {-1, -1, 1, -1, -1, 1, 1, 1}, {-1, -1, 1, -1, 0, 0, -1, 1, 1, 1}, {-1, -1, -1, 0, -1, 1, 1, -1, 1, 0, 1, 1}};
+        int[][] cnt = {{3, 4}, {6, 1}, {5, 2}};                                          // faces +X/-X, +Y/-Y, +Z/-Z
+        boolean[][] mask = new boolean[16][16];
+        double[] L = {-0.45, 0.80, 0.40};
+        // draw the visible faces
+        for (int a = 0; a < 3; a++) for (int sg = 1; sg >= -1; sg -= 2) {
+            double[] nrm = new double[3]; nrm[a] = sg; double[] nt = apply(m, nrm);
+            if (nt[2] <= 0.02) continue;
+            int b = (a + 1) % 3, c2 = (a + 2) % 3;
+            float[] xs = new float[4], ys = new float[4]; int[][] cs = {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
+            for (int q = 0; q < 4; q++) { double[] v = new double[3]; v[a] = sg; v[b] = cs[q][0]; v[c2] = cs[q][1]; double[] w = apply(m, v); xs[q] = (float) (cx + w[0] * sc); ys[q] = (float) (cy - w[1] * sc); }
+            double lit = Math.max(0, nt[0] * L[0] + nt[1] * L[1] + nt[2] * L[2]);
+            int face = lit > 0.55 ? 0xFFFFFF : lit > 0.2 ? 0xDADEEE : 0xB0B6CE;                  // three flat tones, so the cube reads at this size
+            for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) if (inside(xs, ys, x + 0.5f, y + 0.5f)) { px(x, y, face); mask[y][x] = true; }
+            double area = 0; for (int q = 0; q < 4; q++) area += xs[q] * ys[(q + 1) % 4] - xs[(q + 1) % 4] * ys[q]; area = Math.abs(area) / 2;
+            if (area < 9) continue;                                                           // a face seen edge-on shows no pips
+            int cn = cnt[a][sg > 0 ? 0 : 1], pc = cn == 1 ? 0xD02030 : 0x16171F;
+            int[] pl = pips[cn];
+            for (int pi = 0; pi + 1 < pl.length; pi += 2) {
+                double[] v = new double[3]; v[a] = sg; v[b] = pl[pi] * 0.5; v[c2] = pl[pi + 1] * 0.5; double[] w = apply(m, v);
+                int px0 = (int) Math.floor(cx + w[0] * sc), py0 = (int) Math.floor(cy - w[1] * sc);
+                px(px0, py0, pc);
+                if (cn == 1 && area > 18) { px(px0 + 1, py0, pc); px(px0, py0 + 1, pc); }
+            }
+        }
+        // the grey-blue outline
+        for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) if (!mask[y][x]) {
+            boolean nb = (x > 0 && mask[y][x - 1]) || (x < 15 && mask[y][x + 1]) || (y > 0 && mask[y - 1][x]) || (y < 15 && mask[y + 1][x]);
+            if (nb) px(x, y, 0x7B83A3);
+        }
+        if (f >= 0.62f && f < 0.9f) glint(11, 3, 2, 0xFFFFFF, 1f - (f - 0.62f) / 0.28f);       // a little shine as it settles
+    }
+    private static double[][] mul(double[][] a, double[][] b) { double[][] r = new double[3][3]; for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) for (int k = 0; k < 3; k++) r[i][j] += a[i][k] * b[k][j]; return r; }
+    private static double[] apply(double[][] m, double[] v) { return new double[]{m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2], m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2], m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2]}; }
 
     private static boolean fx(int i, float f) {
         float s = sn(f), t = tri(f);

@@ -1,3 +1,6 @@
+## 0.4.33
+- The dice icon is redone from your video: a white die with black pips (a red 1) hops, tumbles in the air as a real turning cube, lands on a 6 and shines, with a shadow under it.
+
 ## 0.4.32
 - Animation Changes and Sound Settings use the Settings icon.
 - Chat main page: "Your message" shows the whole message (it wraps instead of being cut off).
