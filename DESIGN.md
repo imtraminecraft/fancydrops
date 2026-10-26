@@ -364,3 +364,9 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - "Also post in public chat" sends a drop to public chat when its animation is RNG (`Item.rngPick`: the pick in the Drop Library, or RNG by rank when on Default), not by rank alone.
 - The Length slider of every animation has a (Default) button: 5 s. Every animation, slayers included, defaults to 5 s (supersedes the 0.7.6 3 s slayer default; config ver 6 moves 3 s picks to 5 s).
 - Drop icons follow the wiki: Wisp's potion = potion, Wilson's Engineering Plans = paper, Scorched Books and Subzero Inverter = flat wiki pictures (not books/heads).
+
+## Standing requirements added in 0.7.9
+- Cosmetic tile rarity numbers: 0 Common, 1 Rare, 2 Beta, 3 Legendary, 4 Special. Only Special (and Beta) tiles have a background effect; Special tiles always play it, Legendary has none.
+- Removed for good: the King Minos and Fishing Rod name icons.
+- The chat hover card of a name (`Cosmetics.tip`): header, a long divider, then per cosmetic its kind, name, rarity mark (coloured gradient symbol: a hover cannot animate), set and how to get it.
+- Pets with several drop rarities have one Drop Library entry per rarity ("Epic Slug Pet", "Legendary Slug Pet", "Legendary Rat Pet"), each with its own chance and George price. A chat rarity in front picks the entry.

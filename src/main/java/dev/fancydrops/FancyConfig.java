@@ -150,7 +150,7 @@ public class FancyConfig {
         if (c.ver < 3) { c.ver = 3; c.sounds.clear(); c.mcSounds.clear(); save(); }          // the rewrite: old sound picks refer to sounds that no longer exist
         if (c.ver < 4) { c.ver = 4; for (AnimCfg a : c.anims.values()) a.secs = 5f; save(); }          // 0.4.38: every animation is 5 seconds by default
         if (c.ver < 5) { c.ver = 5; for (Map.Entry<String, AnimCfg> e : c.anims.entrySet()) if (e.getKey().startsWith("slayer.")) e.getValue().secs = 3f; save(); }          // 0.7.5: the slayer scenes were 3 seconds (0.7.8 takes that back)
-        if (c.ver < 6) { c.ver = 6; for (AnimCfg a : c.anims.values()) if (a.secs == 3f) a.secs = 5f; save(); }          // 0.7.8: every animation is 5 seconds by default again
+        if (c.ver < 6) { c.ver = 6; for (AnimCfg a : c.anims.values()) if (a.secs == 3f) a.secs = 5f; if ("minos".equals(c.suffix) || "rod".equals(c.suffix)) c.suffix = ""; save(); }          // 0.7.8: every animation is 5 seconds by default again; the King Minos and Fishing Rod icons are gone
         c.textScale = clamp(c.textScale, 0f, 1.1f); c.itemScale = clamp(c.itemScale, 0.5f, 1.1f);
         c.titleScale = clamp(c.titleScale, 0.5f, 1.5f); c.subScale = clamp(c.subScale, 0.5f, 1.5f); c.subDelay = clamp(c.subDelay, 0f, 3f);
         c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);

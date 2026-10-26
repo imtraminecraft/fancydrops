@@ -30,12 +30,10 @@ final class CosmeticData {
         new Def("code", "Code", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFF55D8FF, "contributors"),
         new Def("patron", "Patreon", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFFFB400, "patreon"),
         new Def("betamark", "Beta", Line.BETA, Kind.SUFFIX, "Downloaded the mod before v1.0", 0xFF3FD16A, "beta"),
-        new Def("minos", "King Minos", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF2B01E),
         new Def("dice", "Lucky Dice", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF4F6FB),
         new Def("chest", "Treasure Chest", Line.RARE, Kind.SUFFIX, "Rare", 0xFF8A5A2C),
         new Def("anvil", "Anvil", Line.RARE, Kind.SUFFIX, "Rare", 0xFF9AA3B5),
         new Def("disc", "Music Disc", Line.RARE, Kind.SUFFIX, "Rare", 0xFF22242E),
-        new Def("rod", "Fishing Rod", Line.FREE, Kind.SUFFIX, "Common", 0xFF8A5A2C),
         new Def("tractor", "Tractor", Line.FREE, Kind.SUFFIX, "Common", 0xFF3AA848),
         new Def("bell", "Bell", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2B01E),
         new Def("clock", "Clock", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2F4FA),
@@ -159,7 +157,7 @@ final class CosmeticData {
         Set<String> o = new LinkedHashSet<>(); Set<String> g = grants.getOrDefault(code, Set.of());
         if (Cosmetics.isAdminCode(code)) { for (Def d : ALL) o.add(d.id()); return o; }                              // the owner has everything
         for (String x : g) {
-            if (x.startsWith("c:")) o.add(x.substring(2));
+            if (x.startsWith("c:")) { if (byId(x.substring(2)) != null) o.add(x.substring(2)); }
             else { SetDef sd = setById(x); if (sd != null) for (Def d : members(sd)) o.add(d.id()); }
         }
         return o;
@@ -168,7 +166,7 @@ final class CosmeticData {
     static Set<String> pickedFor(String code) {
         Set<String> o = new LinkedHashSet<>(); Set<String> g = grants.getOrDefault(code, Set.of());
         for (String x : g) {
-            if (x.startsWith("c:")) o.add(x.substring(2));
+            if (x.startsWith("c:")) { if (byId(x.substring(2)) != null) o.add(x.substring(2)); }          // cosmetics that were removed are dropped
             else { SetDef sd = setById(x); if (sd != null) for (Def d : members(sd)) o.add(d.id()); }
         }
         if (Cosmetics.isAdminCode(code) && !remoteRawHas(code)) return heldBy(code);
@@ -181,7 +179,7 @@ final class CosmeticData {
         try { root = com.google.gson.JsonParser.parseString(Cosmetics.remoteRaw == null ? "{}" : Cosmetics.remoteRaw).getAsJsonObject(); } catch (Throwable t) { root = new com.google.gson.JsonObject(); }
         com.google.gson.JsonObject special = root.has("special") ? root.getAsJsonObject("special") : new com.google.gson.JsonObject(); root.add("special", special);
         com.google.gson.JsonObject extra = root.has("extra") ? root.getAsJsonObject("extra") : new com.google.gson.JsonObject();
-        Set<String> left = new LinkedHashSet<>(picks);
+        Set<String> left = new LinkedHashSet<>(); for (String id : picks) if (byId(id) != null) left.add(id);
         for (var e : GRANT_KEY.entrySet()) {
             com.google.gson.JsonArray old = special.has(e.getKey()) ? special.getAsJsonArray(e.getKey()) : new com.google.gson.JsonArray(), neu = new com.google.gson.JsonArray();
             for (var x : old) if (!x.getAsString().equalsIgnoreCase(code)) neu.add(x);

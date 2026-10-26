@@ -413,7 +413,7 @@ public final class ItemIcons {
         return null;
     }
     /** Cache version: farming icons are 14, so the pictures cached from the old img pages are fetched again. */
-    private static int ver(String id) { return farmDrop(id) != null ? 14 : 13; }
+    private static int ver(String id) { return farmDrop(id) != null ? 15 : 13; }
 
     /** Use the configured display name as the Wiki page title, not the internal SkyBlock id. */
     private static String wikiPageName(String id) {
@@ -430,7 +430,7 @@ public final class ItemIcons {
         String n = wikiPageName(id);
         java.util.LinkedHashSet<String> l = new java.util.LinkedHashSet<>();
         DropData.Drop fd = farmDrop(id);
-        if (fd != null) l.add(fd.name);                                       // a farming drop has a wiki page of its own: that picture first, the picture named in img only as a fallback
+        if (fd != null) l.add(FarmData.stripRarity(fd.name));                                       // a farming drop has a wiki page of its own: that picture first, the picture named in img only as a fallback
         if ("WISP_S_ICE_FLAVORED_WATER_I_SPLASH_POTION".equals(id)) l.add("Wisp's Ice-Flavored Water Potion");
         l.add(n);
         l.add(n.replaceAll("\\s+(I{1,3}|IV|V|VI{0,3}|IX|X)$", ""));

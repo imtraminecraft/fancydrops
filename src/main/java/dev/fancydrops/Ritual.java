@@ -722,6 +722,7 @@ final class Ritual {
         float ang = base + (rnd(sd + 1) - 0.5f) * 0.9f, len = 54 + rnd(sd + 2) * 22;
         float mx = (rnd(sd + 3) - 0.5f) * 24, my = -44 + (rnd(sd + 4) - 0.5f) * 20;
         float ux = (float) Math.cos(ang), uy = (float) Math.sin(ang);
+        len = Math.min(len, 38f / Math.max(0.35f, Math.abs(uy)));                           // a cut stays inside the panel: it never pokes out of the top or bottom
         return new float[]{mx - ux * len, my - uy * len, mx + ux * len, my + uy * len};
     }
     private static void slash(float tau, int k, float cx, float gy, float kk, int rgb, float a, float keep) {

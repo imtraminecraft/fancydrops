@@ -30,12 +30,10 @@ final class Cosmetics {
         new Suffix("code", "Code", "Name Icon", fr(0xE110)),
         new Suffix("patron", "Patreon", "Name Icon", fr(0xE120)),
         new Suffix("betamark", "Beta", "Name Icon", fr(0xE130)),
-        new Suffix("minos", "King Minos", "Name Icon", fr(0xE140)),
         new Suffix("dice", "Lucky Dice", "Name Icon", fr(0xE150)),
         new Suffix("chest", "Treasure Chest", "Name Icon", fr(0xE160)),
         new Suffix("anvil", "Anvil", "Name Icon", fr(0xE170)),
         new Suffix("disc", "Music Disc", "Name Icon", fr(0xE180)),
-        new Suffix("rod", "Fishing Rod", "Name Icon", fr(0xE190)),
         new Suffix("tractor", "Tractor", "Name Icon", fr(0xE1A0)),
         new Suffix("bell", "Bell", "Name Icon", fr(0xE1B0)),
         new Suffix("clock", "Clock", "Name Icon", fr(0xE1C0))};
@@ -147,7 +145,7 @@ final class Cosmetics {
             if (u.equals(me)) continue;
             Set<String> g = CosmeticData.grantsOf(u);                    // everybody sees what an owner has been given
             if (g.isEmpty()) continue;
-            for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 3 && g.contains(sd.id())) {       // what they were given: the whole set (minus what you chose not to see)
+            for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 4 && g.contains(sd.id())) {       // what they were given: the whole set (minus what you chose not to see)
                 Look ol = new Look(c0.othersSuffix ? byId(sd.suffix()) : null, c0.othersName ? sd.fx() : null, c0.othersAura ? sd.aura() : null);
                 if (ol.suffix() != null || ol.fx() != null || ol.aura() != null) m.put(u, ol);
                 break;
@@ -271,21 +269,42 @@ final class Cosmetics {
     private static Component tip(Look l, String player, String marker, HoverEvent orig) {
         MutableComponent t = Component.empty().withStyle(Style.EMPTY.withInsertion(marker));            // the marker tells the chat which letters carry an effect
         t.append(Chat.prefix());                                                                          // the same [FancyDrops] as in chat
-        t.append(Component.literal("\n" + player + "'s cosmetics").withStyle(Style.EMPTY.withColor(0xD8D8E8)));
-        t.append(Component.literal("\n──────────────").withStyle(Style.EMPTY.withColor(0x4A4B58)));
-        if (l.suffix() != null) tipLine(t, CosmeticData.byId(l.suffix().id()));
-        if (l.fx() != null) tipLine(t, CosmeticData.byId(l.fx()));
-        if (l.aura() != null) tipLine(t, CosmeticData.byId(l.aura()));
+        t.append(Component.literal("\n" + player).withStyle(Style.EMPTY.withColor(0xFFFFFF).withBold(true)));
+        t.append(Component.literal("'s cosmetics").withStyle(Style.EMPTY.withColor(0xB8BED4)));
+        t.append(Component.literal("\n" + "━".repeat(30)).withStyle(Style.EMPTY.withColor(0x3E4258)));
+        boolean any = false;
+        if (l.suffix() != null) { tipLine(t, CosmeticData.byId(l.suffix().id())); any = true; }
+        if (l.fx() != null) { tipLine(t, CosmeticData.byId(l.fx())); any = true; }
+        if (l.aura() != null) { tipLine(t, CosmeticData.byId(l.aura())); any = true; }
+        if (!any) t.append(Component.literal("\nNothing worn right now").withStyle(Style.EMPTY.withColor(0x6C7388).withItalic(true)));
         if (orig instanceof HoverEvent.ShowText st) { t.append(Component.literal("\n")); t.append(st.value()); }       // whatever the server showed here is kept underneath
         return t;
     }
+    /** The rarity's mark and colour: a hover can't animate, so the animated pin of the menu becomes a coloured gradient symbol. */
+    private static final int[] RAR_RGB = {0x9AA3B5, 0x5B8CFF, 0x3FD16A, 0xFFB400, 0xC77DFF};
+    private static final String[] RAR_MARK = {"●", "◆", "✿", "★", "✦"};
+    private static final int[][] RAR_GRAD = {null, null, null, {0xFFD55A, 0xFF9A1E}, {0xFF7AD9, 0xB48CFF, 0x55D8FF}};
+    private static void rarityTag(MutableComponent t, int r) {
+        String word = CosmeticData.rarityName(r).toUpperCase(java.util.Locale.ROOT), full = RAR_MARK[r] + " " + word;
+        int[] g = RAR_GRAD[r];
+        for (int i = 0; i < full.length(); i++) {
+            int rgb = RAR_RGB[r];
+            if (g != null) { float f = i / (float) Math.max(1, full.length() - 1) * (g.length - 1); int a = (int) Math.floor(f), b2 = Math.min(g.length - 1, a + 1); rgb = Canvas.mix(0xFF000000 | g[a], 0xFF000000 | g[b2], f - a) & 0xFFFFFF; }
+            t.append(Component.literal(String.valueOf(full.charAt(i))).withStyle(Style.EMPTY.withColor(rgb).withBold(r >= 3)));
+        }
+    }
     private static void tipLine(MutableComponent t, CosmeticData.Def d) {
         if (d == null) return;
-        String how = CosmeticData.force.containsKey(d.id()) ? "Test menu" : d.how();
-        String ln = CosmeticData.rarityName(CosmeticData.rarityOf(d));
-        t.append(Component.literal("\n" + CosmeticData.kindLabel(d.kind()) + "  ").withStyle(Style.EMPTY.withColor(0x8A93B0)));
+        int r = CosmeticData.rarityOf(d);
+        CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
+        String how = CosmeticData.force.containsKey(d.id()) ? "Test menu" : sd != null ? sd.how() : d.how();
+        t.append(Component.literal("\n\n" + CosmeticData.kindLabel(d.kind())).withStyle(Style.EMPTY.withColor(0x8A93B0)));
+        t.append(Component.literal("   "));
         t.append(Component.literal(d.name()).withStyle(Style.EMPTY.withColor(d.color() & 0xFFFFFF).withBold(true)));
-        t.append(Component.literal("  " + ln).withStyle(Style.EMPTY.withColor(0x6C7388).withItalic(true)));
+        t.append(Component.literal("\n  "));
+        rarityTag(t, r);
+        if (sd != null) t.append(Component.literal("   ·   " + sd.name() + " set").withStyle(Style.EMPTY.withColor(0x6C7388)));
+        t.append(Component.literal("\n  " + how).withStyle(Style.EMPTY.withColor(0x7F869C).withItalic(true)));
     }
     private static Component tippedGlyph(Look l, String player) {
         return chatGlyph(l.suffix()).copy().withStyle(Style.EMPTY.withHoverEvent(new HoverEvent.ShowText(tip(l, player, "fd:sfx", null))));

@@ -35,15 +35,19 @@ public final class FarmData {
     public static String rarityOf(String name) { var m = RARITY.matcher(name == null ? "" : name.trim()); return m.find() ? m.group(1).toUpperCase(Locale.ROOT) : ""; }
 
     public static DropData.Source byId(String id) { for (DropData.Source s : ALL) if (s.id.equals(id)) return s; return null; }
-    /** The drop with this name (a pet's rarity in front is ignored), or null. */
+    /** The drop with this name, or null. A pet's rarity in front picks that rarity's entry ("Legendary Slug Pet"); without one the first entry of that pet is used. */
     public static DropData.Drop find(String name) {
-        String n = stripRarity(name);
-        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (DropData.loose(d.name, n)) return d;
-        return null;
+        String n = stripRarity(name), r = rarityOf(name); DropData.Drop any = null;
+        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (DropData.loose(stripRarity(d.name), n)) {
+            if (!r.isEmpty() && d.rarity.equalsIgnoreCase(r)) return d;
+            if (any == null) any = d;
+        }
+        return any;
     }
     public static DropData.Source sourceOf(String name) {
-        String n = stripRarity(name);
-        for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (DropData.loose(d.name, n)) return s;
+        DropData.Drop f = find(name);
+        if (f == null) return null;
+        for (DropData.Source s : ALL) if (s.drops.contains(f)) return s;
         return null;
     }
     /** True for a "RARE CROP!" line, or a "RARE DROP!" line for an item only the Farming library lists. */

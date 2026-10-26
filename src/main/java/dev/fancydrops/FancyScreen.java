@@ -756,12 +756,12 @@ public class FancyScreen extends Screen {
             if (hv && r.pIds != null) hoverCos = r.pIds[i];
             int rar = r.pRar == null ? -1 : r.pRar[i];                                                  // rarity: 0 common (grey), 1 beta (green), 2 special (the colours of its set)
             int sch = r.pBg != null ? r.pBg[i] : rar == 2 ? 0xFF3FD16A : rar == 1 ? 0xFF3B5BDB : rar == 0 ? 0xFF9AA3B5 : col;     // the colour scheme of the tile: every tile of a set shares it
-            int bgBase = rar < 0 ? Ui.PANEL2 : Canvas.mix(Ui.PANEL2, sch, rar == 3 ? 0.10f : rar == 2 ? 0.13f : rar == 1 ? 0.14f : 0.07f);
+            int bgBase = rar < 0 ? Ui.PANEL2 : Canvas.mix(Ui.PANEL2, sch, rar == 4 ? 0.12f : rar == 2 ? 0.13f : rar == 1 ? 0.14f : rar == 3 ? 0.08f : 0.07f);
             pill(g, b[0], b[1], b[2], b[3], Canvas.mix(bgBase, Canvas.mix(Ui.ROW_HOVER, sch, 0.22f), k));
-            if (rar >= 1) {                                                                              // special and beta tiles have a background of their own (common has none)
+            if (rar == 4 || rar == 2) {                                                                  // special and beta tiles have a background of their own (legendary, rare and common have none)
                 g.enableScissor(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1);
-                if (rar == 3) { int seg = 8, sw2 = b[2] / seg + 1; for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF)); }
-                if (hv || on) tileFx(g, b, i, sch, rar == 3 && r.pSetId != null ? r.pSetId[i] : "beta", now, hv);          // only the tile you point at (or wear) animates: the rest stay calm and cheap
+                if (rar == 4) { int seg = 8, sw2 = b[2] / seg + 1; for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF)); }
+                if (hv || on || rar == 4) tileFx(g, b, i, sch, rar == 4 && r.pSetId != null ? r.pSetId[i] : "beta", now, hv);          // Special tiles always play their effect; the others only when you point at or wear them
                 g.disableScissor();
             }
             if (on) {
@@ -769,7 +769,7 @@ public class FancyScreen extends Screen {
                 rout(g, b[0], b[1], b[2], b[3], Gfx.argb(200 + pulse, sch & 0xFFFFFF)); g.fill(b[0] + 3, b[1] + b[3] - 3, b[0] + b[2] - 3, b[1] + b[3] - 2, sch);
                 if (r.pOn != null) { int cx2 = b[0] + b[2] - 12, cy2 = b[1] + 6; g.fill(cx2 + 4, cy2 + 5, cx2 + 6, cy2 + 7, sch); g.fill(cx2 + 2, cy2 + 3, cx2 + 4, cy2 + 5, sch); g.fill(cx2 + 6, cy2 + 1, cx2 + 8, cy2 + 5, sch); g.fill(cx2 + 7, cy2 - 1, cx2 + 9, cy2 + 1, sch); }
             }
-            else rout(g, b[0], b[1], b[2], b[3], Gfx.argb(hv ? 210 : rar == 3 ? 130 : rar >= 0 ? 90 : 50, (rar >= 0 ? sch : col) & 0xFFFFFF));
+            else rout(g, b[0], b[1], b[2], b[3], Gfx.argb(hv ? 210 : rar == 4 ? 130 : rar >= 0 ? 90 : 50, (rar >= 0 ? sch : col) & 0xFFFFFF));
             if (r.pVert) {                                                                              // a tall tile: the icon on top, the name under it, shrunk to fit (never cut off)
                 boolean ic0 = r.pIcons[i] != null; int top = b[1] + 4;
                 if (ic0) Icons.draw(g, r.pIcons[i], b[0] + (b[2] - 16) / 2, top, hv || on ? now : 2400L);
@@ -816,6 +816,7 @@ public class FancyScreen extends Screen {
         g.fill(x + 2, y, x + 5, y + 1, lt); g.fill(x + 1, y + 1, x + 6, y + 3, c); g.fill(x, y + 3, x + 7, y + 4, c);
         g.fill(x + 1, y + 4, x + 6, y + 5, dk); g.fill(x + 2, y + 5, x + 5, y + 6, dk); g.fill(x + 3, y + 6, x + 4, y + 7, dk);
         g.fill(x + 2, y + 1, x + 3, y + 2, 0xFFFFFFFF);
+        if (rar == 3) { float gl = Math.max(0f, (float) Math.sin(System.currentTimeMillis() / 400.0)); g.fill(x + 2, y + 1, x + 5, y + 3, Gfx.argb(Math.round(110 * gl), 0xFFFFFF)); }          // legendary: the gem glints
         if (rar == 4) {                                                                                  // special: the gem shimmers and two stars twinkle in turn
             long nw = System.currentTimeMillis(); float sh = 0.5f + 0.5f * (float) Math.sin(nw / 260.0), t1 = 0.5f + 0.5f * (float) Math.sin(nw / 180.0), t2 = 0.5f + 0.5f * (float) Math.sin(nw / 180.0 + 2.4);
             g.fill(x + 2, y + 1, x + 5, y + 3, Gfx.argb(Math.round(90 * sh), 0xFFFFFF));
@@ -831,18 +832,18 @@ public class FancyScreen extends Screen {
         int rar = 0; try { rar = Integer.parseInt(ln[2]); } catch (NumberFormatException ignored) { }
         boolean yours = "1".equals(ln[3]); int rc = RAR_COL[Math.max(0, Math.min(4, rar))];
         List<String> how = new ArrayList<>(); String cur = "";
-        for (String wd : ln[5].split(" ")) { if (!cur.isEmpty() && Gfx.w(font, cur + " " + wd) > 150) { how.add(cur); cur = wd; } else cur = cur.isEmpty() ? wd : cur + " " + wd; }
+        for (String wd : ln[5].split(" ")) { if (!cur.isEmpty() && Gfx.w(font, cur + " " + wd) > 190) { how.add(cur); cur = wd; } else cur = cur.isEmpty() ? wd : cur + " " + wd; }
         if (!cur.isEmpty()) how.add(cur);
-        int w = Math.max(Math.max(Gfx.w(font, ln[0]) + Gfx.w(font, ln[1]) + 10, 80 + 30), 150); w += 16;
-        int h = 8 + 12 + 12 + (ln[4].isEmpty() ? 0 : 11) + 3 + how.size() * 10 + 2;
+        int w = Math.max(Math.max(Gfx.w(font, ln[0]) + Gfx.w(font, ln[1]) + 10, 80 + 30), 190); w += 20;
+        int h = 12 + 16 + 14 + (ln[4].isEmpty() ? 0 : 13) + 8 + how.size() * 12 + 6;
         int x = Math.min(mx + 10, width - w - 2), y = Math.min(my + 12, height - h - 2);
         pill(g, x, y, w, h, 0xF4101420); rout(g, x, y, w, h, Gfx.argb(200, rc & 0xFFFFFF)); g.fill(x, y + 2, x + 2, y + h - 2, tipCol);
-        Gfx.text(g, font, ln[0], x + 8, y + 5, Canvas.mix(tipCol, 0xFFFFFFFF, 0.5f)); Gfx.text(g, font, ln[1], x + 8 + Gfx.w(font, ln[0]) + 6, y + 5, Ui.DIM);
-        int yy = y + 17; rarityPin(g, x + 8, yy + 1, rar); Gfx.text(g, font, CosmeticData.rarityName(rar), x + 20, yy, Canvas.mix(rc, 0xFFFFFFFF, 0.25f));
-        String st = yours ? "Unlocked" : "Locked"; Gfx.text(g, font, st, x + w - 8 - Gfx.w(font, st), yy, yours ? 0xFF62E6A8 : 0xFFFF7B7B);
-        yy += 12; if (!ln[4].isEmpty()) { Gfx.text(g, font, ln[4], x + 8, yy, Ui.SUB); yy += 11; }
-        g.fill(x + 8, yy, x + w - 8, yy + 1, 0x22FFFFFF); yy += 4;
-        for (String hl : how) { Gfx.text(g, font, hl, x + 8, yy, Ui.DIM); yy += 10; }
+        Gfx.text(g, font, ln[0], x + 10, y + 7, Canvas.mix(tipCol, 0xFFFFFFFF, 0.5f)); Gfx.text(g, font, ln[1], x + 10 + Gfx.w(font, ln[0]) + 6, y + 7, Ui.DIM);
+        int yy = y + 23; rarityPin(g, x + 10, yy + 1, rar); Gfx.text(g, font, CosmeticData.rarityName(rar), x + 22, yy, Canvas.mix(rc, 0xFFFFFFFF, 0.25f));
+        String st = yours ? "Unlocked" : "Locked"; Gfx.text(g, font, st, x + w - 10 - Gfx.w(font, st), yy, yours ? 0xFF62E6A8 : 0xFFFF7B7B);
+        yy += 15; if (!ln[4].isEmpty()) { Gfx.text(g, font, ln[4], x + 10, yy, Ui.SUB); yy += 13; }
+        g.fill(x + 10, yy, x + w - 10, yy + 1, 0x22FFFFFF); yy += 6;
+        for (String hl : how) { Gfx.text(g, font, hl, x + 10, yy, Ui.DIM); yy += 12; }
     }
 
     /** A category banner: a gradient with a light sweeping over it, the name in shimmering letters, a line under it and a counter on the right. */

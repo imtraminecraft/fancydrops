@@ -1,3 +1,11 @@
+## 0.7.9
+- Cosmetics: the Special tiles have their animated backgrounds again (they had slipped onto Legendary), Legendary has none. King Minos and Fishing Rod are removed.
+- The chat hover card of a name is longer and clearer: rarity mark in the rarity's colour, the set it belongs to and how it is got. The tile hover card in the menu is roomier too.
+- Others' Special cosmetics show up for you again.
+- Admin console: "43 of 23 picked" is fixed (removed cosmetics are ignored).
+- Slayer scene slashes stay inside the panel.
+- Pest drops: Slug Pet is listed as Epic (1 in 100) and Legendary (1 in 500), Rat Pet as Legendary (1 in 250); each shows what George pays for its rarity and spins as a 3D head.
+
 ## 0.7.8
 - The slashes in the slayer preview are smooth, round strokes now (they were thin, jagged lines at small size).
 - The animation Length slider has a (Default) button (5 s).

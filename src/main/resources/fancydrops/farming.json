@@ -1,5 +1,5 @@
 {
- "v": 11,
+ "v": 12,
  "sources": [
   {
    "id": "crops",
@@ -350,18 +350,18 @@
      "untradeable": false
     },
     {
-     "name": "Rat Pet",
+     "name": "Legendary Rat Pet",
      "id": "RAT;4",
      "icon": "bone",
+     "skull": true,
      "odds": "",
      "chance": "1 in 250",
      "rank": 2,
      "untradeable": false,
-     "img": "Rat",
+     "img": "Rat Pet",
      "rarity": "LEGENDARY",
      "george": {
-      "LEGENDARY": 5000,
-      "MYTHIC": 10000
+      "LEGENDARY": 5000
      }
     },
     {
@@ -402,17 +402,32 @@
      "untradeable": false
     },
     {
-     "name": "Slug Pet",
-     "id": "SLUG;4",
+     "name": "Epic Slug Pet",
+     "id": "SLUG;3",
      "icon": "slime_ball",
+     "skull": true,
      "odds": "",
      "chance": "1 in 100",
      "rank": 2,
      "untradeable": false,
-     "img": "Slug",
+     "img": "Slug Pet",
      "rarity": "EPIC",
      "george": {
-      "EPIC": 500000,
+      "EPIC": 500000
+     }
+    },
+    {
+     "name": "Legendary Slug Pet",
+     "id": "SLUG;4",
+     "icon": "slime_ball",
+     "skull": true,
+     "odds": "",
+     "chance": "1 in 500",
+     "rank": 3,
+     "untradeable": false,
+     "img": "Slug Pet",
+     "rarity": "LEGENDARY",
+     "george": {
       "LEGENDARY": 5000000
      }
     },
