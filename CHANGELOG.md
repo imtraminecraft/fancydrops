@@ -1,3 +1,8 @@
+## 0.4.34
+- The "Coming Soon" construction site is redone: the house trembles, a loose brick falls, then it collapses in a cloud of dust with a small shake. The foreman panics and shrugs, then the crane lifts the pile in three loads and rebuilds the house row by row until the window lights up. The loop is 14 s.
+- More lamp posts along the site, a work light on the crane jib, unfinished steel-frame buildings with tiny workers (hammering, walking planks, welding), far cranes with blinking lights, a water tank, fence, fog and darker edges for depth.
+- The title and the "Coming Soon" tag are unchanged.
+
 ## 0.4.33
 - The dice icon is redone from your video: a white die with black pips (a red 1) hops, tumbles in the air as a real turning cube, lands on a 6 and shines, with a shadow under it.
 

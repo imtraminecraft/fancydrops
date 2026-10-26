@@ -1410,6 +1410,8 @@ public class FancyScreen extends Screen {
         roadSign(g, r.x + 12, r.y + 14, sec); roadSign(g, r.x + r.w - 32, r.y + 14, sec + 1.3f);                  // a swinging road-work sign at each top corner (no hats)
         g.fill(r.x + 6, gy, r.x + r.w - 6, gy + 1, 0x33FFFFFF);                                    // the ground line everything stands on
         g.fill(r.x + 6, gy + 1, r.x + r.w - 6, gy + 3, 0xFF211C10);
+        farLayers(g, r, sec, gy); frames(g, r, sec, gy);                                                // far cranes and unfinished buildings with tiny workers behind the site
+        lamp(g, r.x + Math.round(r.w * 0.27f), gy, sec + 1.1f); lamp(g, r.x + Math.round(r.w * 0.50f), gy, sec + 2.3f); lamp(g, r.x + Math.round(r.w * 0.76f), gy, sec + 3.4f);   // more lamp posts along the site
         int laneL = 12, laneR = mid - 50;
         if (laneR - laneL >= 84) build(g, r, sec, gy, laneL, laneR);                               // left: a little house goes up brick by brick... then it all comes down
         int rx = r.w - 44;                                                                          // right edge: barrel, crate on a pallet, cone
@@ -1420,6 +1422,7 @@ public class FancyScreen extends Screen {
         int bx = r.x + mid + 62;                                                                    // right of centre: three builders on a bench, chatting over a cuppa
         if (r.x + rx - 46 - bx >= 52) bench(g, bx, gy, sec);
         lamp(g, r.x + r.w - 22, gy, sec);                                                           // a lamp post at the right edge, its light cone and moths
+        nearLayers(g, r, sec, gy);
         for (int f = 0; f < 6; f++) {                                                               // fireflies
             float fx = r.x + r.w * (0.52f + 0.4f * ((f * 53) % 10) / 10f) + (float) Math.sin(sec * 0.7f + f * 2.1f) * 9f, fy = gy - 34 - ((f * 29) % 7) * 5 + (float) Math.sin(sec * 1.1f + f) * 5f;
             g.fill(Math.round(fx), Math.round(fy), Math.round(fx) + 1, Math.round(fy) + 1, Gfx.argb(Math.round(200 * (0.5f + 0.5f * (float) Math.sin(sec * 2.4f + f * 1.7f))), 0xFFE066));
@@ -1486,91 +1489,141 @@ public class FancyScreen extends Screen {
         }
     }
 
-    /** The construction loop: a worker and a crane raise a little brick house, slowly. The last load swings loose, the house cracks and falls, the worker shrugs, and it starts again. */
+    /** The construction loop (14 s): the little house stands, trembles, collapses in a cloud of dust, the foreman shrugs, and the crane lifts the pile in three loads and sets the house up again row by row. */
     private static void build(GuiGraphicsExtractor g, Row r, float sec, int gy, int laneL, int laneR) {
-        final float CYC = 23f, PER = 0.45f; final int COLS = 4, WALL = 24, N = WALL + 3;
-        float ph = sec % CYC, buildEnd = N * PER, hit = buildEnd + 2.0f, fallT = buildEnd + 2.6f;
-        final int bw = 11, bh = 5, roofY = gy - bh * 6;
+        float ph0 = sec % 14f, shk = ph0 > 3.6f && ph0 < 4.1f ? 1f - (ph0 - 3.6f) / 0.5f : 0f;
+        int sx = Math.round((float) Math.sin(sec * 90f) * 1.5f * shk), sy = Math.round((float) Math.cos(sec * 70f) * shk);
+        Gfx.push(g); Gfx.translate(g, sx, sy); buildInner(g, r, sec, gy, laneL, laneR); Gfx.pop(g);
+    }
+    private static void buildInner(GuiGraphicsExtractor g, Row r, float sec, int gy, int laneL, int laneR) {
+        final float LOOP = 14f, TREM = 2.4f, TCF = 3.6f, LD0 = 5.4f, LDP = 1.5f; final int COLS = 4, WALL = 24, N = WALL + 3, bw = 11, bh = 5;
+        float ph = sec % LOOP;
         int wx = r.x + laneL + 36 + Math.max(0, (laneR - laneL - 36 - COLS * bw) / 2), mastX = r.x + laneL + 4, top = gy - 64, hookX0 = wx + COLS * bw / 2;
         // the crane: lattice mast, jib, counterweight and a blinking beacon
         g.fill(mastX, top, mastX + 4, gy, 0xFFE0A020); g.fill(mastX - 3, gy - 3, mastX + 7, gy, 0xFF6B5410);
         for (int yy = top + 3; yy < gy - 4; yy += 5) { g.fill(mastX, yy, mastX + 4, yy + 1, 0xFF8A6410); g.fill(mastX + 1, yy + 1, mastX + 3, yy + 3, 0xFFB07818); }
-        g.fill(mastX - 8, top - 1, hookX0 + 10, top + 2, 0xFFE0A020); g.fill(mastX - 8, top + 2, hookX0 + 10, top + 3, 0xFF8A6410); g.fill(mastX - 8, top + 3, mastX - 2, top + 8, 0xFF5A5A66);
+        g.fill(mastX - 8, top - 1, hookX0 + 14, top + 2, 0xFFE0A020); g.fill(mastX - 8, top + 2, hookX0 + 14, top + 3, 0xFF8A6410); g.fill(mastX - 8, top + 3, mastX - 2, top + 8, 0xFF5A5A66);
         g.fill(mastX - 1, top - 5, mastX + 5, top - 1, 0xFFD6A020); g.fill(mastX + 1, top - 8, mastX + 3, top - 5, 0xFF5A5A66);
         boolean blink = (int) (sec * 2.2f) % 2 == 0; g.fill(mastX + 1, top - 10, mastX + 3, top - 8, blink ? 0xFFFF4A3A : 0xFF5A1812);
         if (blink) g.fill(mastX - 1, top - 12, mastX + 5, top - 6, 0x22FF4A3A);
-        int farX = wx - 14, homeX = r.x + laneL + 22, wkX = ph < buildEnd + 2.8f ? farX : -9999;            // where the worker stands while the house goes up
-        // the house, brick by brick
-        boolean tremble = ph >= buildEnd + 0.9f && ph < fallT;
+        { int lx = mastX + 26; float f = 0.9f + 0.1f * (float) Math.sin(sec * 17f);                      // a work light hangs from the jib
+          g.fill(lx, top + 3, lx + 1, top + 10, 0xFF7A7A82); g.fill(lx - 2, top + 10, lx + 3, top + 12, 0xFF5A5A62); g.fill(lx - 1, top + 12, lx + 2, top + 13, 0xFFFFE28A);
+          for (int y = 0; y < 40; y++) { int half = 1 + y / 3; g.fill(lx - half, top + 13 + y, lx + 1 + half, top + 14 + y, Gfx.argb(Math.round(20 * f * (1f - y / 40f)), 0xFFE28A)); } }
+        int farX = wx - 14, homeX = r.x + laneL + 22;
+        boolean tremble = ph >= TREM && ph < TCF;
+        // the bricks: standing, shaking, falling, carried by the crane, or set back in place
         for (int i = 0; i < N; i++) {
-            float placed = i * PER, local = ph - placed;
-            if (local < 0 && ph < fallT) {
-                if (local > -PER && ph < buildEnd) {                                                   // the next brick rides from the pile up to his hand, so the throw starts exactly where it ends
-                    int hw = i >= WALL ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw; float u = 1f + local / PER, ue = u * u * (3f - 2f * u);
-                    int hx0 = farX - 16 + Math.round((wkX + 8 - hw / 2 - (farX - 16)) * ue), hy0 = gy - 8 + Math.round((gy - 17 - (gy - 8)) * ue);
-                    brick(g, hx0, hy0, hw, bh, 0, i >= WALL);
-                }
-                continue;
-            }   // the next brick waits in his hand
-
             boolean roof = i >= WALL; int row = roof ? 6 + (i - WALL) : i / COLS, col = i % COLS;
-            int w = roof ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw, h = roof ? bh : bh;
+            int w = roof ? new int[]{COLS * bw + 6, COLS * bw - 6, 18}[i - WALL] : bw, h = bh;
             int bx = roof ? wx + (COLS * bw - w) / 2 : wx + col * bw + (row % 2 == 1 ? 3 : 0) - (row % 2 == 1 && col == COLS - 1 ? 3 : 0), by = gy - bh * (row + 1);
             float hh = ((i * 2654435761L) & 0xFFFF) / 65536f;
-            if (ph >= fallT) {                                                                         // the collapse: every piece falls its own way and bounces
-                float tc = Math.max(0f, ph - fallT - hh * 0.25f), fall = 0.5f * 150f * tc * tc, vx = (hh - 0.45f) * 46f;
-                int rest = gy - bh - ((i % 3 == 0 && hh > 0.5f) ? bh : 0); float tHit = (float) Math.sqrt(2.0 * Math.max(1, rest - by) / 150.0);
-                float bnc = tc > tHit ? 5f * hh * Math.max(0f, (float) Math.sin((tc - tHit) * 11f)) * (float) Math.exp(-(tc - tHit) * 5f) : 0f;
-                int yy = Math.round(Math.min(rest, by + fall) - bnc), xx = Math.max(r.x + laneL + 10, Math.min(r.x + laneR + 10, Math.round(bx + vx * Math.min(tc, 0.7f))));
-                if (ph < buildEnd + 6.2f) brick(g, xx, yy, w, h, 0, roof);
-                else if (ph < buildEnd + 6.9f) brick(g, xx, yy, w, h, Math.round(255 * (ph - (buildEnd + 6.2f)) / 0.7f), roof);
-                continue;
+            int ld = i < 8 ? 0 : i < 16 ? 1 : 2; float pickT = LD0 + LDP * ld + LDP * 0.4f, placeT = LD0 + LDP * ld + LDP * 0.98f + (row % 3) * 0.045f;
+            if (ph < TCF) { int off = tremble ? (int) Math.round(Math.sin(ph * 60f + i) * Math.min(1.6, (ph - TREM) * 1.6)) : 0; brick(g, bx + off, by, w, h, 0, roof); continue; }
+            if (ph >= placeT) { float u = ph - placeT; brick(g, bx, by - (u < 0.17f ? Math.round(Math.max(0f, 2f - u * 12f)) : 0), w, h, 0, roof); continue; }
+            if (ph >= pickT) continue;                                                                   // it is in the crane's load
+            float tc = ph - TCF - hh * 0.12f; if (tc < 0) { brick(g, bx, by, w, h, 0, roof); continue; }
+            float fall = 0.5f * 190f * tc * tc, vx = (hh - 0.45f) * 52f;
+            int rest = gy - bh - ((i % 3 == 0 && hh > 0.5f) ? bh : 0); float tHit = (float) Math.sqrt(2.0 * Math.max(1, rest - by) / 190.0);
+            float bnc = tc > tHit ? 5f * hh * Math.max(0f, (float) Math.sin((tc - tHit) * 11f)) * (float) Math.exp(-(tc - tHit) * 5f) : 0f;
+            int yy = Math.round(Math.min(rest, by + fall) - bnc), xx = Math.max(r.x + laneL + 10, Math.min(r.x + laneR + 10, Math.round(bx + vx * Math.min(tc, 0.8f))));
+            brick(g, xx, yy, w, h, 0, roof);
+        }
+        if (ph >= TREM + 0.2f && ph < TCF) {                                                              // cracks, trickling dust and one loose brick
+            int cx2 = wx + COLS * bw / 2, cy2 = gy - bh * 3, cr = 0xFF1A0E08;
+            g.fill(cx2, cy2 - 12, cx2 + 1, cy2 - 6, cr); g.fill(cx2 + 1, cy2 - 6, cx2 + 2, cy2 - 1, cr); g.fill(cx2, cy2 - 1, cx2 + 1, cy2 + 5, cr);
+            for (int d = 0; d < 6; d++) { float u = (sec * 2f + d * 0.37f) % 1f; g.fill(wx + 4 + d * 7, gy - bh * 8 + Math.round(u * 14), wx + 6 + d * 7, gy - bh * 8 + Math.round(u * 14) + 1, Gfx.argb(Math.round(150 * (1f - u)), 0xB8A890)); }
+            if (ph > TREM + 0.9f) { float u = ph - TREM - 0.9f; brick(g, wx + COLS * bw + 3, Math.min(gy - bh, gy - bh * 7 + Math.round(u * u * 200f)), bw, bh, 0, false); }
+        }
+        // the door and window
+        boolean standing = ph < TCF, body = standing || ph >= LD0 + LDP * 1.98f + 0.1f, low = standing || ph >= LD0 + LDP * 0.98f + 0.2f, lit = standing || ph >= LD0 + LDP * 2.98f + 0.4f;
+        int d0 = tremble ? (int) Math.round(Math.sin(ph * 60f) * 1.2) : 0;
+        if (low) { g.fill(wx + 4 + d0, gy - 11, wx + 12 + d0, gy, 0xFF4A2C14); g.fill(wx + 5 + d0, gy - 10, wx + 11 + d0, gy - 1, 0xFF6A4020); g.fill(wx + 10 + d0, gy - 6, wx + 11 + d0, gy - 5, 0xFFFFD84A); }
+        if (body) { g.fill(wx + 27 + d0, gy - 22, wx + 37 + d0, gy - 14, 0xFF3A2410); g.fill(wx + 28 + d0, gy - 21, wx + 36 + d0, gy - 15, lit ? 0xFFFFE08A : 0xFF16120C); g.fill(wx + 31 + d0, gy - 21, wx + 32 + d0, gy - 15, 0xFF3A2410);
+            if (lit) g.fill(wx + 22 + d0, gy - 27, wx + 43 + d0, gy - 9, 0x16FFE08A); }
+        // the hook, the rope and the load
+        float hy = top + 10, hsw = 0f; boolean carry = false; int ldK = Math.max(0, Math.min(2, (int) ((ph - LD0) / LDP)));
+        float[] stop = {gy - bh * 3 - 8, gy - bh * 5 - 8, gy - bh * 9 - 8};
+        if (ph >= LD0 && ph < LD0 + LDP * 3) {
+            float u = (ph - (LD0 + LDP * ldK)) / LDP, y0 = ldK == 0 ? top + 10 : stop[ldK - 1] - 6, pile = gy - 12, lift = top + 24;
+            if (u < 0.3f) hy = y0 + (pile - y0) * smooth(u / 0.3f);
+            else if (u < 0.4f) { hy = pile; carry = true; }
+            else if (u < 0.65f) { float k = smooth((u - 0.4f) / 0.25f); hy = pile + (lift - pile) * k; carry = true; hsw = (float) Math.sin((u - 0.4f) * 18f) * 4f * (1f - k); }
+            else { float k = smooth((u - 0.65f) / 0.35f); hy = lift + (stop[ldK] - 6 - lift) * k; carry = true; hsw = (float) Math.sin((u - 0.4f) * 18f) * 1.5f * (1f - k); }
+        } else if (ph >= LD0 + LDP * 3 && ph < LD0 + LDP * 3 + 0.7f) hy = stop[2] - 6 + (top + 10 - (stop[2] - 6)) * smooth((ph - LD0 - LDP * 3) / 0.7f);
+        else if (ph >= LD0 + LDP * 3 + 0.7f || ph < LD0) hy = top + 10 + (float) Math.sin(sec * 1.4f) * 0.8f;
+        int hx = hookX0 + Math.round(hsw), hyi = Math.round(hy);
+        g.fill(hookX0, top + 3, hx + 1, top + 4, 0xFFB0B0B8); g.fill(hx, top + 3, hx + 1, hyi, 0xFFB0B0B8); g.fill(hx - 2, hyi, hx + 3, hyi + 2, 0xFF8A8A94);
+        if (carry) { g.fill(hx - 8, hyi + 3, hx + 8, hyi + 9, 0xFFA03C26); for (int q = 0; q < 2; q++) g.fill(hx - 8, hyi + 5 + q * 2, hx + 8, hyi + 6 + q * 2, 0xFF7A2F1C); g.fill(hx - 8, hyi + 3, hx + 8, hyi + 4, 0xFFE08A62); g.fill(hx - 9, hyi + 5, hx + 9, hyi + 6, 0xFF8A6A0C); }
+        // the foreman
+        float tt = ph; int wk = farX, pose = 0;
+        if (tt < TREM) pose = 0;
+        else if (tt < TCF) pose = 2;
+        else if (tt < TCF + 0.6f) { wk = Math.round(farX + (homeX - farX) * smooth((tt - TCF) / 0.6f)); pose = 4; }
+        else if (tt < TCF + 1.6f) { wk = homeX; pose = 2; }
+        else if (tt < LD0 - 0.4f) { wk = homeX; pose = 3; }
+        else if (tt < LD0 + 0.8f) { wk = Math.round(homeX + (farX - homeX) * smooth((tt - LD0 + 0.4f) / 1.2f)); pose = 4; }
+        else if (tt > LD0 + LDP * 3 + 0.3f && tt < LD0 + LDP * 3 + 2.6f) { pose = 2; }
+        if (pose == 0 && tt > TCF) { wk = farX; }
+        worker(g, wk, gy, pose, sec, 0f);
+        if (pose == 2 && tt < TCF + 1.6f) glyph(g, wk + 1, gy - 26, '!', 0xFFE5484D);
+        if (pose == 3 && tt < LD0 - 0.4f) glyph(g, wk + 1, gy - 26, '?', 0xFFFFC857);
+        // dust while it falls
+        float dt2 = ph - TCF;
+        if (dt2 > -0.2f && dt2 < 2.2f) for (int i = 0; i < 22; i++) {
+            float st = ((i * 7919) % 50) / 100f, u = (dt2 - st) / 1.7f; if (u < 0 || u > 1) continue;
+            float hx2 = ((i * 6007) % 100) / 100f; int dx = wx + Math.round(hx2 * (COLS * bw + 30)) - 15 + Math.round((hx2 - 0.5f) * 36 * u), dy = gy - 2 - Math.round(u * (8 + (i % 4) * 6)), sz = 3 + Math.round(u * 6);
+            g.fill(dx, dy - sz, dx + sz, dy, Gfx.argb(Math.round(110 * (1f - u) * (1f - u)), i % 3 == 0 ? 0xE0D6C0 : 0xA89E8C));
+        }
+        float done = ph - (LD0 + LDP * 2.98f + 0.4f);
+        if (done > 0 && done < 1.1f) for (int i = 0; i < 8; i++) { float u = done / 1.1f, an = i * 0.785f + u; g.fill(wx + COLS * bw / 2 + Math.round((float) Math.cos(an) * (10 + u * 24)), gy - 30 + Math.round((float) Math.sin(an) * (8 + u * 12)), wx + COLS * bw / 2 + Math.round((float) Math.cos(an) * (10 + u * 24)) + 2, gy - 29 + Math.round((float) Math.sin(an) * (8 + u * 12)), Gfx.argb(Math.round(255 * (1f - u)), 0xFFE08A)); }
+    }
+    private static float smooth(float x) { x = Math.max(0f, Math.min(1f, x)); return x * x * (3f - 2f * x); }
+
+    /** Unfinished steel-frame buildings behind the site, each with tiny workers who hammer, walk planks and weld. Dim, so they sit far back. */
+    private static void frames(GuiGraphicsExtractor g, Row r, float sec, int gy) {
+        float[][] def = {{0.07f, 32, 3}, {0.36f, 24, 2}, {0.57f, 30, 3}, {0.70f, 34, 4}, {0.82f, 26, 2}};
+        int seed = 3;
+        for (float[] d : def) {
+            seed += 5; int x = r.x + Math.round(r.w * d[0]), w = (int) d[1], fl = (int) d[2], fh = 12, n = w / 12;
+            g.fill(x - 2, gy - 3, x + w + 3, gy, 0xFF2A2217);
+            for (int f = 0; f < fl; f++) {
+                int yb = gy - 3 - f * fh;
+                for (int c = 0; c <= n; c++) g.fill(x + c * 12, yb - fh, x + c * 12 + 2, yb, 0xFF3A3022);
+                g.fill(x, yb - fh, x + n * 12 + 2, yb - fh + 2, 0xFF4A3E2C);
+                if (f < fl - 1) for (int c = 0; c < n; c++) if (((seed + f * 7 + c) * 2654435761L & 0xFFFF) / 65536f < 0.5f) {
+                    g.fill(x + c * 12 + 3, yb - fh + 3, x + c * 12 + 11, yb - 4, 0xFF15110C);
+                    if (((seed + f + c * 3) * 40503L & 0xFFFF) / 65536f < 0.3f) g.fill(x + c * 12 + 4, yb - fh + 4, x + c * 12 + 10, yb - 5, Gfx.argb(Math.round(120 + 60 * (float) Math.sin(sec + c)), 0xFF6A5326));
+                } else g.fill(x + c * 12 + 5, yb - fh + 5, x + c * 12 + 9, yb - fh + 7, 0xFF2A2218);
+                if (f == fl - 1) for (int c = 0; c <= n; c++) if (((seed + c * 11) * 2654435761L & 0xFFFF) / 65536f < 0.5f) g.fill(x + c * 12, yb - fh - 5, x + c * 12 + 2, yb - fh, 0xFF3A3022);
             }
-            int off = tremble ? (int) Math.round(Math.sin(ph * 60f) * Math.min(2.0, (ph - buildEnd - 0.9f) * 3.0)) : 0;
-            float fl = PER * 1.25f;
-            if (local < fl) {                                                                          // thrown up by the worker: a lob from his hand to its place
-                float u = local / fl, ue = u * (2f - u);
-                int sx0 = wkX + 8 - w / 2, sy0 = gy - 17, sx = Math.round(sx0 + (bx - sx0) * ue), yy = Math.round(sy0 + (by - sy0) * ue - 15f * 4f * u * (1f - u));
-                brick(g, sx, yy, w, h, 0, roof);
-            } else brick(g, bx + off, by, w, h, 0, roof);
-        }
-        if (ph < fallT) {                                                                              // door and window appear as the walls rise
-            int done = Math.min(WALL, (int) (ph / PER)), d0 = tremble ? (int) Math.round(Math.sin(ph * 60f) * 1.5) : 0;
-            if (done >= 2 * COLS) { g.fill(wx + 4 + d0, gy - 11, wx + 12 + d0, gy, 0xFF4A2C14); g.fill(wx + 5 + d0, gy - 10, wx + 11 + d0, gy - 1, 0xFF6A4020); g.fill(wx + 10 + d0, gy - 6, wx + 11 + d0, gy - 5, 0xFFFFD84A); }
-            if (done >= 4 * COLS) { g.fill(wx + 27 + d0, gy - 22, wx + 37 + d0, gy - 14, 0xFF3A2410); g.fill(wx + 28 + d0, gy - 21, wx + 36 + d0, gy - 15, ph > buildEnd ? 0xFFFFE08A : 0xFF7ACBF0); g.fill(wx + 31 + d0, gy - 21, wx + 32 + d0, gy - 15, 0xFF3A2410); }
-        }
-        // the hook and the load
-        if (ph < buildEnd) { g.fill(hookX0, top + 3, hookX0 + 1, top + 8, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 8, hookX0 + 4, top + 10, 0xFF8A8A94); }
-        else if (ph < fallT) {
-            float t = ph - buildEnd, sw = (float) Math.sin(t * 5.5f) * Math.min(1f, t / 1.1f) * (t < 1.6f ? 1f : Math.max(0f, 1f - (t - 1.6f) / 0.4f));
-            int hx = hookX0 + Math.round(sw * 36), hy = top + 26 + Math.round(Math.abs(sw) * 5);
-            g.fill(hookX0, top + 3, hx + 1, top + 4, 0xFFB0B0B8); g.fill(hx, top + 3, hx + 1, hy, 0xFFB0B0B8); brick(g, hx - 6, hy, 12, bh + 1, 0, true);
-            if (t >= 1.5f) {                                                                           // the bump: a crack, sparks, a flash
-                int cx2 = wx + COLS * bw / 2, cy2 = gy - bh * 3, cr = 0xFF1A0E08; float ft = t - 1.5f;
-                g.fill(cx2, cy2 - 12, cx2 + 1, cy2 - 6, cr); g.fill(cx2 + 1, cy2 - 6, cx2 + 2, cy2 - 1, cr); g.fill(cx2, cy2 - 1, cx2 + 1, cy2 + 5, cr); g.fill(cx2 - 1, cy2 + 5, cx2, cy2 + 10, cr); g.fill(cx2 + 1, cy2 + 10, cx2 + 2, cy2 + 14, cr);
-                if (ft < 0.25f) g.fill(wx - 6, roofY - 12, wx + COLS * bw + 6, gy, Gfx.argb(Math.round(70 * (1f - ft / 0.25f)), 0xFFFFFF));
-                for (int sp = 0; sp < 8 && ft < 0.6f; sp++) { double an = sp * 0.8 + 0.3; float rr = 3 + ft * 40 * (0.6f + 0.4f * ((sp * 37) % 5) / 4f); g.fill(cx2 + (int) (Math.cos(an) * rr), cy2 + (int) (Math.sin(an) * rr * 0.8), cx2 + (int) (Math.cos(an) * rr) + 2, cy2 + (int) (Math.sin(an) * rr * 0.8) + 2, Gfx.argb(Math.round(255 * (1f - ft / 0.6f)), sp % 2 == 0 ? 0xFFE066 : 0xFFFFFF)); }
+            for (int yy = gy - 3 - fl * 12 + 2; yy < gy - 3; yy += 3) g.fill(x, yy, x + 5, yy + 1, 0x40706648);          // netting
+            for (int wi = 0; wi < Math.min(fl, 3); wi++) {                                               // the little workers
+                int fy = gy - 3 - wi * fh - 2, kind = (wi + seed) % 3;
+                float ph = sec * (1.6f + ((seed + wi) % 3) * 0.4f) + wi * 2f;
+                int wxp = x + 4 + Math.round((((seed + wi * 3) * 2654435761L & 0xFFFF) / 65536f) * (w - 14));
+                if (kind == 1) wxp = x + 4 + Math.round((0.5f + 0.5f * (float) Math.sin(ph * 0.7f)) * (w - 12));
+                g.fill(wxp, fy - 3, wxp + 1, fy, 0xFF1A1A24); g.fill(wxp + 1, fy - 3, wxp + 2, fy, 0xFF1A1A24);
+                g.fill(wxp, fy - 6, wxp + 2, fy - 3, wi % 2 == 0 ? 0xFFE8742A : 0xFF8AC058); g.fill(wxp, fy - 8, wxp + 2, fy - 6, 0xFFF2C030); g.fill(wxp, fy - 7, wxp + 2, fy - 6, 0xFFF0C8A0);
+                if (kind == 0) { boolean up = Math.sin(ph * 4f) > 0; g.fill(wxp + (up ? 2 : 3), fy - 8 - (up ? 1 : 0), wxp + (up ? 3 : 5), fy - 7 - (up ? 1 : 0), 0xFFCCCCCC); }
+                else if (kind == 1) g.fill(wxp - 1, fy - 10, wxp + 3, fy - 9, 0xFF9A7A3A);
+                else if (Math.sin(sec * 8f + wi) > -0.2f) { for (int s2 = 0; s2 < 5; s2++) { double an = ((int) (sec * 14f) + s2 * 5) * 1.3; int rr = 2 + (s2 * 3 + (int) (sec * 14f)) % 6; g.fill(wxp + 3 + (int) (Math.cos(an) * rr), fy - 5 + (int) (Math.sin(an) * rr * 0.8), wxp + 4 + (int) (Math.cos(an) * rr), fy - 4 + (int) (Math.sin(an) * rr * 0.8), s2 % 2 == 0 ? 0xFFFFE08A : 0xFFFFFFFF); } g.fill(wxp + 2, fy - 6, wxp + 4, fy - 4, 0xFFFFFFFF); }
             }
-        } else { g.fill(hookX0, top + 3, hookX0 + 1, top + 30, 0xFFB0B0B8); g.fill(hookX0 - 3, top + 30, hookX0 + 4, top + 33, 0xFF8A8A94); }
-        // the worker: hammers while it builds, panics at the bump, runs off when it falls, comes back and shrugs
-        float t2 = ph - buildEnd; int wk; int pose;
-        float arm = 0f;
-        if (ph < buildEnd) { wk = farX; pose = 5; float cyc = (ph % PER) / PER; arm = cyc < 0.45f ? cyc / 0.45f : 0f; }       // bends to the pile, then swings the brick up
-        else if (t2 < 2.8f) { wk = farX; pose = t2 > 1.4f ? 2 : 0; }
-        else if (t2 < 4.6f) { wk = Math.round(farX + (homeX - farX) * Math.min(1f, (t2 - 2.8f) / 1.6f)); pose = 4; }
-        else if (t2 < 7.4f) { wk = homeX; pose = 0; }
-        else if (t2 < 9.2f) { wk = Math.round(homeX + (farX - homeX) * (t2 - 7.4f) / 1.8f); pose = 4; }
-        else { wk = farX; pose = t2 < 10.8f ? 3 : 0; }
-        if (ph < buildEnd) for (int b2 = 0; b2 < 3; b2++) { brick(g, farX - 16 + (b2 % 2) * 3, gy - 5 * (b2 + 1), 10, 5, 0, false); }   // the pile he takes from
-        worker(g, wk, gy, pose, sec, arm);
-        if (pose == 2 && t2 < 2.6f) glyph(g, wk + 1, gy - 26, '!', 0xFFE5484D);
-        if (pose == 3) glyph(g, wk + 1, gy - 26, '?', 0xFFFFC857);
-        // dust and smoke while it falls
-        float dt2 = ph - fallT;
-        if (dt2 > 0.2f && dt2 < 3.0f) for (int i = 0; i < 12; i++) {
-            float u = (dt2 - 0.2f) / 2.8f, hx2 = ((i * 7919) % 100) / 100f; int dx = wx + Math.round(hx2 * (COLS * bw + 30)) - 15 + Math.round((hx2 - 0.5f) * 30 * u), dy = gy - 2 - Math.round(u * (8 + (i % 4) * 6)), sz = 3 + Math.round(u * 5);
-            g.fill(dx, dy - sz, dx + sz, dy, Gfx.argb(Math.round(120 * (1f - u)), i % 3 == 0 ? 0xE0D6C0 : 0xA89E8C));
         }
+    }
+    /** Far cranes with blinking lights, a water tank and a fence, and a second dim skyline: the layers that give the site depth. */
+    private static void farLayers(GuiGraphicsExtractor g, Row r, float sec, int gy) {
+        for (int i = 0; i < 24; i++) { int bw2 = 9 + (i * 5) % 9, bx = r.x + 6 + i * 16, bh2 = 14 + (i * 13) % 30; if (bx + bw2 > r.x + r.w - 6) break; g.fill(bx, gy - bh2, bx + bw2, gy, 0xFF241D14); if (i % 5 == 0) g.fill(bx + bw2 / 2, gy - bh2 - 6, bx + bw2 / 2 + 1, gy - bh2, 0xFF241D14); }
+        for (float cf : new float[]{0.44f, 0.9f}) { int cx = r.x + Math.round(r.w * cf), hh = 62; g.fill(cx, gy - hh, cx + 2, gy, 0xFF2C2418); g.fill(cx - 14, gy - hh, cx + 20, gy - hh + 2, 0xFF2C2418); g.fill(cx + 12, gy - hh + 2, cx + 13, gy - hh + 10, 0xFF2C2418);
+            if ((int) (sec * 2.5f + cf * 9) % 2 == 0) g.fill(cx, gy - hh - 3, cx + 2, gy - hh - 1, 0xFFC03030); }
+        int tx = r.x + Math.round(r.w * 0.62f); g.fill(tx, gy - 34, tx + 16, gy - 24, 0xFF221B12); g.fill(tx - 1, gy - 35, tx + 17, gy - 33, 0xFF2C2418); g.fill(tx + 2, gy - 24, tx + 4, gy, 0xFF221B12); g.fill(tx + 12, gy - 24, tx + 14, gy, 0xFF221B12);
+        for (int x = r.x + 90; x < r.x + 90 + 150 && x < r.x + r.w - 6; x += 5) g.fill(x, gy - 10, x + 1, gy, 0xFF251E14); g.fill(r.x + 90, gy - 9, r.x + 240, gy - 8, 0xFF251E14);
+    }
+    /** The nearest layer: drifting fog, dark silhouettes at the very front and soft darkening at the sides. */
+    private static void nearLayers(GuiGraphicsExtractor g, Row r, float sec, int gy) {
+        for (int i = 0; i < 3; i++) { int fx = r.x + Math.round(((sec * (2f + i) + i * 140f) % (r.w + 120f)) - 60f), fy = gy - 12 - i * 8; int x0 = Math.max(r.x + 6, fx), x1 = Math.min(r.x + r.w - 6, fx + 90); if (x1 > x0) g.fill(x0, fy, x1, fy + 6, 0x14B8A888); }
+        for (int[] s : new int[][]{{30, 18}, {r.w - 40, 22}}) { int fx = r.x + s[0], fh = s[1]; g.fill(fx, gy - fh + 8, fx + 3, gy + 3, 0xFF050403); g.fill(fx - 6, gy - fh + 8, fx + 9, gy - fh + 10, 0xFF050403); }
+        for (int x = r.x + 14; x < r.x + r.w - 10; x += 26) g.fill(x, gy + 1, x + 2, gy + 3, 0xFF070605);
+        for (int k = 0; k < 14; k++) { int a = Math.round(70 * (1f - k / 14f) * (1f - k / 14f)); g.fill(r.x + 6 + k, r.y + 12, r.x + 7 + k, gy + 3, Gfx.argb(a, 0x000000)); g.fill(r.x + r.w - 7 - k, r.y + 12, r.x + r.w - 6 - k, gy + 3, Gfx.argb(a, 0x000000)); }
     }
     private static void brick(GuiGraphicsExtractor g, int x, int y, int w, int h, int fade, boolean roof) {
         int a = 255 - Math.max(0, Math.min(255, fade)); if (a <= 0) return;
