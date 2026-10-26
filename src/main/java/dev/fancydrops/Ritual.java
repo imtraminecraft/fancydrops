@@ -570,6 +570,60 @@ final class Ritual {
         if (tre) { float cu = sm(p / 0.7f); chest(icx, gy - 15 * sz * cu - 2, sz * 1.5f, sm((p - 0.4f) / 0.4f), bg); }
     }
 
+
+    // ------------------------------------------------------------------ the slayer scene (a sword slices the boss, the drop springs out)
+    private static final Canvas SL_OUT = new Canvas(SlayerScene.W, SlayerScene.H), SL_L3 = new Canvas(SlayerScene.W, SlayerScene.H);
+    private static SlayerScene.Params slP; private static String slKey = "";
+    /** Boss colours: base, dark, eye for zombie, spider, wolf, enderman, blaze, vampire. */
+    private static final int[][] SL_COL = {{0x5E9E52, 0x3D6B36, 0x10200E}, {0x4A3F42, 0x2A2325, 0xE03030}, {0x8A9099, 0x565B63, 0xC03030}, {0x241B30, 0x0E0A14, 0xD060FF}, {0xE8A020, 0xB05010, 0xFFF080}, {0xB8A4A8, 0x6A2634, 0xD01030}};
+    static boolean isSlayer(Anim a) { return a.group.equals("slayer"); }
+    static int slTheme(Anim a) { return Math.floorMod(a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? SlayerData.theme(a.item.source.id) : 0, 6); }
+
+    /** The Params of the slayer scene for this drop (rebuilt when the boss, the type or the item's art changes). */
+    private static SlayerScene.Params slParams(int theme, int type, Item it) {
+        ItemModel im = it == null ? null : ItemIcons.model(it.id, it.color() & 0xFFFFFF);
+        String key = theme + "/" + type + "/" + (it == null ? "-" : it.id + (im != null ? "+" : "?"));
+        if (slP != null && key.equals(slKey)) return slP;
+        boolean has = type != AnimationManager.NO_DROPS && it != null;
+        SlayerScene.Params q = new SlayerScene.Params(type == AnimationManager.RNG ? 2 : 0, has);
+        int[] col = SL_COL[theme];
+        q.theme = theme; q.base = 0xFF000000 | col[0]; q.dark = 0xFF000000 | col[1]; q.eye = 0xFF000000 | col[2];
+        q.seed = it != null && it.source != null ? Math.abs(it.source.id.hashCode() % 97) : 7 + theme; q.cutSeed = q.seed; q.style = 0;
+        if (has) {
+            q.rarity = 0xFF000000 | (it.color() & 0xFFFFFF);
+            if (im == null) { int[] gem = ItemIcons.gem(q.rarity & 0xFFFFFF); q.item = new SlayerScene.Model(PuffyItem.of(gem, 16, 16, true), gem); }
+            else q.item = im.parts != null ? new SlayerScene.Model(im.parts, im.natural, im.pitchK) : new SlayerScene.Model(im.puffy, im.sprite);
+        }
+        slP = q; slKey = key; return q;
+    }
+
+    /** Paints the slayer scene into the canvas. The scene has its own clock: its opening is stretched over the opening of the animation and its tail over TAIL, so the pivot lines up. */
+    static void paintSlayer(Anim a, float t, float S, float sz, float icy) {
+        cv.clear();
+        int type = a.type; boolean rng = type == AnimationManager.RNG;
+        SlayerScene.Params q = slParams(slTheme(a), type, a.item);
+        float O = S - TAIL, ts = SlayerScene.splitTime(q), tt;
+        if (TextFx.itemOnly) {
+            SlayerScene.drawItemOnly(SL_OUT, SL_L3, q, (System.currentTimeMillis() % 4000L) / 1000f);
+        } else {
+            tt = t < O ? ts * Math.max(0f, t) / O : ts + (t - O) * ((SlayerScene.length(q) - ts) / TAIL);
+            SlayerScene.draw(SL_OUT, SL_L3, q, tt);
+        }
+        float k = 2.2f * sz * (rng ? 1.15f : 1f);
+        float ox = CW / 2f - 56f * k, oy = icy - 32f * k;                                       // the item rests at (56, 32) of the scene
+        int[] src = SL_OUT.px, dst = cv.px;
+        int y0 = Math.max(0, (int) Math.floor(oy)), y1 = Math.min(CH, (int) Math.ceil(oy + SlayerScene.H * k));
+        int x0 = Math.max(0, (int) Math.floor(ox)), x1 = Math.min(CW, (int) Math.ceil(ox + SlayerScene.W * k));
+        for (int y = y0; y < y1; y++) {
+            int sy = (int) ((y + 0.5f - oy) / k); if (sy < 0 || sy >= SlayerScene.H) continue;
+            for (int x = x0; x < x1; x++) {
+                int sx = (int) ((x + 0.5f - ox) / k); if (sx < 0 || sx >= SlayerScene.W) continue;
+                int v = src[sy * SlayerScene.W + sx];
+                if ((v >>> 24) != 0) dst[y * CW + x] = v;
+            }
+        }
+    }
+
     /** Where the item is (canvas units, y): it springs out of the ground, overshoots, then bobs gently. */
     /** A flat round disc, one fill per row (the soft glow is a few of these stacked). */
     private static void discFill(GuiGraphicsExtractor g, int cx, int cy, int r, int col) {
@@ -595,7 +649,8 @@ final class Ritual {
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
         if (rng && cfg.bars) icy = Math.max(barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
-        paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
+        if (isSlayer(a)) paintSlayer(a, t, S, sz, icy);
+        else paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
         return cv.px.clone();
     }
 
@@ -604,7 +659,7 @@ final class Ritual {
         FancyConfig c = FancyConfig.get();
         FancyConfig.AnimCfg cfg = a.cfg();
         Item it = a.item;
-        boolean tre = a.group.equals("treasure");
+        boolean tre = a.group.equals("treasure"), sl = isSlayer(a);
         kind = a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? kindOf(a.item.source.id) : 0;
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
@@ -627,7 +682,7 @@ final class Ritual {
         float shake = rng && p > 0 && p < 0.5f ? (1f - p / 0.5f) * 3f : 0f;
         int sx = Math.round((rnd((int) (t * 60)) - 0.5f) * 2f * shake * u), sy = Math.round((rnd((int) (t * 60) + 77) - 0.5f) * 2f * shake * u);
 
-        boolean sceneOff = TextFx.textOnly || TextFx.itemOnly || TextFx.barsOnly;            // the Changes previews show only the part being edited
+        boolean sceneOff = (TextFx.textOnly || TextFx.itemOnly || TextFx.barsOnly) && !(sl && TextFx.itemOnly);            // the Changes previews show only the part being edited (the slayer scene draws the item itself)
         if (!sceneOff) {
             // ---- the blur: the world dims and softens at the edges (RNG, switchable)
             if (blurOn && barSlide > 0.01f) {
@@ -636,6 +691,7 @@ final class Ritual {
             }
             int[] edited = AnimFrames.override(a, t);                                         // a frame you edited in config/fancydrops/art/animations replaces the drawn one
             if (edited != null && edited.length == cv.px.length) System.arraycopy(edited, 0, cv.px, 0, edited.length);
+            else if (sl) paintSlayer(a, t, S, sz, icy);
             else paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp);
             SceneTexture.upload(cv);
             if (!SceneTexture.draw(g, cv, sx, sy, W, H, 1f)) { int cell = Math.max(1, Math.round((float) W / CW)); cv.flush((x0, y0, x1, y1, col) -> g.fill(x0 + sx, y0 + sy, x1 + sx, y1 + sy, col), 0, 0, cell, 1f); }
@@ -666,7 +722,7 @@ final class Ritual {
         }
 
         // ---- the item (flat icons stay flat, skulls are 3D and turn)
-        if (it != null && p >= 0f && !nod && !TextFx.textOnly && !TextFx.barsOnly) {
+        if (it != null && !sl && p >= 0f && !nod && !TextFx.textOnly && !TextFx.barsOnly) {
             float grow = 0.25f + 0.75f * eob(p / 0.7f);
             float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f);
             float gcx = CW / 2f * W / CW + sx, gcy = itemY(tb, p, icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;

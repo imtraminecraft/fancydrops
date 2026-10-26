@@ -75,7 +75,7 @@ public final class AnimationManager {
     /** The moments (seconds) each sound slot (chop, split, reveal, linger, end) plays in a scene of this length. */
     static float[][] cueTimes(String scene, float secs) {
         float S = Math.max(3.6f, secs), O = S - Ritual.TAIL; boolean tre = scene.startsWith("treasure"), nod = scene.endsWith("nodrops");
-        float[] beats = tre ? new float[]{0.215f * O, 0.505f * O, 0.795f * O} : new float[]{0.34f * O, 0.58f * O, 0.80f * O};
+        float[] beats = tre ? new float[]{0.215f * O, 0.505f * O, 0.795f * O} : scene.startsWith("slayer") ? new float[]{0.536f * O, 0.753f * O, 0.943f * O} : new float[]{0.34f * O, 0.58f * O, 0.80f * O};   // slayer: the three sword slices, as fractions of the opening
         return new float[][]{beats, {O}, nod ? new float[0] : new float[]{O + 0.25f}, {O + 1.0f}, {S - 1.4f}};
     }
 

@@ -39,11 +39,12 @@ public final class DropData {
     public static boolean untradeable(String id) {
         if (id == null) return false;
         for (Source s : MythData.ALL) for (Drop d : s.drops) if (d.untradeable && d.id.equals(id)) return true;
+        for (Source s : SlayerData.ALL) for (Drop d : s.drops) if (d.untradeable && d.id.equals(id)) return true;
         return false;
     }
 
     /** Loads every drop library. */
-    public static void load() { MythData.load(); }
+    public static void load() { MythData.load(); SlayerData.load(); }
 
     private DropData() {}
 }

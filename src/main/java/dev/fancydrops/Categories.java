@@ -21,11 +21,13 @@ final class Categories {
         List<DropData.Source> sources() {
             List<DropData.Source> l = new ArrayList<>();
             if (id.equals("mythological")) { l.addAll(sources("myth")); l.addAll(sources("treasure")); }
+            if (id.equals("slayers")) l.addAll(sources("slayer"));
             return l;
         }
         /** The sources inside one group: the creatures of "myth", the burrow of "treasure". */
         List<DropData.Source> sources(String groupId) {
             List<DropData.Source> l = new ArrayList<>();
+            if (id.equals("slayers")) { if (groupId.equals("slayer")) l.addAll(SlayerData.ALL); return l; }
             if (!id.equals("mythological")) return l;
             if (groupId.equals("myth")) l.addAll(MythData.spawnable(FancyConfig.get().mythPet));
             if (groupId.equals("treasure")) {
@@ -40,12 +42,17 @@ final class Categories {
     static final Type NORMAL = new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: the item shows with a glow and its text.");
     static final Type RNG = new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and the big finish.");
     private static final List<Type> MYTH_TYPES = List.of(NO_DROPS, NORMAL, RNG);
+    private static final List<Type> SLAYER_TYPES = List.of(
+        new Type("nodrops", "No Drops", ":nodrops:", 0xFF9AA3B5, "The boss falls and nothing drops."),
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: a sword slices the boss and the item springs out with its text."),
+        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a huge finishing slice."));
 
     static final List<Cat> ALL = List.of(
         new Cat("mythological", "Mythological", ":mytho:", 0xFF55D8FF, false, "Mythological Ritual is an event that occurs with the Mythological Ritual perk.", List.of(
             new Group("myth", "Mythological Mobs", ":mytho:", 0xFF55D8FF, "What plays when a ritual creature dies.", MYTH_TYPES),
             new Group("treasure", "Treasure", ":treasure:", 0xFFFFD25A, "What plays when a burrow holds treasure.", MYTH_TYPES))),
-        new Cat("slayers", "Slayers", ":slayers:", 0xFFFF5A5A, true, "Slayer bosses and their drops.", List.of()),
+        new Cat("slayers", "Slayers", ":slayers:", 0xFFFF5A5A, false, "Slayer bosses and their rare drops.", List.of(
+            new Group("slayer", "Slayer Bosses", ":slayers:", 0xFFFF5A5A, "What plays when a slayer boss drops something.", SLAYER_TYPES))),
         new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, true, "Crops, pests and the rare drops of the Garden.", List.of()),
         new Cat("experiments", "Experiments", ":experiments:", 0xFFB56BFF, true, "The Experimentation Table's rewards.", List.of()),
         new Cat("mining", "Mining", ":mining:", 0xFF9AB8FF, true, "Rare finds underground.", List.of()),
@@ -61,6 +68,7 @@ final class Categories {
     static Cat catOfGroup(String groupId) { for (Cat c : ALL) for (Group g : c.groups()) if (g.id().equals(groupId)) return c; return ALL.get(0); }
     /** The category a drop source belongs to. */
     static Cat catOfSource(DropData.Source s) {
+        if (SlayerData.byId(s.id) == s) return byId("slayers");
         return ALL.get(0);
     }
 

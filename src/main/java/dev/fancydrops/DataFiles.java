@@ -60,7 +60,7 @@ public final class DataFiles {
             Path p = dir().resolve(name);
             if (!Files.exists(p)) {
                 Files.writeString(p, bundled(name));
-            } else if ("mythological.json".equals(name)) {
+            } else if ("mythological.json".equals(name) || "slayers.json".equals(name)) {
                 if (MythData.version(Files.readString(p)) < MythData.version(bundled(name))) Files.writeString(p, bundled(name));
             }
             return Files.readString(p);

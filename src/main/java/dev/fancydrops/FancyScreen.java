@@ -564,7 +564,7 @@ public class FancyScreen extends Screen {
         d.add(new String[]{"Type", ty.name()});
         d.add(new String[]{"Length", String.format(Locale.ROOT, "%.1f s", a.secs)});
         d.add(new String[]{"Size", Math.round(50 + 50 * c.animScale) + "%"});
-        if (ty == Categories.RNG) { d.add(new String[]{"Bars", a.bars ? "On  ·  " + c.barPx + " px" : "Off"}); d.add(new String[]{"Blur", a.blur ? "On" : "Off"}); }
+        if (ty.id().equals("rng")) { d.add(new String[]{"Bars", a.bars ? "On  ·  " + c.barPx + " px" : "Off"}); d.add(new String[]{"Blur", a.blur ? "On" : "Off"}); }
         d.add(new String[]{"Item size", Math.round(c.itemScale * 100) + "%"});
         final float k0 = 0.75f; int colW = w / 2, per = 8, lh = 12;
         for (int i = 0; i < d.size() && i < per * 2; i++) {
@@ -2158,12 +2158,18 @@ public class FancyScreen extends Screen {
     private Categories.Cat curCat() { return Categories.ALL.get(Math.max(0, Math.min(Categories.ALL.size() - 1, curSub()))); }
     /** The animation group whose editor is open on Animations / Sounds (null = none). */
     private Categories.Group curGroup() {
-        if (landing() || (tab != Tab.ANIMATIONS && tab != Tab.SOUNDS) || dropSrc == null) return null;
+        if (landing() || (tab != Tab.ANIMATIONS && tab != Tab.SOUNDS)) return null;
         Categories.Cat cat = curCat();
         if (cat.wip()) return null;
+        if (dropSrc == null) return onlyGroup(cat);
         for (Categories.Group gr : cat.groups()) if (gr.id().equals(dropSrc)) return gr;
         return null;
     }
+    /** A category with a single group (Slayers) has no hub: its group page opens straight away. */
+    private static Categories.Group onlyGroup(Categories.Cat cat) { return cat.groups().size() == 1 ? cat.groups().get(0) : null; }
+    /** Back out of a group page: to the hub of the category, or to the list of categories when there is no hub. */
+    private void backToCat(Categories.Cat cat) { if (onlyGroup(cat) != null) openPage(-1, null, null); else openPage(curSub(), null, null); }
+    private static String backLabel(Categories.Cat cat, String what) { return onlyGroup(cat) != null ? "Back to all the categories" : "Back to the " + cat.name() + " " + what; }
     private static int edType = 1;                       // the animation type being edited: 0 No Drops, 1 Normal, 2 RNG
     private static String chatCat = "mythological";      // Chat: which category's message is being edited
     private void openPage(int sub, String src, String srcName) { subSel[tab.ordinal()] = sub; dropSrc = src; dropSrcName = srcName; scroll = 0; tabChanged = System.currentTimeMillis(); open.removeIf(o -> o.startsWith("dd_")); }
@@ -2190,7 +2196,7 @@ public class FancyScreen extends Screen {
         int n = Categories.ALL.size(); String[] lb = new String[n], sb = new String[n], ic = new String[n]; int[] co = new int[n]; boolean[] wp = new boolean[n];
         for (int i = 0; i < n; i++) {
             Categories.Cat k = Categories.ALL.get(i); lb[i] = k.name(); ic[i] = k.icon(); co[i] = k.color(); wp[i] = k.wip();
-            sb[i] = k.wip() ? "Soon™" : k.groups().size() + " pages";
+            sb[i] = k.wip() ? "Soon™" : k.groups().size() == 1 ? k.sources().size() + " bosses" : k.groups().size() + " pages";
         }
         Row r = picker("", "", lb, sb, ic, co, wp, 4, () -> -1, i -> openPage(i, null, null));
         r.pVert = true; r.pTh = 44; return fit(r);
@@ -2375,9 +2381,9 @@ public class FancyScreen extends Screen {
         // three levels: the category hub (Mythological Mobs / Treasure), a group page (the creatures), and one source page (a creature or the burrow)
         for (Categories.Group gr : cat.groups()) {
             srcList.add(new String[]{gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())});
-            if (gr.id().equals("myth")) for (DropData.Source s : cat.sources("myth")) srcList.add(new String[]{"myth/" + s.id, srcName(s), ":mob_" + s.id + ":", String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
+            if (gr.id().equals("myth") || gr.id().equals("slayer")) for (DropData.Source s : cat.sources(gr.id())) srcList.add(new String[]{gr.id() + "/" + s.id, srcName(s), ":mob_" + s.id + ":", String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
         }
-        String ds = dropSrc == null ? "" : dropSrc;
+        String ds = dropSrc == null ? (onlyGroup(cat) != null ? onlyGroup(cat).id() : "") : dropSrc;
         String gid = ds.contains("/") ? ds.substring(0, ds.indexOf('/')) : ds;
         Categories.Group grp = null; for (Categories.Group gr : cat.groups()) if (gr.id().equals(gid)) grp = gr;
         if (grp == null) { dropsCategory(cat, c); return; }
@@ -2406,11 +2412,11 @@ public class FancyScreen extends Screen {
 
     /** Mythological Mobs: the pet that decides who can spawn, then the creatures. */
     private void dropsGroup(Categories.Cat cat, Categories.Group grp, List<DropData.Source> srcs, FancyConfig c) {
-        rows.add(backRow(cat.name(), "Back to all the " + cat.name() + " pages", cat.color(), () -> openPage(curSub(), null, null)));
+        rows.add(backRow(onlyGroup(cat) != null ? "Drop Library" : cat.name(), onlyGroup(cat) != null ? "Back to all the categories" : "Back to all the " + cat.name() + " pages", cat.color(), () -> backToCat(cat)));
         int total = 0; for (DropData.Source s : srcs) total += s.drops.size();
-        rows.add(hero(grp.icon(), grp.name(), srcs.size() + (srcs.size() == 1 ? " Mob" : " Mobs") + " \u2022 " + total + (total == 1 ? " Drop" : " Drops") + " listed", grp.color()));
-        mythSettings(rows, c);
-        rows.add(section("Creatures"));
+        rows.add(hero(grp.icon(), grp.name(), srcs.size() + (grp.id().equals("slayer") ? (srcs.size() == 1 ? " Boss" : " Bosses") : srcs.size() == 1 ? " Mob" : " Mobs") + " \u2022 " + total + (total == 1 ? " Drop" : " Drops") + " listed", grp.color()));
+        if (grp.id().equals("myth")) mythSettings(rows, c);
+        rows.add(section(grp.id().equals("slayer") ? "Bosses" : "Creatures"));
         int n = srcs.size(); String[] lb = new String[n], sb = new String[n], mi = new String[n]; int[] co = new int[n];
         for (int i = 0; i < n; i++) { lb[i] = srcName(srcs.get(i)); sb[i] = srcs.get(i).drops.size() + " drops"; co[i] = srcs.get(i).color(); mi[i] = ":mob_" + srcs.get(i).id + ":"; }
         rows.add(picker("", "", lb, sb, mi, co, null, 3, () -> -1, i -> openPage(curSub(), grp.id() + "/" + srcs.get(i).id, lb[i])));
@@ -2419,7 +2425,7 @@ public class FancyScreen extends Screen {
     private void dropsSource(Categories.Cat cat, Categories.Group grp, DropData.Source s, FancyConfig c, boolean single) {
         String nm = srcName(s);
         FancyConfig.SourceCfg sc = c.source(s.id);
-        if (!single) { rows.add(backRow(grp.name(), "Back to all the " + grp.name(), grp.color(), () -> openPage(curSub(), grp.id(), grp.name()))); rows.add(hero(grp.id().equals("myth") ? ":mob_" + s.id + ":" : s.icon, nm, s.drops.size() + " drops", s.color())); }
+        if (!single) { rows.add(backRow(grp.name(), "Back to all the " + grp.name(), grp.color(), () -> openPage(curSub(), grp.id(), grp.name()))); rows.add(hero(grp.id().equals("myth") || grp.id().equals("slayer") ? ":mob_" + s.id + ":" : s.icon, nm, s.drops.size() + " drops", s.color())); }
         Row cols = section(""); cols.dropCols = true; cols.h = 14; rows.add(cols);
         AnimAll aa = new AnimAll(); List<FancyConfig.DropCfg> all = new ArrayList<>();
         for (DropData.Drop d : s.drops) { FancyConfig.DropCfg dc = c.drop(s.id, d.name); FancyConfig.initDrop(dc, Math.max(0, d.rank)); aa.cfgs.add(dc); all.add(dc); }
@@ -2439,7 +2445,7 @@ public class FancyScreen extends Screen {
         dr.iconId = s == TreasureData.SOURCE && !TreasureData.headArt(d.id) ? null : d.id; dr.subColor = d.chance.isEmpty() ? Ui.DIM : Ui.odds(d.odds);
         dr.cell = CELL; dr.dcfg = dc; dr.dropRank = Math.max(0, d.rank);
         dr.ctls.add(new AnimBtn(dc));
-        dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (s == TreasureData.SOURCE) DropListener.playTreasureDrop(d); else DropListener.playMythDrop(s, d); })));
+        dr.ctls.add(new Btn("▶", GREEN, () -> play(() -> { if (s == TreasureData.SOURCE) DropListener.playTreasureDrop(d); else if (SlayerData.byId(s.id) == s) DropListener.playSlayerDrop(s, d); else DropListener.playMythDrop(s, d); })));
         dr.ctls.add(tog(() -> dc.announce, v -> { dc.announce = v; FancyConfig.save(); }, 0xFFD98A1F));
         return dr;
     }
@@ -2493,14 +2499,14 @@ public class FancyScreen extends Screen {
         Categories.Type ty = gr.types().get(ti);
         String key = gr.key(ty);
         FancyConfig.AnimCfg a = c.anim(key);
-        rows.add(backRow(cat.name(), "Back to the " + cat.name() + " animations", cat.color(), () -> openPage(curSub(), null, null)));
+        rows.add(backRow(onlyGroup(cat) != null ? "Animations" : cat.name(), backLabel(cat, "animations"), cat.color(), () -> backToCat(cat)));
         rows.add(typePicker(gr, c));
         rows.add(note(ty.blurb(), ty.color()));
         Row pl = row(0, ":play:", "Preview", "Plays it over the game, like a real drop", ty.color());
         pl.ctls.add(new Btn("▶ Play", GREEN, () -> play(() -> DropListener.playSample(gr.id(), ti)))); rows.add(pl);
         Row len = row(0, ":clock:", "Length", "Between 5 and 7 seconds. The first half is the same for every type", Ui.ACCENT);
         len.ctls.add(new Slider(5, 7, 0.1, () -> a.secs, v -> { a.secs = (float) (Math.round(v * 10) / 10.0); }, () -> String.format(Locale.ROOT, "%.1f s", a.secs))); rows.add(len);
-        if (ty == Categories.RNG) {                                         // only the big finish has cinematic bars and a blurred background
+        if (ty.id().equals("rng")) {                                         // only the big finish has cinematic bars and a blurred background
             rows.add(section("Cinematic"));
             rows.add(toggle(":bars:", "Cinematic bars", "Black bars close in from the top and bottom", () -> a.bars, v -> a.bars = v));
             rows.add(toggle(":glass:", "Background blur", "The game behind the animation goes soft", () -> a.blur, v -> a.blur = v));
@@ -2556,7 +2562,7 @@ public class FancyScreen extends Screen {
         int ti = Math.max(0, Math.min(gr.types().size() - 1, edType));
         Categories.Type ty = gr.types().get(ti);
         final String scene = gr.key(ty);
-        rows.add(backRow(cat.name(), "Back to the " + cat.name() + " sounds", cat.color(), () -> openPage(curSub(), null, null)));
+        rows.add(backRow(onlyGroup(cat) != null ? "Sounds" : cat.name(), backLabel(cat, "sounds"), cat.color(), () -> backToCat(cat)));
         rows.add(typePicker(gr, c));
         if (!c.sound) { rows.add(note("Sounds are off. Turn them on from the Sounds page.", Ui.DIM)); return; }
         if (!c.customSounds) rows.add(note("The FancyDrops sound set is off: every animation uses Minecraft's own sounds. Your picks for them are saved separately.", Ui.DIM));

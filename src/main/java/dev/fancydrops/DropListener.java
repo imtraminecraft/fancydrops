@@ -36,6 +36,7 @@ public final class DropListener {
             { FancyConfig fc = FancyConfig.get(); if (fc.dropsSeen < 100000) { fc.dropsSeen++; FancyConfig.save(); } }          // counts toward the cosmetics that unlock by drops
             dlog("heard: " + line.trim() + "  ->  " + d.kind() + " / " + d.name() + " x" + d.amount());
             if (MythData.isMyth(d) && playMyth(d)) drop = true;
+            else if (SlayerData.isSlayer(d) && playSlayer(d)) drop = true;
             else dlog("left in chat (not a listed drop): " + d.name());
         }
         return drop;
@@ -108,6 +109,64 @@ public final class DropListener {
         it.untradeable = dr.untradeable || DropData.untradeable(dr.id);
         it.rank = Math.max(0, dr.rank);
         return it;
+    }
+
+    // ------------------------------------------------------------------ Slayer bosses
+
+    /** A slayer boss's rare drop line: the animation plays right away. Returns true when the line is replaced by it. */
+    private static boolean playSlayer(ChatParser.Drop d) {
+        FancyConfig c = FancyConfig.get();
+        DropData.Drop dr = SlayerData.find(d.name());
+        DropData.Source src = SlayerData.sourceOf(d.name());
+        if (dr == null || src == null) return false;
+        FancyConfig.SourceCfg sc = c.source(src.id); FancyConfig.DropCfg dc = c.drop(src.id, dr.name);
+        FancyConfig.initDrop(dc, dr.rank);
+        boolean animate = c.masterAnimate && sc.enabled && dc.anim != 3, announce = c.masterAnnounce && c.chatEnabled("slayers") && sc.enabled && dc.announce;
+        dlog("slayer: " + dr.name + " from " + src.id + "  animate=" + animate + " announce=" + announce);
+        if (!animate && !announce) return false;
+        Item it = mythItem(src, dr, d.mf(), d.sim());
+        it.chance = dr.chance;
+        it.amount = Math.max(1, d.amount());
+        it.announce = announce;
+        lookupPrice(it, announce && !animate);
+        if (animate) AnimationManager.play(slayerAnim(AnimationManager.typeOf(it, dc), it, src));
+        return animate;
+    }
+
+    /** A slayer animation: the boss decides the scene's look (zombie, spider, wolf, enderman, blaze, vampire). */
+    private static Anim slayerAnim(int type, Item it, DropData.Source src) {
+        Anim a = new Anim("slayer", type, it);
+        a.kind = SlayerData.theme(src.id);
+        return a;
+    }
+
+    static void launchSlayer(DropData.Source src, DropData.Drop dr, String mf, int type) {
+        Item it = mythItem(src, dr, mf, true); it.chance = dr.chance; previewPrice(it);
+        AnimationManager.play(slayerAnim(type >= 0 ? type : AnimationManager.typeOf(it, FancyConfig.get().drop(src.id, dr.name)), it, src));
+    }
+    /** Menu "play" button of a slayer drop (the Drop Library). */
+    public static void playSlayerDrop(DropData.Source src, DropData.Drop dr) { launchSlayer(src, dr, "+250%", -1); }
+
+    /** /fd simulate Slayer [Boss] [Drop | Nothing] [mf]: a pretend slayer drop, from a named boss or any. */
+    static void simulateSlayer(int mf, String name, Consumer<String> reply) {
+        DropData.Source from = null;
+        for (DropData.Source s : SlayerData.ALL) {
+            int n = s.boss.length();
+            if (name.regionMatches(true, 0, s.boss, 0, n) && (name.length() == n || name.charAt(n) == ' ')) { from = s; name = name.substring(n).trim(); break; }
+        }
+        if (name.equalsIgnoreCase("nothing")) {
+            reply.accept("Simulating a slayer that dropped nothing");
+            Anim a = new Anim("slayer", AnimationManager.NO_DROPS, null); a.kind = from != null ? SlayerData.theme(from.id) : new Random().nextInt(6); AnimationManager.play(a); return;
+        }
+        List<DropData.Drop> pool = new ArrayList<>();
+        if (from != null) pool.addAll(from.drops); else for (DropData.Source s : SlayerData.ALL) pool.addAll(s.drops);
+        if (pool.isEmpty()) { reply.accept("No slayer drops loaded."); return; }
+        List<DropData.Drop> picks = name.isBlank() ? List.of(pool.get(new Random().nextInt(pool.size()))) : pickDrops(pool, name, 1, from == null ? "a slayer drop" : "a " + from.boss + " drop", reply);
+        if (picks == null || picks.isEmpty()) return;
+        DropData.Source src = from != null ? from : SlayerData.sourceOf(picks.get(0).name);
+        if (src == null) return;
+        reply.accept("Simulating " + picks.get(0).name + " from " + src.boss + " at " + mf + " Magic Find");
+        launchSlayer(src, picks.get(0), "+" + mf + "%", -1);
     }
 
     // ------------------------------------------------------------------ Mythological treasure (a burrow that holds loot instead of a creature)
@@ -186,7 +245,7 @@ public final class DropListener {
     static String adv(String m) { String t = ADV + m; return t.length() > 250 ? t.substring(0, 250) : t; }
 
     /** The category (Categories.Cat id) a drop's chat message follows. */
-    static String catOf(Item it) { return "mythological"; }
+    static String catOf(Item it) { return it.source != null && SlayerData.byId(it.source.id) == it.source ? "slayers" : "mythological"; }
 
     static String message(Item it, double price, String mf, String fmt) {
         FancyConfig c = FancyConfig.get();
@@ -211,6 +270,10 @@ public final class DropListener {
     /** What the message would look like for a sample drop (the Chat page shows this live under the format box). */
     public static String sample(String format, String cat) {
         Item it = new Item();
+        if ("slayers".equals(cat) && !SlayerData.ALL.isEmpty()) {
+            DropData.Source b = SlayerData.ALL.get(0); it.source = b; it.name = b.drops.isEmpty() ? "Scythe Blade" : b.drops.get(b.drops.size() - 1).name;
+            return message(it, 21_000_000, "+250%", format);
+        }
         it.name = "Daedalus Stick"; it.source = MythData.ALL.isEmpty() ? null : MythData.ALL.get(0);
         return message(it, 21_000_000, "+250%", format);
     }
@@ -261,6 +324,12 @@ public final class DropListener {
             for (DropData.Drop d : TreasureData.drops(FancyConfig.get().mythSpade)) if (d.name.equals(type == AnimationManager.RNG ? "Myth the Fish" : "Griffin Feather")) dr = d;
             if (dr == null) return;
             launchTreasure(dr, type);
+        } else if (group.equals("slayer")) {
+            if (SlayerData.ALL.isEmpty()) return;
+            DropData.Source s = SlayerData.ALL.get(0);
+            if (s.drops.isEmpty()) return;
+            DropData.Drop dr = s.drops.get(s.drops.size() - 1);                              // the boss's rarest drop
+            launchSlayer(s, dr, "+250%", type);
         } else {
             if (MythData.ALL.isEmpty()) return;
             DropData.Source s = MythData.ALL.get(Math.min(MythData.ALL.size() - 1, 6));
@@ -320,6 +389,7 @@ public final class DropListener {
     public static List<String> allDropNames() {
         TreeSet<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (DropData.Source s : MythData.ALL) for (DropData.Drop d : s.drops) names.add(d.name);
+        for (DropData.Source s : SlayerData.ALL) for (DropData.Drop d : s.drops) names.add(d.name);
         for (int sp = 0; sp < 3; sp++) for (DropData.Drop d : TreasureData.drops(sp)) names.add(d.name);
         return new ArrayList<>(names);
     }

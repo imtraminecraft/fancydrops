@@ -29,7 +29,7 @@ public final class SoundFx {
     }
 
     public static final String NONE = "none";
-    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng"};
+    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng"};
     public static final String[] SLOTS = {"chop", "split", "reveal", "linger", "end"};
 
     private static final Map<String, Fx> ALL = new LinkedHashMap<>();
@@ -52,6 +52,12 @@ public final class SoundFx {
         reg("myth_dig", "Dig", SoundEvents.CROP_BREAK, 0.9f);
         reg("myth_chest", "Chest", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
         reg("myth_fizzle", "Fizzle", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
+        reg("slay_slash", "Slash", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);                         // the Slayer bank: blade, blow, rising chord, ember hum, farewell
+        reg("slay_cleave", "Cleave", SoundEvents.PLAYER_ATTACK_STRONG, 0.9f);
+        reg("slay_reveal", "Slayer reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
+        reg("slay_reveal_epic", "Slayer reveal (epic)", SoundEvents.BEACON_ACTIVATE, 0.9f);
+        reg("slay_glow", "Ember hum", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
+        reg("slay_end", "Slayer farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
     }
 
     // Minecraft's own sounds, picked to work as a set: bright notes for the stepping slices, a solid hit, a reward, a long glow, a soft close
@@ -104,20 +110,26 @@ public final class SoundFx {
             {"myth.rng", "mc_bolt", "mc_trident", "mc_fanfare", "mc_hum", "mc_powerdown"},
             {"treasure.nodrops", "mc_harvest", "mc_fizzle", NONE, NONE, NONE},
             {"treasure.normal", "mc_harvest", "mc_anvil", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"treasure.rng", "mc_harvest", "mc_anvil", "mc_fanfare", "mc_hum", "mc_powerdown"}};
+            {"treasure.rng", "mc_harvest", "mc_anvil", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"slayer.nodrops", "mc_swish", "mc_smack", NONE, NONE, NONE},
+            {"slayer.normal", "mc_swish", "mc_smack", "mc_crystal", "mc_hum", "mc_powerdown"},
+            {"slayer.rng", "mc_swish", "mc_smack", "mc_fanfare", "mc_hum", "mc_powerdown"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) MC_DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
     /** What each slot plays until the player changes it. */
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
     static {
-        String[][] d = {                                         // one sound set for every animation: the Mythological bank
+        String[][] d = {                                         // the Mythological bank, and the Slayer bank for the slayer scenes
             {"myth.nodrops", "myth_bolt", "myth_fizzle", NONE, NONE, NONE},
             {"myth.normal", "myth_bolt", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
             {"myth.rng", "myth_bolt", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
             {"treasure.nodrops", "myth_dig", "myth_fizzle", NONE, NONE, NONE},
             {"treasure.normal", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"},
-            {"treasure.rng", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"}};
+            {"treasure.rng", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"},
+            {"slayer.nodrops", "slay_slash", "slay_cleave", NONE, NONE, NONE},
+            {"slayer.normal", "slay_slash", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
+            {"slayer.rng", "slay_slash", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 

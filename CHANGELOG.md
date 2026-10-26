@@ -1,3 +1,10 @@
+## 0.4.37
+- Slayers is live (no more construction page) in Drop Library, Animations, Sounds and Chat. The six bosses (Revenant Horror, Tarantula Broodfather, Sven Packmaster, Voidgloom Seraph, Inferno Demonlord, Riftstalker Bloodfiend) list their rare drops, each with its animation state, Chat Alert and Play button.
+- Slayer animations: No Drops, Normal and RNG share the same opening (a sword slices the boss three times) and pivot together with the other categories, then the drop springs out. RNG has cinematic bars and blur and hides the hotbar. The scene's look follows the boss.
+- Slayer sounds: the slayer bank (slash, cleave, reveal, ember hum, farewell) is back, with Minecraft-sound defaults for the other sound set. Each slot is editable per type on the Sounds page.
+- Chat: Slayers has its own message and its own Chat Enabled list. `/fd simulate Slayer <Boss> <Drop|Nothing> <mf>` plays a pretend slayer drop.
+- Six new hand-pixeled, animated boss icons.
+
 ## 0.4.36
 - The construction page now matches the mockup exactly: the same small builders, the finer brick house, the crane that rebuilds it, the unfinished buildings and their tiny workers, lamps, far cranes and fog. The old oversized builders and the corner road signs are gone.
 - The Coming Soon board no longer hides a letter (the flicker is gone) and its two builders are the small ones.

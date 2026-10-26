@@ -176,6 +176,7 @@ public final class ItemIcons {
 
     private static boolean isBook(String id) {
         for (DropData.Source s : MythData.ALL) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
+        for (DropData.Source s : SlayerData.ALL) for (DropData.Drop d : s.drops) if (d.id.equalsIgnoreCase(id) && "enchanted_book".equals(d.icon)) return true;
         return false;
     }
 
@@ -274,6 +275,7 @@ public final class ItemIcons {
         if (id != null && id.toUpperCase(java.util.Locale.ROOT).startsWith("DYE_")) return true;
         if (TreasureData.headArt(id)) return true;
         for (DropData.Source s : MythData.ALL) for (DropData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
+        for (DropData.Source s : SlayerData.ALL) for (DropData.Drop d : s.drops) if (d.skull && d.id.equalsIgnoreCase(id)) return true;
         return false;
     }
 
@@ -334,6 +336,8 @@ public final class ItemIcons {
     private static String wikiPageName(String id) {
         if ("MYTHOLOGICAL_RITUAL".equals(id)) return "Mythological Ritual";
         for (DropData.Source slayer : MythData.ALL) for (DropData.Drop drop : slayer.drops)
+            if (drop.id.equalsIgnoreCase(id)) return drop.name;
+        for (DropData.Source slayer : SlayerData.ALL) for (DropData.Drop drop : slayer.drops)
             if (drop.id.equalsIgnoreCase(id)) return drop.name;
         if ("@COIN".equals(id)) return "Coins";
         return id.replace('_', ' ');
