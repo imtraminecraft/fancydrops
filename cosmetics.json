@@ -1,49 +1,26 @@
 {
   "special": {
     "sparkle": [
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
-      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7"
+      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
     ],
     "patreon": [
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
-      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7"
+      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
     ],
     "bughunter": [
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
-      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7"
+      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
     ],
     "contributor": [
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
-      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7"
+      "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
     ]
   },
   "owners": {
     "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8": "sparkle"
   },
   "extra": {
-    "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8": [
-      "firstdrop",
-      "bolt",
-      "fresh",
-      "heart",
-      "crown",
-      "legend",
-      "flame",
-      "discord",
-      "glow",
-      "star",
-      "secret",
-      "pulse",
-      "ghost",
-      "clover",
-      "wave",
-      "snow",
-      "collector",
-      "shimmer",
-      "newcomer",
-      "gem",
-      "hoarder"
-    ],
     "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7": [
       "newcomer",
       "fresh",
@@ -66,6 +43,30 @@
       "shimmer",
       "wave",
       "glow"
+    ],
+    "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8": [
+      "firstdrop",
+      "bolt",
+      "fresh",
+      "heart",
+      "crown",
+      "legend",
+      "flame",
+      "discord",
+      "glow",
+      "star",
+      "secret",
+      "pulse",
+      "ghost",
+      "clover",
+      "wave",
+      "snow",
+      "collector",
+      "shimmer",
+      "newcomer",
+      "gem",
+      "hoarder",
+      "betamark"
     ]
   }
 }
