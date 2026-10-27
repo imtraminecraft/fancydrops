@@ -14,7 +14,7 @@ final class IconArt {
 
     // ------------------------------------------------------------------ the entry point
     /** The picture of one icon at one frame (0..FRAMES-1). tint (RGB, or 0) colours the icons that take a colour. */
-    static int[] render(String name, int tint, int frame) {
+    static synchronized int[] render(String name, int tint, int frame) {                   // synchronized: the icon export runs on a background thread and the canvas is shared
         c = new Canvas(16, 16);
         float f = (frame % FRAMES) / (float) FRAMES;
         if (!paint(name, tint, f)) return null;
@@ -85,79 +85,77 @@ final class IconArt {
         float s = sn(f), t = tri(f);
         if (n.startsWith("fx") && n.length() <= 4 && Character.isDigit(n.charAt(n.length() - 1))) return fx(Integer.parseInt(n.substring(2)), f);
         switch (n) {
-            case "home" -> {                                                                 // a cosy house, smoke rising from the chimney
-                bev(10, 3, 2, 5, 0x8A4B3A);
-                bev(3, 8, 10, 6, 0xF2E3C0);
-                tri(1, 8.6f, 8, 2, 15, 8.6f, 0xD4503A);
-                rect(2, 8, 12, 1, 0x8F2F22);
-                bev(7, 10, 3, 4, 0x7A4A24); px(9, 12, 0xFFD25A);
-                int wc = mix(0x7FC8FF, 0xFFE08A, t);
-                bev(4, 10, 2, 2, wc); bev(11, 10, 2, 2, wc);
+            // ---- the tab icons (0.8.0, "vault" set): one family, gold trim, a dark outline, light from the top left, one small motion each
+            case "home" -> {                                                                 // a little keep: violet slate roof with a gold ridge, a warm lit door, a spark from the chimney
+                bev(11, 3, 2, 5, 0x6A5A8E);
+                bev(3, 8, 10, 6, 0xEADFC6);
+                tri(1, 8.6f, 8, 1.6f, 15, 8.6f, 0x8572C8);
+                rect(2, 8, 12, 1, 0x4A3E7A);
+                px(8, 2, 0xFFE3A0); px(7, 3, 0xE8B84A); px(9, 3, 0xE8B84A);
+                int door = mix(0xC8902A, 0xFFE9A8, t);
+                bev(7, 10, 3, 4, 0x5C3A1E); rect(8, 11, 1, 3, door);
+                bev(4, 10, 2, 2, mix(0x8FA8FF, 0xFFE08A, t)); bev(11, 10, 2, 2, mix(0x8FA8FF, 0xFFE08A, t));
                 outline();
-                for (int i = 0; i < 3; i++) { float u = (f + i / 3f) % 1f; pxa(11 + Math.round((float) Math.sin(u * 6 + i)), Math.round(3 - u * 3), 0xE8EEF8, (1f - u) * 0.9f); }
-                glow(8, 11, 5, 0xFFD890, 0.12f + 0.08f * t);
+                float u = f; pxa(12 + Math.round((float) Math.sin(u * 7)), Math.round(2 - u * 2.5f), 0xFFD060, (1f - u));
+                glow(8, 12, 5, 0xFFD890, 0.10f + 0.10f * t);
             }
-            case "dropped" -> {                                                              // a bookshelf: a book slides out and back
-                int slide = Math.round(2.4f * t);
-                bev(1, 1, 14, 14, 0x7A4A24);
-                rect(2, 2, 12, 12, 0x3A2410);
-                rect(1, 7, 14, 1, 0x9A622E); rect(1, 14, 14, 1, 0x9A622E);
-                int[] cols = {0xE0484E, 0x4A8AE0, 0xF0C040, 0x58B868, 0xB56BFF, 0xE08A3A, 0x55D8FF};
-                int[] ws = {2, 1, 2, 2, 1, 2, 2};
-                int x = 2; for (int i = 0; i < 6 && x < 13; i++) { int w = ws[i], h = 4 - (i % 3 == 1 ? 1 : 0); int yy = 7 - h; if (i == 2) { rect(x, yy + 1 - slide, w, h, cols[i]); px(x, yy + 1 - slide, lite(cols[i], 0.5f)); } else { rect(x, yy, w, h, cols[i]); px(x, yy, lite(cols[i], 0.5f)); } x += w; }
-                x = 2; for (int i = 0; i < 6 && x < 13; i++) { int w = ws[(i + 3) % 7], h = 4 - (i % 2); rect(x, 14 - h, w, h, cols[(i + 3) % 7]); px(x, 14 - h, lite(cols[(i + 3) % 7], 0.5f)); x += w; }
+            case "dropped" -> {                                                              // the drop library: an open chest with gold bands, a gem bobbing out of it
+                int bob = Math.round(1.5f * s);
+                quad(2, 8, 14, 8, 13, 5, 3, 5, 0x6E4622); rect(3, 5, 10, 1, 0xE8B84A);
+                float[] gx = {8, 10.5f, 8, 5.5f}, gy = {0.5f + bob, 3f + bob, 5.5f + bob, 3f + bob};
+                poly(gx, gy, 0x55D8FF);
+                bev(2, 8, 12, 6, 0x8A5A2B);
+                rect(2, 10, 12, 1, 0xE8B84A); rect(2, 8, 12, 1, 0xC8902A);
+                bev(7, 9, 2, 3, 0xFFD25A);
                 outline();
+                glint(7, 2 + bob, 1, 0xFFFFFF, 0.4f + 0.6f * t);
+                glow(8, 4, 4, 0x55D8FF, 0.12f + 0.1f * t);
             }
-            case "animations" -> {                                                           // a film clapperboard: the striped clapper swings shut on its hinge
-                float th = f < 0.4f ? 0.55f * (float) Math.sin(f / 0.4f * 1.2f) / 0.93f : f < 0.55f ? 0.55f * (1f - (f - 0.4f) / 0.15f) : 0f;      // opens, then snaps shut
-                bev(1, 8, 14, 7, 0x1B1F2C);                                                          // the slate
-                rect(2, 9, 12, 1, 0xF4F4F8); rect(2, 11, 5, 1, 0xCBD2E4); rect(8, 11, 6, 1, 0xCBD2E4); rect(2, 13, 8, 1, 0xCBD2E4); rect(11, 13, 3, 1, 0xCBD2E4);
-                float cs = (float) Math.cos(th), sn2 = (float) Math.sin(th);
-                for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {                          // the clapper: a bar turned about the hinge at (1.5, 8)
-                    float dx = x + 0.5f - 1.5f, dy = y + 0.5f - 8f, u = dx * cs - dy * sn2, v = dx * sn2 + dy * cs;
-                    if (u < -0.5f || u > 13f || v < -3.6f || v > -0.2f) continue;
-                    boolean light = (int) Math.floor((u + (v + 3.6f) * 0.9f) / 2.1f) % 2 == 0;
-                    px(x, y, light ? (v < -2.6f ? 0xFFFFFF : 0xE4E8F2) : (v > -1f ? 0x0E1018 : 0x1B1F2C));
-                }
-                rect(1, 8, 14, 1, 0x0E1018);
+            case "animations" -> {                                                           // a star that turns and pulses, little sparks flying off it
+                float rot = f * TAU / 5f, rr = 6.2f + 0.6f * t;
+                float[] xs = new float[10], ys = new float[10];
+                for (int i = 0; i < 10; i++) { float an = rot + i * TAU / 10f - TAU / 4f, r = i % 2 == 0 ? rr : rr * 0.45f; xs[i] = 8 + (float) Math.cos(an) * r; ys[i] = 8.2f + (float) Math.sin(an) * r; }
+                poly(xs, ys, 0xF2C04E);
                 outline();
-                if (f >= 0.55f && f < 0.8f) { glint(14, 5, 2, 0xFFFFFF, 1f - (f - 0.55f) * 3f); px(15, 7, 0xFFE27A); px(0, 6, 0xFFE27A); }
+                for (int i = 0; i < 4; i++) { float u = (f + i / 4f) % 1f; float an = i * TAU / 4f + TAU / 8f; pxa(Math.round(8 + (float) Math.cos(an) * (5 + u * 3)), Math.round(8 + (float) Math.sin(an) * (5 + u * 3)), i % 2 == 0 ? 0xFF8AD0 : 0xB48CFF, 1f - u); }
+                glint(6, 6, 1, 0xFFFFFF, 0.5f + 0.5f * t);
             }
-            case "sounds" -> {                                                               // a speaker with waves going out
-                bev(2, 6, 3, 4, 0xB8C2DA);
-                quad(5, 6, 9, 3, 9, 13, 5, 10, 0x8FA0C8);
+            case "sounds" -> {                                                               // two joined notes, each bobbing in turn, a soft ring going out
+                int b1 = Math.round(Math.max(0f, s) * 1.6f), b2 = Math.round(Math.max(0f, -s) * 1.6f);
+                rect(5, 4 - b1, 1, 8, 0xC8902A); rect(11, 3 - b2, 1, 8, 0xC8902A);
+                quad(5, 3 - b1, 12, 2 - b2, 12, 4 - b2, 5, 5 - b1, 0xE8B84A);
+                ball(4, 12 - b1, 2.1f, 0xE8B84A); ball(10, 11 - b2, 2.1f, 0xE8B84A);
                 outline();
-                for (int i = 0; i < 3; i++) {
-                    float u = (f * 3f - i * 0.7f) % 3f; float a = u < 1f ? u : u < 2f ? 1f : 3f - u; float r = 3 + i * 2.2f;
-                    for (int k = -3; k <= 3; k++) { float ang = k * 0.3f; pxa(Math.round(9.5f + (float) Math.cos(ang) * r * 0.9f), Math.round(8 + (float) Math.sin(ang) * r), hue(0.52f + i * 0.04f, 0.5f, 1f), Math.min(1f, a * 1.3f)); }
-                }
+                float u = f; for (int k = -3; k <= 3; k++) { float ang = k * 0.32f, r = 2 + u * 5; pxa(Math.round(13.5f + (float) Math.cos(ang) * r * 0.5f), Math.round(8 + (float) Math.sin(ang) * r), 0x7FE0D0, (1f - u) * 0.9f); }
             }
-            case "chat" -> {                                                                 // a speech bubble with three bouncing dots
-                bev(1, 2, 14, 9, 0xE8F0FF);
-                tri(4, 11, 4, 14.5f, 8, 11, 0xBFD0F0);
-                rect(4, 10, 4, 1, 0xBFD0F0);
+            case "chat" -> {                                                                 // an ivory speech bubble with a gold rim, three gold dots typing in turn
+                bev(1, 2, 14, 9, 0xF3EAD8);
+                tri(4, 11, 4, 14.5f, 8, 11, 0xD9CCB0);
+                rect(4, 10, 4, 1, 0xD9CCB0);
+                rect(2, 2, 12, 1, 0xFFF6E6);
                 outline();
-                for (int i = 0; i < 3; i++) { int dy = Math.round(Math.max(0f, (float) Math.sin(f * TAU - i * 1.1f)) * 1.8f); rect(4 + i * 3, 6 - dy, 2, 2, mix(0x5A74D8, 0x9AB0FF, i / 2f)); }
+                for (int i = 0; i < 3; i++) { float on = Math.max(0f, (float) Math.sin(f * TAU - i * 1.2f)); int dy = Math.round(on * 1.5f); rect(4 + i * 3, 6 - dy, 2, 2, mix(0xB8862A, 0xFFD25A, on)); }
             }
-            case "settings" -> {                                                             // a gear, turning one tooth every loop
+            case "settings" -> {                                                             // a gold gear turning one tooth every loop, a violet hub
                 float rot = f * TAU / 8f;
                 for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
                     float dx = x + 0.5f - 8, dy = y + 0.5f - 8, r = (float) Math.hypot(dx, dy), th = (float) Math.atan2(dy, dx) + rot;
-                    float lim = Math.cos(8 * th) > 0.15f ? 7.4f : 5.7f;
+                    float lim = Math.cos(8 * th) > 0.3f ? 7.5f : 5.6f;
                     if (r > lim || r < 2.4f) continue;
                     float l = (-dx * 0.5f - dy * 0.8f) / 8f;
-                    px(x, y, l > 0.2f ? lite(0xA9B4CC, (l - 0.2f) * 1.2f) : dark(0xA9B4CC, (0.2f - l) * 0.9f + 0.08f));
+                    px(x, y, r > 5.6f ? (l > 0f ? 0xF2C860 : 0xB07E2A) : l > 0.15f ? lite(0xD9A441, (l - 0.15f) * 1.1f) : dark(0xD9A441, (0.15f - l) * 0.55f));
                 }
-                for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) { float r = (float) Math.hypot(x + 0.5f - 8, y + 0.5f - 8); if (r < 2.4f) px(x, y, r < 1.6f ? 0x1B2236 : 0x59637F); }
+                for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) { float r = (float) Math.hypot(x + 0.5f - 8, y + 0.5f - 8); if (r < 2.4f) px(x, y, r < 1.6f ? 0x221C34 : 0x5A4C86); }
                 outline();
                 glint(5, 4, 1, 0xFFFFFF, 0.5f + 0.5f * t);
             }
-            case "stats" -> {                                                                // bars that grow, with a rising arrow
-                int h1 = Math.round(4 + 2 * t), h2 = Math.round(7 + 2 * (1f - t)), h3 = Math.round(9 + 2 * t);
-                bev(2, 14 - h1, 3, h1, 0x62E6A8); bev(6, 14 - h2, 3, h2, 0xFFC857); bev(10, 14 - h3, 3, h3, 0x55D8FF);
-                rect(1, 14, 14, 1, 0x7F8AB0);
+            case "stats" -> {                                                                // three bars that breathe, a gold arrow climbing over them
+                int h1 = Math.round(4 + 2 * t), h2 = Math.round(6 + 2 * (1f - t)), h3 = Math.round(8 + 2 * t);
+                bev(2, 14 - h1, 3, h1, 0x5A4C86); bev(6, 14 - h2, 3, h2, 0x7FC8B0); bev(10, 14 - h3, 3, h3, 0xE8B84A);
+                rect(1, 14, 14, 1, 0x807891);
                 outline();
-                glint(11, 14 - h3 - 2, 2, 0xFFFFFF, 0.4f + 0.6f * t);
+                ln(2, 9 - t, 7, 6 - t, 0xFFE3A0); ln(7, 6 - t, 13, 2 - t, 0xFFE3A0);
+                px(13, Math.round(2 - t), 0xFFFFFF); px(12, Math.round(2 - t), 0xFFE3A0); px(13, Math.round(3 - t), 0xFFE3A0);
             }
             case "mytho" -> {                                                                // the minotaur: a horned head with glaring eyes
                 tri(2, 7, 1, 2, 5.5f, 5.2f, 0xF4EBD2); tri(14, 7, 15, 2, 10.5f, 5.2f, 0xF4EBD2);
