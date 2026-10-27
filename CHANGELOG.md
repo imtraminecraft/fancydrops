@@ -1,4 +1,6 @@
 ## 0.8.0
+- Settings are tidier: cosmetics you see on yourself and on others are two rows of on/off chips (Icon, Effect, Aura), and the price sources show straight away.
+- Faster navigation: Backspace or the mouse's back button goes back a page, Ctrl+F or / jumps to the search box.
 - New sidebar icons for Home, Drop Library, Animations, Sounds, Chat, Settings and Stats: one matching gold-trimmed set (a little keep, a chest with a gem, a turning star, two notes, a typing bubble, a gold gear, a climbing chart).
 - Smoother: edited animation frames and edited icons are checked on a background thread (no more small hitch every second, or during the first play of a drop animation), the drop log is written in the background, the pixel scene repaints at most 60 times a second, and menu banners, bars and toasts draw with far fewer pieces.
 - New menu look: warm dark panels, a gold accent and hairlines, a quiet highlight for the open page, cleaner rows, buttons and section headings. Every page and setting stays where it was.

@@ -353,7 +353,7 @@ public class FancyScreen extends Screen {
         addRenderableWidget(thrField); thrField.setVisible(false);
         searchField = new EditBox(font, 0, 0, 120, 14, Component.literal("search"));
         searchField.setMaxLength(30); searchField.setBordered(false);
-        searchField.setHint(Component.literal("Search..."));
+        searchField.setHint(Component.literal("Search  (Ctrl+F)"));
         searchField.setValue(query);
         searchField.setResponder(v -> { query = v; scroll = 0; sideScroll = 0; if (tab == Tab.COSMETICS && !v.isBlank()) closeCos(); });
         addRenderableWidget(searchField);
@@ -3450,6 +3450,7 @@ public class FancyScreen extends Screen {
 
 
     @Override public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) { dirty = true;
+        if (event.button() == 3 && editor == 0 && !adminOpen && !adminHome && hdrBack != null) { hdrBack.run(); return true; }        // the mouse's back button goes back a page
         if (searchField.isFocused() && !(event.x() >= searchField.getX() - 6 && event.x() < searchField.getX() + searchField.getWidth() + 6 && event.y() >= searchField.getY() - 3 && event.y() < searchField.getY() + 14)) searchField.setFocused(false);          // a click anywhere else leaves the search box
         if (adminOpen) return event.button() != 0 || adminClick(event.x(), event.y());
         if (adminHome) {
@@ -3617,6 +3618,11 @@ public class FancyScreen extends Screen {
             return true;
         }
         FancyConfig fc = FancyConfig.get();
+        boolean anyField = searchField.isFocused() || formatField.isFocused() || addField.isFocused() || numField.isFocused() || adminField.isFocused() || thrField.isFocused() || tokenField.isFocused();
+        if (!anyField && !cosWin()) {                                                       // shortcuts: Backspace goes back a page, Ctrl+F or / jumps to the search box
+            if (key == 259 && hdrBack != null) { hdrBack.run(); return true; }
+            if ((key == 70 && event.hasControlDownWithQuirk()) || key == 47) { searchField.setFocused(true); setFocused(searchField); return true; }
+        }
         if (key == 256 && cosWin()) { closeCos(); return true; }
         if (key == 256 && fc.menuAnimated) { if (closeAt == 0L) closeAt = System.currentTimeMillis(); return true; }      // Esc fades the menu out first
         return super.keyPressed(event);
