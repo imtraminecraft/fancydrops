@@ -76,6 +76,11 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
                 Identifier.fromNamespaceAndPath("fancydrops", "drop_animation"),
                 (graphics, deltaTracker) -> AnimationManager.render(graphics));
 
+        try {                                                                                  // auras are real particles in the world: hidden by blocks and bodies, always on the player
+            net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents.END_EXTRACTION.register(AuraFx::extract);
+            net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents.COLLECT_SUBMITS.register(AuraFx::submit);
+        } catch (Throwable t) { System.err.println("[FancyDrops] world auras unavailable: " + t); }
+
         HudElementRegistry.attachElementAfter(VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("fancydrops", "auras"),
                 (graphics, deltaTracker) -> AuraFx.render(graphics));

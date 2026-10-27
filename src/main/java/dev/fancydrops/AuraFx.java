@@ -120,13 +120,13 @@ final class AuraFx {
         for (P q : in) { int al = Math.round((q.argb() >>> 24) * k); if (al > 0) o.add(new P(q.x(), q.y(), q.z(), q.size(), (al << 24) | (q.argb() & 0xFFFFFF), q.shape(), q.lag())); }
         return o;
     }
-    /** The moving animation: a curtain of light streams out behind you along the path you just walked, swirling round it. Slower steps, shorter and fainter trail. */
+    /** The moving animation: a short tail of light follows right behind you along the path you just walked. Slower steps, shorter and fainter tail. */
     static List<P> trail(String aura, ArrayDeque<double[]> hist, long now, double ex, double ey, double ez, double turn, float k) {
         List<P> o = new ArrayList<>(); int col = auraRgb(aura), pale = mix(col, 0xFFFFFF, 0.55f);
-        int n = 30;
+        int n = 18;
         for (int i = 0; i < n; i++) {
             float u = i / (float) n;
-            double[] h = at(hist, now - (long) (u * 900f));                                                  // where you were u * 0.9 s ago
+            double[] h = at(hist, now - (long) (u * 400f));                                                  // where you were u * 0.4 s ago: a short tail that stays close
             float hgt = 0.1f + 1.9f * (float) ((i * 0.618034) % 1.0);                                        // each particle keeps its own height: together they make a curtain
             double an = turn * 3.0 + i * 0.75; float r = 0.3f * (1f - 0.4f * u);
             float fl = (1f - u) * (1f - u * 0.4f);
@@ -203,95 +203,148 @@ final class AuraFx {
         return new double[]{x, y, z, yaw, pitch};
     }
 
-    /** Called every frame by the HUD: draws the aura particles round every player who wears one. */
-    private static final Map<UUID, double[]> SMOOTH = new java.util.HashMap<>();
-    private static final Map<UUID, long[]> LOS = new java.util.HashMap<>();
-    static void render(GuiGraphicsExtractor g) {
+    // ------------------------------------------------------------------ in the world: real 3D particles, drawn in the level pass so blocks and bodies hide them
+    /** Where each player's body is drawn this frame (entity id -> x, y, z), read from the game's own render states, so the aura sits exactly on the body. */
+    private static final Map<Integer, double[]> BODY = new HashMap<>();
+    private static double wcX, wcY, wcZ; private static final org.joml.Quaternionf CAM_ROT = new org.joml.Quaternionf();
+    private static boolean worldOk;
+
+    /** End of the game's extraction step: remember where every player body and the camera are this frame. */
+    static void extract(net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionContext ctx) {
+        try {
+            BODY.clear();
+            var ls = ctx.levelState(); var cs = ls.cameraRenderState;
+            wcX = cs.pos.x(); wcY = cs.pos.y(); wcZ = cs.pos.z(); CAM_ROT.set(cs.orientation);
+            for (var st : ls.entityRenderStates) if (st instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState av && !av.isInvisible) BODY.put(av.id, new double[]{av.x, av.y, av.z});
+        } catch (Throwable t) { if (!worldOk) System.err.println("[FancyDrops] aura extract failed: " + t); }
+    }
+
+    /** The level is collecting what to draw: add the aura particles of every player who wears one, as glowing camera-facing quads in the world. */
+    static void submit(net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext ctx) {
         try {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null) return;
             Map<UUID, Cosmetics.Look> looks = Cosmetics.looks();
             if (looks.isEmpty()) return;
-            double[] cam = camera(mc);
-            double cx = cam[0], cy = cam[1], cz = cam[2]; float yaw = (float) cam[3], pitch = (float) cam[4];
-            double yr2 = Math.toRadians(yaw), xr2 = Math.toRadians(pitch);
-            double fx = -Math.sin(yr2) * Math.cos(xr2), fy = -Math.sin(xr2), fz = Math.cos(yr2) * Math.cos(xr2);          // forward
-            double rx = -Math.cos(yr2), ry = 0, rz = -Math.sin(yr2);                                                      // right
-            double ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx;                                // up = right x forward
-            int W = mc.getWindow().getGuiScaledWidth(), H = mc.getWindow().getGuiScaledHeight();
-            double fov = Math.toRadians(mc.options.fov().get()), th = Math.tan(fov / 2), asp = W / (double) H;
-            long now = System.currentTimeMillis();
-            float pt = 1f; try { pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false); } catch (Throwable ignored) { }
             FancyConfig cf = FancyConfig.get();
+            long now = System.currentTimeMillis();
             java.util.Set<UUID> allowed = null;                                                      // "most players with an aura": only the nearest few get drawn
             if (cf.cosMax > 0) {
-                List<net.minecraft.world.entity.player.Player> near = new java.util.ArrayList<>();
+                List<net.minecraft.world.entity.player.Player> near = new ArrayList<>();
                 for (var p : mc.level.players()) if (p != mc.player) { Cosmetics.Look l0 = looks.get(p.getUUID()); if (l0 != null && l0.aura() != null) near.add(p); }
-                near.sort(java.util.Comparator.comparingDouble(q -> mc.player.distanceToSqr(q)));
-                allowed = new java.util.HashSet<>(); for (int i = 0; i < Math.min(cf.cosMax, near.size()); i++) allowed.add(near.get(i).getUUID());
+                near.sort(Comparator.comparingDouble(q -> mc.player.distanceToSqr(q)));
+                allowed = new HashSet<>(); for (int i = 0; i < Math.min(cf.cosMax, near.size()); i++) allowed.add(near.get(i).getUUID());
             }
-            boolean firstP = true; try { Object ct0 = call(mc.options, "getCameraType"); firstP = ct0 == null || Boolean.TRUE.equals(call(ct0, "isFirstPerson")); } catch (Throwable ignored) { }
+            org.joml.Vector3f right = CAM_ROT.transform(new org.joml.Vector3f(1, 0, 0)), up = CAM_ROT.transform(new org.joml.Vector3f(0, 1, 0));
+            float pt = 1f; try { pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false); } catch (Throwable ignored) { }
             for (var p : mc.level.players()) {
                 Cosmetics.Look l = looks.get(p.getUUID());
                 if (l == null || l.aura() == null) continue;
-                if (p == mc.player && cf.cosHideFirst && firstP) continue;
                 if (p != mc.player && (mc.player.distanceTo(p) > cf.cosRange || (allowed != null && !allowed.contains(p.getUUID())))) continue;
-                if (p != mc.player) {                                                                    // someone else: a quick look-through check every half second, not every frame (it flickered when moving)
-                    long[] ck = LOS.computeIfAbsent(p.getUUID(), k -> new long[]{0, 1});
-                    if (now - ck[0] > 500) { ck[0] = now; ck[1] = mc.player.hasLineOfSight(p) ? 1 : 0; }
-                    if (ck[1] == 0) continue;
+                double[] body = BODY.get(p.getId());
+                if (body == null) {                                                                 // not drawn this frame (first person, invisible, out of view)
+                    if (p != mc.player || cf.cosHideFirst) continue;
+                    var v = p.getPosition(pt); body = new double[]{v.x, v.y, v.z};                // first person: your own aura still round you, if you want it
                 }
-                double ox = fieldD(p, "xOld"), oy = fieldD(p, "yOld"), oz = fieldD(p, "zOld");           // where the player is drawn this frame: between the last tick and this one
-                if (ox == 0 && oy == 0 && oz == 0) { ox = p.getX(); oy = p.getY(); oz = p.getZ(); }
-                double ex = ox + (p.getX() - ox) * pt, ey = oy + (p.getY() - oy) * pt, ez = oz + (p.getZ() - oz) * pt;
-                if (p != mc.player) {                                                                    // other players move in network steps: ease the point the aura follows so it doesn't shake
-                    double[] sm = SMOOTH.get(p.getUUID()); if (sm == null) { sm = new double[]{ex, ey, ez, now}; SMOOTH.put(p.getUUID(), sm); }
-                    double dts = Math.max(1, Math.min(100, now - (long) sm[3])); sm[3] = now;
-                    if (Math.abs(ex - sm[0]) + Math.abs(ey - sm[1]) + Math.abs(ez - sm[2]) > 6) { sm[0] = ex; sm[1] = ey; sm[2] = ez; }
-                    else { double k = 1 - Math.exp(-dts / 130.0); sm[0] += (ex - sm[0]) * k; sm[1] += (ey - sm[1]) * k; sm[2] += (ez - sm[2]) * k; }
-                    ex = sm[0]; ey = sm[1]; ez = sm[2];
-                }
-                double[] st = STATE.get(p.getUUID()); if (st == null) { st = new double[]{0, now, ex, ey, ez, now, 1, 0, 0}; STATE.put(p.getUUID(), st); }     // phase ms, last frame, last position, last time it moved, speed
-                double moved = Math.abs(ex - st[2]) + Math.abs(ey - st[3]) + Math.abs(ez - st[4]);
-                if (moved > 0.004) st[5] = now;
-                double dtf = Math.max(1, Math.min(100, now - (long) st[1]));
-                double sp = Math.sqrt((ex - st[2]) * (ex - st[2]) + (ez - st[4]) * (ez - st[4])) / (dtf / 1000.0);      // blocks per second
-                st[7] += (Math.min(sp, 12.0) - st[7]) * Math.min(1.0, dtf / 160.0);                                      // smoothed, so it eases in and out
-                st[2] = ex; st[3] = ey; st[4] = ez;
-                ArrayDeque<double[]> hist = HIST.computeIfAbsent(p.getUUID(), k -> new ArrayDeque<>());
-                if (hist.isEmpty() || now - (long) hist.peekLast()[0] >= 25) hist.addLast(new double[]{now, ex, ey, ez});
-                while (hist.size() > 2 && now - (long) hist.peekFirst()[0] > 1600) hist.removeFirst();
-                float moveK = (float) Math.max(0.0, Math.min(1.0, (st[7] - 0.35) / 3.6)); moveK = moveK * moveK * (3f - 2f * moveK);
-                boolean idle = now - (long) st[5] > 5000, going = now - (long) st[5] < 250;
-                double want = going ? 2.0 : idle ? 0.55 : 1.0;
-                if (cf.cosCalm) want *= 0.4;                                            // moving: the aura swirls faster round you; resting: it slows down
-                double dtm = Math.min(100, now - st[1]); st[1] = now;
-                st[6] += (want - st[6]) * Math.min(1.0, dtm / 250.0);
-                st[0] += dtm * st[6];
-                float idleK = idle ? (float) Math.min(1.0, (now - st[5] - 5000) / 1200.0) : 0f;            // the idle animation fades in over a second
-                st[8] += dtm * (0.25 + st[7] * 0.35) / 1000.0;                                              // the trail's swirl turns with your speed: it slows as you do
-                List<P> ps = fade(particles(l.aura(), (long) st[0]), 1f - moveK);                           // the resting aura melts away as you pick up speed, and comes back as you slow
-                if (idleK > 0f) ps.addAll(idleParticles(l.aura(), now, idleK * (1f - moveK)));
-                if (moveK > 0.01f) ps.addAll(trail(l.aura(), hist, now, ex, ey, ez, st[8], moveK));
-                int keep = Math.min(100, cf.cosAmount); int pi = 0;
-                for (P q : ps) {
-                    if (keep < 100 && (pi + 1) * keep / 100 == pi++ * keep / 100) continue;                  // aura amount below 100%: drop an even share of the particles
-                    double bx = ex, by = ey, bz = ez;                                                       // always on you: the aura moves round the body, it never trails behind
-                    double dx = bx + q.x() - cx, dy = by + q.y() - cy, dz = bz + q.z() - cz;
-                    double zc = dx * fx + dy * fy + dz * fz;
-                    if (zc < 0.25) continue;
-                    double xc = dx * rx + dy * ry + dz * rz, yc = dx * ux + dy * uy + dz * uz;
-                    float sx = (float) (W / 2.0 * (1 + xc / (zc * th * asp))), sy = (float) (H / 2.0 * (1 - yc / (zc * th)));
-                    float px = (float) (q.size() * cf.cosSize / 100.0 * (H / 2.0) / (zc * th));
-                    draw(g, sx, sy, px, q);
-                }
+                List<P> ps = frameParticles(p.getUUID(), l.aura(), body[0], body[1], body[2], now, cf);
+                if (ps.isEmpty()) continue;
+                final float ox = (float) (body[0] - wcX), oy = (float) (body[1] - wcY), oz = (float) (body[2] - wcZ);
+                final float k = cf.cosSize / 100f;
+                ctx.submitNodeCollector().submitCustomGeometry(ctx.poseStack(), net.minecraft.client.renderer.rendertype.RenderTypes.lightning(), (pose, buf) -> {
+                    for (P q : ps) quad3d(pose, buf, ox + q.x(), oy + q.y(), oz + q.z(), q.size() * k, q, right, up);
+                });
             }
+            worldOk = true;
+        } catch (Throwable t) { if (!worldOk) { worldOk = true; System.err.println("[FancyDrops] aura draw failed: " + t); } }
+    }
+
+    /** This frame's particles round one player: the resting aura, the idle swirl after 5 s still, and a short trail while moving. Positions are relative to the feet. */
+    private static List<P> frameParticles(UUID id, String aura, double ex, double ey, double ez, long now, FancyConfig cf) {
+        double[] st = STATE.get(id); if (st == null) { st = new double[]{0, now, ex, ey, ez, now, 1, 0, 0}; STATE.put(id, st); }     // phase ms, last frame, last position, last time it moved, speed, swirl
+        double dtf = Math.max(1, Math.min(100, now - (long) st[1]));
+        double moved = Math.abs(ex - st[2]) + Math.abs(ey - st[3]) + Math.abs(ez - st[4]);
+        if (moved > 0.004) st[5] = now;
+        double sp = Math.sqrt((ex - st[2]) * (ex - st[2]) + (ez - st[4]) * (ez - st[4])) / (dtf / 1000.0);      // blocks per second
+        if (sp > 60) sp = 0;                                                                                     // a teleport, not a run
+        st[7] += (Math.min(sp, 12.0) - st[7]) * Math.min(1.0, dtf / 160.0);
+        st[2] = ex; st[3] = ey; st[4] = ez;
+        ArrayDeque<double[]> hist = HIST.computeIfAbsent(id, kk -> new ArrayDeque<>());
+        if (hist.isEmpty() || now - (long) hist.peekLast()[0] >= 25) hist.addLast(new double[]{now, ex, ey, ez});
+        while (hist.size() > 2 && now - (long) hist.peekFirst()[0] > 800) hist.removeFirst();
+        float moveK = (float) Math.max(0.0, Math.min(1.0, (st[7] - 0.35) / 3.6)); moveK = moveK * moveK * (3f - 2f * moveK);
+        boolean idle = now - (long) st[5] > 5000, going = now - (long) st[5] < 250;
+        double want = going ? 1.6 : idle ? 0.55 : 1.0;
+        if (cf.cosCalm) want *= 0.4;
+        double dtm = Math.min(100, now - st[1]); st[1] = now;
+        st[6] += (want - st[6]) * Math.min(1.0, dtm / 250.0);
+        st[0] += dtm * st[6] * Math.max(0.2, cf.cosSpeed / 100.0);
+        float idleK = idle ? (float) Math.min(1.0, (now - st[5] - 5000) / 1200.0) : 0f;
+        st[8] += dtm * (0.25 + st[7] * 0.35) / 1000.0;
+        List<P> ps = fade(particles(aura, (long) st[0]), 1f - 0.6f * moveK);                                     // the aura stays on you while you run, a little fainter
+        if (idleK > 0f) ps.addAll(idleParticles(aura, now, idleK * (1f - moveK)));
+        if (moveK > 0.01f) ps.addAll(trail(aura, hist, now, ex, ey, ez, st[8], moveK));
+        int keep = Math.min(100, cf.cosAmount);
+        if (keep < 100) { List<P> o = new ArrayList<>(); for (int i = 0; i < ps.size(); i++) if ((i + 1) * keep / 100 != i * keep / 100) o.add(ps.get(i)); ps = o; }
+        if (STATE.size() > 64) { STATE.clear(); HIST.clear(); }
+        return ps;
+    }
+
+    /** One particle as glowing quads facing the camera: a soft halo, then the shape (a square, a four-point star, or a ring round the body). */
+    private static void quad3d(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float size, P q, org.joml.Vector3f r, org.joml.Vector3f u) {
+        int a = q.argb() >>> 24, rgb = q.argb() & 0xFFFFFF; if (a < 6 || size <= 0.001f) return;
+        int cr = (rgb >> 16) & 255, cg = (rgb >> 8) & 255, cb = rgb & 255;
+        if (q.shape() == 2) {                                                                    // a thin ring of light round the body at this height
+            float rad = 0.6f; int seg = 28;
+            for (int i = 0; i < seg; i++) {
+                double a0 = i * Math.PI * 2 / seg, a1 = (i + 1) * Math.PI * 2 / seg;
+                float x0 = x + (float) Math.cos(a0) * rad - q.x(), z0 = z + (float) Math.sin(a0) * rad - q.z(), x1 = x + (float) Math.cos(a1) * rad - q.x(), z1 = z + (float) Math.sin(a1) * rad - q.z();
+                float h = 0.025f;
+                buf.addVertex(pose, x0, y - h, z0).setColor(cr, cg, cb, a); buf.addVertex(pose, x1, y - h, z1).setColor(cr, cg, cb, a);
+                buf.addVertex(pose, x1, y + h, z1).setColor(cr, cg, cb, a); buf.addVertex(pose, x0, y + h, z0).setColor(cr, cg, cb, a);
+                buf.addVertex(pose, x0, y + h, z0).setColor(cr, cg, cb, a); buf.addVertex(pose, x1, y + h, z1).setColor(cr, cg, cb, a);       // the back face too, so it shows from any side
+                buf.addVertex(pose, x1, y - h, z1).setColor(cr, cg, cb, a); buf.addVertex(pose, x0, y - h, z0).setColor(cr, cg, cb, a);
+            }
+            return;
+        }
+        bill(pose, buf, x, y, z, size * 1.9f, size * 1.9f, r, u, cr, cg, cb, Math.round(a * 0.22f));     // soft halo
+        if (q.shape() == 1) {                                                                    // a four-point star: two thin arms and a bright core
+            bill(pose, buf, x, y, z, size * 1.5f, size * 0.16f, r, u, cr, cg, cb, a);
+            bill(pose, buf, x, y, z, size * 0.16f, size * 1.5f, r, u, cr, cg, cb, a);
+            bill(pose, buf, x, y, z, size * 0.3f, size * 0.3f, r, u, 255, 255, 255, Math.min(255, a + 40));
+        } else bill(pose, buf, x, y, z, size * 0.55f, size * 0.55f, r, u, cr, cg, cb, a);
+    }
+    /** A camera-facing rectangle, hw/hh its half width and height in blocks. */
+    private static void bill(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float hw, float hh, org.joml.Vector3f r, org.joml.Vector3f u, int cr, int cg, int cb, int a) {
+        if (a < 4) return;
+        float rx = r.x * hw, ry = r.y * hw, rz = r.z * hw, ux = u.x * hh, uy = u.y * hh, uz = u.z * hh;
+        buf.addVertex(pose, x - rx - ux, y - ry - uy, z - rz - uz).setColor(cr, cg, cb, a);
+        buf.addVertex(pose, x + rx - ux, y + ry - uy, z + rz - uz).setColor(cr, cg, cb, a);
+        buf.addVertex(pose, x + rx + ux, y + ry + uy, z + rz + uz).setColor(cr, cg, cb, a);
+        buf.addVertex(pose, x - rx + ux, y - ry + uy, z - rz + uz).setColor(cr, cg, cb, a);
+    }
+
+    /** Called every frame by the HUD: only the fallback name over other players' heads (the auras are drawn in the world, see submit). */
+    static void render(GuiGraphicsExtractor g) {
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null || mc.player == null || Cosmetics.nameTagHooked) return;
+            Map<UUID, Cosmetics.Look> looks = Cosmetics.looks();
+            if (looks.isEmpty()) return;
+            FancyConfig cf = FancyConfig.get();
+            long now = System.currentTimeMillis();
+            double[] cam = camera(mc);
+            double cx = cam[0], cy = cam[1], cz = cam[2]; float yaw = (float) cam[3], pitch = (float) cam[4];
+            double yr2 = Math.toRadians(yaw), xr2 = Math.toRadians(pitch);
+            double fx = -Math.sin(yr2) * Math.cos(xr2), fy = -Math.sin(xr2), fz = Math.cos(yr2) * Math.cos(xr2);
+            double rx = -Math.cos(yr2), ry = 0, rz = -Math.sin(yr2);
+            double ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx;
+            int W = mc.getWindow().getGuiScaledWidth(), H = mc.getWindow().getGuiScaledHeight();
+            double fov = Math.toRadians(mc.options.fov().get()), th = Math.tan(fov / 2), asp = W / (double) H;
             if (!Cosmetics.nameTagHooked) for (var p : mc.level.players()) {                                // fallback (the name-tag mixin did not apply): the name cosmetic and suffix over other players' heads
                 if (p == mc.player) continue;
                 Cosmetics.Look l = looks.get(p.getUUID());
                 if (l == null || (l.fx() == null && l.suffix() == null) || mc.player.distanceTo(p) > Math.min(24, cf.cosRange)) continue;
-                double[] sm = SMOOTH.get(p.getUUID());
-                double ex = sm != null ? sm[0] : p.getX(), ey = (sm != null ? sm[1] : p.getY()) + p.getBbHeight() + 0.95, ez = sm != null ? sm[2] : p.getZ();
+                double ex = p.getX(), ey = p.getY() + p.getBbHeight() + 0.95, ez = p.getZ();
                 double dx = ex - cx, dy = ey - cy, dz = ez - cz, zc = dx * fx + dy * fy + dz * fz;
                 if (zc < 0.5) continue;
                 double xc = dx * rx + dy * ry + dz * rz, yc = dx * ux + dy * uy + dz * uz;
@@ -303,7 +356,6 @@ final class AuraFx {
                 g.fill(Math.round(sx - tw / 2f - 2), Math.round(sy - 1), Math.round(sx + tw / 2f + 2), Math.round(sy + 9), 0x40000000);
                 g.text(font, c, Math.round(sx - tw / 2f), Math.round(sy), 0xFFFFFFFF, true);
             }
-            if (STATE.size() > 64) { STATE.clear(); HIST.clear(); SMOOTH.clear(); LOS.clear(); }
         } catch (Throwable ignored) { }
     }
 

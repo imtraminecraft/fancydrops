@@ -1,4 +1,5 @@
-## 0.7.10
+## 0.8.0
+- Auras are real particles in the world now: they sit exactly on the player (any camera, FOV or sprint), and blocks and bodies hide them. The running tail is short and stays close.
 - Pets show what George pays as their Value (with "George" as the source), instead of an auction price.
 - `/fd simulate` with a coin drop like "1,000,000 Coins" works (the commas inside its name were being cut).
 - Slayer slashes are one thin, smooth, pointed cut (in the preview they looked like lightning, and they were too thick in the animation).

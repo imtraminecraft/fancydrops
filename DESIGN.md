@@ -377,3 +377,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## Standing requirements added in 0.7.10
 - A pet's Value in the animation (and its chat alert price) is what George pays for its rarity (`Item.fixedPrice`, source "George"); the auction price is never looked up for it.
+
+## Standing requirements added in 0.8.0
+- Auras are drawn in the level pass (`LevelRenderEvents.END_EXTRACTION` reads each player's body position from its `AvatarRenderState`, `COLLECT_SUBMITS` draws camera-facing quads with `RenderTypes.lightning()`), never projected on the HUD. They follow the body exactly and are depth tested. The moving tail is at most 0.4 s long.
+- Compile check for Claude sessions: stage `minecraft-merged-*-26.2.jar` from the project's `.gradle/loom-cache/minecraftMaven` and the Fabric API / library jars from `~/.gradle/caches/modules-2/files-2.1`, then compile with JDK 25 (`javac --release 25 -proc:none`). A clean compile is required before every push.
