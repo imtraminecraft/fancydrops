@@ -616,6 +616,36 @@ final class Ritual {
         float pulse = 0.85f + 0.15f * (float) Math.sin(t * 5f);
         float[] offs = spread > 0f ? new float[]{-spread, spread} : new float[]{0f};                 // one centre per drop
         if (farmMode || expMode) { softPivot(t, p, icx, gy, icy, sz, isc, rc, energy, rng, offs, bg, itemA, cx0, cy0, pulse, O); return; }          // no rings and no runes: a field gives petals, a book gives light
+        if (!rng && variant == 1) {                                                        // ---- NORMAL, starburst: rays flash out from the item as it lands, then sparks drift
+            float land = p - 0.42f;
+            if (land > 0f && land < 0.6f) for (int r = 0; r < 12; r++) {
+                float an = r * 6.2832f / 12f + rnd(r + 31) * 0.3f, len = (18 + 16 * rnd(r + 7)) * sz * eo(land / 0.35f), fade = 1f - cl(land / 0.6f);
+                float x0 = cx0 + (float) Math.cos(an) * 6 * sz, y0 = cy0 + (float) Math.sin(an) * 6 * sz * 0.8f;
+                stroke(x0, y0, x0 + (float) Math.cos(an) * len, y0 + (float) Math.sin(an) * len * 0.8f, 0.6f + 0.5f * sz, r % 3 == 0 ? WHITE : rc, 0.8f * fade * itemA);
+            }
+            glowE(cx0, cy0, 30 * sz * isc * pulse, 30 * sz * isc * pulse, rc, 0.45f * itemA);
+            glowE(cx0, cy0, 13 * sz * isc, 13 * sz * isc, WHITE, 0.2f * itemA);
+            for (int k = 0; k < 10; k++) {                                                    // sparks that drift up and fade
+                float ph = ((t * 0.6f + k * 0.1f) % 1f); float sx2 = cx0 + (rnd(k + 90) - 0.5f) * 40 * sz, sy2 = cy0 + 10 * sz - ph * 30 * sz;
+                glint(sx2, sy2, 1, k % 2 == 0 ? WHITE : rc, (float) Math.sin(Math.PI * ph) * itemA * 0.9f);
+            }
+            if (tre) { float cu = sm(p / 0.6f); chest(icx, gy - 13 * sz * cu - 2, sz * 1.0f, sm((p - 0.15f) / 0.35f), bg); }
+            return;
+        }
+        if (!rng && variant == 2) {                                                        // ---- NORMAL, spiral: two ribbons of light wind up round the item, then one soft ring
+            for (int arm = 0; arm < 2; arm++) for (int i = 0; i < 30; i++) {
+                float u = i / 30f, life = cl((p - u * 0.5f) / 0.9f); if (life <= 0f || life >= 1f) continue;
+                float an = arm * 3.1416f + u * 9f + t * 2.4f, r = (30 - 22 * u) * sz * isc * (1f - 0.3f * life);
+                float sx2 = cx0 + (float) Math.cos(an) * r, sy2 = lerp(gy, cy0, u) + (float) Math.sin(an) * r * 0.3f;
+                float al = (float) Math.sin(Math.PI * life) * itemA;
+                glint(sx2, sy2, i % 3 == 0 ? 2 : 1, arm == 0 ? WHITE : rc, al); glowE(sx2, sy2, 3 * sz, 3 * sz, arm == 0 ? WHITE : rc, 0.25f * al);
+            }
+            float rp = (p - 0.6f) / 0.7f; if (rp > 0f && rp < 1f) ringE(cx0, cy0, (14 + 26 * eo(rp)) * sz * isc, (14 + 26 * eo(rp)) * sz * isc * 0.35f, mixc(rc, WHITE, 0.4f), (1f - rp) * 0.9f * itemA, 0, 6.2832f, 0, 0);
+            glowE(cx0, cy0, 30 * sz * isc * pulse, 30 * sz * isc * pulse, rc, 0.45f * itemA);
+            glowE(cx0, cy0, 13 * sz * isc, 13 * sz * isc, WHITE, 0.2f * itemA);
+            if (tre) { float cu = sm(p / 0.6f); chest(icx, gy - 13 * sz * cu - 2, sz * 1.0f, sm((p - 0.15f) / 0.35f), bg); }
+            return;
+        }
         if (!rng) {                                                                        // ---- NORMAL: ascension rings, a glow, orbiting sparkles
             float sw = p / 0.8f; if (sw < 1f) ringE(icx, gy, rx * (0.5f + 1.5f * eo(sw)), ry * (0.5f + 1.5f * eo(sw)), mixc(rc, WHITE, 0.45f), (1f - sw) * 0.95f, 0, 6.2832f, 0, 0);
             for (int j = 0; j < 4; j++) {
@@ -772,9 +802,20 @@ final class Ritual {
     private static void discFill(GuiGraphicsExtractor g, int cx, int cy, int r, int col) {
         for (int y = -r; y <= r; y++) { int hw = (int) Math.round(Math.sqrt(Math.max(0, (double) r * r - (double) y * y))); g.fill(cx - hw, cy + y, cx + hw, cy + y + 1, col); }
     }
+    /** The Normal flourish of the drop being drawn (0 rings, 1 starburst, 2 spiral); RNG and No Drops always use 0. */
+    static int variant;
     private static float itemY(float t, float p, float gy, float icy, float sz, boolean bob, float amp) {
+        float wob = bob ? (float) Math.sin(t * 2.2f) * 1.8f * sz * amp * sm((p - 0.8f) / 0.6f) : 0f;
+        if (variant == 1) {                                                                // falls in from above and lands with two small bounces
+            float u = cl(p / 0.75f), b = u < 0.55f ? (u / 0.55f) * (u / 0.55f) : u < 0.8f ? 1f - 0.18f * (float) Math.sin((u - 0.55f) / 0.25f * Math.PI) : 1f - 0.05f * (float) Math.sin((u - 0.8f) / 0.2f * Math.PI);
+            return lerp(icy - 40 * sz, icy, b) + wob;
+        }
+        if (variant == 2) {                                                                // spirals up out of the ground
+            float u = eo(p / 0.9f);
+            return lerp(gy - 4, icy, u) + (float) Math.sin(u * 9f) * 3f * sz * (1f - u) + wob;
+        }
         float rise = eob(p / 0.85f);
-        return lerp(gy - 4, icy, rise) + (bob ? (float) Math.sin(t * 2.2f) * 1.8f * sz * amp * sm((p - 0.8f) / 0.6f) : 0f);
+        return lerp(gy - 4, icy, rise) + wob;
     }
 
     /** Seconds from the pivot (the moment the drop appears) to the end. */
@@ -807,11 +848,12 @@ final class Ritual {
         Item it = a.lead(), second = a.item2;
         boolean tre = a.group.equals("treasure"), sl = isSlayer(a);
         kind = a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? kindOf(a.item.source.id) : 0;
+        variant = a.type == AnimationManager.NORMAL ? a.variant : 0;
         if (sl) kind = 12 + slTheme(a);
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;
-        float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale) * 1.5f;
+        float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)) * (rng ? 1f : Math.max(0.5f, Math.min(1f, c.normalSize / 100f))), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale) * 1.5f;          // Normal and No Drops can play smaller, so they stay out of the way
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         boolean barsOn = (rng && cfg.bars) || TextFx.barsOnly, blurOn = rng && cfg.blur && !TextFx.barsOnly && !TextFx.itemOnly;
@@ -852,7 +894,7 @@ final class Ritual {
             if (edited != null && edited.length == cv.px.length) SceneTexture.upload(cv);
             if (!SceneTexture.draw(g, cv, sx, sy, W, H, 1f)) { int cell = Math.max(1, Math.round((float) W / CW)); cv.flush((x0, y0, x1, y1, col) -> g.fill(x0 + sx, y0 + sy, x1 + sx, y1 + sy, col), 0, 0, cell, 1f); }
             if (rng && p > 0 && p < 0.45f) g.fill(0, 0, W, H, Gfx.argb(Math.round(235 * (1f - p / 0.45f) * (1f - p / 0.45f)), 0xFFFFFF));                  // the flash
-            else if (!tre && !rng) for (int k = 0; k < 3; k++) { float tau = t - 0.34f * O - k * 0.24f * O; if (tau > 0 && tau < 0.18f) g.fill(0, 0, W, H, Gfx.argb(Math.round(26 * (1f - tau / 0.18f)), 0xD8F6FF)); }
+            else if (!tre && !rng) for (int k = 0; k < 3; k++) { float tau = t - 0.34f * O - k * 0.24f * O; if (tau > 0 && tau < 0.18f) g.fill(0, 0, W, H, Gfx.argb(Math.round(10 * (1f - tau / 0.18f)), 0xD8F6FF)); }          // only a faint flicker for everyday drops: the screen never flashes
         }
 
         // ---- the bars

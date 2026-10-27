@@ -1,4 +1,6 @@
 ## 0.8.0
+- Normal drops are less samey: each one picks one of three flourishes (rising rings, a starburst as it falls in and lands, or a spiral of light it climbs out of).
+- Everyday drops stay out of the way: Normal and No Drops play at 80% of the animation size by default (Animations > Animation Changes > Everyday drops size), and their screen flicker is much fainter. RNG drops keep the full show.
 - Settings are tidier: cosmetics you see on yourself and on others are two rows of on/off chips (Icon, Effect, Aura), and the price sources show straight away.
 - Faster navigation: Backspace or the mouse's back button goes back a page, Ctrl+F or / jumps to the search box.
 - New sidebar icons for Home, Drop Library, Animations, Sounds, Chat, Settings and Stats: one matching gold-trimmed set (a little keep, a chest with a gem, a turning star, two notes, a typing bubble, a gold gear, a climbing chart).

@@ -2571,6 +2571,8 @@ public class FancyScreen extends Screen {
         rows.add(picker("Animation Changes", "The look every animation shares", lb, sb, new String[]{":bars:", ":text:", ":size:", ":dock_top:"}, new int[]{0xFF6C86FF, 0xFFFF72C6, 0xFFFFC857, 0xFF56D8FF}, null, 2, () -> -1, i -> openEditor(i + 1)));
         Row sz = row(0, ":size:", "Animation size", "How big every animation is", Ui.ACCENT);
         sz.ctls.add(new Slider(0.5, 1.5, 0.05, () -> c.animScale, v -> c.animScale = (float) v, () -> Math.round(50 + 50 * c.animScale) + "%").live()); rows.add(sz);
+        Row ns = row(0, ":normal:", "Everyday drops size", "Normal and No Drops play this much smaller, so they stay out of the way. RNG stays full size", Ui.ACCENT);
+        ns.ctls.add(new Slider(50, 100, 5, () -> c.normalSize, v -> c.normalSize = (int) Math.round(v), () -> c.normalSize + "%").typed(1)); rows.add(ns);
     }
 
     /** The tiles of a category's animation groups ("Mythological Mobs", "Treasure"): each opens its editor. */

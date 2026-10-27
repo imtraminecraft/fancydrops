@@ -41,6 +41,7 @@ public final class AnimationManager {
         float speed = 1f;                        // 1.8 after a cocooned slayer boss
         boolean helios;                          // the Ray of Helios pest drop: a sunbeam instead of the vacuum
         long start; float lastT = -1f; int kind = -1;                  // kind: which Mythological creature to show (-1 = the one the drop belongs to)
+        int variant = new java.util.Random().nextInt(3);          // which Normal flourish and entrance this drop gets (0 rings, 1 starburst, 2 spiral), so drops don't all look the same
         Anim(String group, int type, Item item) { this.group = group; this.type = type; this.item = type == NO_DROPS ? null : item; }
         String key() { return group + "." + TYPE_IDS[type]; }
         FancyConfig.AnimCfg cfg() { return FancyConfig.get().anim(key()); }

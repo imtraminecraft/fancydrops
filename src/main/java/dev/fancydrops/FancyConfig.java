@@ -53,6 +53,7 @@ public class FancyConfig {
     }
     // Bar changes
     public int barPx = 15;               // bar height in pixels of the 96-pixel-tall scene (5..15)
+    public int normalSize = 80;          // Normal and No Drops animations play at this % of the Animation size (50..100), so everyday drops stay out of the way; RNG stays full size
     public float animScale = 1f;         // how big every animation is: 0.5 .. 1.5 (shown as 75% .. 125%; 1.0 is the standard 100%)
     public int barOpacity = 90;          // how solid the bars are (%)
     public boolean barPillars = false;    // the side pillars
@@ -153,7 +154,7 @@ public class FancyConfig {
         if (c.ver < 6) { c.ver = 6; for (AnimCfg a : c.anims.values()) if (a.secs == 3f) a.secs = 5f; if ("minos".equals(c.suffix) || "rod".equals(c.suffix)) c.suffix = ""; save(); }          // 0.7.8: every animation is 5 seconds by default again; the King Minos and Fishing Rod icons are gone
         c.textScale = clamp(c.textScale, 0f, 1.1f); c.itemScale = clamp(c.itemScale, 0.5f, 1.1f);
         c.titleScale = clamp(c.titleScale, 0.5f, 1.5f); c.subScale = clamp(c.subScale, 0.5f, 1.5f); c.subDelay = clamp(c.subDelay, 0f, 3f);
-        c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);
+        c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.normalSize = Math.max(50, Math.min(100, c.normalSize)); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);
         c.barPx = Math.max(5, Math.min(15, c.barPx));
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
