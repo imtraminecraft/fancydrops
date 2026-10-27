@@ -196,7 +196,7 @@ final class TextFx {
     static void columns(GuiGraphicsExtractor g, Font font, int cx, int yLab, int yVal, float sc, Item it, FancyConfig c, int alpha) {
         java.util.List<Object[]> cols = new java.util.ArrayList<>();
         if (c.showOdds && !it.odds.isEmpty()) cols.add(new Object[]{"ODDS", it.odds, Ui.odds(it.odds), 0.35f});
-        if (c.showOdds && !it.chance.isEmpty()) cols.add(new Object[]{"CHANCE", it.chance, Ui.SUB, 0.7f});
+        if (c.showOdds && !it.chance.isEmpty()) cols.add(new Object[]{"CHANCE", it.chance, Ui.ANIM_SUB, 0.7f});
         if (c.showPrice && !it.untradeable && it.price != -1) {
             String lab = "VALUE" + (c.showPriceSource && it.price >= 0 && it.priceSource != null && !it.priceSource.isEmpty() ? "  ·  " + it.priceSource.toUpperCase(java.util.Locale.ROOT) : "");
             cols.add(new Object[]{lab, it.price < 0 ? "..." : fullCoins(it.price * Math.max(1, it.amount)) + " coins", Ui.PRICE, 1.05f});
@@ -223,10 +223,10 @@ final class TextFx {
 
     static void detailAt(GuiGraphicsExtractor g, Font font, int cx, int y, float sc, Item it, FancyConfig c, int alpha) {
         java.util.List<Object> parts = new java.util.ArrayList<>();
-        if (c.showOdds && !it.odds.isEmpty()) { parts.add(lit(it.odds)); parts.add(Ui.odds(it.odds)); if (!it.chance.isEmpty()) { parts.add(lit("  " + it.chance)); parts.add(Ui.SUB); } }
+        if (c.showOdds && !it.odds.isEmpty()) { parts.add(lit(it.odds)); parts.add(Ui.odds(it.odds)); if (!it.chance.isEmpty()) { parts.add(lit("  " + it.chance)); parts.add(Ui.ANIM_SUB); } }
         if (c.showPrice && !it.untradeable && it.price != -1) {
             String p = it.price < 0 ? "..." : PriceService.fmt(it.price * Math.max(1, it.amount)) + " coins";
-            if (!parts.isEmpty()) { parts.add(lit("   ")); parts.add(Ui.SUB); }
+            if (!parts.isEmpty()) { parts.add(lit("   ")); parts.add(Ui.ANIM_SUB); }
             parts.add(lit(p)); parts.add(Ui.PRICE);
         }
         if (!parts.isEmpty()) line(g, font, cx, y, sc, alpha, parts.toArray());

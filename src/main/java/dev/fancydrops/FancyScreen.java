@@ -83,7 +83,7 @@ public class FancyScreen extends Screen {
             boolean on = get.getAsBoolean();
             int ty = y + (h - 14) / 2, w = x1 - x0;
             float v = anim("tg|" + key, on ? 1f : 0f, 30f), hv = anim("th|" + key, hover ? 1f : 0f, 48f);
-            int base = Canvas.mix(0xFF2B2E3B, col, v);
+            int base = Canvas.mix(Ui.OFF, col, v);
             pill(g, x0, ty, w, 14, Canvas.mix(base, 0xFFFFFFFF, hv * 0.18f));
             g.fill(x0 + 2, ty + 1, x1 - 2, ty + 2, Gfx.argb(Math.round(70 * v + 25 * hv), 0xFFFFFF));          // top shine
             g.fill(x0 + 2, ty + 12, x1 - 2, ty + 13, Gfx.argb(Math.round(70 * (1f - v)), 0x000000));           // shadow while off
@@ -104,6 +104,7 @@ public class FancyScreen extends Screen {
         void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {
             int ty = y + (h - 14) / 2;
             pill(g, x0, ty, x1 - x0, 14, hover ? Canvas.mix(color, 0xFFFFFFFF, 0.18f) : color);
+            g.fill(x0 + 2, ty + 1, x1 - 2, ty + 2, 0x40FFFFFF); g.fill(x0 + 2, ty + 12, x1 - 2, ty + 13, 0x40000000);
             Gfx.textCentered(g, font, label, (x0 + x1) / 2, ty + 3, 0xFFFFFFFF);
         }
         boolean click(double mx, int button) { if (button == 0) run.run(); return true; }
@@ -1352,10 +1353,10 @@ public class FancyScreen extends Screen {
             int[] b = {px + 8, y, px + sw - 6, y + 22};
             boolean hov = inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3], hit = t.label.toLowerCase(Locale.ROOT).contains(q);
             float hv = anim("stab|" + ti, hov ? 1f : 0f, 48f);
-            if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
+            if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, Ui.ROW_HOVER, hv));
             iconBack(g, b[0] + 14, b[1] + 11, 9, hit || hov, tabCol(t));
             tabIcon(g, t, b[0] + 6, b[1] + 3, hit || hov ? now : 2400L, hit || hov);
-            Gfx.text(g, font, t.label, b[0] + 28, b[1] + 7, hit ? Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.35f) : Canvas.mix(Canvas.mix(0xFF8A8A96, tabCol(t), 0.45f), 0xFFFFFFFF, hv * 0.4f));
+            Gfx.text(g, font, t.label, b[0] + 28, b[1] + 7, hit ? Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.35f) : Canvas.mix(Canvas.mix(Ui.DIM, tabCol(t), 0.45f), 0xFFFFFFFF, hv * 0.4f));
             searchSide.add(new int[]{ti, -1, b[0], b[1], b[2], b[3], -1});
             y += 24;
             String[] sn = subNames(t);
@@ -1367,11 +1368,11 @@ public class FancyScreen extends Screen {
                 float shv = anim("ssub|" + ti + "|" + k, sh ? 1f : 0f, 48f);
                 int sc2 = subCol(t);
                 if (sHit) { pill(g, sb[0], sb[1], sb[2] - sb[0], sb[3] - sb[1], Canvas.mix(Ui.ROW, sc2, 0.22f)); g.fill(sb[0], sb[1] + 2, sb[0] + 2, sb[3] - 2, sc2); }
-                else if (shv > 0.01f) pill(g, sb[0], sb[1], sb[2] - sb[0], sb[3] - sb[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, shv));
+                else if (shv > 0.01f) pill(g, sb[0], sb[1], sb[2] - sb[0], sb[3] - sb[1], Canvas.mix(Ui.PANEL2, Ui.ROW_HOVER, shv));
                 String ic = subList(t).get(k).icon();
                 iconBack(g, sb[0] + 10, sb[1] + rowH / 2, 6, sHit, sc2);
                 Gfx.push(g); Gfx.translate(g, sb[0] + 5, sb[1] + (rowH - 13) / 2); Gfx.scale(g, 0.7f); Icons.draw(g, ic, 0, 0, sHit || sh ? now : 2400L); Gfx.pop(g);
-                Gfx.text(g, font, sn[k], sb[0] + 21, sb[1] + (rowH - 8) / 2, sHit ? Ui.TEXT : Canvas.mix(Canvas.mix(0xFF8A8A96, sc2, 0.4f), 0xFFFFFFFF, shv * 0.4f));
+                Gfx.text(g, font, sn[k], sb[0] + 21, sb[1] + (rowH - 8) / 2, sHit ? Ui.TEXT : Canvas.mix(Canvas.mix(Ui.DIM, sc2, 0.4f), 0xFFFFFFFF, shv * 0.4f));
                 searchSide.add(new int[]{ti, k, sb[0], sb[1], sb[2], sb[3], -1});
                 y += rowH + 1;
                 if (held) for (int si = 0; si < searchSrcs.size(); si++) {                // the pages inside it that hold the match
@@ -2995,14 +2996,11 @@ public class FancyScreen extends Screen {
         Gfx.push(g); Gfx.translate(g, px + pw / 2f, py + ph / 2f); Gfx.scale(g, zoom); Gfx.translate(g, -(px + pw / 2f), -(py + ph / 2f));
         pill(g, px, py, pw, ph, Ui.PANEL);
         if (!cosWin()) { g.fill(px + 1, py + 2, px + sw, py + ph - 1, soft(Ui.PANEL2)); g.fill(px + sw, py + 4, px + sw + 1, py + ph - 4, Ui.BORDER); }
-        int[] grad = {0xFF42D9FF, 0xFF6578FF, 0xFFB66CFF, 0xFFFF6EB5};
-        float flow = animOn ? (now % 5000L) / 5000f : 0f;                    // the colours slowly flow along the top edge
-        for (int x = px + 1; x < px + pw - 1; x += 3) {
-            float u = (((x - px) / (float) pw + flow) % 1f) * grad.length;
-            int i0 = (int) u % grad.length;
-            g.fill(x, py, Math.min(px + pw - 1, x + 3), py + 2, Canvas.mix(grad[i0], grad[(i0 + 1) % grad.length], u - (int) u));
-        }
+        g.fill(px + 2, py + 1, px + pw - 2, py + 38, 0x08FFFFFF);                                   // a faint lighter band behind the header
         rout(g, px, py, pw, ph, Ui.BORDER);
+        g.fill(px + 3, py, px + pw - 3, py + 1, Ui.HAIR);                                          // a thin gold hairline along the top edge, with a slow light passing over it
+        if (animOn) { int sx = px + Math.round(((now % 6000L) / 6000f) * (pw + 120)) - 60;
+            for (int k = -30; k <= 30; k += 2) { int x = sx + k; if (x > px + 2 && x < px + pw - 4) g.fill(x, py, x + 2, py + 1, Gfx.argb(Math.round(200 * (1f - Math.abs(k) / 31f)), Ui.ACCENT & 0xFFFFFF)); } }
 
         if (!cosWin()) {
         // brand
@@ -3010,7 +3008,7 @@ public class FancyScreen extends Screen {
         // the name drops in letter by letter, bounces once, and stays still
         {
             float age = born == 0L || !animOn ? 99f : (now - born) / 1000f;
-            int[] pal = {0xFF56D8FF, 0xFF6885FF, 0xFFB56BFF, 0xFFFF72C6, 0xFFFFB86B};
+            int[] pal = {0xFFFFE3A0, 0xFFF4C860, 0xFFE8AE3E, 0xFFF4C860};
             String title = "FancyDrops"; int tx = px + 40;
             for (int i = 0; i < title.length(); i++) {
                 String ch = String.valueOf(title.charAt(i)); int cwid = Gfx.w(font, ch);
@@ -3044,19 +3042,19 @@ public class FancyScreen extends Screen {
         String[] sn = subs();
         for (int pass = 0; pass < 2; pass++) {                                     // pass 0: the scrolling list. pass 1: Settings, pinned under a line at the bottom
         if (pass == 0) g.enableScissor(px + 4, py + 42, px + sw, sideBottom()); else g.enableScissor(px + 4, pinTop() - 1, px + sw, py + ph - 4);
-        pill(g, px + 8, sy, sw - 14, tabBoxH(), Ui.ROW);
-        g.fill(px + 8, sy + 2, px + 10, sy + tabBoxH() - 2, tabAcc);
+        pill(g, px + 8, sy, sw - 14, tabBoxH(), Canvas.mix(Ui.ROW, Ui.ACCENT, 0.07f));
+        g.fill(px + 8, sy + 3, px + 10, sy + tabBoxH() - 3, Ui.ACCENT);
         for (int i = 0; i < Tab.values().length; i++) {
             Tab t = Tab.values()[i]; if (t == Tab.COSMETICS || (t == Tab.GENERAL) != (pass == 1)) continue; int[] b = tabBox(i);
             boolean act = t == tab, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
             float hv = anim("tab|" + i, hov && !act ? 1f : 0f, 48f);
             float tin = !animOn || born == 0L ? 1f : ease(((now - born) / 1000f - 0.08f - vi(i) * 0.045f) / 0.3f);        // the tabs slide in one after the other
             Gfx.push(g); Gfx.translate(g, Math.round((1f - tin) * -22f + hv * 2f), 0);
-            if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
+            if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, Ui.ROW_HOVER, hv));
             int dx = 0;
             iconBack(g, b[0] + 14 + dx, b[1] + 11 + toff, 9, act, tabCol(t));
             tabIcon(g, t, b[0] + 6 + dx, b[1] + 3 + toff, act && cfg.menuIcons ? now : 2400L, act);   // only the open page's icon moves
-            Gfx.text(g, font, t.label, b[0] + 28 + dx, b[1] + 7 + toff, act ? Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.35f) : Canvas.mix(Canvas.mix(0xFF8A8A96, tabCol(t), 0.45f), 0xFFFFFFFF, hv * 0.4f));
+            Gfx.text(g, font, t.label, b[0] + 28 + dx, b[1] + 7 + toff, act ? Ui.TEXT : Canvas.mix(Canvas.mix(Ui.DIM, tabCol(t), 0.2f), Ui.TEXT, hv * 0.6f));
             if (t == Tab.STATS) { Gfx.push(g); Gfx.translate(g, b[2] - 20, b[1] + 8); Gfx.scale(g, 0.75f); Gfx.text(g, font, "WIP", 0, 0, 0xFFB08A20); Gfx.pop(g); }
             Gfx.pop(g);
         }
@@ -3064,15 +3062,15 @@ public class FancyScreen extends Screen {
         if (subExp > 0.02f && sn.length > 0 && (tab == Tab.GENERAL) == (pass == 1)) {                                      // the open tab lists its own sub pages under it (Settings: above it)
             boolean pin = tab == Tab.GENERAL; int top = pin ? subBox(0)[1] - 1 : tabBox(tab.ordinal())[1] + 24;
             g.enableScissor(px + 8, top, px + sw - 6, top + (pin ? sn.length * SUBH : Math.round(subExp * (subH() * sn.length + srcExtra()))));
-            g.fill(px + 12, top, px + 13, top + subH() * sn.length + srcExtra() - 2, Canvas.mix(Ui.BORDER, subCol(tab), 0.45f));
+            g.fill(px + 12, top, px + 13, top + subH() * sn.length + srcExtra() - 2, Ui.BORDER);
             for (int k = 0; k < sn.length; k++) {
                 int[] b = subBox(k);
                 boolean wip = subList(tab).get(k).wip(); int dot = subList(tab).get(k).color();
                 boolean act = !onLanding() && curSub() == k, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
                 float hv = anim("sub|" + k, hov && !act ? 1f : 0f, 48f);
                 int sc2 = subCol(tab);
-                if (act) { pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.ROW, sc2, 0.22f)); g.fill(b[0], b[1] + 2, b[0] + 2, b[3] - 2, sc2); }
-                else if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
+                if (act) { pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.ROW, Ui.ACCENT, 0.07f)); g.fill(b[0], b[1] + 2, b[0] + 2, b[3] - 2, Ui.ACCENT); }
+                else if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, Ui.ROW_HOVER, hv));
                 int dx = 0;
                 iconBack(g, b[0] + 10 + dx, b[1] + 8, 7, act, sc2);
                 Gfx.push(g); Gfx.translate(g, b[0] + 4 + dx, b[1] + 2); Gfx.scale(g, 0.8f);
@@ -3081,7 +3079,7 @@ public class FancyScreen extends Screen {
                 int availW = b[2] - b[0] - 26 - (wip ? 18 : 0), lw = Gfx.w(font, sn[k]);
                 float fit = lw > availW ? Math.max(0.6f, availW / (float) lw) : 1f;                  // a long name shrinks to fit instead of being cut off
                 Gfx.push(g); Gfx.translate(g, b[0] + 21 + dx, b[1] + 5 + (fit < 1f ? (1f - fit) * 4f : 0f)); Gfx.scale(g, fit);
-                Gfx.text(g, font, sn[k], 0, 0, act ? Ui.TEXT : Canvas.mix(Canvas.mix(0xFF8A8A96, sc2, 0.4f), 0xFFFFFFFF, hv * 0.4f));
+                Gfx.text(g, font, sn[k], 0, 0, act ? Ui.TEXT : Canvas.mix(Canvas.mix(Ui.DIM, sc2, 0.2f), Ui.TEXT, hv * 0.6f));
                 Gfx.pop(g);
                 if (wip) { Gfx.push(g); Gfx.translate(g, b[2] - 17, b[1] + 6); Gfx.scale(g, 0.75f); Gfx.text(g, font, "WIP", 0, 0, 0xFFB08A20); Gfx.pop(g); }
             }
@@ -3092,13 +3090,13 @@ public class FancyScreen extends Screen {
                     boolean act = dropSrc != null && (e[0].equals(dropSrc) || dropSrc.startsWith(e[0] + "/")), hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
                     float hv = anim("src|" + j, hov && !act ? 1f : 0f, 48f);
                     int col = Integer.parseInt(e[3]); if (e.length > 4) b[0] += 8;
-                    if (act) { pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.ROW, Ui.ACCENT, 0.22f)); g.fill(b[0], b[1] + 2, b[0] + 2, b[3] - 2, Ui.ACCENT); }
-                    else if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, 0xFF1D1E27, hv));
+                    if (act) { pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.ROW, Ui.ACCENT, 0.07f)); g.fill(b[0], b[1] + 2, b[0] + 2, b[3] - 2, Ui.ACCENT); }
+                    else if (hv > 0.01f) pill(g, b[0], b[1], b[2] - b[0], b[3] - b[1], Canvas.mix(Ui.PANEL2, Ui.ROW_HOVER, hv));
                     int availW = b[2] - b[0] - 8, lw = Gfx.w(font, e[1]); float fit = lw > availW ? Math.max(0.55f, availW / (float) lw) : 1f;
                     if (e[2] != null) { Gfx.push(g); Gfx.translate(g, b[0] + 2, b[1] + 1); Gfx.scale(g, 0.75f); if (Icons.has(e[2])) Icons.draw(g, e[2], 0, 0, act || hv > 0.1f ? now : 2400L); else Gfx.item(g, e[2], 0, 0); Gfx.pop(g); }
                     availW -= 12 + (srcWip.contains(e[0]) ? 18 : 0); fit = lw > availW ? Math.max(0.55f, availW / (float) lw) : 1f;
                     Gfx.push(g); Gfx.translate(g, b[0] + 17, b[1] + 3 + (fit < 1f ? (1f - fit) * 3f : 0f)); Gfx.scale(g, 0.9f * fit);
-                    Gfx.text(g, font, e[1], 0, 0, act ? Ui.TEXT : Canvas.mix(0xFF8A8A96, 0xFFE0E0E8, hv));
+                    Gfx.text(g, font, e[1], 0, 0, act ? Ui.TEXT : Canvas.mix(Ui.DIM, Ui.TEXT, hv * 0.8f));
                     Gfx.pop(g);
                     if (srcWip.contains(e[0])) { Gfx.push(g); Gfx.translate(g, b[2] - 17, b[1] + 4); Gfx.scale(g, 0.75f); Gfx.text(g, font, "WIP", 0, 0, 0xFFB08A20); Gfx.pop(g); }
                 }
@@ -3112,7 +3110,7 @@ public class FancyScreen extends Screen {
         }
         if (sideMax() > 0) {                                                       // a slim scroll bar shows there is more below
             int trk = sideBottom() - py - 48, bar = Math.max(14, trk * trk / (trk + sideMax())), by0 = py + 44 + Math.round((trk - bar) * (sideScroll / (float) sideMax()));
-            g.fill(px + sw - 3, py + 44, px + sw - 1, py + 44 + trk, 0x22FFFFFF); g.fill(px + sw - 3, by0, px + sw - 1, by0 + bar, 0x99B0B8D0);
+            g.fill(px + sw - 3, py + 44, px + sw - 1, py + 44 + trk, 0x22FFFFFF); g.fill(px + sw - 3, by0, px + sw - 1, by0 + bar, Ui.BORDER);
         }
 
         }
@@ -3237,7 +3235,8 @@ public class FancyScreen extends Screen {
             boolean hov = !r.locked && mx >= r.x && mx < r.x + r.w && my >= r.y && my < r.y + r.h && my >= lt && my < lb;
             float hv = anim("row|" + tab + r.indent + r.title, hov && r.field == null && (r.click != null || !r.ctls.isEmpty()) ? 1f : 0f, 48f);
             pill(g, r.x, r.y, r.w, r.h, hv > 0.02f ? Canvas.mix(Ui.ROW, Ui.ROW_HOVER, hv) : Ui.ROW);
-            g.fill(r.x + 1, r.y + 3, r.x + 3 + Math.round(hv * 2), r.y + r.h - 3, r.accent);
+            g.fill(r.x + 3, r.y + 1, r.x + r.w - 3, r.y + 2, Ui.SHINE);                                   // a soft top edge, like light on a surface
+            g.fill(r.x + 1, r.y + 4, r.x + 3, r.y + r.h - 4, Gfx.argb(Math.round(110 + 145 * hv), r.accent & 0xFFFFFF));
 
             int ix = r.x + 17, iy = r.y + (r.field != null ? 14 : r.h / 2);
             if (r.spriteId != null && ItemIcons.hasPixels(r.spriteId)) ItemIcons.draw(g, r.spriteId, null, ix, iy, 1f);
@@ -3247,14 +3246,14 @@ public class FancyScreen extends Screen {
             int tx2 = r.x + 32;
             int limit = (r.ctls.isEmpty() ? r.x + r.w - 24 : r.ctls.get(0).x0 - 8) - tx2;
             boolean two = !r.sub.isEmpty();
-            marquee(g, r.title, tx2, r.y + (two ? 5 : (r.h - 8) / 2), Math.max(40, limit), r.locked ? 0xFF8A8A96 : Ui.TEXT);
+            marquee(g, r.title, tx2, r.y + (two ? 5 : (r.h - 8) / 2), Math.max(40, limit), r.locked ? Ui.DIM : Ui.TEXT);
             if (two && r.wrapSub) { int wy = r.y + 17; for (String ln : wrap(r.sub, r.subW > 0 ? r.subW : r.w - 52)) { Gfx.text(g, font, ln, tx2, wy, r.subColor); wy += 11; } }
             else if (two) marquee(g, r.sub, tx2, r.y + 16, Math.max(40, limit), r.subColor);
 
             int ci = 0;
             for (Ctl c : r.ctls) { c.key = tab + r.title + (ci++); c.draw(g, r.y, r.wrapSub && r.subW > 0 ? r.h : Math.min(r.h, 28), mx >= c.x0 && mx < c.x1 && my >= r.y && my < r.y + r.h); }
             if (r.wip) drawWip(g, r);
-            if (r.arrow) chevron(g, r.x + r.w - 12 + Math.round(hv * (r.open ? 0 : 1.5f)), r.y + r.h / 2, r.open ? 1 : 0, Canvas.mix(0xFF7C8394, Ui.ACCENT, Math.max(hv, r.open ? 0.7f : 0f)));
+            if (r.arrow) chevron(g, r.x + r.w - 12 + Math.round(hv * (r.open ? 0 : 1.5f)), r.y + r.h / 2, r.open ? 1 : 0, Canvas.mix(Ui.DIM, Ui.ACCENT, Math.max(hv, r.open ? 0.7f : 0f)));
 
             if (r.field != null) {
                 r.field.setVisible(r.y >= lt && r.y + r.h <= lb);
@@ -3292,7 +3291,7 @@ public class FancyScreen extends Screen {
             int by = lt + (int) ((viewH - bh) * (scroll / (float) (totalH - viewH)));
             boolean sh = dragScroll || (mx >= cx + cw && mx < cx + cw + 12 && my >= lt && my < lb);
             g.fill(cx + cw + 3, lt, cx + cw + 5, lb, 0x14FFFFFF);
-            pill(g, cx + cw + 2, by, sh ? 5 : 3, bh, sh ? 0xFF8A93B0 : 0xFF4A4B58);
+            pill(g, cx + cw + 2, by, sh ? 5 : 3, bh, sh ? Ui.ACCENT : Ui.BORDER);
         }
         drawCommunity(g, mx, my);
         if (!cosWin()) {                                                            // the Cosmetics button: outside the menu, bottom right
@@ -3383,7 +3382,7 @@ public class FancyScreen extends Screen {
         int n = r.pickLabels.size();
         if (n > popVis) {                                       // little scroll bar
             int bh = Math.max(8, (hgt - 4) * popVis / n), by = popY + 2 + (int) ((hgt - 4 - bh) * (popScroll / (float) (n - popVis)));
-            g.fill(popX1 - 3, by, popX1 - 1, by + bh, 0xFF4A4B58);
+            g.fill(popX1 - 3, by, popX1 - 1, by + bh, Ui.BORDER);
         }
     }
 
@@ -3398,7 +3397,9 @@ public class FancyScreen extends Screen {
             }
             return;
         }
-        Gfx.text(g, font, Gfx.fit(font, r.title, cw), cx, r.y + 8, Ui.DIM);
+        String st = Gfx.fit(font, r.title.toUpperCase(java.util.Locale.ROOT), cw - 20); int sw0 = Gfx.w(font, st);
+        Gfx.text(g, font, st, cx + 2, r.y + 8, Canvas.mix(Ui.ACCENT, Ui.DIM, 0.35f));
+        g.fill(cx + sw0 + 8, r.y + 12, cx + cw - 4, r.y + 13, Ui.BORDER);
     }
 
     /** A strip of hazard tape: a bar of stripes along the top and bottom (each a picture, not a pile of rectangles), with the words on a plate. */

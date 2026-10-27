@@ -19,7 +19,7 @@ public final class AnimationManager {
         public boolean untradeable, announce, sim, rngPick, fixedPrice;
         public volatile double price = -2;       // -2 = still loading, -1 = no price
         public volatile String priceSource = "";
-        public String extra; public int extraCol = Ui.SUB;     // one more line under the price
+        public String extra; public int extraCol = Ui.ANIM_SUB;     // one more line under the price
         public int color() {
             return switch (rank) { case 0 -> Ui.R_RARE; case 1 -> Ui.R_VERY; case 2 -> Ui.R_CRAZY; default -> Ui.R_LEGEND; };
         }
