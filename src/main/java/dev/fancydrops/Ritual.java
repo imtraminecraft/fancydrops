@@ -842,7 +842,7 @@ final class Ritual {
             else {
                 long nowMs = System.currentTimeMillis();
                 String id = a.group + a.type + "/" + a.kind + "/" + (it == null ? 0 : it.id.hashCode()) + "/" + a.count() + "/" + TextFx.itemOnly;
-                boolean reuse = AnimationManager.previewing && id.equals(upKey) && nowMs - upMs < 33 && nowMs >= upMs;       // a menu preview repaints at ~30 fps: the picture it shows barely changes between frames
+                boolean reuse = id.equals(upKey) && nowMs >= upMs && nowMs - upMs < (AnimationManager.previewing ? 33 : 15);       // the pixel scene repaints at most ~60 fps in game (~30 in menu previews): at 144 fps the picture barely changes between frames
                 if (!reuse) {
                     begin(a, sz, isc);
                     try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { end(); }

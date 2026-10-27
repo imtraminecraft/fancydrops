@@ -852,8 +852,8 @@ public class FancyScreen extends Screen {
         long now = System.currentTimeMillis(); int col = r.accent;
         pill(g, r.x, r.y, r.w, r.h, Canvas.mix(Ui.ROW, col, 0.12f));
         g.enableScissor(r.x, r.y, r.x + r.w, r.y + r.h);
-        for (int i = 0; i < r.w; i += 2) {                                                              // colour fading out to the right
-            float u = i / (float) r.w; g.fill(r.x + i, r.y, r.x + i + 2, r.y + r.h, Gfx.argb(Math.round(70 * (1f - u) * (1f - u)), col & 0xFFFFFF));
+        for (int i = 0, step = Math.max(2, r.w / 14); i < r.w; i += step) {                          // colour fading out to the right (14 bands, not one per pixel)
+            float u = (i + step / 2f) / r.w; g.fill(r.x + i, r.y, Math.min(r.x + r.w, r.x + i + step), r.y + r.h, Gfx.argb(Math.round(70 * (1f - u) * (1f - u)), col & 0xFFFFFF));
         }
         int sw = Math.round(((now % 3200L) / 3200f) * (r.w + 60)) - 30;                                  // a slanted light sweeping across
         for (int j = 0; j < r.h; j++) g.fill(r.x + sw - j / 2, r.y + j, r.x + sw - j / 2 + 10, r.y + j + 1, 0x14FFFFFF);
@@ -877,7 +877,7 @@ public class FancyScreen extends Screen {
             String[] pr = badge.split(" / "); float want = Math.min(1f, Integer.parseInt(pr[0]) / (float) Math.max(1, Integer.parseInt(pr[1])));
             float fk = ease(Math.min(1f, (now - cosAt) / 1500f)) * want; int bx0 = r.x + 12, bx1 = r.x + r.w - 12, by0 = r.y + r.h - 9, fw = Math.round((bx1 - bx0) * fk);
             g.fill(bx0, by0, bx1, by0 + 5, 0x66000000);
-            for (int i = 0; i < fw; i++) g.fill(bx0 + i, by0, bx0 + i + 1, by0 + 5, Canvas.mix(0xFFB56BFF, 0xFF56D8FF, i / (float) Math.max(1, bx1 - bx0)));
+            for (int i = 0, st2 = Math.max(2, (bx1 - bx0) / 24); i < fw; i += st2) g.fill(bx0 + i, by0, Math.min(bx0 + fw, bx0 + i + st2), by0 + 5, Canvas.mix(0xFFB56BFF, 0xFF56D8FF, i / (float) Math.max(1, bx1 - bx0)));
             if (fw > 2 && fk < want + 0.0001f) { g.fill(bx0 + fw - 2, by0 - 1, bx0 + fw, by0 + 6, 0xFFFFFFFF); }
             int sh = Math.round(((now % 2600L) / 2600f) * (bx1 - bx0)); if (sh < fw) g.fill(bx0 + sh, by0, Math.min(bx0 + fw, bx0 + sh + 6), by0 + 2, 0x55FFFFFF);
         } else if (!badge.isEmpty() && badge.matches("\\d+ / \\d+")) {                                                // how much is unlocked: a bar that fills once when the page opens
@@ -2053,9 +2053,9 @@ public class FancyScreen extends Screen {
         int al = Math.round(255 * in * out);
         if (al < 6) return;
         pill(g, x, y, w, h, Gfx.argb(Math.min(245, al), 0x10141D));
-        for (int i = 0; i < w; i++) {                                                                  // a colour that glides along the border
+        for (int i = 0; i < w; i += 3) {                                                               // a colour that glides along the border (3-pixel steps)
             float u = ((i / (float) w) + fxNow / 1800f) % 1f; int bc = Canvas.mix(toastCol, 0xFFFFFFFF, 0.25f + 0.5f * (float) Math.abs(Math.sin(u * Math.PI * 2)));
-            g.fill(x + i, y, x + i + 1, y + 1, Gfx.argb(al, bc & 0xFFFFFF)); g.fill(x + i, y + h - 1, x + i + 1, y + h, Gfx.argb(al, bc & 0xFFFFFF));
+            int e = Math.min(x + w, x + i + 3); g.fill(x + i, y, e, y + 1, Gfx.argb(al, bc & 0xFFFFFF)); g.fill(x + i, y + h - 1, e, y + h, Gfx.argb(al, bc & 0xFFFFFF));
         }
         g.fill(x, y + 1, x + 1, y + h - 1, Gfx.argb(al, toastCol & 0xFFFFFF)); g.fill(x + w - 1, y + 1, x + w, y + h - 1, Gfx.argb(al, toastCol & 0xFFFFFF));
         Gfx.push(g); Gfx.translate(g, x + 5, y + (h - 12) / 2f + (float) Math.sin(fxNow / 260.0) * 0.8f); Gfx.scale(g, 0.75f); Icons.draw(g, ":sparkle:", 0, 0, now); Gfx.pop(g);

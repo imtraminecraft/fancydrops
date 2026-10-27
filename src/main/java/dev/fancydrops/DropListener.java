@@ -76,12 +76,18 @@ public final class DropListener {
     }
 
     /** A few lines about what was heard and what happened to it: config/fancydrops/drop-log.txt, so a missing animation can be traced. */
+    private static final java.util.concurrent.ExecutorService LOG = java.util.concurrent.Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "fancydrops-log"); t.setDaemon(true); return t; });
+    /** Written on a background thread, so a busy chat never waits for the disk. */
     static void dlog(String s) {
+        String line = java.time.LocalTime.now().withNano(0) + "  " + s + "\n";
+        LOG.execute(() -> writeLog(line));
+    }
+    private static void writeLog(String line) {
         try {
             java.nio.file.Path f = DataFiles.dir().resolve("drop-log.txt");
             if (java.nio.file.Files.exists(f) && java.nio.file.Files.size(f) > 200_000) java.nio.file.Files.delete(f);
             java.nio.file.Files.createDirectories(f.getParent());
-            java.nio.file.Files.writeString(f, java.time.LocalTime.now().withNano(0) + "  " + s + "\n", java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+            java.nio.file.Files.writeString(f, line, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
         } catch (Throwable ignored) { }
     }
 

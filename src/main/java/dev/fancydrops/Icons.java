@@ -49,12 +49,17 @@ final class Icons {
     // ---- your own icons: config/fancydrops/icons/<name>.png. A 16 px wide picture; 16 tall = one still picture, 128 tall = the 8 animation frames stacked top to bottom.
     //      Every icon is saved there once. Edit a file and save it: the game picks it up within a second, no restart.
     private static final String[] EXPORT = {"anim_icons", "anim_menu", "animations", "back", "bars", "bazaar", "bell", "chan_coop", "chan_off", "chan_party", "chan_public", "chat", "clock", "cos_aura", "cos_name", "cos_suffix", "cosmetics", "dice", "disc", "discord", "patreon", "github", "dock_bottom", "dock_off", "dock_top", "dropped", "dye", "fancydrops", "farm", "fishing", "format", "glass", "griffin", "hammer", "menu", "mining", "mytho", "nodrops", "normal", "note", "play", "raredrops", "refresh", "send", "settings", "size", "slayers", "snd_beat", "snd_burst", "snd_end", "snd_linger", "snd_reveal", "sounds", "speed", "stats", "switch", "shovel", "text", "treasure", "updates"};
-    private static final java.util.Map<String, int[][]> OVR = new java.util.HashMap<>();
-    private static long ovrScan, ovrStamp; private static boolean exported;
+    private static volatile java.util.Map<String, int[][]> OVR = java.util.Map.of();                 // swapped whole by the background scan, read by the render thread
+    private static long ovrScan, ovrStamp; private static boolean exported; private static volatile boolean scanning, cacheStale;
     static java.nio.file.Path iconDir() { return DataFiles.art("icons"); }
+    /** Looks for edited icon pictures once a second, on a background thread: file I/O never runs on the render thread (it caused a small hitch every second). */
     private static void scanOverrides() {
+        if (cacheStale) { cacheStale = false; CACHE.clear(); }
         long nw = System.currentTimeMillis();
-        if (nw - ovrScan < 1000L) return; ovrScan = nw;
+        if (scanning || nw - ovrScan < 1000L) return; ovrScan = nw; scanning = true;
+        java.util.concurrent.CompletableFuture.runAsync(() -> { try { scanNow(); } finally { scanning = false; } });
+    }
+    private static void scanNow() {
         try {
             java.nio.file.Path dir = iconDir();
             if (!exported) {
@@ -83,15 +88,16 @@ final class Icons {
             long stamp = 0; java.util.List<java.nio.file.Path> files = new java.util.ArrayList<>();
             try (var st = java.nio.file.Files.list(dir)) { for (java.nio.file.Path f : (Iterable<java.nio.file.Path>) st::iterator) if (f.toString().toLowerCase(java.util.Locale.ROOT).endsWith(".png")) { files.add(f); stamp += java.nio.file.Files.getLastModifiedTime(f).toMillis() + java.nio.file.Files.size(f); } }
             if (stamp == ovrStamp) return; ovrStamp = stamp;
-            OVR.clear(); CACHE.clear();
+            java.util.Map<String, int[][]> next = new java.util.HashMap<>();
             for (java.nio.file.Path f : files) {
                 try {
                     var im = javax.imageio.ImageIO.read(f.toFile()); if (im == null || im.getWidth() != 16 || im.getHeight() % 16 != 0) continue;
                     int n = im.getHeight() / 16; int[][] fr = new int[n][256];
                     for (int i = 0; i < n; i++) im.getRGB(0, i * 16, 16, 16, fr[i], 0, 16);
-                    String nm = f.getFileName().toString(); OVR.put(nm.substring(0, nm.length() - 4), fr);
+                    String nm = f.getFileName().toString(); next.put(nm.substring(0, nm.length() - 4), fr);
                 } catch (Exception ignored) {}
             }
+            OVR = next; cacheStale = true;
         } catch (Exception ignored) {}
     }
 

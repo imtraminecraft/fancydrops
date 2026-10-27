@@ -1,4 +1,5 @@
 ## 0.8.0
+- Smoother: edited animation frames and edited icons are checked on a background thread (no more small hitch every second, or during the first play of a drop animation), the drop log is written in the background, the pixel scene repaints at most 60 times a second, and menu banners, bars and toasts draw with far fewer pieces.
 - New menu look: warm dark panels, a gold accent and hairlines, a quiet highlight for the open page, cleaner rows, buttons and section headings. Every page and setting stays where it was.
 - Auras are real particles in the world now: they sit exactly on the player (any camera, FOV or sprint), and blocks and bodies hide them. The running tail is short and stays close.
 - Pets show what George pays as their Value (with "George" as the source), instead of an auction price.

@@ -76,43 +76,48 @@ final class AnimFrames {
     }
 
     // ---------------------------------------------------------------- playing edited frames
-    private static final class Folder { Path dir; long next, stamp; int n; Map<String, Long> orig = new HashMap<>(); int[][] data; boolean[] tried; }
+    private static final class Folder { Path dir; long next, stamp = -1; int n = -1; volatile int[][] data; volatile boolean loading; }
     private static final Map<String, Folder> CACHE = new HashMap<>();
 
-    /** The edited picture for this moment of the scene (320x180 ARGB), or null to let the code draw it. */
+    /** The edited picture for this moment of the scene (320x180 ARGB), or null to let the code draw it.
+     *  The render thread never touches the disk here: a background thread looks at the folder every 5 seconds and loads every edited frame at once. */
     static int[] override(AnimationManager.Anim a, float t) {
         try {
             if (!done) return null;                                                   // not while the frames are still being written
             String nm = name(a.group, a.type, Math.max(0, a.kind));
             long now = System.currentTimeMillis();
             Folder f = CACHE.computeIfAbsent(nm, k -> { Folder x = new Folder(); x.dir = DataFiles.art("animations").resolve(k); return x; });
-            if (now >= f.next) {                                                      // look again once a second: a saved edit shows up at once
-                f.next = now + 5000L;
-                long st = 0; int n = 0;
-                if (Files.isDirectory(f.dir)) try (var s = Files.list(f.dir)) { for (Path p : (Iterable<Path>) s::iterator) { String fn = p.getFileName().toString(); if (fn.startsWith("frame_") && fn.endsWith(".png")) { n++; st += Files.getLastModifiedTime(p).toMillis() + Files.size(p); } } }
-                if (st != f.stamp || n != f.n) {
-                    f.stamp = st; f.n = n; f.data = new int[Math.max(1, n)][]; f.tried = new boolean[Math.max(1, n)]; f.orig.clear();
-                    Path man = f.dir.resolve("original.txt");
-                    if (Files.exists(man)) for (String ln : Files.readAllLines(man)) { int q = ln.indexOf('='); if (q > 0) try { f.orig.put(ln.substring(0, q), Long.parseLong(ln.substring(q + 1).trim())); } catch (NumberFormatException ignored) {} }
-                }
-            }
-            if (f.n == 0 || f.orig.isEmpty()) return null;
-            int i = Math.max(0, Math.min(f.n - 1, Math.round(t * FPS)));
-            if (!f.tried[i]) {
-                f.tried[i] = true;
-                String fn = String.format("frame_%03d.png", i); Path p = f.dir.resolve(fn);
-                if (Files.exists(p)) {
-                    byte[] b = Files.readAllBytes(p); CRC32 c = new CRC32(); c.update(b);
-                    Long was = f.orig.get(fn);
-                    if (was == null || was != c.getValue()) {                         // changed by you
-                        BufferedImage bi = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(b));
-                        if (bi != null && bi.getWidth() == W && bi.getHeight() == H) { int[] px = new int[W * H]; bi.getRGB(0, 0, W, H, px, 0, W); f.data[i] = px; }
-                        else System.out.println("[FancyDrops] " + nm + "/" + fn + " is not 320x180, so it is ignored.");
-                    }
-                }
-            }
-            return f.data[i];
+            if (now >= f.next && !f.loading) { f.next = now + 5000L; f.loading = true; IO.execute(() -> { try { scan(f, nm); } finally { f.loading = false; } }); }
+            int[][] d = f.data;
+            if (d == null || d.length == 0) return null;
+            int i = Math.max(0, Math.min(d.length - 1, Math.round(t * FPS)));
+            return d[i];
         } catch (Throwable ex) { return null; }
+    }
+    /** Background: reads the folder, and when anything changed, loads the frames you edited (a frame whose bytes still match original.txt is left to the code). */
+    private static void scan(Folder f, String nm) {
+        try {
+            long st = 0; int n = 0;
+            if (Files.isDirectory(f.dir)) try (var s = Files.list(f.dir)) { for (Path p : (Iterable<Path>) s::iterator) { String fn = p.getFileName().toString(); if (fn.startsWith("frame_") && fn.endsWith(".png")) { n++; st += Files.getLastModifiedTime(p).toMillis() + Files.size(p); } } }
+            if (st == f.stamp && n == f.n) return;
+            f.stamp = st; f.n = n;
+            Map<String, Long> orig = new HashMap<>();
+            Path man = f.dir.resolve("original.txt");
+            if (Files.exists(man)) for (String ln : Files.readAllLines(man)) { int q = ln.indexOf('='); if (q > 0) try { orig.put(ln.substring(0, q), Long.parseLong(ln.substring(q + 1).trim())); } catch (NumberFormatException ignored) {} }
+            if (n == 0 || orig.isEmpty()) { f.data = null; return; }
+            int[][] out = new int[n][]; boolean any = false;
+            for (int i = 0; i < n; i++) {
+                String fn = String.format("frame_%03d.png", i); Path p = f.dir.resolve(fn);
+                if (!Files.exists(p)) continue;
+                byte[] b = Files.readAllBytes(p); CRC32 c = new CRC32(); c.update(b);
+                Long was = orig.get(fn);
+                if (was != null && was == c.getValue()) continue;                       // untouched: the code draws it
+                BufferedImage bi = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(b));
+                if (bi != null && bi.getWidth() == W && bi.getHeight() == H) { int[] px = new int[W * H]; bi.getRGB(0, 0, W, H, px, 0, W); out[i] = px; any = true; }
+                else System.out.println("[FancyDrops] " + nm + "/" + fn + " is not 320x180, so it is ignored.");
+            }
+            f.data = any ? out : null;
+        } catch (Throwable ignored) {}
     }
 
     private AnimFrames() {}
