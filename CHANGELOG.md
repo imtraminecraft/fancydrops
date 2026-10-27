@@ -1,15 +1,10 @@
 ## 0.8.0
-- Normal drops are less samey: each one picks one of three flourishes (rising rings, a starburst as it falls in and lands, or a spiral of light it climbs out of).
-- Everyday drops stay out of the way: Normal and No Drops play at 80% of the animation size by default (Animations > Animation Changes > Everyday drops size), and their screen flicker is much fainter. RNG drops keep the full show.
-- Settings are tidier: cosmetics you see on yourself and on others are two rows of on/off chips (Icon, Effect, Aura), and the price sources show straight away.
-- Faster navigation: Backspace or the mouse's back button goes back a page, Ctrl+F or / jumps to the search box.
-- New sidebar icons for Home, Drop Library, Animations, Sounds, Chat, Settings and Stats: one matching gold-trimmed set (a little keep, a chest with a gem, a turning star, two notes, a typing bubble, a gold gear, a climbing chart).
-- Smoother: edited animation frames and edited icons are checked on a background thread (no more small hitch every second, or during the first play of a drop animation), the drop log is written in the background, the pixel scene repaints at most 60 times a second, and menu banners, bars and toasts draw with far fewer pieces.
-- New menu look: warm dark panels, a gold accent and hairlines, a quiet highlight for the open page, cleaner rows, buttons and section headings. Every page and setting stays where it was.
-- Auras are real particles in the world now: they sit exactly on the player (any camera, FOV or sprint), and blocks and bodies hide them. The running tail is short and stays close.
-- Pets show what George pays as their Value (with "George" as the source), instead of an auction price.
-- `/fd simulate` with a coin drop like "1,000,000 Coins" works (the commas inside its name were being cut).
-- Slayer slashes are one thin, smooth, pointed cut (in the preview they looked like lightning, and they were too thick in the animation).
+- **New menu look:** warm dark panels with gold accents, cleaner rows and buttons, and new sidebar icons.
+- **Auras** are real particles in the world: they stay on the player and hide behind blocks and bodies.
+- **Smoother:** no more small hitches every second or on a drop animation's first play.
+- **Drops:** Normal drops get one of three flourishes, and everyday drops play smaller (Animation Changes > Everyday drops size). RNG keeps the full show.
+- **Settings:** cosmetics on/off chips, price sources shown directly. Backspace goes back a page, Ctrl+F searches.
+- Pets show George's price as their Value. Thinner slayer slashes. `/fd simulate 1,000,000 Coins` works.
 
 ## 0.7.9
 - Cosmetics: the Special tiles have their animated backgrounds again (they had slipped onto Legendary), Legendary has none. King Minos and Fishing Rod are removed.
