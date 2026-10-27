@@ -97,6 +97,22 @@ public class FancyScreen extends Screen {
         boolean click(double mx, int button) { if (button == 0) set.accept(!get.getAsBoolean()); return true; }
     }
 
+    /** A small labelled on/off chip (several sit side by side in one row): lit in its colour when on, dark when off. */
+    private class Chip extends Ctl {
+        final String label; final BooleanSupplier get; final Consumer<Boolean> set; final int col;
+        Chip(String label, BooleanSupplier g, Consumer<Boolean> s, int col) { this.label = label; get = g; set = s; this.col = col; }
+        int width() { return Gfx.w(font, label) + 20; }
+        void draw(GuiGraphicsExtractor g, int y, int h, boolean hover) {
+            boolean on = get.getAsBoolean(); int ty = y + (h - 14) / 2, w = x1 - x0;
+            float v = anim("chip|" + key, on ? 1f : 0f, 30f), hv = anim("chiph|" + key, hover ? 1f : 0f, 48f);
+            pill(g, x0, ty, w, 14, Canvas.mix(Canvas.mix(Ui.PANEL2, col, 0.32f * v), 0xFFFFFFFF, hv * 0.08f));
+            rout(g, x0, ty, w, 14, Gfx.argb(Math.round(60 + 140 * v), (on ? col : Ui.BORDER) & 0xFFFFFF));
+            g.fill(x0 + 5, ty + 5, x0 + 9, ty + 9, on ? Canvas.mix(col, 0xFFFFFFFF, 0.5f) : Ui.OFF);
+            Gfx.text(g, font, label, x0 + 13, ty + 3, on ? Ui.TEXT : Ui.DIM);
+        }
+        boolean click(double mx, int button) { if (button == 0) set.accept(!get.getAsBoolean()); return true; }
+    }
+
     private class Btn extends Ctl {
         final String label; final int color; final Runnable run;
         Btn(String label, int color, Runnable run) { this.label = label; this.color = color; this.run = run; }
@@ -2775,19 +2791,21 @@ public class FancyScreen extends Screen {
                 rows.add(section("Notices"));
                 rows.add(toggle(":bell:", "Pop-up notices", "Small notices under the menu (saved, discarded, links) instead of chat messages", () -> c.popups, v -> c.popups = v));
                 rows.add(section("Cosmetics"));
-                rows.add(section("You"));
-                rows.add(toggle(":cos_suffix:", "Your name icon", "The little icon after your name", () -> c.selfSuffix, v -> { c.selfSuffix = v; CosmeticData.changed(); }));
-                rows.add(toggle(":cos_name:", "Your name effect", "Moving colours on your name", () -> c.selfName, v -> { c.selfName = v; CosmeticData.changed(); }));
-                rows.add(toggle(":cos_aura:", "Your aura", "Particles around you", () -> c.selfAura, v -> { c.selfAura = v; CosmeticData.changed(); }));
+                rows.add(section("What to show"));
+                Row you = row(0, ":cos_suffix:", "On you", "Click a chip to turn it on or off", 0xFFC77DFF);
+                you.ctls.add(new Chip("Icon", () -> c.selfSuffix, v -> { c.selfSuffix = v; CosmeticData.changed(); }, 0xFFFFC857));
+                you.ctls.add(new Chip("Effect", () -> c.selfName, v -> { c.selfName = v; CosmeticData.changed(); }, 0xFFFF9AC8));
+                you.ctls.add(new Chip("Aura", () -> c.selfAura, v -> { c.selfAura = v; CosmeticData.changed(); }, 0xFF8FD0FF)); rows.add(you);
+                Row oth = row(0, ":cos_name:", "On other players", "Turn off what you don't want to see", 0xFF8FD0FF);
+                oth.ctls.add(new Chip("Icon", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }, 0xFFFFC857));
+                oth.ctls.add(new Chip("Effect", () -> c.othersName, v -> { c.othersName = v; CosmeticData.changed(); }, 0xFFFF9AC8));
+                oth.ctls.add(new Chip("Aura", () -> c.othersAura, v -> { c.othersAura = v; CosmeticData.changed(); }, 0xFF8FD0FF)); rows.add(oth);
                 rows.add(toggle(":cos_aura:", "Calm mode", "Names stay still and auras slow down", () -> c.cosCalm, v -> { c.cosCalm = v; CosmeticData.changed(); }));
                 rows.add(toggle(":cos_aura:", "Hide my aura in first person", "It still shows in F5 and to others", () -> c.cosHideFirst, v -> { c.cosHideFirst = v; CosmeticData.changed(); }));
                 rows.add(section("Other players"));
-                rows.add(toggle(":cos_suffix:", "Their name icons", "The little icon after other players' names", () -> c.othersSuffix, v -> { c.othersSuffix = v; CosmeticData.changed(); }));
-                rows.add(toggle(":cos_name:", "Their name effects", "Moving colours on other players' names", () -> c.othersName, v -> { c.othersName = v; CosmeticData.changed(); }));
-                rows.add(toggle(":cos_aura:", "Their auras", "Particles around other players", () -> c.othersAura, v -> { c.othersAura = v; CosmeticData.changed(); }));
-                Row cr = row(0, ":cos_aura:", "Show within", "Players further away look normal", Ui.ACCENT);
+                Row cr = row(0, ":cos_aura:", "Cosmetics distance", "Players further away look normal", Ui.ACCENT);
                 cr.ctls.add(new Slider(8, 48, 4, () -> c.cosRange, v -> { c.cosRange = (int) v; CosmeticData.changed(); }, () -> c.cosRange + " blocks").typed(1)); rows.add(cr);
-                rows.add(picker("Most players with an aura", "Fewer is lighter on your FPS", new String[]{"4", "8", "16", "All"}, new String[]{"", "", "", ""}, new String[]{":cos_aura:", ":cos_aura:", ":cos_aura:", ":cos_aura:"},
+                rows.add(picker("Max auras shown", "The nearest players first. Fewer is lighter on FPS", new String[]{"4", "8", "16", "All"}, new String[]{"", "", "", ""}, new String[]{":cos_aura:", ":cos_aura:", ":cos_aura:", ":cos_aura:"},
                     new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFFC857, 0xFFFF72C6}, null, 4, () -> c.cosMax == 4 ? 0 : c.cosMax == 8 ? 1 : c.cosMax == 16 ? 2 : 3, i -> { c.cosMax = new int[]{4, 8, 16, 0}[i]; CosmeticData.changed(); }));
                 rows.add(section("Look and speed"));
                 Row sp = row(0, ":cos_name:", "Name effect speed", "How fast the colours move", Ui.ACCENT);
@@ -2797,16 +2815,14 @@ public class FancyScreen extends Screen {
                 Row sz = row(0, ":cos_aura:", "Aura size", "Size of each particle", Ui.ACCENT);
                 sz.ctls.add(new Slider(50, 150, 5, () -> c.cosSize, v -> { c.cosSize = (int) v; CosmeticData.changed(); }, () -> c.cosSize + "%").typed(1)); rows.add(sz);
                 rows.add(section("Prices"));
-                Row ps = fold("__price", ":coin:", "Price source", "Bazaar for Bazaar items, Auction House for the rest", Ui.ACCENT);
-                rows.add(ps);
-                if (ps.open) {
+                {                                                                       // the price sources, shown straight away (they used to hide behind a fold)
                     Row bz = toggle(":bazaar:", "Bazaar", "Items sold on the Bazaar", () -> c.useBazaar, v -> { c.useBazaar = v; PriceService.refreshAsync(); });
-                    bz.indent = 1; rows.add(bz);
-                    Row bp = stepper(":coin:", "Bazaar price", "Sell order or instant sell", () -> c.bazaarPrice.equals("SELL") ? "Insta Sell" : "Sell Order",
+                    rows.add(bz);
+                    Row bp = stepper(":coin:", "Bazaar price", "Which Bazaar price counts: a sell order or an instant sell", () -> c.bazaarPrice.equals("SELL") ? "Insta Sell" : "Sell Order",
                             d -> c.bazaarPrice = c.bazaarPrice.equals("SELL") ? "BUY" : "SELL", 90);
-                    bp.indent = 1; rows.add(bp);
+                    rows.add(bp);
                     Row ah = toggle(":hammer:", "Auction House", "Items sold by players (lowest BIN)", () -> c.useAuctions, v -> { c.useAuctions = v; PriceService.refreshAsync(); });
-                    ah.indent = 1; rows.add(ah);
+                    rows.add(ah);
                 }
                 Row rf = row(0, ":refresh:", "Refresh prices now", "Status: " + PriceService.status, Ui.ACCENT);
                 rf.ctls.add(new Btn("Refresh", Ui.ROW_HOVER, () -> { PriceService.refreshAsync(); toast("Refreshing prices.", 0xFF62E6A8); }));
