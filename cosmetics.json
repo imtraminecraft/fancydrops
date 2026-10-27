@@ -2,7 +2,8 @@
   "special": {
     "sparkle": [
       "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
+      "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9"
     ],
     "patreon": [
       "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
@@ -83,7 +84,6 @@
     "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9": [
       "pulse",
       "betamark",
-      "sparkle",
       "dice",
       "disc",
       "tractor",
