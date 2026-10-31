@@ -120,13 +120,16 @@ final class IconArt {
                 for (int i = 0; i < 4; i++) { float u = (f + i / 4f) % 1f; float an = i * TAU / 4f + TAU / 8f; pxa(Math.round(8 + (float) Math.cos(an) * (5 + u * 3)), Math.round(8 + (float) Math.sin(an) * (5 + u * 3)), i % 2 == 0 ? 0xFF8AD0 : 0xB48CFF, 1f - u); }
                 glint(6, 6, 1, 0xFFFFFF, 0.5f + 0.5f * t);
             }
-            case "sounds" -> {                                                               // two joined notes, each bobbing in turn, a soft ring going out
-                int b1 = Math.round(Math.max(0f, s) * 1.6f), b2 = Math.round(Math.max(0f, -s) * 1.6f);
-                rect(5, 4 - b1, 1, 8, 0xC8902A); rect(11, 3 - b2, 1, 8, 0xC8902A);
-                quad(5, 3 - b1, 12, 2 - b2, 12, 4 - b2, 5, 5 - b1, 0xE8B84A);
-                ball(4, 12 - b1, 2.1f, 0xE8B84A); ball(10, 11 - b2, 2.1f, 0xE8B84A);
+            case "sounds" -> {                                                               // a gold speaker, its cone pushing out, sound arcs travelling away
+                int push = f < 0.15f ? 1 : 0;
+                bev(1, 6, 3, 5, 0xE8B84A);
+                quad(4, 6, 8 + push, 2, 8 + push, 14, 4, 11, 0x5A4C86);
+                rect(4, 7, 1, 3, 0x3A3160);
                 outline();
-                float u = f; for (int k = -3; k <= 3; k++) { float ang = k * 0.32f, r = 2 + u * 5; pxa(Math.round(13.5f + (float) Math.cos(ang) * r * 0.5f), Math.round(8 + (float) Math.sin(ang) * r), 0x7FE0D0, (1f - u) * 0.9f); }
+                for (int i = 0; i < 3; i++) {
+                    float u = (f + i / 3f) % 1f, r = 2.5f + u * 5.5f, a = (1f - u) * (u < 0.15f ? u / 0.15f : 1f);
+                    for (int k = -4; k <= 4; k++) { float ang = k * 0.22f; pxa(Math.round(8.5f + (float) Math.cos(ang) * r), Math.round(8 + (float) Math.sin(ang) * r * 1.1f), i == 0 ? 0xFFE3A0 : 0xE8B84A, a); }
+                }
             }
             case "chat" -> {                                                                 // an ivory speech bubble with a gold rim, three gold dots typing in turn
                 bev(1, 2, 14, 9, 0xF3EAD8);
@@ -136,26 +139,23 @@ final class IconArt {
                 outline();
                 for (int i = 0; i < 3; i++) { float on = Math.max(0f, (float) Math.sin(f * TAU - i * 1.2f)); int dy = Math.round(on * 1.5f); rect(4 + i * 3, 6 - dy, 2, 2, mix(0xB8862A, 0xFFD25A, on)); }
             }
-            case "settings" -> {                                                             // a gold gear turning one tooth every loop, a violet hub
-                float rot = f * TAU / 8f;
-                for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) {
-                    float dx = x + 0.5f - 8, dy = y + 0.5f - 8, r = (float) Math.hypot(dx, dy), th = (float) Math.atan2(dy, dx) + rot;
-                    float lim = Math.cos(8 * th) > 0.3f ? 7.5f : 5.6f;
-                    if (r > lim || r < 2.4f) continue;
-                    float l = (-dx * 0.5f - dy * 0.8f) / 8f;
-                    px(x, y, r > 5.6f ? (l > 0f ? 0xF2C860 : 0xB07E2A) : l > 0.15f ? lite(0xD9A441, (l - 0.15f) * 1.1f) : dark(0xD9A441, (0.15f - l) * 0.55f));
+            case "settings" -> {                                                             // Settings: a dark panel with three sliders, their gold knobs gliding to new values
+                bev(1, 2, 14, 12, 0x2E2840);
+                for (int i = 0; i < 3; i++) {
+                    int y = 4 + i * 4; rect(3, y, 10, 1, 0x5A5068);
+                    float v = 0.5f + 0.4f * (float) Math.sin(f * TAU + i * 2.1f); int kx = 3 + Math.round(v * 8);
+                    rect(3, y, kx - 3, 1, i == 0 ? 0xE8B84A : i == 1 ? 0x7FC8B0 : 0xB9A8F0);
+                    bev(kx - 1, y - 1, 3, 3, 0xFFE3A0);
                 }
-                for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) { float r = (float) Math.hypot(x + 0.5f - 8, y + 0.5f - 8); if (r < 2.4f) px(x, y, r < 1.6f ? 0x221C34 : 0x5A4C86); }
                 outline();
-                glint(5, 4, 1, 0xFFFFFF, 0.5f + 0.5f * t);
             }
-            case "stats" -> {                                                                // three bars that breathe, a gold arrow climbing over them
-                int h1 = Math.round(4 + 2 * t), h2 = Math.round(6 + 2 * (1f - t)), h3 = Math.round(8 + 2 * t);
-                bev(2, 14 - h1, 3, h1, 0x5A4C86); bev(6, 14 - h2, 3, h2, 0x7FC8B0); bev(10, 14 - h3, 3, h3, 0xE8B84A);
-                rect(1, 14, 14, 1, 0x807891);
+            case "stats" -> {                                                                // Stats: a little chart window, a gold line climbing through blinking points
+                bev(1, 2, 14, 12, 0x2E2840);
+                for (int x = 3; x < 13; x += 3) for (int y = 4; y < 13; y++) if (y % 2 == 0) px(x, y, 0x3E3654);
+                float[] ys = {11, 9, 10, 6, 7, 4};
+                for (int i = 0; i < 5; i++) { float a = ys[i] - (i == 4 ? t : 0), b = ys[i + 1] - (i + 1 == 5 ? t : 0); ln(2.5f + i * 2.1f, a, 2.5f + (i + 1) * 2.1f, b, 0xE8B84A); }
                 outline();
-                ln(2, 9 - t, 7, 6 - t, 0xFFE3A0); ln(7, 6 - t, 13, 2 - t, 0xFFE3A0);
-                px(13, Math.round(2 - t), 0xFFFFFF); px(12, Math.round(2 - t), 0xFFE3A0); px(13, Math.round(3 - t), 0xFFE3A0);
+                int on = (int) (f * 6) % 6; for (int i = 0; i < 6; i++) px(Math.round(2.5f + i * 2.1f), Math.round(ys[i] - (i >= 4 ? t : 0)), i == on ? 0xFFFFFF : 0xFFE3A0);
             }
             case "mytho" -> {                                                                // the minotaur: a horned head with glaring eyes
                 tri(2, 7, 1, 2, 5.5f, 5.2f, 0xF4EBD2); tri(14, 7, 15, 2, 10.5f, 5.2f, 0xF4EBD2);
@@ -191,15 +191,16 @@ final class IconArt {
                 outline();
                 if (f > 0.45f) { float u = (f - 0.45f) / 0.55f; for (int i = 0; i < 6; i++) { float an = -0.3f - i * 0.5f; pxa(Math.round(8 + (float) Math.cos(an) * u * (4 + i % 3 * 2) * (i % 2 == 0 ? 1 : -1)), Math.round(5 - (float) Math.sin(-an) * u * (5 + i % 2 * 3) + u * u * 4), i % 2 == 0 ? 0xFFE27A : 0xFFA030, 1f - u); } glint(8, 4, 1, 0xFFFFFF, 1f - (f - 0.45f) / 0.2f); }
             }
-            case "slayers" -> {                                                              // a thin blade, a blood-red gem, a red glow
-                glow(8, 8, 8, 0xFF3A3A, 0.18f + 0.1f * t);
-                ln(13.5f, 1, 5, 10, 0xE8EEF8); ln(14, 1.5f, 5.5f, 10.5f, 0x9AA4C0);                    // a slim blade, one pixel wide with a shaded edge
-                px(14, 1, 0xFFFFFF); px(13, 1, 0xFFFFFF);
-                ln(3.5f, 8, 8, 12.5f, 0xD8A02A); ln(3.5f, 9, 7.5f, 13, 0x8A5A12);                    // a narrow guard
-                ln(4.5f, 11.5f, 2, 14, 0x5A1A22); ln(5, 12, 2.5f, 14.5f, 0x7A2A32);                  // the grip
-                px(1, 15, 0xFF3A3A); px(2, 15, 0xC82A2A);                                              // a red pommel gem
+            case "slayers" -> {                                                              // Slayers: a bone-white skull with a sword behind it, its eyes burning red
+                ln(2, 14, 13, 3, 0xC9D2E4); ln(3, 14, 14, 3, 0x9AA6BE); ln(2, 13, 13, 2, 0xE8EEF8);                          // the blade
+                rect(1, 13, 3, 1, 0x8A5A2B); rect(2, 12, 1, 3, 0x8A5A2B); px(1, 15, 0xE8B84A);                               // guard and grip
+                ball(8, 7, 4.6f, 0xEDE6D6);
+                rect(5, 10, 6, 3, 0xEDE6D6); rect(6, 12, 1, 1, 0x8A8296); rect(8, 12, 1, 1, 0x8A8296); rect(10, 12, 1, 1, 0x8A8296);
                 outline();
-                glint(13 - Math.round(f * 7), 2 + Math.round(f * 7), 1, 0xFFFFFF, 0.35f + 0.65f * t);
+                float e = 0.5f + 0.5f * t; int ec = mix(0xB01818, 0xFF6A4A, e);
+                rect(5, 7, 2, 2, 0x1A1018); rect(9, 7, 2, 2, 0x1A1018); px(6, 8, ec); px(10, 8, ec); px(5, 7, mix(0x1A1018, ec, 0.5f)); px(9, 7, mix(0x1A1018, ec, 0.5f));
+                px(8, 10, 0x3A2A30);
+                glow(6, 8, 3, 0xFF3A2A, 0.25f * e); glow(10, 8, 3, 0xFF3A2A, 0.25f * e);
             }
             case "grp_slayers" -> {                                                          // two crossed swords over a skull with burning red eyes, a spark at the cross
                 glow(8, 8, 8, 0xFF3A3A, 0.12f + 0.1f * t);
@@ -237,20 +238,14 @@ final class IconArt {
                 glow(8, 6, 8, 0xFF4A2A, 0.10f + 0.08f * t);
                 outline();
             }
-            case "grp_crops" -> {                                                            // Rare Crops: three golden wheat stalks swaying over dark soil, a gold glint on the tallest ear
-                glow(8, 6, 8, 0xFFD25A, 0.08f + 0.1f * t);
-                rect(1, 13, 14, 2, 0x5A3E22); rect(1, 13, 14, 1, 0x7A5A38); px(4, 14, 0x3A2410); px(10, 14, 0x3A2410); px(13, 13, 0x9A7A52);
-                int[] xs = {4, 8, 12}, tops = {5, 1, 4};
-                for (int k = 0; k < 3; k++) {
-                    int sw = Math.round(sn(f + k * 0.33f) * 0.9f);
-                    for (int y = tops[k] + 2; y < 13; y++) px(xs[k] + (y < tops[k] + 6 ? sw : 0), y, y % 3 == 0 ? 0x5E9A36 : 0x7CCB4F);
-                    int x0 = xs[k] + sw;
-                    for (int j = 0; j < 4; j++) { int y = tops[k] + j; px(x0 - 1, y, j % 2 == 0 ? 0xE8B83A : 0xC89428); px(x0 + 1, y, j % 2 == 0 ? 0xC89428 : 0xE8B83A); }
-                    px(x0, tops[k] - 1, 0xFFE27A); px(x0, tops[k], 0xF4C94A); px(x0, tops[k] + 1, 0xE8B83A);
-                }
-                ln(5, 11, 7, 9, 0x7CCB4F); ln(11, 10, 9, 8, 0x5E9A36);
+            case "grp_crops" -> {                                                            // Rare Crops: a golden wheat sheaf tied with a red band, glinting
+                int sway = Math.round(0.8f * s);
+                for (int i = 0; i < 5; i++) { float x0 = 8 + (i - 2) * 0.6f, x1 = 3 + i * 2.5f + sway; ln(x0, 14, x1, 4, 0xC8902A); }
+                for (int i = 0; i < 5; i++) { int ex = Math.round(3 + i * 2.5f) + sway; bev(ex - 1, 2 + (i % 2), 2, 4, 0xF2C860); }
+                rect(6, 10, 5, 2, 0xC83A3A); px(6, 10, 0xFF7A6A);
                 outline();
-                glint(8 + Math.round(sn(f) * 0.9f), 1, 1, 0xFFFFFF, 0.3f + 0.7f * t);
+                glint(8 + sway, 3, 1, 0xFFFFFF, t);
+                glow(8, 5, 5, 0xFFD25A, 0.12f + 0.1f * t);
             }
             case "grp_feast" -> {                                                            // Harvest Feast: a fat pumpkin on a plate, steam curling up
                 glow(8, 9, 8, 0xFFA63A, 0.10f + 0.08f * t);
@@ -335,14 +330,17 @@ final class IconArt {
                 for (int i = 0; i < 3; i++) { float u = (f + i / 3f) % 1f; pxa(Math.round(off + 1 - u * 3), Math.round(11 - u * 4 + i), 0x9AE05A, 1f - u); }
                 outline();
             }
-            case "raredrops" -> {                                                            // Rare Drops: a faceted violet gem, sparkles flying off it
-                glow(8, 8, 8, 0xB56BFF, 0.14f + 0.12f * t);
-                tri(3, 6, 8, 2, 13, 6, 0xC9A0FF); tri(3, 6, 8, 2, 8, 6, 0xE4CCFF); tri(3, 6, 13, 6, 8, 14, 0x8A5AD8); tri(8, 6, 13, 6, 8, 14, 0x6A3AB8); tri(3, 6, 8, 6, 8, 14, 0xA878F0);
-                ln(3, 6, 13, 6, 0xF0E4FF); ln(5.5f, 4, 7, 6, 0xF8F0FF); px(5, 5, 0xFFFFFF); px(6, 4, 0xFFFFFF);
+            case "raredrops" -> {                                                            // Rare Drops: an open enchanted book, a violet gem rising out of it on a beam of light
+                int hov = Math.round(1.2f * s);
+                quad(0.5f, 9, 8, 11, 8, 15.5f, 0.5f, 13.5f, 0x5A3A9E); quad(8, 11, 15.5f, 9, 15.5f, 13.5f, 8, 15.5f, 0x4A2E86);   // the covers
+                quad(1.5f, 8, 8, 10, 8, 14, 1.5f, 12, 0xF3EAD8); quad(8, 10, 14.5f, 8, 14.5f, 12, 8, 14, 0xE0D4B8);            // the pages
+                ln(3, 10, 7, 11.2f, 0xB8A888); ln(3, 11.3f, 7, 12.5f, 0xB8A888); ln(9, 11.2f, 13, 10, 0xB8A888); ln(9, 12.5f, 13, 11.3f, 0xB8A888);
+                for (int y = 2; y < 10; y++) { pxa(7, y, 0xFFE9A8, 0.15f + 0.2f * t); pxa(8, y, 0xFFE9A8, 0.3f + 0.3f * t); }
+                float[] gx = {8, 11.5f, 8, 4.5f}, gy = {0.5f + hov, 4f + hov, 8.5f + hov, 4f + hov};
+                poly(gx, gy, 0xB56BFF);
                 outline();
-                glint(12 - Math.round(f * 2), 3 + Math.round(f * 2), 2, 0xFFE27A, 0.3f + 0.7f * t);
-                glint(3 + Math.round(f * 2), 12 - Math.round(f * 3), 1, 0x9AF0FF, 0.2f + 0.8f * (1f - t));
-                glint(13, 12, 1, 0xFFFFFF, 0.25f + 0.75f * (float) Math.abs(sn(f * 2)));
+                glint(7, 2 + hov, 1, 0xFFFFFF, 0.5f + 0.5f * t);
+                glow(8, 4, 6, 0xB56BFF, 0.15f + 0.1f * t);
             }
             case "grp_mobs" -> {                                                             // Rare Mob Drops: a zombie head, a gold star dropping out of it
                 rect(3, 3, 10, 10, 0x5E9A3C); rect(3, 3, 10, 1, 0x86CC5A); rect(3, 12, 10, 1, 0x3E7A28); rect(3, 3, 1, 10, 0x76B84E);
@@ -363,19 +361,18 @@ final class IconArt {
                 int[] cc = {0xFF5A8A, 0x7CCB4F, 0x55D8FF, 0xFFD25A, 0xB56BFF};
                 for (int i = 0; i < 5; i++) { float u = (f + i * 0.2f) % 1f; pxa(1 + i * 3 + Math.round((float) Math.sin(u * 6 + i)), Math.round(u * 15), cc[i], (float) Math.sin(u * 3.1416f)); }
             }
-            case "mining" -> {                                                               // a pickaxe swings onto a rock and cracks it
-                float sw = f < 0.55f ? f / 0.55f : 1f;                                                  // 0 raised .. 1 hits
-                float rec = f < 0.55f ? 0f : (f - 0.55f) / 0.45f;
-                float ang = (1f - sw) * 0.9f;                                                           // the handle's lean
-                float hx = 9 - (1f - sw) * 5, hy = 5 - (1f - sw) * 4;                                    // where the head is
-                poly(new float[]{1, 6, 14, 15, 13, 7, 3}, new float[]{15, 8.5f, 8.5f, 12, 15, 15, 15}, 0x7A8398);      // the rock
-                poly(new float[]{3, 7, 11, 13, 8}, new float[]{13, 9.5f, 9.5f, 12, 11.5f}, 0x9AA3B8);
-                if (rec > 0f) { ln(9, 9, 8 + Math.round(rec), 11, 0x2A2F3C); ln(8, 11, 6, 13, 0x2A2F3C); if (rec > 0.4f) { ln(9, 10, 11, 12, 0x2A2F3C); ln(6, 13, 4, 14, 0x2A2F3C); } }
-                ln(3.5f, 14, hx, hy, 0x8A5A2C); ln(4.5f, 14, hx + 1, hy, 0x6B4423);                      // the handle
-                quad(hx - 4, hy - 1, hx, hy - 3, hx + 5, hy + 1, hx + 1, hy + 0.5f, 0xC8D0E2);          // the curved pick
-                tri(hx - 4, hy - 1, hx - 5, hy + 1, hx - 3, hy, 0xE8EEF8); tri(hx + 5, hy + 1, hx + 6, hy + 3, hx + 4, hy + 1.5f, 0x9AA3B8);
+            case "mining" -> {                                                               // Mining: a pickaxe comes down on an ore block, sparks fly and the gems glint
+                bev(6, 9, 9, 6, 0x6E6A78);
+                rect(8, 11, 2, 2, 0x55D8FF); rect(12, 10, 2, 1, 0xFFC857); rect(12, 13, 2, 1, 0x55D8FF); px(8, 11, 0xC8F4FF);
+                int up = f < 0.3f ? Math.round(2 * (f / 0.3f)) : f < 0.4f ? Math.round(2 * (1f - (f - 0.3f) / 0.1f)) : 0;      // lifts, then strikes
+                int dx = -up, dy = -up;
+                ln(1 + dx, 14 + dy, 8 + dx, 7 + dy, 0x8A5A2B); ln(2 + dx, 14 + dy, 8 + dx, 8 + dy, 0x6E4622);                   // the handle
+                ln(4 + dx, 3 + dy, 6 + dx, 3 + dy, 0xC9D2E4); ln(7 + dx, 4 + dy, 9 + dx, 6 + dy, 0xC9D2E4); ln(10 + dx, 7 + dy, 11 + dx, 9 + dy, 0xC9D2E4);
+                ln(5 + dx, 4 + dy, 6 + dx, 4 + dy, 0x8A93AA); ln(7 + dx, 5 + dy, 9 + dx, 7 + dy, 0x8A93AA); px(10 + dx, 9 + dy, 0x8A93AA);   // the iron head
+                px(3 + dx, 3 + dy, 0xE8EEF8); px(11 + dx, 10 + dy, 0xE8EEF8);
                 outline();
-                if (sw >= 1f) { float v = Math.min(1f, rec * 1.6f); px(9 + Math.round(v * 4), 8 - Math.round(v * 4), 0xFFE27A); px(9 - Math.round(v * 4), 8 - Math.round(v * 3), 0xFFB03A); px(9, 7 - Math.round(v * 3), 0xFFFFFF); }
+                if (f >= 0.4f && f < 0.7f) { float u = (f - 0.4f) / 0.3f; for (int k = 0; k < 4; k++) pxa(Math.round(10 + (k - 1.5f) * 2.2f * u), Math.round(8 - u * 4 + (k % 2)), k % 2 == 0 ? 0xFFE3A0 : 0xFFFFFF, 1f - u); }
+                glint(12, 10, 1, 0xFFFFFF, 0.3f + 0.7f * t);
             }
             case "fishing" -> {                                                              // a fish leaping
                 float jy = -3.5f * 4f * f * (1f - f) * 1f;
@@ -446,12 +443,17 @@ final class IconArt {
                     glow(8, 7, 7, 0xB48CFF, 0.18f * t);
                 }
             }
-            case "snd_beat" -> {                                                             // Beat: a drum being hit, rings leaving it
-                bev(2, 8, 12, 6, 0xB5532E); rect(2, 8, 12, 2, 0xF0D8A8); rect(3, 10, 1, 4, 0xE8C080); rect(8, 10, 1, 4, 0xE8C080); rect(12, 10, 1, 4, 0xE8C080);
-                float hit = f < 0.3f ? f / 0.3f : 0f;
-                ln(3, 3 + 4 * hit, 7, 7 + hit, 0xE8D8B0); ln(13, 3 + 4 * (1f - hit), 9, 7, 0xE8D8B0);
+            case "snd_beat" -> {                                                             // Beat: a drum seen from the front, a stick strikes it and a ring of sound bursts out
+                float hit = f < 0.12f ? 1f - f / 0.12f : 0f;
+                ball(8, 9, 5.6f, 0xB83A3A);
+                ball(8, 9, 4.2f, 0xF3EAD8);
+                px(8, 9, 0xD9CCB0); rect(7, 8, 3, 1, 0xEDE3CC);
+                int sy = f < 0.12f ? 6 : 2 + Math.round(2 * (float) Math.sin(Math.min(1f, (f - 0.12f) / 0.5f) * Math.PI));
+                ln(13, sy - 3, 9, sy + 1, 0xC8902A); px(9, sy + 1, 0xFFE3A0);
                 outline();
-                if (f > 0.25f) { float u = (f - 0.25f) / 0.75f; pxa(8 - Math.round(2 + u * 5), 7, 0xFFE27A, 1f - u); pxa(8 + Math.round(2 + u * 5), 7, 0xFFE27A, 1f - u); pxa(8, 6 - Math.round(u * 3), 0xFFF3B0, 1f - u); }
+                float u = f; float r = 5.5f + u * 3.5f;
+                for (int k = 0; k < 20; k++) { float an = k * TAU / 20f; pxa(Math.round(8 + (float) Math.cos(an) * r), Math.round(9 + (float) Math.sin(an) * r), 0xFFE3A0, (1f - u) * 0.8f); }
+                if (hit > 0f) glow(8, 9, 5, 0xFFFFFF, 0.35f * hit);
             }
             case "snd_burst" -> {                                                            // Burst: a starburst
                 glow(8, 8, 8, 0xFF9A3A, 0.25f + 0.15f * t);
@@ -468,10 +470,15 @@ final class IconArt {
                 ball(8, 9, 1.8f, 0xFFD25A);
                 outline();
             }
-            case "snd_linger" -> {                                                           // Linger: a note whose echoes fade away
-                ball(5, 12, 2.4f, 0x9AB8FF); ln(7, 12, 7, 3, 0x9AB8FF); ln(7, 3, 11, 5, 0x9AB8FF); ln(7, 4, 11, 6, 0x6A88CF);
-                for (int i = 1; i <= 3; i++) { float a = Math.max(0f, 1f - i * 0.3f - 0.3f * (1f - t)); for (int k = 0; k < 6; k++) pxa(9 + i * 2, 5 + k * 2 - (k % 2), 0x9AB8FF, a); }
+            case "snd_linger" -> {                                                           // Linger: a gold note, its echoes drifting off to the right and fading
+                for (int e = 2; e >= 0; e--) {
+                    float u = (f + e / 3f) % 1f; int ox = e == 0 ? 0 : Math.round(u * 6) + e; float al = e == 0 ? 1f : (1f - u) * 0.6f;
+                    int col = e == 0 ? 0xE8B84A : 0xB9A8F0;
+                    if (e == 0) { rect(8, 3, 1, 9, 0xC8902A); quad(8, 3, 12, 5, 12, 7, 8, 5, 0xE8B84A); ball(6.5f, 12, 2.2f, col); }
+                    else { for (int y = 3; y < 12; y++) pxa(8 + ox, y, col, al * 0.8f); for (int y = 11; y <= 13; y++) for (int x = 5; x <= 8; x++) pxa(x + ox, y, col, al * 0.7f); }
+                }
                 outline();
+                glint(5, 11, 1, 0xFFFFFF, 0.4f + 0.6f * t);
             }
             case "snd_end" -> {                                                              // End: a bell struck once, a last ring
                 float sw = s * 1.2f;

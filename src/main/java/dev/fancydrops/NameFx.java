@@ -41,15 +41,15 @@ final class NameFx {
                 if (n > 0 && hash(7, st) % n == i) c = mix(c, 0xFFFFFF, 0.9f * en);
                 return c;
             }
-            case "glitch": {                                                // Critical: red; a white band sweeps over it, a letter flashes white, and now and then the whole name blinks white like a siren
-                int c = 0xFF4A2E;
-                float pos = (t % 1800L) / 1800f * (n + 8) - 3, d = i - pos;
-                if (d > -1.2f && d <= 0.3f) c = 0xFFFFFF;
-                long cyc = t % 3000L;
-                if (cyc < 420L) c = ((i + (int) (t / 90L)) & 1) == 0 ? 0xFF4A2E : 0xFFFFFF;
-                long st = t / 800L; float en = (float) Math.sin(Math.PI * ((t % 800L) / 800f));
-                if (n > 0 && hash(3, st) % n == i) c = mix(c, 0xFFFFFF, 0.9f * en);
-                return c;
+            case "glitch": {                                                // Critical: red, with a heartbeat: twice a beat ("lub-dub") a white pulse bursts from the middle of the name and runs out to both ends
+                int c = 0xFF3B30; float best = 0f;
+                long cyc = t % 1600L; float mid = (n - 1) / 2f, dist = Math.abs(i - mid);
+                for (long b : new long[]{0L, 240L}) {
+                    long dt = cyc - b; if (dt < 0 || dt >= 520L) continue;
+                    float u = dt / 520f, front = u * (mid + 2.5f), k = Math.max(0f, 1f - Math.abs(dist - front) / 1.7f) * (1f - u);
+                    best = Math.max(best, b == 0L ? k : k * 0.75f);
+                }
+                return mix(c, 0xFFFFFF, 0.92f * best);
             }
             case "contribfx": {                                             // Aqua Flow: aqua with a wave of white foam running along it
                 int c = 0x38D2FF;

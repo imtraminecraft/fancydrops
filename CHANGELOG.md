@@ -1,3 +1,10 @@
+## 0.8.1
+- **Cosmetics:** auras are round and soft (no more boxy squares). Name tags over players get their name effect and icon. Cleaner name hover card.
+- **Given cosmetics are opt-in:** they only unlock; others see them once the owner turns them on (needs the worn-cosmetics server).
+- **Gold colours everywhere:** the chat prefix, /fd help and every mod message match the new menu.
+- **New icons:** Rare Drops, Sounds, Slayers, Mining, Settings, Beat, Linger, Rare Crops and Stats.
+- **Critical** name effect is now a heartbeat: a white pulse runs out from the middle of the name, twice a beat.
+
 ## 0.8.0
 - **New menu look:** warm dark panels with gold accents, cleaner rows and buttons, and new sidebar icons.
 - **Auras** are real particles in the world: they stay on the player and hide behind blocks and bodies.

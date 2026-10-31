@@ -935,7 +935,7 @@ public class FancyScreen extends Screen {
             case "glow" -> "A soft white glow that slowly brightens. ";
             case "fresh" -> "A lighter shade drifts along your name. ";
             case "sparklefx" -> "Starlight blue with a white comet and twinkling letters. ";
-            case "glitch" -> "Red with a white band, a flashing letter and a siren blink. ";
+            case "glitch" -> "Red with a heartbeat: twice a beat a white pulse runs out from the middle. ";
             case "contribfx" -> "Aqua with waves of white foam. ";
             case "royal" -> "Gold with a running white glint. ";
             default -> "";
