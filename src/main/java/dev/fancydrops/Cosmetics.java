@@ -121,10 +121,70 @@ final class Cosmetics {
                     for (var cid : e.getValue().getAsJsonArray()) m.computeIfAbsent(e.getKey().toLowerCase(Locale.ROOT), k -> new HashSet<>()).add("c:" + cid.getAsString());
                 }
                 remoteRaw = res.body();
+                var root = com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject();
+                String wu = root.has("wornUrl") ? root.get("wornUrl").getAsString().trim() : "";
+                wornUrl = wu.startsWith("https://") ? (wu.endsWith("/") ? wu.substring(0, wu.length() - 1) : wu) : null;
                 CosmeticData.grants = m; remoteOkAt = System.currentTimeMillis();
+                if (wornUrl != null) { wornAt = 0; publishAt = System.currentTimeMillis() + 1500; }
             } catch (Throwable ignored) { }
         });
     }
+    // ---- what every player chose to wear (opt-in): a tiny server (tools/worn-worker.js) keeps each player's pick; its address is "wornUrl" in cosmetics.json.
+    //      Without it, others see a given set as before. With it, a given cosmetic only shows once its owner turns it on.
+    static volatile String wornUrl;
+    private static volatile Map<String, String[]> WORN = Map.of();                  // player code -> {suffix, name effect, aura}
+    private static volatile long wornAt, publishAt; private static volatile boolean publishing;
+    private static void refreshWorn() {
+        String u = wornUrl; long now = System.currentTimeMillis();
+        if (u == null || now - wornAt < 60_000L) return; wornAt = now;
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                var res = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(u + "/worn")).header("User-Agent", "FancyDrops").GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+                if (res.statusCode() != 200) return;
+                Map<String, String[]> m = new HashMap<>();
+                for (var e : com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject().entrySet()) {
+                    var o = e.getValue().getAsJsonObject();
+                    m.put(e.getKey().toLowerCase(Locale.ROOT), new String[]{o.has("s") ? o.get("s").getAsString() : "", o.has("f") ? o.get("f").getAsString() : "", o.has("a") ? o.get("a").getAsString() : ""});
+                }
+                WORN = m;
+            } catch (Throwable ignored) { }
+        });
+    }
+    /** Your pick changed (or you joined): tell the server, a moment later, what you now wear. It checks with Mojang that it is really you. */
+    static void wornChanged() { if (wornUrl != null) publishAt = System.currentTimeMillis() + 2000; }
+    private static void publishTick(Minecraft mc) {
+        long now = System.currentTimeMillis();
+        if (publishAt == 0 || now < publishAt || publishing || wornUrl == null) return;
+        publishAt = 0;
+        UUID me = me(); if (me == null) return;
+        if (CosmeticData.grantsOf(me).isEmpty() && !isAdmin()) return;                  // nothing given to you: nothing to show others
+        FancyConfig c = FancyConfig.get();
+        String sx = CosmeticData.unlockedId(c.suffix) ? c.suffix : "", fx = CosmeticData.unlockedId(c.nameFx) ? c.nameFx : "", au = CosmeticData.unlockedId(c.aura) ? c.aura : "";
+        String name = mc.getUser().getName(), token = mc.getUser().getAccessToken(), u = wornUrl;
+        publishing = true;
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                byte[] rb = new byte[20]; new java.security.SecureRandom().nextBytes(rb); StringBuilder sid = new StringBuilder(); for (byte b : rb) sid.append(String.format("%02x", b));
+                mc.services().sessionService().joinServer(me, token, sid.toString());           // proves to Mojang (and so to the server) that this pick comes from you
+                com.google.gson.JsonObject o = new com.google.gson.JsonObject();
+                o.addProperty("name", name); o.addProperty("serverId", sid.toString()); o.addProperty("suffix", sx); o.addProperty("fx", fx); o.addProperty("aura", au);
+                java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(u + "/worn")).header("User-Agent", "FancyDrops").header("Content-Type", "application/json")
+                        .POST(java.net.http.HttpRequest.BodyPublishers.ofString(o.toString())).build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+                wornAt = 0;
+            } catch (Throwable t) { System.err.println("[FancyDrops] could not share your cosmetics: " + t); }
+            finally { publishing = false; }
+        });
+    }
+    /** True when this player was given the cosmetic (alone, or as part of a set). */
+    private static boolean owns(Set<String> g, String id) {
+        if (id == null || id.isEmpty()) return false;
+        if (g.contains("c:" + id)) return true;
+        CosmeticData.Def d = CosmeticData.byId(id); if (d == null) return false;
+        if (d.set() != null && g.contains(d.set())) return true;
+        if (id.equals("sparkle")) for (CosmeticData.SetDef sd : CosmeticData.SETS) if ("sparkle".equals(sd.suffix()) && g.contains(sd.id())) return true;
+        return false;
+    }
+
     static final FontDescription EMOJI = new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "emoji"));
 
     private record Seg(String text, Style style) {}
@@ -137,7 +197,7 @@ final class Cosmetics {
         Map<UUID, Look> m = new LinkedHashMap<>(); UUID me = me();
         FancyConfig c0 = FancyConfig.get();
         if (!(c0.masterAnimate || c0.masterAnnounce)) return m;                  // the mod is off: nothing is drawn on your screen (other players still see yours, they get it from the list, not from you)
-        refreshRemote();
+        refreshRemote(); refreshWorn();
         var conn = Minecraft.getInstance().getConnection();
         if (conn != null) for (var info : conn.getOnlinePlayers()) {
             if (info.getProfile() == null) continue;
@@ -145,6 +205,12 @@ final class Cosmetics {
             if (u.equals(me)) continue;
             Set<String> g = CosmeticData.grantsOf(u);                    // everybody sees what an owner has been given
             if (g.isEmpty()) continue;
+            if (wornUrl != null) {                                       // opt-in: only what the owner turned on, and only what they were given
+                String[] w = WORN.get(code(u)); if (w == null) continue;
+                Look ol = new Look(c0.othersSuffix && owns(g, w[0]) ? byId(w[0]) : null, c0.othersName && owns(g, w[1]) ? w[1] : null, c0.othersAura && owns(g, w[2]) ? w[2] : null);
+                if (ol.suffix() != null || ol.fx() != null || ol.aura() != null) m.put(u, ol);
+                continue;
+            }
             for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 4 && g.contains(sd.id())) {       // what they were given: the whole set (minus what you chose not to see)
                 Look ol = new Look(c0.othersSuffix ? byId(sd.suffix()) : null, c0.othersName ? sd.fx() : null, c0.othersAura ? sd.aura() : null);
                 if (ol.suffix() != null || ol.fx() != null || ol.aura() != null) m.put(u, ol);
@@ -466,7 +532,7 @@ final class Cosmetics {
     static Map<UUID, Look> looks() { return looksMap; }
     /** Every tick: who wears what right now (the aura drawing and the tab read this). */
     static void tickAura(Minecraft mc) {
-        try { looksMap = mc.level == null ? Map.of() : active(); } catch (Throwable ignored) { }
+        try { looksMap = mc.level == null ? Map.of() : active(); publishTick(mc); } catch (Throwable ignored) { }
     }
 
     /** A name in the menu preview: the colour you have on the server, with the effect on top. */

@@ -137,7 +137,7 @@ final class CosmeticData {
     }
     static boolean wearingSet(SetDef s) { FancyConfig c = FancyConfig.get(); return (s.suffix() == null ? "" : s.suffix()).equals(c.suffix) && s.fx().equals(c.nameFx) && (s.aura() == null || s.aura().equals(c.aura)); }
     /** Something you wear changed: chat lines already on screen are redone with the new look. */
-    static void changed() { Cosmetics.historyDirty = true; UCACHE.clear(); }
+    static void changed() { Cosmetics.historyDirty = true; UCACHE.clear(); Cosmetics.wornChanged(); }
     static String kindLabel(Kind k) { return k == Kind.SUFFIX ? "Name Icon" : k == Kind.NAME ? "Name effect" : "Aura"; }
 
     // ---- Admin Panel helpers
