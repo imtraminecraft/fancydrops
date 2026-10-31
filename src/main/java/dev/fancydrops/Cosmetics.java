@@ -123,7 +123,7 @@ final class Cosmetics {
                 remoteRaw = res.body();
                 var root = com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject();
                 String wu = root.has("wornUrl") ? root.get("wornUrl").getAsString().trim() : "";
-                wornUrl = wu.startsWith("https://") ? (wu.endsWith("/") ? wu.substring(0, wu.length() - 1) : wu) : null;
+                if (wu.startsWith("https://")) wornUrl = wu.endsWith("/") ? wu.substring(0, wu.length() - 1) : wu;
                 CosmeticData.grants = m; remoteOkAt = System.currentTimeMillis();
                 if (wornUrl != null) { wornAt = 0; publishAt = System.currentTimeMillis() + 1500; }
             } catch (Throwable ignored) { }
@@ -131,7 +131,8 @@ final class Cosmetics {
     }
     // ---- what every player chose to wear (opt-in): a tiny server (tools/worn-worker.js) keeps each player's pick; its address is "wornUrl" in cosmetics.json.
     //      Without it, others see a given set as before. With it, a given cosmetic only shows once its owner turns it on.
-    static volatile String wornUrl;
+    static final String DEFAULT_WORN = "https://fancydrops-worn.imtraminecraft.workers.dev";      // used until cosmetics.json says otherwise (its copy on GitHub can take minutes to update)
+    static volatile String wornUrl = DEFAULT_WORN;
     private static volatile Map<String, String[]> WORN = Map.of();                  // player code -> {suffix, name effect, aura}
     private static volatile long wornAt, publishAt; private static volatile boolean publishing;
     private static void refreshWorn() {
@@ -140,7 +141,7 @@ final class Cosmetics {
         java.util.concurrent.CompletableFuture.runAsync(() -> {
             try {
                 var res = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(u + "/worn")).header("User-Agent", "FancyDrops").GET().build(), java.net.http.HttpResponse.BodyHandlers.ofString());
-                if (res.statusCode() != 200) return;
+                if (res.statusCode() != 200) { System.err.println("[FancyDrops] worn list: " + res.statusCode()); return; }
                 Map<String, String[]> m = new HashMap<>();
                 for (var e : com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject().entrySet()) {
                     var o = e.getValue().getAsJsonObject();
@@ -157,7 +158,7 @@ final class Cosmetics {
         if (publishAt == 0 || now < publishAt || publishing || wornUrl == null) return;
         publishAt = 0;
         UUID me = me(); if (me == null) return;
-        if (CosmeticData.grantsOf(me).isEmpty() && !isAdmin()) return;                  // nothing given to you: nothing to show others
+        if (CosmeticData.grantsOf(me).isEmpty() && !isAdmin()) { System.err.println("[FancyDrops] not sharing cosmetics: none given to you"); return; }
         FancyConfig c = FancyConfig.get();
         String sx = CosmeticData.unlockedId(c.suffix) ? c.suffix : "", fx = CosmeticData.unlockedId(c.nameFx) ? c.nameFx : "", au = CosmeticData.unlockedId(c.aura) ? c.aura : "";
         String name = mc.getUser().getName(), token = mc.getUser().getAccessToken(), u = wornUrl;
@@ -168,8 +169,9 @@ final class Cosmetics {
                 mc.services().sessionService().joinServer(me, token, sid.toString());           // proves to Mojang (and so to the server) that this pick comes from you
                 com.google.gson.JsonObject o = new com.google.gson.JsonObject();
                 o.addProperty("name", name); o.addProperty("serverId", sid.toString()); o.addProperty("suffix", sx); o.addProperty("fx", fx); o.addProperty("aura", au);
-                java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(u + "/worn")).header("User-Agent", "FancyDrops").header("Content-Type", "application/json")
+                var res = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(java.net.URI.create(u + "/worn")).header("User-Agent", "FancyDrops").header("Content-Type", "application/json")
                         .POST(java.net.http.HttpRequest.BodyPublishers.ofString(o.toString())).build(), java.net.http.HttpResponse.BodyHandlers.ofString());
+                System.err.println("[FancyDrops] shared your cosmetics (" + (sx.isEmpty() ? "-" : sx) + ", " + (fx.isEmpty() ? "-" : fx) + ", " + (au.isEmpty() ? "-" : au) + "): " + res.statusCode() + " " + res.body());
                 wornAt = 0;
             } catch (Throwable t) { System.err.println("[FancyDrops] could not share your cosmetics: " + t); }
             finally { publishing = false; }

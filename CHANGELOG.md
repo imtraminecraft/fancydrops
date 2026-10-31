@@ -1,3 +1,6 @@
+## 0.8.2
+- Opt-in cosmetics start working right away (the server address is built in) and the log says when your cosmetics were shared.
+
 ## 0.8.1
 - **Cosmetics:** auras are round and soft (no more boxy squares). Name tags over players get their name effect and icon. Cleaner name hover card.
 - **Given cosmetics are opt-in:** they only unlock; others see them once the owner turns them on (needs the worn-cosmetics server).
