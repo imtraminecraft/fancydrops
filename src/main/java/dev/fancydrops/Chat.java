@@ -8,15 +8,16 @@ import java.util.regex.Pattern;
 
 /** How the mod talks in the player's chat: a gradient name tag, then the message with numbers, Magic Find and commands picked out in their own hex colours. */
 final class Chat {
-    static final int[] GRADIENT = {0x56D8FF, 0x6885FF, 0xB56BFF, 0xFF72C6, 0xFFB86B};
-    static final int TEXT = 0xD5DAE4, DIM = 0x7C8494, NUMBER = 0xFFC857, MF = 0x55E6FF, COMMAND = 0x9AA6FF, GOOD = 0x62E6A8, BAD = 0xFF7B7B, BRACKET = 0x4B5266;
+    // The "vault" colours (0.8.1), the same as the menu: a gold name, warm white text, violet commands.
+    static final int[] GRADIENT = {0xFFE3A0, 0xF4C860, 0xE8AE3E, 0xF4C860, 0xFFE3A0};
+    static final int TEXT = 0xE9E3D6, DIM = 0x8A8296, NUMBER = 0xFFD27A, MF = 0x55E6FF, COMMAND = 0xB9A8F0, GOOD = 0x62E6A8, BAD = 0xFF7B7B, BRACKET = 0x5A5266, LINE = 0x4A3F2A;
 
     private static final Pattern TOKEN = Pattern.compile(
             "(?<mf>\\+\\d[\\d,.]*%)|(?<cmd>/(?:fd|fancydrops)\\b)|(?<par>\\([^)]*\\))|(?<good>\\b(?:enabled|on|Sent|Simulating)\\b)|(?<bad>\\b(?:disabled|DISABLED|off|muted)\\b)|(?<num>\\b\\d[\\d,.]*(?:[kKMB]\\b|%)?)");
 
     static MutableComponent color(String s, int rgb) { return Component.literal(s).withStyle(st -> st.withColor(rgb)); }
 
-    /** [FancyDrops] with the name in the menu's cyan-violet-pink-amber gradient. */
+    /** [FancyDrops] with the name in the menu's gold.  */
     static MutableComponent prefix() {
         MutableComponent out = Component.empty().append(color("[", BRACKET));
         String name = "FancyDrops";

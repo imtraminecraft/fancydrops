@@ -208,17 +208,20 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     }
 
     private static int help(FabricClientCommandSource s) {
+        s.sendFeedback(Chat.color("\u2501".repeat(32), Chat.LINE));
         s.sendFeedback(waveTitle("FancyDrops").copy().append(Chat.color("  \u00B7  Quick guide", Chat.DIM)));
         helpLine(s, "/fd", "Open the menu");
         helpLine(s, "/fd <words>", "Open the menu and search for them (for example /fd minos)");
         helpLine(s, "/fd mute", "Turn every sound on or off");
         helpLine(s, "/fd toggle", "Turn the whole mod on or off");
         helpLine(s, "/fd help simulate", "Category: every /fd simulate command");
+        s.sendFeedback(Chat.color("\u2501".repeat(32), Chat.LINE));
         return Command.SINGLE_SUCCESS;
     }
 
     /** /fd help simulate: every simulate command. */
     private static int helpSimulate(FabricClientCommandSource s) {
+        s.sendFeedback(Chat.color("\u2501".repeat(32), Chat.LINE));
         s.sendFeedback(waveTitle("FancyDrops").copy().append(Chat.color("  \u00B7  Simulate", Chat.DIM)));
         helpLine(s, "/fd simulate Mythological <Mob|Treasure> <Drop> <mf>", "Play a pretend drop through the real animation");
         helpLine(s, "/fd simulate Slayer <Boss> <Drop> [Drop 2] <mf>", "The same for a slayer boss: one or two drops (Nothing for no drop)");
@@ -227,15 +230,16 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         s.sendFeedback(Component.literal(" "));
         s.sendFeedback(Chat.color("Example  ", Chat.DIM).append(Chat.color("/fd simulate Mythological Minos Hunter Daedalus Stick 250", Chat.COMMAND)));
         s.sendFeedback(Chat.color("Tab completes names. Use Nothing as the drop for a ritual that gave nothing. The magic find goes last and defaults to 250.", Chat.DIM));
+        s.sendFeedback(Chat.color("\u2501".repeat(32), Chat.LINE));
         return Command.SINGLE_SUCCESS;
     }
 
     private static void helpLine(FabricClientCommandSource s, String command, String description) {
-        s.sendFeedback(Chat.color("   " + command, Chat.COMMAND));
-        s.sendFeedback(Chat.color("      " + description, Chat.TEXT));
+        s.sendFeedback(Chat.color(" \u25B8 ", Chat.GRADIENT[2]).append(Chat.color(command, Chat.COMMAND)));
+        s.sendFeedback(Chat.color("     " + description, Chat.DIM));
     }
 
-    /** Same cyan-to-violet-to-pink wave palette as the animated /fancydrops menu title. */
+    /** The gold of the menu title. */
     private static Component waveTitle(String text) {
         MutableComponent out = Component.empty();
         for (int i = 0; i < text.length(); i++) {

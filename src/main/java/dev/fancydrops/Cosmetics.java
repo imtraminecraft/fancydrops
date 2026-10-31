@@ -266,45 +266,42 @@ final class Cosmetics {
     }
 
     // ---- the hover card: "FancyDrops" on top, then which cosmetics the player has and how they got each one
+    /** The hover card on a name: a clean card in the menu's gold. Header, a gold rule, then one line per cosmetic (kind, name, rarity), and the set it comes from once at the bottom. */
     private static Component tip(Look l, String player, String marker, HoverEvent orig) {
         MutableComponent t = Component.empty().withStyle(Style.EMPTY.withInsertion(marker));            // the marker tells the chat which letters carry an effect
         t.append(Chat.prefix());                                                                          // the same [FancyDrops] as in chat
-        t.append(Component.literal("\n" + player).withStyle(Style.EMPTY.withColor(0xFFFFFF).withBold(true)));
-        t.append(Component.literal("'s cosmetics").withStyle(Style.EMPTY.withColor(0xB8BED4)));
-        t.append(Component.literal("\n" + "━".repeat(30)).withStyle(Style.EMPTY.withColor(0x3E4258)));
-        boolean any = false;
-        if (l.suffix() != null) { tipLine(t, CosmeticData.byId(l.suffix().id())); any = true; }
-        if (l.fx() != null) { tipLine(t, CosmeticData.byId(l.fx())); any = true; }
-        if (l.aura() != null) { tipLine(t, CosmeticData.byId(l.aura())); any = true; }
-        if (!any) t.append(Component.literal("\nNothing worn right now").withStyle(Style.EMPTY.withColor(0x6C7388).withItalic(true)));
-        if (orig instanceof HoverEvent.ShowText st) { t.append(Component.literal("\n")); t.append(st.value()); }       // whatever the server showed here is kept underneath
+        t.append(Component.literal("\n" + player).withStyle(Style.EMPTY.withColor(Chat.TEXT).withBold(true)));
+        t.append(Component.literal("\n" + "\u2501".repeat(18)).withStyle(Style.EMPTY.withColor(Chat.LINE)));
+        List<CosmeticData.Def> worn = new ArrayList<>();
+        if (l.suffix() != null) worn.add(CosmeticData.byId(l.suffix().id()));
+        if (l.fx() != null) worn.add(CosmeticData.byId(l.fx()));
+        if (l.aura() != null) worn.add(CosmeticData.byId(l.aura()));
+        worn.removeIf(java.util.Objects::isNull);
+        if (worn.isEmpty()) t.append(Component.literal("\nNothing worn right now").withStyle(Style.EMPTY.withColor(Chat.DIM).withItalic(true)));
+        String set = null; boolean oneSet = true;
+        for (CosmeticData.Def d : worn) {
+            tipLine(t, d);
+            String sid = d.set(); if (set == null) set = sid; else if (sid == null || !sid.equals(set)) oneSet = false;
+        }
+        CosmeticData.SetDef sd = oneSet && set != null ? CosmeticData.setById(set) : null;
+        if (sd != null) {
+            t.append(Component.literal("\n" + "\u2501".repeat(18)).withStyle(Style.EMPTY.withColor(Chat.LINE)));
+            t.append(Component.literal("\n" + sd.name() + " set").withStyle(Style.EMPTY.withColor(sd.color() & 0xFFFFFF).withBold(true)));
+            t.append(Component.literal("\n" + sd.how()).withStyle(Style.EMPTY.withColor(Chat.DIM).withItalic(true)));
+        }
+        if (orig instanceof HoverEvent.ShowText st) { t.append(Component.literal("\n\n")); t.append(st.value()); }       // whatever the server showed here is kept underneath
         return t;
     }
-    /** The rarity's mark and colour: a hover can't animate, so the animated pin of the menu becomes a coloured gradient symbol. */
-    private static final int[] RAR_RGB = {0x9AA3B5, 0x5B8CFF, 0x3FD16A, 0xFFB400, 0xC77DFF};
-    private static final String[] RAR_MARK = {"●", "◆", "✿", "★", "✦"};
-    private static final int[][] RAR_GRAD = {null, null, null, {0xFFD55A, 0xFF9A1E}, {0xFF7AD9, 0xB48CFF, 0x55D8FF}};
-    private static void rarityTag(MutableComponent t, int r) {
-        String word = CosmeticData.rarityName(r).toUpperCase(java.util.Locale.ROOT), full = RAR_MARK[r] + " " + word;
-        int[] g = RAR_GRAD[r];
-        for (int i = 0; i < full.length(); i++) {
-            int rgb = RAR_RGB[r];
-            if (g != null) { float f = i / (float) Math.max(1, full.length() - 1) * (g.length - 1); int a = (int) Math.floor(f), b2 = Math.min(g.length - 1, a + 1); rgb = Canvas.mix(0xFF000000 | g[a], 0xFF000000 | g[b2], f - a) & 0xFFFFFF; }
-            t.append(Component.literal(String.valueOf(full.charAt(i))).withStyle(Style.EMPTY.withColor(rgb).withBold(r >= 3)));
-        }
-    }
+    /** The rarity's mark and colour: a hover can't animate, so the animated pin of the menu becomes a coloured mark and word. */
+    private static final int[] RAR_RGB = {0x9AA3B5, 0x6E95FF, 0x3FD16A, 0xFFB400, 0xC77DFF};
+    private static final String[] RAR_MARK = {"\u25CF", "\u25C6", "\u273F", "\u2605", "\u2726"};
     private static void tipLine(MutableComponent t, CosmeticData.Def d) {
-        if (d == null) return;
         int r = CosmeticData.rarityOf(d);
-        CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
-        String how = CosmeticData.force.containsKey(d.id()) ? "Test menu" : sd != null ? sd.how() : d.how();
-        t.append(Component.literal("\n\n" + CosmeticData.kindLabel(d.kind())).withStyle(Style.EMPTY.withColor(0x8A93B0)));
-        t.append(Component.literal("   "));
+        t.append(Component.literal("\n" + RAR_MARK[r] + " ").withStyle(Style.EMPTY.withColor(RAR_RGB[r])));
         t.append(Component.literal(d.name()).withStyle(Style.EMPTY.withColor(d.color() & 0xFFFFFF).withBold(true)));
-        t.append(Component.literal("\n  "));
-        rarityTag(t, r);
-        if (sd != null) t.append(Component.literal("   ·   " + sd.name() + " set").withStyle(Style.EMPTY.withColor(0x6C7388)));
-        t.append(Component.literal("\n  " + how).withStyle(Style.EMPTY.withColor(0x7F869C).withItalic(true)));
+        t.append(Component.literal("  " + CosmeticData.kindLabel(d.kind())).withStyle(Style.EMPTY.withColor(Chat.DIM)));
+        t.append(Component.literal("  " + CosmeticData.rarityName(r)).withStyle(Style.EMPTY.withColor(RAR_RGB[r]).withItalic(true)));
+        if (CosmeticData.force.containsKey(d.id())) t.append(Component.literal("  (test)").withStyle(Style.EMPTY.withColor(Chat.DIM)));
     }
     private static Component tippedGlyph(Look l, String player) {
         return chatGlyph(l.suffix()).copy().withStyle(Style.EMPTY.withHoverEvent(new HoverEvent.ShowText(tip(l, player, "fd:sfx", null))));
