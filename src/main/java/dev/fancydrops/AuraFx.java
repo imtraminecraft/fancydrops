@@ -306,21 +306,37 @@ final class AuraFx {
             }
             return;
         }
-        bill(pose, buf, x, y, z, size * 1.9f, size * 1.9f, r, u, cr, cg, cb, Math.round(a * 0.22f));     // soft halo
-        if (q.shape() == 1) {                                                                    // a four-point star: two thin arms and a bright core
-            bill(pose, buf, x, y, z, size * 1.5f, size * 0.16f, r, u, cr, cg, cb, a);
-            bill(pose, buf, x, y, z, size * 0.16f, size * 1.5f, r, u, cr, cg, cb, a);
-            bill(pose, buf, x, y, z, size * 0.3f, size * 0.3f, r, u, 255, 255, 255, Math.min(255, a + 40));
-        } else bill(pose, buf, x, y, z, size * 0.55f, size * 0.55f, r, u, cr, cg, cb, a);
+        disc(pose, buf, x, y, z, size * 2.0f, r, u, cr, cg, cb, Math.round(a * 0.35f));                 // a round soft halo (no square edges)
+        if (q.shape() == 1) {                                                                    // a four-point star: two soft pointed arms and a bright core
+            arm(pose, buf, x, y, z, size * 1.6f, size * 0.22f, r, u, cr, cg, cb, a);
+            arm(pose, buf, x, y, z, size * 1.6f, size * 0.22f, u, new org.joml.Vector3f(r).negate(), cr, cg, cb, a);      // turned a quarter, same winding (so it is not culled)
+            disc(pose, buf, x, y, z, size * 0.4f, r, u, 255, 255, 255, Math.min(255, a + 40));
+        } else disc(pose, buf, x, y, z, size * 0.7f, r, u, cr, cg, cb, a);
     }
-    /** A camera-facing rectangle, hw/hh its half width and height in blocks. */
-    private static void bill(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float hw, float hh, org.joml.Vector3f r, org.joml.Vector3f u, int cr, int cg, int cb, int a) {
+    /** A round, soft dot facing the camera: full colour in the middle fading to nothing at the rim (a fan of thin triangles). */
+    private static void disc(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float rad, org.joml.Vector3f r, org.joml.Vector3f u, int cr, int cg, int cb, int a) {
+        if (a < 4 || rad <= 0.0005f) return;
+        int seg = 10;
+        for (int i = 0; i < seg; i++) {
+            double a0 = i * Math.PI * 2 / seg, a1 = (i + 1) * Math.PI * 2 / seg;
+            float c0 = (float) Math.cos(a0) * rad, s0 = (float) Math.sin(a0) * rad, c1 = (float) Math.cos(a1) * rad, s1 = (float) Math.sin(a1) * rad;
+            buf.addVertex(pose, x, y, z).setColor(cr, cg, cb, a);
+            buf.addVertex(pose, x + r.x * c0 + u.x * s0, y + r.y * c0 + u.y * s0, z + r.z * c0 + u.z * s0).setColor(cr, cg, cb, 0);
+            buf.addVertex(pose, x + r.x * c1 + u.x * s1, y + r.y * c1 + u.y * s1, z + r.z * c1 + u.z * s1).setColor(cr, cg, cb, 0);
+            buf.addVertex(pose, x, y, z).setColor(cr, cg, cb, a);
+        }
+    }
+    /** One arm of a star along `along`: bright at the centre, thin and fading to a point at both tips. */
+    private static void arm(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float len, float w, org.joml.Vector3f along, org.joml.Vector3f side, int cr, int cg, int cb, int a) {
         if (a < 4) return;
-        float rx = r.x * hw, ry = r.y * hw, rz = r.z * hw, ux = u.x * hh, uy = u.y * hh, uz = u.z * hh;
-        buf.addVertex(pose, x - rx - ux, y - ry - uy, z - rz - uz).setColor(cr, cg, cb, a);
-        buf.addVertex(pose, x + rx - ux, y + ry - uy, z + rz - uz).setColor(cr, cg, cb, a);
-        buf.addVertex(pose, x + rx + ux, y + ry + uy, z + rz + uz).setColor(cr, cg, cb, a);
-        buf.addVertex(pose, x - rx + ux, y - ry + uy, z - rz + uz).setColor(cr, cg, cb, a);
+        float[][] pts = {{len, 0}, {0, w}, {-len, 0}, {0, -w}};
+        for (int i = 0; i < 4; i++) {
+            float[] p0 = pts[i], p1 = pts[(i + 1) % 4];
+            buf.addVertex(pose, x, y, z).setColor(cr, cg, cb, a);
+            buf.addVertex(pose, x + along.x * p0[0] + side.x * p0[1], y + along.y * p0[0] + side.y * p0[1], z + along.z * p0[0] + side.z * p0[1]).setColor(cr, cg, cb, p0[0] != 0 ? 0 : a / 2);
+            buf.addVertex(pose, x + along.x * p1[0] + side.x * p1[1], y + along.y * p1[0] + side.y * p1[1], z + along.z * p1[0] + side.z * p1[1]).setColor(cr, cg, cb, p1[0] != 0 ? 0 : a / 2);
+            buf.addVertex(pose, x, y, z).setColor(cr, cg, cb, a);
+        }
     }
 
     /** Called every frame by the HUD: only the fallback name over other players' heads (the auras are drawn in the world, see submit). */
@@ -380,9 +396,16 @@ final class AuraFx {
                 g.fill(x - w / 2, y, x + w / 2, y + 1, a);
                 break;
             }
-            default: {
+            default: {                                                                 // a small round dot: bright middle, softer rim (never a square)
                 int s = Math.max(1, Math.round(px));
-                g.fill(x - s / 2, y - s / 2, x - s / 2 + s, y - s / 2 + s, a);
+                if (s <= 1) { g.fill(x, y, x + 1, y + 1, a); break; }
+                float rr = s / 2f + 0.5f;
+                for (int dy = -s; dy <= s; dy++) {
+                    float hw = (float) Math.sqrt(Math.max(0f, rr * rr - dy * dy)); int w = Math.round(hw); if (w <= 0) continue;
+                    int edge = Math.round(al * 0.45f) << 24 | rgb;
+                    g.fill(x - w, y + dy, x + w + 1, y + dy + 1, edge);
+                    if (w > 1 && Math.abs(dy) < rr - 1) g.fill(x - w + 1, y + dy, x + w, y + dy + 1, a);
+                }
             }
         }
     }
