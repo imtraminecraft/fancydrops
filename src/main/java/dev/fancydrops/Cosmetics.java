@@ -446,12 +446,17 @@ final class Cosmetics {
     }
 
     /** The name over a player's head with their effect and suffix, or null when they wear none. */
-    static volatile boolean nameTagHooked;                                  // true once the name-tag mixin has run
+    static volatile boolean nameTagHooked;                                  // true once name tags are styled in the world (AuraFx.extract)
     static Component nameTag(Component base, Entity e) {
         if (base == null || !(e instanceof net.minecraft.world.entity.player.Player)) return null;
-        Look lk = looksMap.get(e.getUUID());
+        return styleTag(base, e.getUUID(), e.getName().getString());
+    }
+    /** A name tag (the player's own, or the floating text a server puts over them) with that player's name effect and icon, or null when it has none. */
+    static Component styleTag(Component base, UUID id, String name) {
+        if (base == null) return null;
+        Look lk = looksMap.get(id);
         if (lk == null || (lk.fx() == null && lk.suffix() == null)) return null;
-        String name = e.getName().getString(), bs = base.getString();
+        String bs = base.getString();
         int at = find(bs, name);
         if (at < 0) return null;
         Component out = base;

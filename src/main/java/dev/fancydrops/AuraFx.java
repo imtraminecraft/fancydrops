@@ -2,6 +2,7 @@ package dev.fancydrops;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.network.chat.Component;
 
 import java.util.*;
 
@@ -216,7 +217,32 @@ final class AuraFx {
             var ls = ctx.levelState(); var cs = ls.cameraRenderState;
             wcX = cs.pos.x(); wcY = cs.pos.y(); wcZ = cs.pos.z(); CAM_ROT.set(cs.orientation);
             for (var st : ls.entityRenderStates) if (st instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState av && !av.isInvisible) BODY.put(av.id, new double[]{av.x, av.y, av.z});
+            styleNameTags(ls);
         } catch (Throwable t) { if (!worldOk) System.err.println("[FancyDrops] aura extract failed: " + t); }
+    }
+
+    /** Every name tag about to be drawn this frame: a player's own tag, or the floating text a server (Hypixel) hangs over them, gets that player's name effect and icon.
+     *  Done on the render states, so it works for every player, you included in F5, whatever draws the name. */
+    private static void styleNameTags(net.minecraft.client.renderer.state.level.LevelRenderState ls) {
+        Minecraft mc = Minecraft.getInstance(); if (mc.level == null) return;
+        Map<UUID, Cosmetics.Look> looks = Cosmetics.looks(); if (looks.isEmpty()) return;
+        FancyConfig cf = FancyConfig.get();
+        List<net.minecraft.world.entity.player.Player> worn = new ArrayList<>();
+        for (var p : mc.level.players()) { Cosmetics.Look l = looks.get(p.getUUID()); if (l != null && (l.fx() != null || l.suffix() != null)) worn.add(p); }
+        if (worn.isEmpty()) return;
+        Cosmetics.nameTagHooked = true;
+        for (var st : ls.entityRenderStates) {
+            if (st.nameTag == null) continue;
+            net.minecraft.world.entity.player.Player owner = null;
+            if (st instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState av) { for (var p : worn) if (p.getId() == av.id) { owner = p; break; } }
+            else for (var p : worn) {                                                           // floating text: it belongs to the player right under it
+                if (Math.abs(st.x - p.getX()) < 1.2 && Math.abs(st.z - p.getZ()) < 1.2 && st.y > p.getY() - 0.5 && st.y < p.getY() + 4.5) { owner = p; break; }
+            }
+            if (owner == null) continue;
+            if (owner != mc.player && owner.distanceTo(mc.player) > cf.cosRange) continue;
+            Component c = Cosmetics.styleTag(st.nameTag, owner.getUUID(), owner.getName().getString());
+            if (c != null) st.nameTag = c;
+        }
     }
 
     /** The level is collecting what to draw: add the aura particles of every player who wears one, as glowing camera-facing quads in the world. */
