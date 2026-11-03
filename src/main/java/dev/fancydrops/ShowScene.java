@@ -45,6 +45,7 @@ final class ShowScene {
         if (a <= 0.01f) return;
         float op = Math.min(t, O), appear = sm(t / (0.15f * O + 0.05f)), al = a * appear;
         float rumble = sm((op - 0.84f * O) / (0.16f * O)) * (1f - sm(p / 0.4f));
+        ShowScenery.paint(Ritual.cv, motif, t, icx, gy, sz, al * 0.9f, tint);
         switch (motif) {
             case WATER, LAVA, SPOOKY -> pool(t, O, op, p, icx, gy, sz, motif, al, rumble, rng);
             case WINTER -> ice(t, O, op, p, icx, gy, sz, al, rumble, rng);
@@ -71,8 +72,8 @@ final class ShowScene {
             }
         }
         Ritual.glowE(cx, gy, rx * 1.35f, ry * 2.2f, surf, 0.28f * a);                         // the light the pool gives off
-        Ritual.fillE(cx, gy, rx + 2, ry + 1.5f, mix(deep, 0x000000, 0.5f), a);                // the rim
-        Ritual.fillE(cx, gy, rx, ry, deep, a);
+        if (m == SPOOKY) { Ritual.fillE(cx, gy, rx + 2, ry + 1.5f, mix(deep, 0x000000, 0.5f), a); Ritual.fillE(cx, gy, rx, ry, deep, a); }      // the pond (the sea and the lava lake need none)
+        else Ritual.glowE(cx, gy, rx, ry, surf, 0.35f * a);
         for (int i = 0; i < 26; i++) {                                                        // shimmering streaks on the surface
             float u = rnd(i * 13 + 2), v = rnd(i * 5 + 9) * 2f - 1f, sx = cx + (u * 2f - 1f) * rx * 0.85f * (float) Math.sqrt(1 - v * v * 0.6f), sy = gy + v * ry * 0.7f;
             float tw = 0.5f + 0.5f * (float) Math.sin(t * (2f + rnd(i) * 2f) + i), len = (3 + 5 * rnd(i * 3)) * sz;

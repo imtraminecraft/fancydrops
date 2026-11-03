@@ -24,7 +24,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 final class Ritual {
     private Ritual() {}
 
-    static final int CW = 320, CH = 180;
+    static final int CW = 640, CH = 360;
+    /** Canvas units per old canvas unit: the scene canvas has twice the detail of the first 320 x 180 one, every size is written in the old units. */
+    static final float K = CW / 320f;
     private static final Canvas main = new Canvas(CW, CH), sil = new Canvas(CW, CH);
     static Canvas cv = main;                                                    // what the drawing helpers paint on
 
@@ -568,6 +570,7 @@ final class Ritual {
         else if (expMode) { gy = BookScene.baseY(icy, sz); BookScene.paint(t, O, p, icx, gy, sz, bg, rng); }
         else if (showMotif >= 0) ShowScene.paint(t, O, p, icx, gy, sz, showMotif, bg, rng, showTint);
         else if (!tre) {
+            if (!slayerMode) ShowScenery.paint(cv, ShowScenery.MYTH, t, icx, gy, sz, bg * sm(t / 0.25f) * 0.9f, 0);
             if (slayerMode) slPanel(t, icx, gy, icy, sz, isc, Math.min(sz, (gy - 4) / 98f), ry, energy, bg);
             float draw = sm(t / (0.35f * O));
             float sigA = nod ? 1f - cl(p / 0.9f) * 0.2f : 1f;
@@ -599,6 +602,7 @@ final class Ritual {
             if (!slayerMode) cracks(op, icx, gy, rx, ry, strikes * 3, strikes > 0 ? cl(1f - (op - ts[strikes - 1]) / 0.8f) : 0f, bg * (nod ? 1f - cl(p / 0.9f) : 1f));
             if (!slayerMode) motes(t, icx, gy, rx, ry, 70 * sz, energy, 0.9f * bg, 26);
         } else {
+            ShowScenery.paint(cv, ShowScenery.TREASURE, t, icx, gy, sz, bg * sm(t / 0.25f) * 0.9f, 0);
             float done = dig(op, O, icx, gy, rx, ry, sz, blade, Math.max(bg, 0f));
             if (done > 0.3f) motes(t, icx, gy, rx * 0.5f, ry * 0.5f, 60 * sz, GOLD, 0.9f * bg * done, 18);
         }
@@ -897,7 +901,7 @@ final class Ritual {
         FancyConfig c = FancyConfig.get(); FancyConfig.AnimCfg cfg = a.cfg(); Item it = a.lead();
         boolean tre = a.group.equals("treasure"); kind = Math.max(0, a.kind); int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float S = Math.max(3.6f, cfg.secs), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale) * 1.5f;
+        float S = Math.max(3.6f, cfg.secs), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz * K, isc = Math.max(0.4f, c.itemScale) * 1.5f;
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         float barH = CH * Math.max(0.031f, Math.min(0.094f, c.barPx / 160f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
@@ -922,17 +926,17 @@ final class Ritual {
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;
-        float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)) * (rng ? 1f : Math.max(0.5f, Math.min(1f, c.normalSize / 100f))), sz = SMALLER * csz, ssz = sz * SCENE_K, isc = Math.max(0.4f, c.itemScale) * 1.5f;          // Normal and No Drops can play smaller, so they stay out of the way
+        float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)) * (rng ? 1f : Math.max(0.5f, Math.min(1f, c.normalSize / 100f))), sz = SMALLER * csz, szc = sz * K, ssz = szc * SCENE_K, isc = Math.max(0.4f, c.itemScale) * 1.5f;          // Normal and No Drops can play smaller, so they stay out of the way
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         boolean barsOn = (rng && cfg.bars) || TextFx.barsOnly, blurOn = rng && cfg.blur && !TextFx.barsOnly && !TextFx.itemOnly;
 
         // where everything is (canvas units)
         float barH = CH * Math.max(0.031f, Math.min(0.094f, c.barPx / 160f));
-        float hi = 16 * sz * isc * (rng ? 1.2f : 1f);
+        float hi = 16 * szc * isc * (rng ? 1.2f : 1f);
         float icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
-        if (c.animPos == 0) icy = topIcy(sz, hi, barsOn ? barH + 1 : 0f);
-        if (barsOn) icy = Math.max(c.animPos == 0 ? 0f : barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
+        if (c.animPos == 0) icy = topIcy(szc, hi, barsOn ? barH + 1 : 0f);
+        if (barsOn) icy = Math.max(c.animPos == 0 ? 0f : barH + hi + 4, Math.min(CH - barH - hi - 14 * szc, icy));
         float u = (float) H / CH;                                                          // gui units per canvas unit
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
         float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene
@@ -945,7 +949,7 @@ final class Ritual {
         if (!sceneOff) {
             // ---- the blur: the world dims and softens at the edges (RNG, switchable)
             if (blurOn && barSlide > 0.01f) {                                             // a soft shade only behind the stage, so the item stands out (the rest of the screen stays as it is)
-                int rr = Math.round(78 * csz * u), ccy = Math.round(icy * u);
+                int rr = Math.round(78 * csz * K * u), ccy = Math.round(icy * u);
                 for (int i = 0; i < 6; i++) discFill(g, W / 2, ccy, Math.round(rr * (1f - i * 0.13f)), Gfx.argb(Math.round(16 * barSlide), 0x04050E));
             }
             int[] edited = AnimFrames.override(a, t);                                         // a frame you edited in config/fancydrops/art/animations replaces the drawn one
@@ -955,14 +959,14 @@ final class Ritual {
                 String id = a.group + a.type + "/" + a.kind + "/" + (it == null ? 0 : it.id.hashCode()) + "/" + a.count() + "/" + TextFx.itemOnly;
                 boolean reuse = id.equals(upKey) && nowMs >= upMs && nowMs - upMs < (AnimationManager.previewing ? 33 : 15);       // the pixel scene repaints at most ~60 fps in game (~30 in menu previews): at 144 fps the picture barely changes between frames
                 if (!reuse) {
-                    begin(a, sz, isc);
-                    try { paint(t, tre, type, S, ssz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); stage(a, icy, ssz, sz, isc); } finally { end(); }
+                    begin(a, szc, isc);
+                    try { paint(t, tre, type, S, ssz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); stage(a, icy, ssz, szc, isc); } finally { end(); }
                     SceneTexture.upload(cv); upKey = id; upMs = nowMs;
                 }
             }
             if (edited != null && edited.length == cv.px.length) SceneTexture.upload(cv);
             if (!SceneTexture.draw(g, cv, sx, sy, W, H, 1f)) { int cell = Math.max(1, Math.round((float) W / CW)); cv.flush((x0, y0, x1, y1, col) -> g.fill(x0 + sx, y0 + sy, x1 + sx, y1 + sy, col), 0, 0, cell, 1f); }
-            if (rng && p > 0 && p < 0.45f) { float fl = (1f - p / 0.45f) * (1f - p / 0.45f); int rr = Math.round(46 * csz * u * (1f + 0.4f * p)); for (int i = 0; i < 4; i++) discFill(g, W / 2 + sx, Math.round(icy * u) + sy, Math.round(rr * (1f - i * 0.22f)), Gfx.argb(Math.round(60 * fl), 0xFFFFFF)); }                  // the flash: a burst of light on the item, not the whole screen
+            if (rng && p > 0 && p < 0.45f) { float fl = (1f - p / 0.45f) * (1f - p / 0.45f); int rr = Math.round(46 * csz * K * u * (1f + 0.4f * p)); for (int i = 0; i < 4; i++) discFill(g, W / 2 + sx, Math.round(icy * u) + sy, Math.round(rr * (1f - i * 0.22f)), Gfx.argb(Math.round(60 * fl), 0xFFFFFF)); }                  // the flash: a burst of light on the item, not the whole screen
 
         }
 
@@ -990,14 +994,14 @@ final class Ritual {
 
         // ---- the item (flat icons stay flat, skulls are 3D and turn)
         if (it != null && p >= 0f && !nod && !TextFx.textOnly && !TextFx.barsOnly) {
-            List<Item> all = a.items(); int n = all.size(); float[] offs = offsetsOf(a, sz, isc);
+            List<Item> all = a.items(); int n = all.size(); float[] offs = offsetsOf(a, szc, isc);
             for (int ii = 0; ii < n; ii++) {
             Item cur = all.get(ii);
             float pi = p - (n > 1 ? ii * 0.07f : 0f);                                          // several drops pop in one after another, left to right
             if (pi < 0f) continue;
             float grow = 0.25f + 0.75f * eob(pi / 0.7f);
             float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f) * sizeOf(n);
-            float gcx = CW / 2f * W / CW + sx + offs[Math.min(ii, offs.length - 1)] * u, gcy = -liftOf(ii, n, sz) * u + itemY(tb, p, a.group.equals("exp") ? BookScene.baseY(icy, ssz) : icy + 22 * ssz, icy, ssz, c.itemBob, c.itemBobAmp) * u + sy;
+            float gcx = CW / 2f * W / CW + sx + offs[Math.min(ii, offs.length - 1)] * u, gcy = -liftOf(ii, n, szc) * u + itemY(tb, p, a.group.equals("exp") ? BookScene.baseY(icy, ssz) : icy + 22 * ssz, icy, ssz, c.itemBob, c.itemBobAmp) * u + sy;
             if (c.itemGlow > 0.02f) {                                                          // the glow behind the item (Item changes > Glow), in the drop's colour
                 int gr = Math.round(s * 11f), gcol = mixc(rc, WHITE, 0.25f); float ga = Math.max(0f, Math.min(1f, itemA)) * Math.min(1f, c.itemGlow);
                 for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }
@@ -1020,7 +1024,7 @@ final class Ritual {
         if (!TextFx.itemOnly && !TextFx.barsOnly && (textT > 0f || TextFx.textOnly)) {
             float sc = c.textK() * Math.max(0.55f, Math.min(W, H) / 540f) * (0.8f + 0.2f * csz); if (TextFx.textOnly) sc = c.textK() * Math.max(1.3f, Math.min(2.6f, W / 150f));          // the Text editor shows the words big enough to read
             float th = textH(a, it, sc, c);
-            float top = c.textAbove() ? (icy - hi - 14 * sz) * u - th : (icy + hi + 26 * sz) * u;
+            float top = c.textAbove() ? (icy - hi - 14 * szc) * u - th : (icy + hi + 26 * szc) * u;
             if (TextFx.textOnly) { while (th > H * 0.92f && sc > 0.8f) { sc *= 0.9f; th = textH(a, it, sc, c); } top = Math.max(2f, (H - th) / 2f); }       // the Text editor centres the words and fills the box
             if (barsOn) { float bhg = barH * u; top = Math.max(bhg + 6, Math.min(H - bhg - th - 6, top)); }
             float tl = TextFx.textOnly ? TextFx.loopClock(4.6f) : 0f;                                    // the Text editor replays the words on their own clock

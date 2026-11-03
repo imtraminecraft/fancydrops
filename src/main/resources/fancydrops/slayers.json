@@ -1,5 +1,5 @@
 {
- "v": 3,
+ "v": 4,
  "sources": [
   {
    "id": "zombie",
@@ -13,24 +13,6 @@
     "eye": "#10200E"
    },
    "drops": [
-    {
-     "name": "Matcha Dye",
-     "id": "MATCHA_DYE",
-     "icon": "lime_dye",
-     "skull": true,
-     "odds": "RNGesus Incarnate",
-     "chance": "1 in 250,000 (T5)",
-     "rank": 3
-    },
-    {
-     "name": "Pestilence Rune I",
-     "id": "PESTILENCE_RUNE;1",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 18.6 (T5)",
-     "rank": 1
-    },
     {
      "name": "Revenant Shard",
      "id": "REVENANT_SHARD",
@@ -153,24 +135,6 @@
     "eye": "#E03030"
    },
    "drops": [
-    {
-     "name": "Brick Red Dye",
-     "id": "BRICK_RED_DYE",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "RNGesus Incarnate",
-     "chance": "1 in 250,000 (T5)",
-     "rank": 3
-    },
-    {
-     "name": "Bite Rune I",
-     "id": "BITE_RUNE;1",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 18.1 (T5)",
-     "rank": 1
-    },
     {
      "name": "Darkness Within Rune I",
      "id": "DARKNESS_WITHIN_RUNE;1",
@@ -303,24 +267,6 @@
    },
    "drops": [
     {
-     "name": "Celeste Dye",
-     "id": "CELESTE_DYE",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "RNGesus Incarnate",
-     "chance": "1 in 500,000 (T4)",
-     "rank": 3
-    },
-    {
-     "name": "Spirit Rune I",
-     "id": "SPIRIT_RUNE;1",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 15.7 (T4)",
-     "rank": 1
-    },
-    {
      "name": "Furball",
      "id": "FURBALL",
      "icon": "rabbit_hide",
@@ -389,24 +335,6 @@
    },
    "drops": [
     {
-     "name": "Byzantium Dye",
-     "id": "BYZANTIUM_DYE",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "RNGesus Incarnate",
-     "chance": "1 in 500,000 (T4)",
-     "rank": 3
-    },
-    {
-     "name": "Endersnake Rune I",
-     "id": "ENDERSNAKE_RUNE;1",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 18.7 (T4)",
-     "rank": 1
-    },
-    {
      "name": "Summoning Eye",
      "id": "SUMMONING_EYE",
      "icon": "ender_eye",
@@ -414,24 +342,6 @@
      "odds": "Extraordinary",
      "chance": "1 in 179 (T4)",
      "rank": 2
-    },
-    {
-     "name": "Transmission Tuner",
-     "id": "TRANSMISSION_TUNER",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 47.2 (T4)",
-     "rank": 1
-    },
-    {
-     "name": "Null Atom",
-     "id": "NULL_ATOM",
-     "icon": "ender_pearl",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 20.2 (T4)",
-     "rank": 1
     },
     {
      "name": "Pocket Espresso Machine",
@@ -533,15 +443,6 @@
      "rank": 3
     },
     {
-     "name": "Enchanted Book (Mana Steal I)",
-     "id": "ENCHANTMENT_MANA_STEAL_1",
-     "icon": "enchanted_book",
-     "odds": "Rare",
-     "chance": "1 in 23.6 (T4)",
-     "skull": false,
-     "rank": 1
-    },
-    {
      "name": "Enchanted Book (Smarty Pants I)",
      "id": "ENCHANTMENT_SMARTY_PANTS_1",
      "icon": "enchanted_book",
@@ -573,89 +474,6 @@
     "eye": "#FFF080"
    },
    "drops": [
-    {
-     "name": "Flame Dye",
-     "id": "FLAME_DYE",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "RNGesus Incarnate",
-     "chance": "1 in 500,000 (T4)",
-     "rank": 3
-    },
-    {
-     "name": "Lavatears Rune I",
-     "id": "LAVATEARS_RUNE;1",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 43.3 (T4)",
-     "rank": 1
-    },
-    {
-     "name": "Wisp's Ice-Flavored Water I Splash Potion",
-     "id": "WISP_S_ICE_FLAVORED_WATER_I_SPLASH_POTION",
-     "icon": "potion",
-     "skull": false,
-     "amount": true,
-     "odds": "Rare",
-     "chance": "1 in 37.9 (T4)",
-     "rank": 1
-    },
-    {
-     "name": "Mana Disintegrator",
-     "id": "MANA_DISINTEGRATOR",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 27.1 (T4)",
-     "rank": 1
-    },
-    {
-     "name": "Scorched Books",
-     "id": "SCORCHED_BOOKS",
-     "icon": "book",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 47.4 (T4)",
-     "rank": 1
-    },
-    {
-     "name": "Kelvin Inverter",
-     "id": "KELVIN_INVERTER",
-     "icon": "redstone",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 37.9 (T4)",
-     "rank": 1
-    },
-    {
-     "name": "Gabagool Distillate",
-     "id": "GABAGOOL_DISTILLATE",
-     "icon": "glass_bottle",
-     "skull": false,
-     "amount": true,
-     "odds": "Rare",
-     "chance": "1 in 22.6 (T4)",
-     "rank": 1
-    },
-    {
-     "name": "Inferno Demonlord Shard",
-     "id": "INFERNO_DEMONLORD_SHARD",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 19.0 (T4)",
-     "rank": 1
-    },
-    {
-     "name": "Scorched Power Crystal",
-     "id": "SCORCHED_POWER_CRYSTAL",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 31.6 (T4)",
-     "rank": 1
-    },
     {
      "name": "Archfiend Dice",
      "id": "ARCHFIEND_DICE",
@@ -711,24 +529,6 @@
      "rank": 3
     },
     {
-     "name": "Flawed Opal Gemstone",
-     "id": "FLAWED_OPAL_GEM",
-     "icon": "orange_dye",
-     "odds": "Rare",
-     "chance": "1 in 34.5 (T4)",
-     "amount": true,
-     "rank": 1
-    },
-    {
-     "name": "Enchanted Book (Duplex I)",
-     "id": "ENCHANTMENT_ULTIMATE_REITERATE_1",
-     "icon": "enchanted_book",
-     "odds": "Rare",
-     "chance": "1 in 54.3 (T4)",
-     "skull": false,
-     "rank": 1
-    },
-    {
      "name": "Enchanted Book (Fire Aspect III)",
      "id": "ENCHANTMENT_FIRE_ASPECT_3",
      "icon": "enchanted_book",
@@ -751,42 +551,6 @@
     "eye": "#D01030"
    },
    "drops": [
-    {
-     "name": "Sangria Dye",
-     "id": "SANGRIA_DYE",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "RNGesus Incarnate",
-     "chance": "1 in 10,000 (T5)",
-     "rank": 3
-    },
-    {
-     "name": "Bubba Blister",
-     "id": "BUBBA_BLISTER",
-     "icon": "fermented_spider_eye",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 11.1 (T5)",
-     "rank": 1
-    },
-    {
-     "name": "Fang-tastic Chocolate Chip",
-     "id": "FANG_TASTIC_CHOCOLATE_CHIP",
-     "icon": "cookie",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 11.1 (T5)",
-     "rank": 1
-    },
-    {
-     "name": "Guardian Lucky Block",
-     "id": "GUARDIAN_LUCKY_BLOCK",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 16.7 (T5)",
-     "rank": 1
-    },
     {
      "name": "McGrubber's Burger",
      "id": "MCGRUBBER_S_BURGER",
