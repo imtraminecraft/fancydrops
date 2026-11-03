@@ -20,6 +20,7 @@ public final class ChatParser {
     public static boolean isKill(String line) { return line != null && KILL.matcher(line).find(); }
     // "RARE DROP! Scythe Blade (+120% ✯ Magic Find)"
     private static final Pattern DROP = Pattern.compile("(?:^|(?<=[\\s\\]>»:*]))((?:VERY |CRAZY )?RARE|CRAZY|INSANE|PET|SWEET|RNGESUS)\\s+(DROP|CROP)!\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BOUNTY = Pattern.compile("HARVEST BOUNTY!\\s*You found\\s+(?:an?\\s+|some\\s+)?(.+?)\\s+when harvesting\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern MF_ANY = Pattern.compile("\\(\\+([\\d.,]+)%");
     // farming lines carry Overbloom instead of Magic Find: "(+25 ☘ Overbloom)"
     private static final Pattern OVERBLOOM = Pattern.compile("\\s*\\(\\+?([\\d.,]+)%?[^)]*Overbloom[^)]*\\)\\s*$", Pattern.CASE_INSENSITIVE);
@@ -41,6 +42,12 @@ public final class ChatParser {
     public static Drop parseDrop(String line) {
         if (line == null) return null;
         line = line.replace('\u00a0', ' ').replaceAll("[\\u200b-\\u200f\\u2060\\ufeff]", "");
+        Matcher hb = BOUNTY.matcher(line);                                                   // "HARVEST BOUNTY! You found a Synthesis Chip when harvesting a crop in the Greenhouse!"
+        if (hb.find()) {
+            String nm = hb.group(1).trim().replaceAll("^[\"'“”]+|[\"'“”]+$", "").replaceAll("\\s+", " ");
+            int amt = 1; Matcher ap = AMOUNT_PREFIX.matcher(nm); if (ap.matches()) { amt = Integer.parseInt(ap.group(1)); nm = ap.group(2).trim(); }
+            return nm.isEmpty() ? null : new Drop("HARVEST BOUNTY", nm, amt, null);
+        }
         Matcher m = DROP.matcher(line);
         if (!m.find()) return null;
         String kind = m.group(1).toUpperCase(Locale.ROOT) + (m.group(2).equalsIgnoreCase("CROP") ? " CROP" : "");
