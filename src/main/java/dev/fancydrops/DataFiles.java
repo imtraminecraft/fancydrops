@@ -60,7 +60,7 @@ public final class DataFiles {
             Path p = dir().resolve(name);
             if (!Files.exists(p)) {
                 Files.writeString(p, bundled(name));
-            } else if (java.util.List.of("mythological.json", "slayers.json", "farming.json", "experiments.json").contains(name)) {
+            } else if (java.util.List.of("mythological.json", "slayers.json", "farming.json", "experiments.json", "fishing.json", "crimson.json", "mobs.json", "dyes.json").contains(name)) {
                 if (MythData.version(Files.readString(p)) < MythData.version(bundled(name))) Files.writeString(p, bundled(name));
             }
             return Files.readString(p);

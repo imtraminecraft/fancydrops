@@ -555,7 +555,7 @@ final class Ritual {
     static void paint(float t, boolean tre, int type, float S, float sz, float isc, int rc, float icy, int blade, boolean itemBob, float bobAmp) {
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float O = S - TAIL, p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
-        int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : farmMode ? FarmScene.ENERGY[farmKind] : expMode ? 0xB56BFF : CYAN;
+        int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : farmMode ? FarmScene.ENERGY[farmKind] : expMode ? 0xB56BFF : showMotif == ShowScene.DYE ? showTint : showMotif >= 0 ? ShowScene.ENERGY[showMotif] : CYAN;
         float bg = 1f - sm((p - 0.5f) / 0.9f);                                             // the background fades while the words show
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
         float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene                  // the item fades slowly at the end
@@ -566,6 +566,7 @@ final class Ritual {
         // ---- THE OPENING (the same for every type)
         if (farmMode) FarmScene.paint(t, O, p, icx, gy, sz, farmKind, bg, rng);
         else if (expMode) { gy = BookScene.baseY(icy, sz); BookScene.paint(t, O, p, icx, gy, sz, bg, rng); }
+        else if (showMotif >= 0) ShowScene.paint(t, O, p, icx, gy, sz, showMotif, bg, rng, showTint);
         else if (!tre) {
             if (slayerMode) slPanel(t, icx, gy, icy, sz, isc, Math.min(sz, (gy - 4) / 98f), ry, energy, bg);
             float draw = sm(t / (0.35f * O));
@@ -601,8 +602,8 @@ final class Ritual {
             float done = dig(op, O, icx, gy, rx, ry, sz, blade, Math.max(bg, 0f));
             if (done > 0.3f) motes(t, icx, gy, rx * 0.5f, ry * 0.5f, 60 * sz, GOLD, 0.9f * bg * done, 18);
         }
-        if (inh > 0f && p < 0.35f && !slayerMode && !farmMode && !expMode) inhale(inh, icx, gy, icx, icy, rx, ry, energy, 1f - cl(p / 0.35f), sz);
-        if (p < 0 && inh > 0 && !slayerMode && !farmMode && !expMode) glowE(icx, gy, rx * 0.8f * inh, ry * 1.2f * inh, energy, 0.5f * inh);
+        if (inh > 0f && p < 0.35f && !slayerMode && !farmMode && !expMode && showMotif < 0) inhale(inh, icx, gy, icx, icy, rx, ry, energy, 1f - cl(p / 0.35f), sz);
+        if (p < 0 && inh > 0 && !slayerMode && !farmMode && !expMode && showMotif < 0) glowE(icx, gy, rx * 0.8f * inh, ry * 1.2f * inh, energy, 0.5f * inh);
 
         // ---- THE PIVOT
         if (p < 0f) return;
@@ -617,7 +618,7 @@ final class Ritual {
         float cx0 = icx, cy0 = itemY(t, p, gy, icy, sz, itemBob, bobAmp);
         float pulse = 0.85f + 0.15f * (float) Math.sin(t * 5f);
         float[] offs = itemOffs;                                                           // one centre per drop
-        if (farmMode || expMode) { softPivot(t, p, icx, gy, icy, sz, isc, rc, energy, rng, offs, bg, itemA, cx0, cy0, pulse, O); return; }          // no rings and no runes: a field gives petals, a book gives light
+        if (farmMode || expMode || showMotif >= 0) { softPivot(t, p, icx, gy, icy, sz, isc, rc, energy, rng, offs, bg, itemA, cx0, cy0, pulse, O); return; }          // no rings and no runes: a field gives petals, a book gives light
         if (!rng && variant == 1) {                                                        // ---- NORMAL, starburst: rays flash out from the item as it lands, then sparks drift
             float land = p - 0.42f;
             if (land > 0f && land < 0.6f) for (int r = 0; r < 12; r++) {
@@ -695,8 +696,9 @@ final class Ritual {
 
     /** The finish of a Farming or Experiment drop: warm light behind the item, petals (or sparks of light from the book) rising round it, sun rays; RNG adds a golden bloom, a sunburst and a spray of petals. */
     private static void softPivot(float t, float p, float icx, float gy, float icy, float sz, float isc, int rc, int energy, boolean rng, float[] offs, float bg, float itemA, float cx0, float cy0, float pulse, float O) {
-        boolean book = expMode;
-        int[] pal = book ? new int[]{0xE6D2FF, 0x9AF0FF, 0xFFFFFF, rng ? 0xFFC857 : 0xB56BFF}
+        boolean book = expMode || showMotif >= 0;
+        int[] pal = showMotif >= 0 ? new int[]{mixc(energy, WHITE, 0.4f), energy, 0xFFFFFF, rng ? 0xFFC857 : mixc(energy, rc, 0.5f)}
+            : book ? new int[]{0xE6D2FF, 0x9AF0FF, 0xFFFFFF, rng ? 0xFFC857 : 0xB56BFF}
             : farmKind == FarmScene.FEAST ? new int[]{0xFF9A3A, 0xFFD070, 0xE8502A, 0x7CCB4F}
             : farmKind == FarmScene.PEST || farmKind == FarmScene.HELIOS ? new int[]{0x9AE05A, 0xFFE27A, 0xFFFFFF, 0x7CCB4F}
             : new int[]{0xFFD25A, 0xFFF0A0, 0x7CCB4F, 0xFF9AC8};
@@ -734,6 +736,7 @@ final class Ritual {
     static boolean slayerMode;                                                          // set by the caller: paint() draws a slayer scene
     static boolean farmMode, expMode;                                                   // the Farming field (farmKind: 0 crops, 1 feast, 2 pest, 3 Ray of Helios, 4 bounty) and the Experimentation Table book
     static int farmKind;
+    static int showMotif = -1, showTint = 0xFF72C6;                                      // the Showcase scene (ShowScene: fishing, Crimson Isle, rare mobs, dyes) and the dye's own colour
     static float[] itemOffs = {0f};                                                     // canvas units from the middle to each drop (one entry per drop)
 
     /** Sets the scene flags for an animation; end() clears them again. */
@@ -741,8 +744,15 @@ final class Ritual {
         slayerMode = isSlayer(a); if (slayerMode) { kind = 12 + slTheme(a); slSeed = System.identityHashCode(a) & 0xFFFF; }
         farmMode = a.group.equals("crops") || a.group.equals("feast") || a.group.equals("bounty") || a.group.equals("pests");
         expMode = a.group.equals("exp");
+        showMotif = ShowScene.motifOf(a.group); showTint = dyeTint(a);
         farmKind = a.group.equals("feast") ? FarmScene.FEAST : a.group.equals("bounty") ? FarmScene.BOUNTY : a.group.equals("pests") ? (a.helios ? FarmScene.HELIOS : FarmScene.PEST) : FarmScene.CROPS;
         itemOffs = offsetsOf(a, sz, isc);
+    }
+    /** A dye's own colour (from the Dyes library), or pink. */
+    static int dyeTint(Anim a) {
+        Item it = a.lead(); if (it == null || it.source == null) return 0xFF72C6;
+        for (DropData.Drop d : it.source.drops) if (d.name.equals(it.name) && d.color != null && !d.color.isEmpty()) return DropData.hex(d.color, 0xFFFF72C6) & 0xFFFFFF;
+        return 0xFF72C6;
     }
     /** Canvas units from the middle to each drop: one drop sits in the middle, more are spaced evenly, closer together the more there are, never wider than about 60% of the screen. */
     static float[] offsetsOf(Anim a, float sz, float isc) {
@@ -761,7 +771,7 @@ final class Ritual {
     }
     /** Each drop's size when several share the scene. */
     static float sizeOf(int n) { return n <= 1 ? 1f : n == 2 ? 0.85f : n == 3 ? 0.76f : Math.max(0.5f, 2.6f / n); }
-    static void end() { slayerMode = false; farmMode = false; expMode = false; itemOffs = new float[]{0f}; }
+    static void end() { slayerMode = false; farmMode = false; expMode = false; showMotif = -1; itemOffs = new float[]{0f}; }
     /** The colour of each boss: zombie, spider, wolf, enderman, blaze, vampire. */
     private static final int[] SL_ENERGY = {0x7CD060, 0xE03030, 0xC8D4E8, 0xD060FF, 0xFFB030, 0xD01030};
     static boolean isSlayer(Anim a) { return a.group.equals("slayer"); }

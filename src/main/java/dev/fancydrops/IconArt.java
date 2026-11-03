@@ -248,6 +248,41 @@ final class IconArt {
                 glow(8, 6, 8, 0xFF4A2A, 0.10f + 0.08f * t);
                 outline();
             }
+            case "grp_water" -> {                                                            // Water: a red and white bobber on a ripple, a fish's fin circling
+                float bob = sn(f) * 0.8f; int by = Math.round(7 + bob);
+                for (int x = 1; x < 15; x++) { float w = sn(f * 2 + x * 0.5f) * 0.6f; px(x, Math.round(11 + w), 0x2E8FD8); pxa(x, Math.round(12 + w), 0x1A5A98, 0.8f); }
+                ln(13, 0, 8, by - 2, 0xD8E0EA);
+                rect(6, by - 2, 4, 2, 0xE83030); rect(6, by, 4, 2, 0xFFFFFF); px(7, by - 2, 0xFF8A80);
+                float r = 2 + 3 * f; for (int i = 0; i < 10; i++) { float an = i * 0.628f; pxa(Math.round(8 + (float) Math.cos(an) * r), Math.round(11 + (float) Math.sin(an) * r * 0.3f), 0xBDEBFF, 1f - f); }
+                outline();
+                glint(4, 4, 1, 0xFFFFFF, t);
+            }
+            case "grp_lava" -> {                                                             // Lava: a pool of magma, a bubble swelling and popping, embers rising
+                for (int y = 10; y < 15; y++) for (int x = 1; x < 15; x++) px(x, y, mix(0xFF7A1A, 0xA01E08, (y - 10) / 5f * 0.8f + 0.2f * sn(f * 3 + x * 0.7f + y)));
+                for (int x = 1; x < 15; x++) px(x, 10, mix(0xFFD060, 0xFF8A20, 0.5f + 0.5f * sn(f * 2 + x)));
+                float b = (f * 1.5f) % 1f; if (b < 0.75f) { ball(6, 10 - b * 2, 1 + b * 2, 0xFFB040); px(6, Math.round(9 - b * 2), 0xFFF0A0); } else { float q = (b - 0.75f) * 4; for (int i = 0; i < 4; i++) pxa(Math.round(6 + (i < 2 ? -1 - i : i - 1) * (1 + q)), Math.round(9 - q * 2 - i % 2), 0xFFD060, 1 - q); }
+                for (int i = 0; i < 4; i++) { float u = (f + i * 0.25f) % 1f; pxa(3 + i * 3, Math.round(9 - u * 8), i % 2 == 0 ? 0xFFB030 : 0xFF5A20, 1 - u); }
+                outline();
+                glow(8, 12, 8, 0xFF6A1A, 0.16f + 0.1f * t);
+            }
+            case "grp_spooky" -> {                                                           // Spooky: a carved pumpkin with a flickering face, a bat flitting over it
+                ball(8, 10, 5f, 0xE8801A); rect(4, 7, 8, 1, 0xF0A040); px(5, 10, 0xC86010); px(11, 10, 0xC86010);
+                rect(7, 4, 2, 2, 0x4A7A2A);
+                int fc = mix(0xFFD040, 0xFFF4A0, t); rect(5, 9, 2, 1, fc); rect(9, 9, 2, 1, fc); rect(6, 12, 4, 1, fc); px(5, 11, fc); px(10, 11, fc);
+                float bx = 8 + (float) Math.cos(f * 6.2832f) * 5, byy = 2 + (float) Math.sin(f * 12.566f) * 1; int w = (int) (f * 8) % 2;
+                px(Math.round(bx), Math.round(byy), 0x7A5AA8); px(Math.round(bx) - 1, Math.round(byy) - w, 0x7A5AA8); px(Math.round(bx) + 1, Math.round(byy) - w, 0x7A5AA8);
+                outline();
+                glow(8, 10, 6, 0xFF9A2E, 0.14f + 0.12f * t);
+            }
+            case "grp_winter" -> {                                                           // Winter: a hole in the ice, a fishing line in it, snow falling
+                for (int y = 9; y < 15; y++) { int hw = Math.round(7f * (float) Math.sqrt(Math.max(0, 1 - ((y - 11.5f) / 3.5f) * ((y - 11.5f) / 3.5f)))); for (int x = 8 - hw; x < 8 + hw; x++) px(x, y, y == 9 ? 0xFFFFFF : 0xCFEFFF); }
+                rect(5, 11, 6, 2, 0x0A3A5A); rect(6, 10, 4, 1, 0x1A5A7A); px(5, 11, 0x5AA8D0); px(10, 12, 0x5AA8D0);
+                ln(12, 0, 8, 11, 0xD8E0EA);
+                ln(2, 12, 4, 13, 0x8ACCE8); ln(13, 11, 11, 13, 0x8ACCE8);
+                for (int i = 0; i < 6; i++) { float u = (f * 0.7f + i / 6f) % 1f; pxa(1 + (i * 5) % 14, Math.round(u * 9), 0xFFFFFF, (float) Math.sin(u * Math.PI)); }
+                outline();
+                glint(8, 11, 1, 0x9FE4FF, t);
+            }
             case "grp_crops" -> {                                                            // Rare Crops: a golden wheat sheaf tied with a red band, glinting
                 int sway = Math.round(0.8f * s);
                 for (int i = 0; i < 5; i++) { float x0 = 8 + (i - 2) * 0.6f, x1 = 3 + i * 2.5f + sway; ln(x0, 14, x1, 4, 0xC8902A); }

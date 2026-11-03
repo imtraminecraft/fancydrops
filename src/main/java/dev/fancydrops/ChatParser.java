@@ -21,6 +21,7 @@ public final class ChatParser {
     // "RARE DROP! Scythe Blade (+120% ✯ Magic Find)"
     private static final Pattern DROP = Pattern.compile("(?:^|(?<=[\\s\\]>»:*]))((?:VERY |CRAZY )?RARE|CRAZY|INSANE|PET|SWEET|RNGESUS)\\s+(DROP|CROP)!\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern BOUNTY = Pattern.compile("HARVEST BOUNTY!\\s*You found\\s+(?:an?\\s+|some\\s+)?(.+?)\\s+when harvesting\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DYE = Pattern.compile("\\bWOW!\\s*You found\\s+(?:an?\\s+)?(.+?\\bDye)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern MF_ANY = Pattern.compile("\\(\\+([\\d.,]+)%");
     // farming lines carry Overbloom instead of Magic Find: "(+25 ☘ Overbloom)"
     private static final Pattern OVERBLOOM = Pattern.compile("\\s*\\(\\+?([\\d.,]+)%?[^)]*Overbloom[^)]*\\)\\s*$", Pattern.CASE_INSENSITIVE);
@@ -48,6 +49,8 @@ public final class ChatParser {
             int amt = 1; Matcher ap = AMOUNT_PREFIX.matcher(nm); if (ap.matches()) { amt = Integer.parseInt(ap.group(1)); nm = ap.group(2).trim(); }
             return nm.isEmpty() ? null : new Drop("HARVEST BOUNTY", nm, amt, null);
         }
+        Matcher dy = DYE.matcher(line);                                                      // "WOW! You found a Flame Dye!" (dyes have their own line)
+        if (dy.find()) return new Drop("DYE", dy.group(1).trim().replaceAll("\\s+", " "), 1, null);
         Matcher m = DROP.matcher(line);
         if (!m.find()) return null;
         String kind = m.group(1).toUpperCase(Locale.ROOT) + (m.group(2).equalsIgnoreCase("CROP") ? " CROP" : "");

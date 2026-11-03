@@ -40,6 +40,7 @@ public final class DropListener {
             if (FarmData.isFarm(d) && playFarm(d)) drop = true;             // farming drops have no kill: they play at once
             else if (MythData.isMyth(d) && playMyth(d)) drop = true;
             else if (SlayerData.isSlayer(d)) { killDrops = true; if (queueSlayer(d, now)) drop = true; }
+            else if (ExtraData.sourceOf(d.name()) != null) { if (playExtra(d)) drop = true; }      // fishing, the Crimson Isle, rare mobs, dyes
             else dlog("left in chat (not a listed drop): " + d.name());
         }
         return drop;
@@ -142,6 +143,7 @@ public final class DropListener {
     /** The ledger's name for where a drop came from: slayer, crops / feast / bounty / pests, or exp. */
     static String groupOf(DropData.Source src) {
         if (src == null) return "other";
+        if (src.group != null && !src.group.isEmpty()) return src.group;
         if (SlayerData.byId(src.id) == src) return "slayer";
         if (FarmData.byId(src.id) == src) return src.id;
         if (src == ExperimentData.SOURCE) return "exp";
@@ -280,6 +282,52 @@ public final class DropListener {
         DropData.Source src2 = second == null ? null : from != null ? from : SlayerData.sourceOf(second.name);
         reply.accept("Simulating " + picks.get(0).name + (second == null ? "" : " + " + second.name) + " from " + src.boss + " at " + mf + " Magic Find");
         launchSlayer(src, picks.get(0), src2, second, "+" + mf + "%", -1);
+    }
+
+    // ------------------------------------------------------------------ Fishing, the Crimson Isle, rare mobs and dyes (ExtraData)
+
+    /** The menu category a newer group lives in. */
+    static String catOfGroup(String g) {
+        if (g.startsWith("fish_")) return "fishing";
+        return switch (g) { case "crimson" -> "bosses"; case "mobs" -> "experiments"; case "dyes" -> "dyes"; default -> "experiments"; };
+    }
+    /** The scene variant of a source: its place in its group (drops of the same creature stack into one animation). */
+    private static int extraKind(DropData.Source src) { return Math.max(0, ExtraData.group(src.group).indexOf(src)); }
+
+    /** A drop of the newer libraries: the Showcase scene of its group plays right away. */
+    private static boolean playExtra(ChatParser.Drop d) {
+        DropData.Source src = ExtraData.sourceOf(d.name()); DropData.Drop dr = ExtraData.find(d.name());
+        if (src == null || dr == null) return false;
+        Item it = dropItem(src, dr, d.mf(), d.sim()); it.chance = dr.chance; it.amount = Math.max(1, d.amount());
+        Plan pl = plan(src, dr, it, catOfGroup(src.group), src.group);
+        return pl != null && show(src.group, pl, null, extraKind(src), false);
+    }
+    static void launchExtra(DropData.Source src, DropData.Drop dr, DropData.Drop dr2, int type) {
+        Item it = dropItem(src, dr, "+250%", true); it.chance = dr.chance; previewPrice(it);
+        Anim a = new Anim(src.group, type >= 0 ? type : previewType(it, src, dr), it); a.kind = extraKind(src);
+        if (dr2 != null) { Item it2 = dropItem(src, dr2, "+250%", true); it2.chance = dr2.chance; previewPrice(it2); a.add(it2); }
+        AnimationManager.play(a);
+    }
+    /** /fd simulate Fishing|Crimson|Mobs|Dyes [Creature] [Drop] [Drop 2]: a pretend drop of the newer libraries. */
+    static void simulateExtra(String cat, String name, Consumer<String> reply) {
+        List<DropData.Source> pool = new ArrayList<>();
+        for (DropData.Source s : ExtraData.ALL) if (catOfGroup(s.group).equals(cat) && (!cat.equals("bosses") || s.group.equals("crimson")) && (!cat.equals("experiments") || s.group.equals("mobs"))) pool.add(s);
+        if (pool.isEmpty()) { reply.accept("No drops loaded for that."); return; }
+        DropData.Source from = null;
+        for (DropData.Source s : pool) {
+            int n = s.boss.length();
+            if (n > 0 && name.regionMatches(true, 0, s.boss, 0, n) && (name.length() == n || name.charAt(n) == ' ')) { from = s; name = name.substring(n).trim(); break; }
+        }
+        List<DropData.Drop> drops = new ArrayList<>();
+        if (from != null) drops.addAll(from.drops); else for (DropData.Source s : pool) drops.addAll(s.drops);
+        List<DropData.Drop> picks = name.isBlank() ? List.of(drops.get(new Random().nextInt(drops.size()))) : pickDrops(drops, name, 2, "a drop", reply);
+        if (picks == null || picks.isEmpty()) return;
+        DropData.Source src = from;
+        if (src == null) for (DropData.Source s : pool) if (s.drops.contains(picks.get(0))) { src = s; break; }
+        if (src == null) return;
+        DropData.Drop second = picks.size() > 1 && src.drops.contains(picks.get(1)) ? picks.get(1) : null;
+        reply.accept("Simulating " + picks.get(0).name + (second == null ? "" : " + " + second.name) + " from " + src.boss);
+        launchExtra(src, picks.get(0), second, -1);
     }
 
     // ------------------------------------------------------------------ Farming
@@ -473,6 +521,7 @@ public final class DropListener {
     /** The category (Categories.Cat id) a drop's chat message follows. */
     static String catOf(Item it) {
         if (it.source == null) return "mythological";
+        if (it.source.group != null && !it.source.group.isEmpty()) return catOfGroup(it.source.group);
         if (SlayerData.byId(it.source.id) == it.source) return "bosses";
         if (FarmData.byId(it.source.id) == it.source) return "farming";
         if (it.source == ExperimentData.SOURCE) return "experiments";
@@ -559,6 +608,7 @@ public final class DropListener {
         else if (SlayerData.byId(s.id) == s) playSlayerDrop(s, d);
         else if (FarmData.byId(s.id) == s) launchFarm(s, d, 25, -1);
         else if (s == ExperimentData.SOURCE) playExpDrop(d);
+        else if (s.group != null && !s.group.isEmpty()) launchExtra(s, d, null, -1);
         else playMythDrop(s, d);
     }
     /** Menu "play" button of a Mythological drop (the Drop Library). */
@@ -568,6 +618,12 @@ public final class DropListener {
 
     /** The Animation Editor's Play button: a sample drop of this group in the given type (No Drops, Normal or RNG). two = a pair of drops (Slayers and the Table). */
     public static void playSample(String group, int type, boolean two) {
+        if (ExtraData.BY_GROUP.containsKey(group)) {                                          // fishing, the Crimson Isle, rare mobs, dyes: the group's first creature
+            List<DropData.Source> l = ExtraData.group(group); if (l.isEmpty() || l.get(0).drops.isEmpty()) return;
+            DropData.Source s = l.get(0); List<DropData.Drop> d = s.drops;
+            launchExtra(s, type == AnimationManager.RNG ? d.get(d.size() - 1) : d.get(0), two && d.size() > 1 ? d.get(d.size() - 2) : null, type);
+            return;
+        }
         switch (group) {
             case "treasure" -> {
                 DropData.Drop dr = null;
@@ -606,6 +662,12 @@ public final class DropListener {
 
     /** Menu "▶ 3 items": several sample drops at once, which stack into one animation. */
     public static void playSampleMany(String group, int type, int n) {
+        if (ExtraData.BY_GROUP.containsKey(group)) {
+            List<DropData.Source> l = ExtraData.group(group); if (l.isEmpty()) return;
+            DropData.Source s = l.get(0); for (DropData.Source x : l) if (x.drops.size() > s.drops.size()) s = x;          // the creature with the most drops
+            for (int i = 0; i < Math.min(n, s.drops.size()); i++) launchExtra(s, s.drops.get(s.drops.size() - 1 - i), null, type);
+            return;
+        }
         List<DropData.Drop> pool; DropData.Source src = null;
         switch (group) {
             case "treasure" -> pool = TreasureData.drops(FancyConfig.get().mythSpade);

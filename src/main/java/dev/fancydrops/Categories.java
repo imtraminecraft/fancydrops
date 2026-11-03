@@ -21,15 +21,13 @@ final class Categories {
         /** Where this category's drops come from: a creature, a chest... (the Drop Library's sub-sub pages). */
         List<DropData.Source> sources() {
             List<DropData.Source> l = new ArrayList<>();
-            if (id.equals("mythological")) { l.addAll(sources("myth")); l.addAll(sources("treasure")); }
-            if (id.equals("bosses")) l.addAll(sources("slayer"));
-            if (id.equals("farming")) for (Group g : groups) l.addAll(sources(g.id()));
-            if (id.equals("experiments")) l.addAll(sources("exp"));
+            for (Group g : groups) if (!g.wip()) l.addAll(sources(g.id()));
             return l;
         }
-        /** The sources inside one group: the creatures of "myth", the burrow of "treasure". */
+        /** The sources inside one group: the creatures of "myth", the burrow of "treasure", the sea creatures of "fish_lava". */
         List<DropData.Source> sources(String groupId) {
             List<DropData.Source> l = new ArrayList<>();
+            if (ExtraData.BY_GROUP.containsKey(groupId)) { l.addAll(ExtraData.group(groupId)); return l; }
             if (id.equals("bosses")) { if (groupId.equals("slayer")) l.addAll(SlayerData.ALL); return l; }
             if (id.equals("farming")) { DropData.Source f = FarmData.byId(groupId); if (f != null) l.add(f); return l; }
             if (id.equals("experiments")) { if (groupId.equals("exp") && !ExperimentData.SOURCE.id.isEmpty()) l.add(ExperimentData.SOURCE); return l; }
@@ -63,10 +61,18 @@ final class Categories {
         new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A book opens and turns three pages: the items rise from its light with their text."),
         new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "An RNG item: the book turns three pages in a storm of light, with cinematic bars and blur."));
 
+    /** Fishing, Crimson Isle and Rare Mob Drops: the creature's world rises around the item (the Showcase scene). */
+    private static final List<Type> SHOW_TYPES = List.of(
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: the creature's world rises around the item, then its text."),
+        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a big finish in the creature's colours."));
+    private static final List<Type> DYE_TYPES = List.of(
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A dye: a splash of its own colour fills the screen around the vial."),
+        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare dye: cinematic bars and a flood of its colour."));
+
     /** True for a group whose Drop Library page is one list of drops (no creatures to pick first). */
-    static boolean single(Group g) { return !g.id().equals("myth") && !g.id().equals("slayer"); }
+    static boolean single(Group g) { return !hasSubs(g); }
     /** True for a group whose Drop Library page lists creatures, each with its own page. */
-    static boolean hasSubs(Group g) { return g.id().equals("myth") || g.id().equals("slayer"); }
+    static boolean hasSubs(Group g) { return g.id().equals("myth") || g.id().equals("slayer") || ExtraData.group(g.id()).size() > 1; }
 
     static final List<Cat> ALL = List.of(
         new Cat("mythological", "Mythological", ":mytho:", 0xFF55D8FF, false, "Mythological Ritual is an event that occurs with the Mythological Ritual perk.", List.of(
@@ -75,7 +81,7 @@ final class Categories {
         new Cat("bosses", "Bosses", ":slayers:", 0xFFFF5A5A, false, "Bosses of every kind and their rare drops.", List.of(
             new Group("slayer", "Slayers", ":grp_slayers:", 0xFFFF5A5A, "What plays when a slayer boss drops something.", SLAYER_TYPES),
             new Group("rift", "The Rift", ":grp_rift:", 0xFFB56BFF, "A mirror dimension of the main server.", SLAYER_TYPES, true),
-            new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "The Nether of Hypixel SkyBlock.", SLAYER_TYPES, true))),
+            new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "Ashfang, Bladesoul, the Barbarian Duke, the Mage Outlaw and the Magma Boss.", SHOW_TYPES))),
         new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, false, "Every rare drop you can find in the Garden.", List.of(
             new Group("crops", "Rare Crops", ":grp_crops:", 0xFF7CCB4F, "What plays when a crop turns out rare.", FARM_TYPES),
             new Group("feast", "Harvest Feast", ":grp_feast:", 0xFFFFA63A, "What plays when the Harvest Feast serves a rare crop.", FARM_TYPES),
@@ -83,11 +89,16 @@ final class Categories {
             new Group("pests", "Pest Drops", ":grp_pests:", 0xFFD2603F, "What plays when a pest drops something.", PEST_TYPES))),
         new Cat("experiments", "Rare Drops", ":raredrops:", 0xFFB56BFF, false, "Rare drops from the Experimentation Table, rare mobs and events.", List.of(
             new Group("exp", "Experimentation Table", ":grp_exp:", 0xFFB56BFF, "What plays when the Table gives out rewards.", EXP_TYPES),
-            new Group("mobs", "Rare Mob Drops", ":grp_mobs:", 0xFFFF8A5A, "Rare drops of everyday mobs.", EXP_TYPES, true),
+            new Group("mobs", "Rare Mob Drops", ":grp_mobs:", 0xFFFF8A5A, "Rare drops of everyday mobs: Zealots, Ghosts, Spiders, Golems and more.", SHOW_TYPES),
             new Group("events", "Events", ":grp_events:", 0xFF55D8FF, "Rare drops of the server's events.", EXP_TYPES, true))),
         new Cat("mining", "Mining", ":mining:", 0xFF9AB8FF, true, "Rare finds underground.", List.of()),
-        new Cat("fishing", "Fishing", ":fishing:", 0xFF4FC3FF, true, "Sea creatures and what they carry.", List.of()),
-        new Cat("dyes", "Dyes", ":dye:", 0xFFFF72C6, true, "Every dye in the game.", List.of()));
+        new Cat("fishing", "Fishing", ":fishing:", 0xFF4FC3FF, false, "Sea creatures and the rare things they carry.", List.of(
+            new Group("fish_water", "Water", ":grp_water:", 0xFF4FC3FF, "Sea creatures of the open water and the Crystal Hollows.", SHOW_TYPES),
+            new Group("fish_lava", "Lava", ":grp_lava:", 0xFFFF7A2E, "Lava sea creatures of the Crimson Isle and the Magma Fields.", SHOW_TYPES),
+            new Group("fish_spooky", "Spooky", ":grp_spooky:", 0xFFFF9A2E, "The Spooky Festival's sea creatures.", SHOW_TYPES),
+            new Group("fish_winter", "Winter", ":grp_winter:", 0xFF9FE4FF, "Jerry's Workshop's sea creatures.", SHOW_TYPES))),
+        new Cat("dyes", "Dyes", ":dye:", 0xFFFF72C6, false, "Every dye in the game and where it comes from.", List.of(
+            new Group("dyes", "Dyes", ":dye:", 0xFFFF72C6, "What plays when a dye drops.", DYE_TYPES))));
 
     static Cat byId(String id) { for (Cat c : ALL) if (c.id().equals(id)) return c; return ALL.get(0); }
     static Group group(String key) {

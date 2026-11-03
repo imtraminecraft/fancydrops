@@ -18,7 +18,7 @@ const OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
 
 // ---------------------------------------------------------------- achievements (the only place they are defined)
 // stat(p) reads the player's stats; goal is the number to reach. reward: the cosmetic it unlocks.
-const CH = { ledger: "The Ledger", fortune: "Fortune", myth: "Mythological", bosses: "Bosses", farm: "Farming", table: "Rare Drops" };
+const CH = { ledger: "The Ledger", fortune: "Fortune", myth: "Mythological", bosses: "Bosses", farm: "Farming", table: "Rare Drops", wild: "The Wilds" };
 const ACH = [
   // The Ledger: everything together
   { id: "first_find", ch: "ledger", name: "First Find", desc: "Get your first rare drop.", icon: "seal", goal: 1, stat: (p) => p.drops },
@@ -57,8 +57,16 @@ const ACH = [
   // Rare Drops (Experimentation Table)
   { id: "scholar", ch: "table", name: "Scholar", desc: "Get 10 Experimentation Table rewards.", icon: "book", goal: 10, stat: (p) => g(p, "exp").d },
   { id: "mastermind", ch: "table", name: "Mastermind", desc: "Get 5 RNG Experimentation Table rewards.", icon: "book", goal: 5, stat: (p) => g(p, "exp").rng },
+  // the Wilds: fishing, the Crimson Isle, rare mobs and dyes
+  { id: "angler", ch: "wild", name: "Angler", desc: "Get 10 rare drops from sea creatures.", icon: "fish", goal: 10, stat: (p) => fish(p).d },
+  { id: "deep_sea", ch: "wild", name: "Deep Sea Legend", desc: "Get 3 RNG drops from sea creatures.", icon: "fish", goal: 3, stat: (p) => fish(p).rng },
+  { id: "isle_raider", ch: "wild", name: "Isle Raider", desc: "Get 10 rare drops from Crimson Isle bosses.", icon: "flame", goal: 10, stat: (p) => g(p, "crimson").d },
+  { id: "rare_breed", ch: "wild", name: "Rare Breed", desc: "Get 10 rare mob drops.", icon: "skull", goal: 10, stat: (p) => g(p, "mobs").d },
+  { id: "living_colour", ch: "wild", name: "Living Colour", desc: "Find a dye.", icon: "dye", goal: 1, stat: (p) => g(p, "dyes").d, secret: true },
+  { id: "palette", ch: "wild", name: "Palette", desc: "Find 3 different dyes.", icon: "dye", goal: 3, stat: (p) => Object.keys(p.dyes || {}).length },
 ];
 const g = (p, k) => p.g[k] || { d: 0, rng: 0 };
+const fish = (p) => ["fish_water", "fish_lava", "fish_spooky", "fish_winter"].reduce((a, k) => ({ d: a.d + g(p, k).d, rng: a.rng + g(p, k).rng }), { d: 0, rng: 0 });
 const farm = (p) => ["crops", "feast", "bounty", "pests"].reduce((a, k) => a + g(p, k).d, 0);
 
 // the Special and Beta sets, by grant key in cosmetics.json
@@ -73,7 +81,7 @@ const BETA = ["betamark", "pulse"];
 
 // ---------------------------------------------------------------- helpers
 const json = (o, extra = {}) => new Response(JSON.stringify(o), { headers: { "content-type": "application/json", ...CORS, ...extra } });
-const blankProfile = () => ({ drops: 0, rng: 0, bigRng: 0, value: 0, best: 0, r3: 0, uniq: {}, days: {}, vinyl: {}, bosses: {}, g: {}, unlocked: {}, recent: [], first: Date.now() });
+const blankProfile = () => ({ drops: 0, rng: 0, bigRng: 0, value: 0, best: 0, r3: 0, uniq: {}, days: {}, vinyl: {}, bosses: {}, dyes: {}, g: {}, unlocked: {}, recent: [], first: Date.now() });
 
 async function codeOf(uuid) {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(uuid));
@@ -107,7 +115,7 @@ function view(p) {
     return { id: a.id, ch: a.ch, chapter: CH[a.ch], name: a.name, desc: a.desc, icon: a.icon, goal: a.goal, progress: v, done, at: p.unlocked[a.id] || 0, reward: a.reward || "", secret: !!a.secret };
   });
   const cosmetics = ACH.filter((a) => p.unlocked[a.id] && a.reward).map((a) => a.reward);
-  const stats = { drops: p.drops, rng: p.rng, bigRng: p.bigRng, value: p.value, best: p.best, r3: p.r3, unique: Object.keys(p.uniq).length, days: Object.keys(p.days).length, bosses: Object.keys(p.bosses).length, vinyls: Object.keys(p.vinyl).length, groups: p.g, since: p.first };
+  const stats = { drops: p.drops, rng: p.rng, bigRng: p.bigRng, value: p.value, best: p.best, r3: p.r3, unique: Object.keys(p.uniq).length, days: Object.keys(p.days).length, bosses: Object.keys(p.bosses).length, vinyls: Object.keys(p.vinyl).length, dyes: Object.keys(p.dyes || {}).length, groups: p.g, since: p.first };
   return { stats, achievements: list, cosmetics, chapters: CH };
 }
 
@@ -150,7 +158,7 @@ export default {
     for (const e of events) {
       if (p.recent.length >= 400) break;                                                  // more than 400 drops an hour is not real play
       const grp = String(e.g || ""), id = String(e.id || "").slice(0, 64), item = String(e.item || "").slice(0, 64);
-      if (!/^[a-z]{2,12}$/.test(grp) || !id) continue;
+      if (!/^[a-z_]{2,16}$/.test(grp) || !id) continue;
       const rng = !!e.rng, v = Math.max(0, Math.min(Number(e.v) || 0, 5_000_000_000)), r = Math.max(0, Math.min(3, Number(e.r) || 0));
       p.drops++; p.recent.push(now); taken++;
       if (rng) p.rng++;
@@ -159,6 +167,7 @@ export default {
       p.value += v; p.best = Math.max(p.best, v);
       p.uniq[id] = 1; p.days[day] = 1;
       if (/vinyl/i.test(item)) p.vinyl[id] = 1;
+      if (grp === "dyes") (p.dyes = p.dyes || {})[id] = 1;
       if (grp === "slayer" && e.src) p.bosses[String(e.src).slice(0, 24)] = 1;
       const gg = (p.g[grp] = p.g[grp] || { d: 0, rng: 0 }); gg.d++; if (rng) gg.rng++;
     }

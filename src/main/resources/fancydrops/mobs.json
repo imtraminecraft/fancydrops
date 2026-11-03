@@ -1,0 +1,635 @@
+{
+ "v": 1,
+ "sources": [
+  {
+   "id": "voidling_extremist",
+   "name": "Voidling Extremist",
+   "boss": "Voidling Extremist",
+   "icon": "bone",
+   "color": "#B56BFF",
+   "drops": [
+    {
+     "name": "Enderman Cortex Rewriter",
+     "id": "ENDERMAN_CORTEX_REWRITER",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 1,000",
+     "rank": 3
+    },
+    {
+     "name": "Summoning Eye",
+     "id": "SUMMONING_EYE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 2,500",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "voidling_fanatic",
+   "name": "Voidling Fanatic",
+   "boss": "Voidling Fanatic",
+   "icon": "bone",
+   "color": "#B56BFF",
+   "drops": [
+    {
+     "name": "Enchanted Ender Pearl",
+     "id": "ENCHANTED_ENDER_PEARL",
+     "icon": "ender_pearl",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Epic Enderman Pet",
+     "id": "ENDERMAN;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 8,333",
+     "rank": 3
+    },
+    {
+     "name": "Legendary Enderman Pet",
+     "id": "ENDERMAN;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 142,857",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "obsidian_defender",
+   "name": "Obsidian Defender",
+   "boss": "Obsidian Defender",
+   "icon": "bone",
+   "color": "#B56BFF",
+   "drops": [
+    {
+     "name": "Enchanted Obsidian",
+     "id": "ENCHANTED_OBSIDIAN",
+     "icon": "obsidian",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Ender Belt",
+     "id": "ENDER_BELT",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Obsidian Chestplate",
+     "id": "OBSIDIAN_CHESTPLATE",
+     "icon": "leather_chestplate",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 1,000",
+     "rank": 3
+    },
+    {
+     "name": "Rare Combat Exp Boost",
+     "id": "PET_ITEM_COMBAT_SKILL_BOOST_RARE",
+     "icon": "iron_sword",
+     "skull": false,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 10,000",
+     "rank": 3
+    },
+    {
+     "name": "Epic Combat Exp Boost",
+     "id": "PET_ITEM_COMBAT_SKILL_BOOST_EPIC",
+     "icon": "iron_sword",
+     "skull": false,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 30,303",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "enderman",
+   "name": "Enderman",
+   "boss": "Enderman",
+   "icon": "bone",
+   "color": "#B56BFF",
+   "drops": [
+    {
+     "name": "Ender Necklace",
+     "id": "ENDER_NECKLACE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Rare Enderman Pet",
+     "id": "ENDERMAN;2",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 10,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "ghost",
+   "name": "Ghost",
+   "boss": "Ghost",
+   "icon": "bone",
+   "color": "#9AB8FF",
+   "drops": [
+    {
+     "name": "Volta",
+     "id": "VOLTA",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 500",
+     "rank": 1
+    },
+    {
+     "name": "Sorrow",
+     "id": "SORROW",
+     "icon": "ghast_tear",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 833",
+     "rank": 1
+    },
+    {
+     "name": "Plasma",
+     "id": "PLASMA",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 1,000",
+     "rank": 3
+    },
+    {
+     "name": "Ghostly Boots",
+     "id": "GHOST_BOOTS",
+     "icon": "leather_boots",
+     "skull": false,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 10,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "diamond_goblin",
+   "name": "Diamond Goblin",
+   "boss": "Diamond Goblin",
+   "icon": "bone",
+   "color": "#9AB8FF",
+   "drops": [
+    {
+     "name": "Pure Mithril Gem",
+     "id": "PET_ITEM_PURE_MITHRIL_GEM",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "automaton",
+   "name": "Automaton",
+   "boss": "Automaton",
+   "icon": "bone",
+   "color": "#9AB8FF",
+   "drops": [
+    {
+     "name": "Synthetic Heart",
+     "id": "SYNTHETIC_HEART",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Control Switch",
+     "id": "CONTROL_SWITCH",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Superlite Motor",
+     "id": "SUPERLITE_MOTOR",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Robotron Reflector",
+     "id": "ROBOTRON_REFLECTOR",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "FTX 3070",
+     "id": "FTX_3070",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Electron Transmitter",
+     "id": "ELECTRON_TRANSMITTER",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "butterfly",
+   "name": "Butterfly",
+   "boss": "Butterfly",
+   "icon": "bone",
+   "color": "#9AB8FF",
+   "drops": [
+    {
+     "name": "Jasper Crystal",
+     "id": "JASPER_CRYSTAL",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 1,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "bal",
+   "name": "Bal",
+   "boss": "Bal",
+   "icon": "bone",
+   "color": "#9AB8FF",
+   "drops": [
+    {
+     "name": "Epic Bal Pet",
+     "id": "BAL;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 7,937",
+     "rank": 3
+    },
+    {
+     "name": "Legendary Bal Pet",
+     "id": "BAL;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 18,519",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "lapis_zombie",
+   "name": "Lapis Zombie",
+   "boss": "Lapis Zombie",
+   "icon": "bone",
+   "color": "#9AB8FF",
+   "drops": [
+    {
+     "name": "Lapis Crystal",
+     "id": "LAPIS_CRYSTAL",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Exp Share Core",
+     "id": "PET_ITEM_EXP_SHARE_DROP",
+     "icon": "dye",
+     "skull": false,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 10,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "redstone_pigman",
+   "name": "Redstone Pigman",
+   "boss": "Redstone Pigman",
+   "icon": "bone",
+   "color": "#9AB8FF",
+   "drops": [
+    {
+     "name": "Exp Share Core",
+     "id": "PET_ITEM_EXP_SHARE_DROP",
+     "icon": "dye",
+     "skull": false,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 10,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "old_wolf",
+   "name": "Old Wolf",
+   "boss": "Old Wolf",
+   "icon": "bone",
+   "color": "#7BE05A",
+   "drops": [
+    {
+     "name": "Wolf Talisman",
+     "id": "WOLF_TALISMAN",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 1,000",
+     "rank": 3
+    },
+    {
+     "name": "Epic Hound Pet",
+     "id": "HOUND;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 33,333",
+     "rank": 3
+    },
+    {
+     "name": "Legendary Hound Pet",
+     "id": "HOUND;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 100,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "crypt_ghoul",
+   "name": "Crypt Ghoul",
+   "boss": "Crypt Ghoul",
+   "icon": "bone",
+   "color": "#7BE05A",
+   "drops": [
+    {
+     "name": "Epic Ghoul Pet",
+     "id": "GHOUL;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 33,333",
+     "rank": 3
+    },
+    {
+     "name": "Legendary Ghoul Pet",
+     "id": "GHOUL;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 100,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "golden_ghoul",
+   "name": "Golden Ghoul",
+   "boss": "Golden Ghoul",
+   "icon": "bone",
+   "color": "#7BE05A",
+   "drops": [
+    {
+     "name": "Golden Powder",
+     "id": "GOLDEN_POWDER",
+     "icon": "glowstone_dust",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 2,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "broodmother",
+   "name": "Broodmother",
+   "boss": "Broodmother",
+   "icon": "bone",
+   "color": "#7BE05A",
+   "drops": [
+    {
+     "name": "Epic Tarantula Pet",
+     "id": "TARANTULA;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 5,000",
+     "rank": 3
+    },
+    {
+     "name": "Legendary Tarantula Pet",
+     "id": "TARANTULA;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 12,500",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "dasher_spider",
+   "name": "Dasher Spider",
+   "boss": "Dasher Spider",
+   "icon": "bone",
+   "color": "#7BE05A",
+   "drops": [
+    {
+     "name": "Arachne's Calling",
+     "id": "ARACHNE_KEEPER_FRAGMENT",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 500",
+     "rank": 1
+    },
+    {
+     "name": "Epic Tarantula Pet",
+     "id": "TARANTULA;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 25,000",
+     "rank": 3
+    },
+    {
+     "name": "Legendary Tarantula Pet",
+     "id": "TARANTULA;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate",
+     "chance": "1 in 100,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "wither_spectre",
+   "name": "Wither Spectre",
+   "boss": "Wither Spectre",
+   "icon": "bone",
+   "color": "#FF8A5A",
+   "drops": [
+    {
+     "name": "Rampart Helmet",
+     "id": "RAMPART_HELMET",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Chestplate",
+     "id": "RAMPART_CHESTPLATE",
+     "icon": "leather_chestplate",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Leggings",
+     "id": "RAMPART_LEGGINGS",
+     "icon": "leather_leggings",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Boots",
+     "id": "RAMPART_BOOTS",
+     "icon": "leather_boots",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Sword of Bad Health",
+     "id": "SWORD_OF_BAD_HEALTH",
+     "icon": "wooden_sword",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 2,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  },
+  {
+   "id": "blaze",
+   "name": "Blaze",
+   "boss": "Blaze",
+   "icon": "bone",
+   "color": "#FF8A5A",
+   "drops": [
+    {
+     "name": "Rampart Helmet",
+     "id": "RAMPART_HELMET",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Chestplate",
+     "id": "RAMPART_CHESTPLATE",
+     "icon": "leather_chestplate",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Leggings",
+     "id": "RAMPART_LEGGINGS",
+     "icon": "leather_leggings",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Boots",
+     "id": "RAMPART_BOOTS",
+     "icon": "leather_boots",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Sword of Bad Health",
+     "id": "SWORD_OF_BAD_HEALTH",
+     "icon": "wooden_sword",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 2,000",
+     "rank": 3
+    }
+   ],
+   "group": "mobs"
+  }
+ ]
+}

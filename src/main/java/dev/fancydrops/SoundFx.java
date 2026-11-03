@@ -29,7 +29,7 @@ public final class SoundFx {
     }
 
     public static final String NONE = "none";
-    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng", "crops.normal", "crops.rng", "feast.normal", "feast.rng", "bounty.normal", "bounty.rng", "pests.normal", "pests.rng", "exp.normal", "exp.rng"};
+    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng", "crops.normal", "crops.rng", "feast.normal", "feast.rng", "bounty.normal", "bounty.rng", "pests.normal", "pests.rng", "exp.normal", "exp.rng", "fish_water.normal", "fish_water.rng", "fish_lava.normal", "fish_lava.rng", "fish_spooky.normal", "fish_spooky.rng", "fish_winter.normal", "fish_winter.rng", "crimson.normal", "crimson.rng", "mobs.normal", "mobs.rng", "dyes.normal", "dyes.rng"};
     public static final String[] SLOTS = {"chop", "split", "reveal", "linger", "end"};
 
     private static final Map<String, Fx> ALL = new LinkedHashMap<>();
@@ -104,6 +104,12 @@ public final class SoundFx {
         mc("mc_conduit", "Conduit", "block.conduit.ambient", 0.7f);
         mc("mc_enchant", "Enchant", "block.enchantment_table.use", 0.8f);
         mc("mc_page", "Page", "item.book.page_turn", 0.9f);
+        mc("mc_splash", "Splash", "entity.fishing_bobber.splash", 0.9f);
+        mc("mc_lavapop", "Lava pop", "block.lava.pop", 0.9f);
+        mc("mc_icebreak", "Ice break", "block.glass.break", 0.8f);
+        mc("mc_blast", "Blast", "entity.generic.explode", 0.6f);
+        mc("mc_chain", "Chain", "block.chain.break", 0.9f);
+        mc("mc_drip", "Drip", "item.bucket.empty", 0.8f);
         mc("mc_squish", "Squish", "entity.slime.squish", 0.8f);
         mc("mc_gift", "Gift", "entity.allay.item_given", 0.9f);
         mc("mc_fizzle", "Fizzle", "block.respawn_anchor.deplete", 0.7f);
@@ -136,7 +142,21 @@ public final class SoundFx {
             {"pests.normal", "mc_squish", "mc_smack", "mc_orb", "mc_hum", "mc_powerdown"},
             {"pests.rng", "mc_squish", "mc_smack", "mc_fanfare", "mc_hum", "mc_powerdown"},
             {"exp.normal", "mc_page", "mc_enchant", "mc_crystal", "mc_hum", "mc_powerdown"},
-            {"exp.rng", "mc_page", "mc_enchant", "mc_fanfare", "mc_hum", "mc_powerdown"}};
+            {"exp.rng", "mc_page", "mc_enchant", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"fish_water.normal", "mc_splash", "mc_splash", "mc_levelup", "mc_hum", "mc_powerdown"},
+            {"fish_water.rng", "mc_splash", "mc_splash", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"fish_lava.normal", "mc_lavapop", "mc_blast", "mc_levelup", "mc_hum", "mc_powerdown"},
+            {"fish_lava.rng", "mc_lavapop", "mc_blast", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"fish_spooky.normal", "mc_splash", "mc_bell", "mc_levelup", "mc_hum", "mc_powerdown"},
+            {"fish_spooky.rng", "mc_splash", "mc_bell", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"fish_winter.normal", "mc_icebreak", "mc_icebreak", "mc_chime", "mc_hum", "mc_powerdown"},
+            {"fish_winter.rng", "mc_icebreak", "mc_icebreak", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"crimson.normal", "mc_blast", "mc_thunder", "mc_crystal", "mc_hum", "mc_powerdown"},
+            {"crimson.rng", "mc_blast", "mc_thunder", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"mobs.normal", "mc_bass", "mc_chain", "mc_crystal", "mc_hum", "mc_powerdown"},
+            {"mobs.rng", "mc_bass", "mc_chain", "mc_fanfare", "mc_hum", "mc_powerdown"},
+            {"dyes.normal", "mc_drip", "mc_splash", "mc_shimmer", "mc_hum", "mc_powerdown"},
+            {"dyes.rng", "mc_drip", "mc_splash", "mc_fanfare", "mc_hum", "mc_powerdown"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) MC_DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
@@ -162,7 +182,21 @@ public final class SoundFx {
             {"pests.normal", "pest_vacuum", "pest_gulp", "pest_pop", "myth_glow", "farm_end"},
             {"pests.rng", "pest_vacuum", "pest_gulp", "farm_bloom_big", "myth_glow_big", "farm_end"},
             {"exp.normal", "exp_flip", "exp_open", "exp_reveal", "myth_glow", "exp_end"},
-            {"exp.rng", "exp_flip", "exp_open", "exp_reveal_epic", "myth_glow_big", "exp_end"}};
+            {"exp.rng", "exp_flip", "exp_open", "exp_reveal_epic", "myth_glow_big", "exp_end"},
+            {"fish_water.normal", "farm_heave", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
+            {"fish_water.rng", "farm_heave", "myth_shatter", "myth_reveal_big", "myth_glow_big", "myth_end"},
+            {"fish_lava.normal", "farm_heave", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
+            {"fish_lava.rng", "farm_heave", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"},
+            {"fish_spooky.normal", "farm_heave", "myth_fizzle", "myth_reveal", "myth_glow", "myth_end"},
+            {"fish_spooky.rng", "farm_heave", "myth_fizzle", "myth_reveal_big", "myth_glow_big", "myth_end"},
+            {"fish_winter.normal", "myth_shatter", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
+            {"fish_winter.rng", "myth_shatter", "myth_shatter", "myth_reveal_big", "myth_glow_big", "myth_end"},
+            {"crimson.normal", "myth_bolt", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
+            {"crimson.rng", "myth_bolt", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"},
+            {"mobs.normal", "slay_slash", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
+            {"mobs.rng", "slay_slash", "myth_shatter", "myth_reveal_big", "myth_glow_big", "myth_end"},
+            {"dyes.normal", "farm_cut", "farm_bloom", "exp_reveal", "myth_glow", "farm_end"},
+            {"dyes.rng", "farm_cut", "farm_bloom", "farm_bloom_big", "myth_glow_big", "farm_end"}};
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 

@@ -1,0 +1,365 @@
+{
+ "v": 1,
+ "sources": [
+  {
+   "id": "dyes",
+   "name": "Dyes",
+   "boss": "Dyes",
+   "icon": "pink_dye",
+   "color": "#FF72C6",
+   "group": "dyes",
+   "drops": [
+    {
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Legendary and Mythic water sea creatures",
+     "chance": "1 in 50,000",
+     "rank": 3,
+     "color": "#7FFFD4"
+    },
+    {
+     "name": "Carmine Dye",
+     "id": "DYE_CARMINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Legendary and Mythic lava sea creatures",
+     "chance": "1 in 50,000",
+     "rank": 3,
+     "color": "#960018"
+    },
+    {
+     "name": "Iceberg Dye",
+     "id": "DYE_ICEBERG",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Legendary and Mythic winter sea creatures",
+     "chance": "1 in 50,000",
+     "rank": 3,
+     "color": "#71A6D2"
+    },
+    {
+     "name": "Midnight Dye",
+     "id": "DYE_MIDNIGHT",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Spooky Festival mobs and sea creatures",
+     "chance": "1 in 500,000",
+     "rank": 3,
+     "color": "#50216C"
+    },
+    {
+     "name": "Cyclamen Dye",
+     "id": "DYE_CYCLAMEN",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Crimson Isle mobs and bosses",
+     "chance": "1 in 250,000",
+     "rank": 3,
+     "color": "#F56FA1"
+    },
+    {
+     "name": "Pearlescent Dye",
+     "id": "DYE_PEARLESCENT",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "End mobs",
+     "chance": "1 in 5,000,000",
+     "rank": 3,
+     "color": "#115555"
+    },
+    {
+     "name": "Bone Dye",
+     "id": "DYE_BONE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Any skeleton",
+     "chance": "1 in 3,000,000",
+     "rank": 3,
+     "color": "#E3DAC9"
+    },
+    {
+     "name": "Celadon Dye",
+     "id": "DYE_CELADON",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Bacte (the Rift)",
+     "chance": "1 in 10,000",
+     "rank": 3,
+     "color": "#ACE1AF"
+    },
+    {
+     "name": "Copper Dye",
+     "id": "DYE_COPPER",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Garden Visitors",
+     "chance": "1 in 500",
+     "rank": 3,
+     "color": "#B87333"
+    },
+    {
+     "name": "Dung Dye",
+     "id": "DYE_DUNG",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Vacuuming pests in the Garden",
+     "chance": "1 in 50,000",
+     "rank": 3,
+     "color": "#4F2A2A"
+    },
+    {
+     "name": "Emerald Dye",
+     "id": "DYE_EMERALD",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Safari critters",
+     "chance": "1 in 50,000",
+     "rank": 3,
+     "color": "#50C878"
+    },
+    {
+     "name": "Fossil Dye",
+     "id": "DYE_FOSSIL",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Excavating Suspicious Scrap",
+     "chance": "1 in 500,000",
+     "rank": 3,
+     "color": "#866F12"
+    },
+    {
+     "name": "Frostbitten Dye",
+     "id": "DYE_FROSTBITTEN",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Glacite corpses",
+     "chance": "1 in 10,000",
+     "rank": 3,
+     "color": "#09D8EB"
+    },
+    {
+     "name": "Holly Dye",
+     "id": "DYE_HOLLY",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Red Gifts",
+     "chance": "1 in 8,000",
+     "rank": 3,
+     "color": "#3C6746"
+    },
+    {
+     "name": "Jade Dye",
+     "id": "DYE_JADE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Crystal Nucleus runs",
+     "chance": "1 in 500,000",
+     "rank": 3,
+     "color": "#00A86B"
+    },
+    {
+     "name": "Livid Dye",
+     "id": "DYE_LIVID",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Master Mode Floor V",
+     "chance": "1 in 5,000",
+     "rank": 3,
+     "color": "#CEB7AA"
+    },
+    {
+     "name": "Mango Dye",
+     "id": "DYE_MANGO",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Foraging tree gifts",
+     "chance": "1 in 100,000",
+     "rank": 3,
+     "color": "#FDBE02"
+    },
+    {
+     "name": "Mocha Dye",
+     "id": "DYE_MOCHA",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Brewing potions",
+     "chance": "1 in 750,000",
+     "rank": 3,
+     "color": "#967969"
+    },
+    {
+     "name": "Nadeshiko Dye",
+     "id": "DYE_NADESHIKO",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Experimentation Table",
+     "chance": "1 in 25,000",
+     "rank": 3,
+     "color": "#F6ADC6"
+    },
+    {
+     "name": "Necron Dye",
+     "id": "DYE_NECRON",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Master Mode Floor VII",
+     "chance": "1 in 2,500",
+     "rank": 3,
+     "color": "#E7413C"
+    },
+    {
+     "name": "Nyanza Dye",
+     "id": "DYE_NYANZA",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Commissions",
+     "chance": "1 in 250,000",
+     "rank": 3,
+     "color": "#E9FFDB"
+    },
+    {
+     "name": "Pelt Dye",
+     "id": "DYE_PELT",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Trapper animals",
+     "chance": "1 in 10,000",
+     "rank": 3,
+     "color": "#50414C"
+    },
+    {
+     "name": "Periwinkle Dye",
+     "id": "DYE_PERIWINKLE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Runic mobs",
+     "chance": "1 in 100,000",
+     "rank": 3,
+     "color": "#CCCCFF"
+    },
+    {
+     "name": "Secret Dye",
+     "id": "DYE_SECRET",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Dungeon secrets",
+     "chance": "1 in 1,000,000",
+     "rank": 3,
+     "color": "#7D7D7D"
+    },
+    {
+     "name": "Tentacle Dye",
+     "id": "TENTACLE_DYE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Kuudra paid chests",
+     "chance": "1 in 40,000",
+     "rank": 3,
+     "color": "#324D6C"
+    },
+    {
+     "name": "Treasure Dye",
+     "id": "DYE_TREASURE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Treasure chests",
+     "chance": "1 in 10,000",
+     "rank": 3,
+     "color": "#FCD12A"
+    },
+    {
+     "name": "Wild Strawberry Dye",
+     "id": "DYE_WILD_STRAWBERRY",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Serving Vincent in the Garden",
+     "chance": "1 in 2,500",
+     "rank": 3,
+     "color": "#FF43A4"
+    },
+    {
+     "name": "Archfiend Dye",
+     "id": "DYE_ARCHFIEND",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "High Class Archfiend Dice",
+     "chance": "1 in 666",
+     "rank": 3,
+     "color": "#B80036"
+    },
+    {
+     "name": "Mythological Dye",
+     "id": "DYE_MYTHOLOGICAL",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Mythological creatures",
+     "chance": "1 in 250,000",
+     "rank": 3,
+     "color": "#6F6F0C"
+    },
+    {
+     "name": "Matcha Dye",
+     "id": "DYE_MATCHA",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Revenant Horror",
+     "chance": "1 in 250,000",
+     "rank": 3,
+     "color": "#74A12E"
+    },
+    {
+     "name": "Brick Red Dye",
+     "id": "DYE_BRICK_RED",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Tarantula Broodfather",
+     "chance": "1 in 250,000",
+     "rank": 3,
+     "color": "#CB4154"
+    },
+    {
+     "name": "Celeste Dye",
+     "id": "DYE_CELESTE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Sven Packmaster",
+     "chance": "1 in 500,000",
+     "rank": 3,
+     "color": "#B2FFFF"
+    },
+    {
+     "name": "Byzantium Dye",
+     "id": "DYE_BYZANTIUM",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Voidgloom Seraph",
+     "chance": "1 in 500,000",
+     "rank": 3,
+     "color": "#702963"
+    },
+    {
+     "name": "Flame Dye",
+     "id": "DYE_FLAME",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Inferno Demonlord",
+     "chance": "1 in 500,000",
+     "rank": 3,
+     "color": "#E25822"
+    },
+    {
+     "name": "Sangria Dye",
+     "id": "DYE_SANGRIA",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Riftstalker Bloodfiend",
+     "chance": "1 in 40,000",
+     "rank": 3,
+     "color": "#D40808"
+    }
+   ]
+  }
+ ]
+}

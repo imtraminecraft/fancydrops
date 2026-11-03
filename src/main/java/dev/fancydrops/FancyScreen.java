@@ -2245,7 +2245,10 @@ public class FancyScreen extends Screen {
         Row b = row(0, ":back:", title, sub, accent); b.noSearch = true; b.backGo = go; b.backLabel = title; return b;
     }
     /** A creature's menu icon (wiki head or drawn), or a slayer boss's drawn one. */
-    private static String srcIcon(DropData.Source s) { return SlayerData.byId(s.id) == s ? ":boss_" + s.id + ":" : ":mob_" + s.id + ":"; }
+    private static String srcIcon(DropData.Source s) {
+        if (s.group != null && !s.group.isEmpty() && !s.drops.isEmpty()) return ":it_" + s.drops.get(s.drops.size() - 1).id.toLowerCase(java.util.Locale.ROOT).replace(';', '~') + ":";      // fishing, Crimson, mobs: the rarest thing it carries
+        return SlayerData.byId(s.id) == s ? ":boss_" + s.id + ":" : ":mob_" + s.id + ":";
+    }
     private static String srcName(DropData.Source s) { return s.boss == null || s.boss.isEmpty() ? s.name : s.boss; }
     /** What a category tile counts: its pages, their sub pages and the items inside (drops, animations or sounds, by the tab). */
     private String tileCount(Categories.Cat k) {

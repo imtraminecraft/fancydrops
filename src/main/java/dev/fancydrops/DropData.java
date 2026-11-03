@@ -12,12 +12,14 @@ public final class DropData {
         public String rarity = "";                  // pets: the usual rarity
         public java.util.Map<String, Long> george;  // pets: what George pays per rarity
         public double[] pct;                        // Mythological: the drop chance in percent for a Common..Mythic Griffin pet (0 = that pet cannot meet it)
+        public String color = "";                   // Dyes: the dye's own colour
         public int rank = -1;                       // 0 blue, 1 purple, 2 pink, 3 gold
     }
     public static class Cube { public String base = "#5E9E52", dark = "#3D6B36", eye = "#10200E"; }
     /** Where drops come from: a creature, a chest, a table. */
     public static class Source {
         public String id = "", name = "", boss = "", icon = "nether_star", color = "#FFB300";
+        public String group = "";                    // the newer libraries (ExtraData): which animation group this source plays
         public int minPet = 0;                       // Mythological: the lowest Griffin pet rarity (0 Common .. 5 Mythic) this creature spawns for
         public Cube cube = new Cube();
         public List<Drop> drops = new ArrayList<>();
@@ -40,6 +42,7 @@ public final class DropData {
         List<Source> l = new ArrayList<>(MythData.ALL);
         l.addAll(SlayerData.ALL); l.addAll(FarmData.ALL);
         if (!ExperimentData.SOURCE.id.isEmpty()) l.add(ExperimentData.SOURCE);
+        l.addAll(ExtraData.ALL);
         return l;
     }
 
@@ -51,7 +54,7 @@ public final class DropData {
     }
 
     /** Loads every drop library. */
-    public static void load() { MythData.load(); SlayerData.load(); FarmData.load(); ExperimentData.load(); }
+    public static void load() { MythData.load(); SlayerData.load(); FarmData.load(); ExperimentData.load(); ExtraData.load(); }
 
     private DropData() {}
 

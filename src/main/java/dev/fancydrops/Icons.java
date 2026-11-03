@@ -34,6 +34,7 @@ final class Icons {
         if (name.equals("griffin_pet")) { if (ItemIcons.hasPixels("GRIFFIN;5")) { ItemIcons.draw(g, "GRIFFIN;5", null, x + 8, y + 8, 1.15f); return; } ItemIcons.prefetch("GRIFFIN;5"); name = "griffin"; }      // the pet's own head (a feather until it loads)
         if (name.startsWith("mob_") && ItemIcons.hasPixels("MOB_" + name.substring(4))) { ItemIcons.draw(g, "MOB_" + name.substring(4), null, x + 8, y + 8, 1.15f); return; }      // the creature's own 3D head (the pixel icon shows until it has loaded)
         if (name.startsWith("mob_")) ItemIcons.prefetch("MOB_" + name.substring(4));
+        if (name.startsWith("it_")) { ItemIcons.draw(g, name.substring(3).toUpperCase(java.util.Locale.ROOT).replace('~', ';'), null, x + 8, y + 8, 1f); return; }      // a creature of the newer libraries: its rarest drop
         if (name.startsWith("boss_")) {
             String bid = name.substring(5);
             ItemIcons.draw(g, SlayerData.headId(bid), SlayerData.headFallback(bid), x + 8, y + 8, 1.15f); return;

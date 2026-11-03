@@ -1,0 +1,181 @@
+{
+ "v": 1,
+ "sources": [
+  {
+   "id": "ashfang",
+   "name": "Ashfang",
+   "boss": "Ashfang",
+   "icon": "blaze_powder",
+   "color": "#FF6A3A",
+   "drops": [
+    {
+     "name": "Magma Urchin",
+     "id": "MAGMA_URCHIN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Fire Veil Wand",
+     "id": "FIRE_VEIL_WAND",
+     "icon": "blaze_rod",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
+    }
+   ],
+   "group": "crimson"
+  },
+  {
+   "id": "bladesoul",
+   "name": "Bladesoul",
+   "boss": "Bladesoul",
+   "icon": "blaze_powder",
+   "color": "#FF6A3A",
+   "drops": [
+    {
+     "name": "Magma Urchin",
+     "id": "MAGMA_URCHIN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Ragnarock",
+     "id": "RAGNAROCK_AXE",
+     "icon": "golden_sword",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
+    }
+   ],
+   "group": "crimson"
+  },
+  {
+   "id": "barbarian_duke_x",
+   "name": "Barbarian Duke X",
+   "boss": "Barbarian Duke X",
+   "icon": "blaze_powder",
+   "color": "#FF6A3A",
+   "drops": [
+    {
+     "name": "Magma Urchin",
+     "id": "MAGMA_URCHIN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Flaming Fist",
+     "id": "FLAMING_FIST",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
+    }
+   ],
+   "group": "crimson"
+  },
+  {
+   "id": "mage_outlaw",
+   "name": "Mage Outlaw",
+   "boss": "Mage Outlaw",
+   "icon": "blaze_powder",
+   "color": "#FF6A3A",
+   "drops": [
+    {
+     "name": "Magma Urchin",
+     "id": "MAGMA_URCHIN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Fire Freeze Staff",
+     "id": "FIRE_FREEZE_STAFF",
+     "icon": "yellow_flower",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Wand of Strength",
+     "id": "WAND_OF_STRENGTH",
+     "icon": "stick",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
+    }
+   ],
+   "group": "crimson"
+  },
+  {
+   "id": "magma_boss",
+   "name": "Magma Boss",
+   "boss": "Magma Boss",
+   "icon": "blaze_powder",
+   "color": "#FF6A3A",
+   "drops": [
+    {
+     "name": "Magma Urchin",
+     "id": "MAGMA_URCHIN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Epic Magma Cube Pet",
+     "id": "MAGMA_CUBE;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional",
+     "chance": "1 in 66.7",
+     "rank": 0
+    },
+    {
+     "name": "Fire Fury Staff",
+     "id": "FIRE_FURY_STAFF",
+     "icon": "blaze_rod",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Molten Cube",
+     "id": "MOLTEN_CUBE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Legendary Magma Cube Pet",
+     "id": "MAGMA_CUBE;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare",
+     "chance": "1 in 250",
+     "rank": 1
+    }
+   ],
+   "group": "crimson"
+  }
+ ]
+}
