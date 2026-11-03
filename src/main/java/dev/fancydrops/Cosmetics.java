@@ -158,7 +158,7 @@ final class Cosmetics {
         if (publishAt == 0 || now < publishAt || publishing || wornUrl == null) return;
         publishAt = 0;
         UUID me = me(); if (me == null) return;
-        if (CosmeticData.grantsOf(me).isEmpty() && !isAdmin()) { System.err.println("[FancyDrops] not sharing cosmetics: none given to you"); return; }
+        if (CosmeticData.grantsOf(me).isEmpty() && !isAdmin() && (Achievements.profile() == null || Achievements.profile().cosmetics().isEmpty()) && FancyConfig.get().suffix.isEmpty() && FancyConfig.get().nameFx.isEmpty() && FancyConfig.get().aura.isEmpty()) return;      // nothing to show others
         FancyConfig c = FancyConfig.get();
         String sx = CosmeticData.unlockedId(c.suffix) ? c.suffix : "", fx = CosmeticData.unlockedId(c.nameFx) ? c.nameFx : "", au = CosmeticData.unlockedId(c.aura) ? c.aura : "";
         String name = mc.getUser().getName(), token = mc.getUser().getAccessToken(), u = wornUrl;
@@ -177,16 +177,6 @@ final class Cosmetics {
             finally { publishing = false; }
         });
     }
-    /** True when this player was given the cosmetic (alone, or as part of a set). */
-    private static boolean owns(Set<String> g, String id) {
-        if (id == null || id.isEmpty()) return false;
-        if (g.contains("c:" + id)) return true;
-        CosmeticData.Def d = CosmeticData.byId(id); if (d == null) return false;
-        if (d.set() != null && g.contains(d.set())) return true;
-        if (id.equals("sparkle")) for (CosmeticData.SetDef sd : CosmeticData.SETS) if ("sparkle".equals(sd.suffix()) && g.contains(sd.id())) return true;
-        return false;
-    }
-
     static final FontDescription EMOJI = new FontDescription.Resource(Identifier.fromNamespaceAndPath("fancydrops", "emoji"));
 
     private record Seg(String text, Style style) {}
@@ -206,13 +196,13 @@ final class Cosmetics {
             UUID u = info.getProfile().id();
             if (u.equals(me)) continue;
             Set<String> g = CosmeticData.grantsOf(u);                    // everybody sees what an owner has been given
-            if (g.isEmpty()) continue;
             if (wornUrl != null) {                                       // opt-in: only what the owner turned on, and only what they were given
                 String[] w = WORN.get(code(u)); if (w == null) continue;
-                Look ol = new Look(c0.othersSuffix && owns(g, w[0]) ? byId(w[0]) : null, c0.othersName && owns(g, w[1]) ? w[1] : null, c0.othersAura && owns(g, w[2]) ? w[2] : null);
+                Look ol = new Look(c0.othersSuffix && !w[0].isEmpty() ? byId(w[0]) : null, c0.othersName && !w[1].isEmpty() && CosmeticData.byId(w[1]) != null ? w[1] : null, c0.othersAura && !w[2].isEmpty() && CosmeticData.byId(w[2]) != null ? w[2] : null);   // the server only keeps what the player owns (given or earned)
                 if (ol.suffix() != null || ol.fx() != null || ol.aura() != null) m.put(u, ol);
                 continue;
             }
+            if (g.isEmpty()) continue;
             for (CosmeticData.SetDef sd : CosmeticData.SETS) if (sd.rarity() == 4 && g.contains(sd.id())) {       // what they were given: the whole set (minus what you chose not to see)
                 Look ol = new Look(c0.othersSuffix ? byId(sd.suffix()) : null, c0.othersName ? sd.fx() : null, c0.othersAura ? sd.aura() : null);
                 if (ol.suffix() != null || ol.fx() != null || ol.aura() != null) m.put(u, ol);

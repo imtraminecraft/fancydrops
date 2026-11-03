@@ -177,6 +177,8 @@ public final class SoundFx {
 
     public static Iterable<String> names() { return ALL.keySet(); }
     public static Fx byName(String n) { return n == null ? null : ALL.get(n.toLowerCase(Locale.ROOT)); }
+    /** The little fanfare of an unlocked achievement. */
+    public static void achievement() { Fx f = byName("exp_reveal"); if (f == null) f = byName("mc_chime"); if (f != null) play(f, 1.2f, 0.8f); }
 
     /** Every choice for a slot, "none" first: the mod's own sounds, or Minecraft's while Custom sounds is off. */
     public static List<String> choices() {

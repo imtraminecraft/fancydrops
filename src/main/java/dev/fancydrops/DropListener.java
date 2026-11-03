@@ -103,8 +103,9 @@ public final class DropListener {
         FancyConfig.initDrop(dc, dr.rank);
         boolean animate = c.masterAnimate && sc.enabled && dc.anim != 3, announce = c.masterAnnounce && c.chatEnabled("mythological") && sc.enabled && dc.announce;
         dlog("mythological: " + dr.name + " from " + src.id + "  animate=" + animate + " announce=" + announce);
-        if (!animate && !announce) return false;
         Item it = mythItem(src, dr, d.mf(), d.sim());
+        Achievements.report(it, "myth", dr.rank >= 2);                                 // every real drop counts for the ledger, shown or not
+        if (!animate && !announce) { lookupPrice(it, false); return false; }
         it.amount = Math.max(1, d.amount());
         it.announce = announce; it.rngPick = dc.anim == 2 || dc.anim == 0 && it.rank >= 2;
         lookupPrice(it, announce && !animate);
@@ -132,9 +133,19 @@ public final class DropListener {
         FancyConfig.initDrop(dc, dr.rank);
         boolean animate = c.masterAnimate && sc.enabled && dc.anim != 3, announce = c.masterAnnounce && c.chatEnabled(chatCat) && sc.enabled && dc.announce;
         dlog(what + ": " + dr.name + " from " + src.id + "  animate=" + animate + " announce=" + announce);
-        if (!animate && !announce) return null;
+        Achievements.report(it, groupOf(src), dr.rank >= 2);                          // every real drop counts for the ledger, shown or not
+        if (!animate && !announce) { lookupPrice(it, false); return null; }
         it.announce = announce; it.rngPick = dc.anim == 2 || dc.anim == 0 && it.rank >= 2;
         return new Plan(it, animate, announce, animate ? AnimationManager.typeOf(it, dc) : -1);
+    }
+
+    /** The ledger's name for where a drop came from: slayer, crops / feast / bounty / pests, or exp. */
+    static String groupOf(DropData.Source src) {
+        if (src == null) return "other";
+        if (SlayerData.byId(src.id) == src) return "slayer";
+        if (FarmData.byId(src.id) == src) return src.id;
+        if (src == ExperimentData.SOURCE) return "exp";
+        return "myth";
     }
 
     /** Looks the prices up and plays one or two planned drops as one animation. Returns true when an animation plays (the chat line is then replaced). */
@@ -407,8 +418,9 @@ public final class DropListener {
         FancyConfig.initDrop(dc, dr.rank);
         boolean animate = c.masterAnimate && sc.enabled && dc.anim != 3, announce = c.masterAnnounce && c.chatEnabled("mythological") && sc.enabled && dc.announce;
         dlog("treasure: " + dr.name + "  animate=" + animate + " announce=" + announce);
-        if (!animate && !announce) return false;
         Item it = treasureItem(dr);
+        Achievements.report(it, "treasure", dr.rank >= 2);
+        if (!animate && !announce) { lookupPrice(it, false); return false; }
         it.stateKey = cfgName;
         it.announce = announce; it.rngPick = dc.anim == 2 || dc.anim == 0 && it.rank >= 2;
         lookupPrice(it, announce && !animate);

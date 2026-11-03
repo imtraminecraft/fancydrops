@@ -87,6 +87,7 @@ final class CosmeticData {
         if (d == null) return false;
         Boolean f = force.get(d.id()); if (f != null) return f;
         if (Cosmetics.isAdmin() || grantsOf(Cosmetics.me()).contains("c:" + d.id())) return true;           // the owner has everything; single cosmetics can be handed out one by one
+        if (Achievements.hasCosmetic(d.id())) return true;                                                  // earned through an achievement (the server decides, not this computer)
         FancyConfig c = FancyConfig.get();
         switch (d.line()) {
             case BETA: return betaEligible();
@@ -104,7 +105,9 @@ final class CosmeticData {
     }
     /** What to tell a player who presses a locked cosmetic. */
     static String lockText(Def d) {
-        if (d.line() == Line.RARE || d.line() == Line.LEGENDARY) return "Cannot be unlocked yet. How to get it comes soon.";
+        Achievements.Ach a = Achievements.unlocking(d.id());
+        if (a != null) return "Achievement: " + a.name() + ". " + a.desc() + " (" + fmtN(a.progress()) + " / " + fmtN(a.goal()) + ")";
+        if (d.line() == Line.RARE || d.line() == Line.LEGENDARY || d.line() == Line.FREE) return "Earned through an achievement. Open Achievements to see which.";
         if (d.line() == Line.BETA) return "The beta is over. Only players who downloaded before v1.0 have it.";
         if (d.line() == Line.SPECIAL) return setById(d.set()).how();
         return switch (d.id()) {
@@ -114,6 +117,7 @@ final class CosmeticData {
             default -> "Find the hidden button.";
         };
     }
+    static String fmtN(double v) { return v >= 1e9 ? String.format(java.util.Locale.ROOT, "%.1fB", v / 1e9) : v >= 1e6 ? String.format(java.util.Locale.ROOT, "%.1fM", v / 1e6) : v >= 1e4 ? String.format(java.util.Locale.ROOT, "%.0fk", v / 1e3) : String.valueOf((long) v); }
     static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 4 : d.line() == Line.LEGENDARY ? 3 : d.line() == Line.BETA ? 2 : d.line() == Line.RARE ? 1 : 0; }
     static String rarityName(int r) { return r == 4 ? "Special" : r == 3 ? "Legendary" : r == 2 ? "Beta" : r == 1 ? "Rare" : "Common"; }
     static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set())) o.add(d); return o; }

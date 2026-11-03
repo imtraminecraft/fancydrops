@@ -59,7 +59,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             DropListener.tick(mc);
             tabTick++;                                                                        // who wears what changes rarely: look every quarter second, every tick only while a name is moving
             if (Cosmetics.tabMoving || tabTick % 5 == 0) Cosmetics.tickTab(mc);
-            if (tabTick % 5 == 0) Cosmetics.tickAura(mc);
+            if (tabTick % 5 == 0) { Cosmetics.tickAura(mc); Achievements.tick(mc); }
             Cosmetics.tickChat(mc);
         });
 
