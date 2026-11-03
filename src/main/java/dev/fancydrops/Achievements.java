@@ -48,7 +48,7 @@ final class Achievements {
         CompletableFuture.runAsync(() -> {
             try {
                 var res = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(b + "/profile/" + Cosmetics.code(me))).header("User-Agent", "FancyDrops").GET().build(), HttpResponse.BodyHandlers.ofString());
-                if (res.statusCode() != 200) { status = "The ledger server answered " + res.statusCode() + "."; failedAt = System.currentTimeMillis(); return; }
+                if (res.statusCode() != 200) { status = res.statusCode() == 404 ? "The ledger is being updated. Back soon." : "The ledger server answered " + res.statusCode() + "."; System.err.println("[FancyDrops] ledger: GET /profile answered " + res.statusCode() + " (the worker needs tools/worn-worker.js deployed)"); failedAt = System.currentTimeMillis(); return; }
                 profile = parse(JsonParser.parseString(res.body()).getAsJsonObject()); status = ""; CosmeticData.changed();
             } catch (Throwable t) { status = "Can't reach the ledger right now."; failedAt = System.currentTimeMillis(); }
             finally { fetching = false; }

@@ -1,5 +1,5 @@
 {
- "v": 2,
+ "v": 3,
  "sources": [
   {
    "id": "zombie",
@@ -21,26 +21,6 @@
      "odds": "RNGesus Incarnate",
      "chance": "1 in 250,000 (T5)",
      "rank": 3
-    },
-    {
-     "name": "Foul Flesh",
-     "id": "FOUL_FLESH",
-     "icon": "rotten_flesh",
-     "skull": false,
-     "amount": true,
-     "odds": "Occasional",
-     "chance": "1 in 7.35 (T5)",
-     "rank": 0
-    },
-    {
-     "name": "Revenant Viscera",
-     "id": "REVENANT_VISCERA",
-     "icon": "rotten_flesh",
-     "skull": false,
-     "amount": true,
-     "odds": "Occasional",
-     "chance": "1 in 7.35 (T5)",
-     "rank": 0
     },
     {
      "name": "Pestilence Rune I",
@@ -183,16 +163,6 @@
      "rank": 3
     },
     {
-     "name": "Toxic Arrow Poison",
-     "id": "TOXIC_ARROW_POISON",
-     "icon": "spider_eye",
-     "skull": false,
-     "amount": true,
-     "odds": "Occasional",
-     "chance": "1 in 7.86 (T5)",
-     "rank": 0
-    },
-    {
      "name": "Bite Rune I",
      "id": "BITE_RUNE;1",
      "icon": "player_head",
@@ -310,14 +280,6 @@
      "rank": 3
     },
     {
-     "name": "Tarantula Silk",
-     "id": "TARANTULA_SILK",
-     "icon": "string",
-     "odds": "Occasional",
-     "chance": "1 in 7.08 (T5)",
-     "rank": 0
-    },
-    {
      "name": "Enchanted Book (Bane of Arthropods VI)",
      "id": "ENCHANTMENT_BANE_OF_ARTHROPODS_6",
      "icon": "enchanted_book",
@@ -348,16 +310,6 @@
      "odds": "RNGesus Incarnate",
      "chance": "1 in 500,000 (T4)",
      "rank": 3
-    },
-    {
-     "name": "Hamster Wheel",
-     "id": "HAMSTER_WHEEL",
-     "icon": "wheat",
-     "skull": false,
-     "amount": true,
-     "odds": "Occasional",
-     "chance": "1 in 6.06 (T4)",
-     "rank": 0
     },
     {
      "name": "Spirit Rune I",
@@ -444,16 +396,6 @@
      "odds": "RNGesus Incarnate",
      "chance": "1 in 500,000 (T4)",
      "rank": 3
-    },
-    {
-     "name": "Twilight Arrow Poison",
-     "id": "TWILIGHT_ARROW_POISON",
-     "icon": "spider_eye",
-     "skull": false,
-     "amount": true,
-     "odds": "Occasional",
-     "chance": "1 in 7.87 (T4)",
-     "rank": 0
     },
     {
      "name": "Endersnake Rune I",
@@ -660,15 +602,6 @@
      "rank": 1
     },
     {
-     "name": "Bundle of Magma Arrows",
-     "id": "BUNDLE_OF_MAGMA_ARROWS",
-     "icon": "arrow",
-     "skull": false,
-     "odds": "Occasional",
-     "chance": "1 in 12.6 (T4)",
-     "rank": 0
-    },
-    {
      "name": "Mana Disintegrator",
      "id": "MANA_DISINTEGRATOR",
      "icon": "player_head",
@@ -778,15 +711,6 @@
      "rank": 3
     },
     {
-     "name": "Enchanted Blaze Powder",
-     "id": "ENCHANTED_BLAZE_POWDER",
-     "icon": "blaze_powder",
-     "odds": "Occasional",
-     "chance": "1 in 12.6 (T4)",
-     "amount": true,
-     "rank": 0
-    },
-    {
      "name": "Flawed Opal Gemstone",
      "id": "FLAWED_OPAL_GEM",
      "icon": "orange_dye",
@@ -837,15 +761,6 @@
      "rank": 3
     },
     {
-     "name": "Soultwist Rune I",
-     "id": "SOULTWIST_RUNE;1",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Occasional",
-     "chance": "1 in 9.35 (T5)",
-     "rank": 0
-    },
-    {
      "name": "Bubba Blister",
      "id": "BUBBA_BLISTER",
      "icon": "fermented_spider_eye",
@@ -889,15 +804,6 @@
      "odds": "Extraordinary",
      "chance": "1 in 83.3 (T5)",
      "rank": 2
-    },
-    {
-     "name": "Enchanted Book Bundle (Quantum)",
-     "id": "ENCHANTMENT_QUANTUM_5",
-     "icon": "enchanted_book",
-     "odds": "Occasional",
-     "chance": "1 in 8.35 (T5)",
-     "skull": false,
-     "rank": 0
     },
     {
      "name": "Enchanted Book Bundle (The One)",

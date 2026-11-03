@@ -35,11 +35,15 @@ public class FancyScreen extends Screen {
     private int tabAcc;
     private Tab prevTab = Tab.HOME; private long cosAt;
     /** The Cosmetics page is its own window (no sidebar), opened from the button at the bottom left of the menu. */
-    private boolean cosWin() { return tab == Tab.COSMETICS; }
+    private boolean cosWin() { return tab == Tab.COSMETICS || tab == Tab.STATS; }
+    /** Pages with their own door instead of a sidebar entry: Cosmetics (bottom left) and Achievements (bottom right). */
+    private static boolean hiddenTab(Tab t) { return t == Tab.COSMETICS || t == Tab.STATS; }
+    private int[] achBtn() { int x = Math.min(px + pw + 6, width - 28), y = py + ph - 22; return new int[]{x, y, x + 22, y + 22}; }          // outside the menu, bottom right, under the community buttons
+    private void openAch() { if (!hiddenTab(tab)) prevTab = tab; tab = Tab.STATS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; Achievements.refresh(true); }
     private int[] cosBtn() { int x = Math.max(2, px - 28), y = py + ph - 22; return new int[]{x, y, x + 22, y + 22}; }          // outside the menu, bottom right, under the community buttons
     private int[] adminBtn() { int[] c = cosBtn(); return new int[]{c[0], c[1] - 28, c[2], c[3] - 28}; }          // admin only: just above the Cosmetics button
-    private void openCos() { if (tab != Tab.COSMETICS) prevTab = tab; tab = Tab.COSMETICS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
-    private void closeCos() { tab = prevTab == Tab.COSMETICS ? Tab.HOME : prevTab; scroll = 0; selY = Float.NaN; tabChanged = System.currentTimeMillis(); }
+    private void openCos() { if (!hiddenTab(tab)) prevTab = tab; tab = Tab.COSMETICS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
+    private void closeCos() { tab = hiddenTab(prevTab) ? Tab.HOME : prevTab; scroll = 0; selY = Float.NaN; tabChanged = System.currentTimeMillis(); }
     private static int vi(int ord) { return switch (Tab.values()[ord]) { case HOME -> 0; case DROPS -> 1; case ANIMATIONS -> 2; case SOUNDS -> 3; case CHAT -> 4; case STATS -> 5; default -> 0; }; }          // the sidebar list: Settings sits pinned at the bottom, Cosmetics and Resources have their own doors
     private static int tabCol(Tab t) { return TAB_COL[t.ordinal()]; }
     private static int subCol(Tab t) { return Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.5f); }
@@ -302,7 +306,7 @@ public class FancyScreen extends Screen {
         super(Component.literal("FancyDrops"));
         prefetchAll();
         if (!skipIntro) { tab = Tab.HOME; subSel[Tab.HOME.ordinal()] = -1; dropSrc = null; dropSrcName = null; scroll = 0; query = ""; }          // a fresh /fd opens on the Home page itself, never on Resources
-        if (pendingStats) { pendingStats = false; tab = Tab.STATS; subSel[Tab.STATS.ordinal()] = -1; scroll = 0; }
+        if (pendingStats) { pendingStats = false; prevTab = Tab.HOME; openAch(); }
         if (pendingTab != null) { Tab pt = pendingTab.equals("sounds") ? Tab.SOUNDS : Tab.ANIMATIONS; pendingTab = null; tab = pt; subSel[pt.ordinal()] = -1; scroll = 0; query = ""; }          // /fd editor
         if (pendingCos) { pendingCos = false; prevTab = Tab.HOME; tab = Tab.COSMETICS; query = ""; scroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; }
         if (pendingSearch != null) { query = pendingSearch; pendingSearch = null; scroll = 0; }          // a fresh /fd opens on Home; coming back from a preview keeps your page
@@ -355,7 +359,7 @@ public class FancyScreen extends Screen {
         searchField.setMaxLength(30); searchField.setBordered(false);
         searchField.setHint(Component.literal("Search  (Ctrl+F)"));
         searchField.setValue(query);
-        searchField.setResponder(v -> { query = v; scroll = 0; sideScroll = 0; if (tab == Tab.COSMETICS && !v.isBlank()) closeCos(); });
+        searchField.setResponder(v -> { query = v; scroll = 0; sideScroll = 0; if (cosWin() && !v.isBlank()) closeCos(); });
         addRenderableWidget(searchField);
         numField = new EditBox(font, 0, 0, 40, 14, Component.literal("value"));
         numField.setMaxLength(4);
@@ -2339,7 +2343,7 @@ public class FancyScreen extends Screen {
             java.util.Set<String> shown = new java.util.HashSet<>();
             int pageCount = 0;
             for (Tab t : Tab.values()) {                                    // a page whose name matches opens whole: "mythological", "stats"... (Cosmetics has its own button)
-                if (t == Tab.COSMETICS) continue;
+                if (hiddenTab(t)) continue;
                 int ti = t.ordinal(); String[] sn = subNames(t);
                 boolean tabHit = t.label.toLowerCase(Locale.ROOT).contains(q);
                 List<Integer> want = new ArrayList<>();
@@ -2364,7 +2368,7 @@ public class FancyScreen extends Screen {
             tab = keepTab; System.arraycopy(keepSub, 0, subSel, 0, keepSub.length); dropSrc = keepSrc; dropSrcName = keepName;
             searching = true;
             for (Tab t : Tab.values()) {                                    // then single settings and drops anywhere that match
-                if (t == Tab.COSMETICS) continue;
+                if (hiddenTab(t)) continue;
                 rows.clear(); srcList.clear(); srcWip.clear(); buildTab(t);
                 for (Row r : rows) {
                     if (r.kind != NORMAL || r.field != null || r.noSearch || r.locked) continue;
@@ -2935,7 +2939,7 @@ public class FancyScreen extends Screen {
     private int[] tabBox(int i) {
         Tab ti = Tab.values()[i];
         if (ti == Tab.GENERAL) return new int[]{px + 8, py + ph - 26, px + sw - 6, py + ph - 4};
-        int y = (ti == Tab.COSMETICS ? -1000 : py + 70 - sideScroll + vi(i) * tp()) + (tab != Tab.GENERAL && i > tab.ordinal() ? Math.round(subExp * subH() * subs().length) + srcExtra() : 0);
+        int y = (hiddenTab(ti) ? -1000 : py + 70 - sideScroll + vi(i) * tp()) + (tab != Tab.GENERAL && i > tab.ordinal() ? Math.round(subExp * subH() * subs().length) + srcExtra() : 0);
         return new int[]{px + 8, y, px + sw - 6, y + tabBoxH()};
     }
     private int[] srcBox(int j) { int[] b = subBox(curSub()); int y = b[1] + subH() + j * srcH(); return new int[]{px + 26, y, px + sw - 6, y + srcH() - 1}; }
@@ -3066,7 +3070,7 @@ public class FancyScreen extends Screen {
         pill(g, px + 8, sy, sw - 14, tabBoxH(), Canvas.mix(Ui.ROW, Ui.ACCENT, 0.07f));
         g.fill(px + 8, sy + 3, px + 10, sy + tabBoxH() - 3, Ui.ACCENT);
         for (int i = 0; i < Tab.values().length; i++) {
-            Tab t = Tab.values()[i]; if (t == Tab.COSMETICS || (t == Tab.GENERAL) != (pass == 1)) continue; int[] b = tabBox(i);
+            Tab t = Tab.values()[i]; if (hiddenTab(t) || (t == Tab.GENERAL) != (pass == 1)) continue; int[] b = tabBox(i);
             boolean act = t == tab, hov = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3];
             float hv = anim("tab|" + i, hov && !act ? 1f : 0f, 48f);
             float tin = !animOn || born == 0L ? 1f : ease(((now - born) / 1000f - 0.08f - vi(i) * 0.045f) / 0.3f);        // the tabs slide in one after the other
@@ -3300,7 +3304,7 @@ public class FancyScreen extends Screen {
         placePopup();
         drawPopup(g, mx, my);
 
-        if (tab != Tab.COSMETICS) {                                                      // Cosmetics has no search
+        if (!cosWin()) {                                                                 // Cosmetics and Achievements have no search
             searchField.setBordered(false); searchField.setVisible(true); searchField.setX(cx + cw - 118); searchField.setY(py + 14); searchField.setWidth(112);
             pill(g, cx + cw - 124, py + 11, 124, 16, searchField.isFocused() ? Canvas.mix(Ui.PANEL2, Ui.ACCENT, 0.25f) : Ui.PANEL2);
             if (searchField.isFocused()) rout(g, cx + cw - 124, py + 11, 124, 16, Gfx.argb(190, Ui.ACCENT & 0xFFFFFF));
@@ -3315,6 +3319,22 @@ public class FancyScreen extends Screen {
             pill(g, cx + cw + 2, by, sh ? 5 : 3, bh, sh ? Ui.ACCENT : Ui.BORDER);
         }
         drawCommunity(g, mx, my);
+        {                                                                           // the Achievements button: outside the menu, bottom right, like the community buttons
+            int[] b = achBtn(); boolean hv = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3], on = tab == Tab.STATS;
+            float k = anim("achBtn", hv || on ? 1f : 0f, 40f), pulse = 0.5f + 0.5f * (float) Math.sin(fxNow / 700.0);
+            int ac = 0xFFE8B84A;
+            pill(g, b[0] - 2, b[1] - 2, 26, 26, Gfx.argb(Math.round(12 + 16 * pulse + 22 * k), ac & 0xFFFFFF));
+            pill(g, b[0], b[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, ac, 0.14f), Ui.ROW_HOVER, k));
+            rout(g, b[0], b[1], 22, 22, Gfx.argb(Math.round(70 + 60 * pulse + 90 * k), ac & 0xFFFFFF));
+            Icons.draw(g, ":trophy:", b[0] + 3, b[1] + 3 - Math.round(k), hv ? System.currentTimeMillis() : 2400L);
+            for (int q = 0; q < 3; q++) {
+                float ph = ((fxNow / 1500f) + q * 0.34f) % 1f, al = (float) Math.sin(ph * Math.PI);
+                int sx = b[0] + 1 + (q * 9 + 4) % 20, sy = b[1] + 1 + (q * 13 + 2) % 20 - Math.round(ph * 3f);
+                int sc = Gfx.argb(Math.round(170 * al), q % 2 == 0 ? 0xFFF4C8 : 0xFFD87A);
+                g.fill(sx, sy - 1, sx + 1, sy + 2, sc); g.fill(sx - 1, sy, sx + 2, sy + 1, sc);
+            }
+            if (hv) { String tt = "Achievements"; int w = Gfx.w(font, tt) + 8, x0 = Math.min(width - w - 2, b[2] - w); pill(g, x0, b[1] - 16, w, 13, 0xFF0D0F16); rout(g, x0, b[1] - 16, w, 13, Ui.BORDER); Gfx.text(g, font, tt, x0 + 4, b[1] - 13, Ui.TEXT); }
+        }
         if (!cosWin()) {                                                            // the Cosmetics button: outside the menu, bottom right
             int[] cb = cosBtn(); boolean ch = mx >= cb[0] && mx < cb[2] && my >= cb[1] && my < cb[3];
             float hv2 = anim("cosBtn", ch ? 1f : 0f, 40f); int ac = 0xFFC77DFF;
@@ -3504,6 +3524,7 @@ public class FancyScreen extends Screen {
         }
 
         if (button == 0 && !cosWin() && mx >= cosBtn()[0] && mx < cosBtn()[2] && my >= cosBtn()[1] && my < cosBtn()[3]) { openCos(); return true; }
+        if (button == 0 && in2(mx, my, achBtn())) { if (tab == Tab.STATS) closeCos(); else openAch(); return true; }
         if (button == 0 && !cosWin() && mx >= masterBox()[0] && mx < masterBox()[2] && my >= masterBox()[1] && my < masterBox()[3]) {
             FancyConfig mc = FancyConfig.get(); boolean on = !(mc.masterAnimate || mc.masterAnnounce);
             mc.setMaster(on, on); FancyConfig.save();
@@ -3519,7 +3540,7 @@ public class FancyScreen extends Screen {
             }
         } else
         for (int i = 0; i < Tab.values().length; i++) {
-            if (i == Tab.COSMETICS.ordinal()) continue;
+            if (hiddenTab(Tab.values()[i])) continue;
             int[] b = tabBox(i);
             if (i != Tab.GENERAL.ordinal() && my >= sideBottom()) continue;
             if (inSide(mx, my) && mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3]) { dropSrc = null; dropSrcName = null; if (tab != Tab.values()[i]) { tabChanged = System.currentTimeMillis(); } tab = Tab.values()[i]; subSel[tab.ordinal()] = -1; scroll = 0; open.removeIf(o -> o.startsWith("dd_")); return true; }

@@ -244,4 +244,56 @@ final class ShowScene {
             }
         }
     }
+
+    // ------------------------------------------------------------------ the finish round the item: one of its own for every scene
+    /** Drawn round each drop once it has appeared. p = seconds since then, a = how visible the item is. */
+    static void finish(float t, float p, float cx, float cy, float sz, float isc, int motif, int tint, boolean rng, float a) {
+        if (a <= 0.01f) return;
+        float R = (rng ? 30 : 24) * sz * isc, grow = eo(p / 0.6f);
+        switch (motif) {
+            case WATER -> {                                                                  // a halo of water turns round it, bubbles rise
+                for (int i = 0; i < 26; i++) { float an = t * 1.6f + i * 0.2416f; float r = R * grow * (0.95f + 0.05f * (float) Math.sin(t * 4 + i)); dot(cx + (float) Math.cos(an) * r, cy + (float) Math.sin(an) * r * 0.42f, i % 4 == 0 ? WHITE : 0x7FD4FF, (0.5f + 0.4f * (float) Math.sin(an * 2)) * a); }
+                for (int i = 0; i < (rng ? 16 : 9); i++) { float u = (t * 0.5f + rnd(i * 7)) % 1f, x = cx + (rnd(i * 3) - 0.5f) * R * 1.4f + (float) Math.sin(t * 3 + i) * 1.5f, y = cy + R * 0.6f - u * R * 2.2f;
+                    Ritual.ringE(x, y, 1.2f + rnd(i) * 1.3f, 1.2f + rnd(i) * 1.3f, 0xBDEBFF, (float) Math.sin(u * Math.PI) * 0.8f * a, 0, 6.2832f, 0, 0); }
+            }
+            case LAVA -> {                                                                   // a spiral of embers winds up round it, heat ripples
+                for (int i = 0; i < (rng ? 30 : 18); i++) { float u = (t * 0.45f + i / (rng ? 30f : 18f)) % 1f, an = u * 9f + i, r = R * (1f - 0.6f * u) * grow;
+                    dot(cx + (float) Math.cos(an) * r, cy + R * 0.5f - u * R * 1.8f + (float) Math.sin(an) * r * 0.3f, u < 0.3f ? 0xFFF0A0 : u < 0.7f ? 0xFFA030 : 0xFF4A10, (float) Math.sin(u * Math.PI) * a); }
+                for (int k = 0; k < 2; k++) { float u = (t * 0.7f + k * 0.5f) % 1f; Ritual.ringE(cx, cy, R * (0.4f + 0.8f * u), R * (0.4f + 0.8f * u) * 0.5f, 0xFF7A2E, (1f - u) * 0.5f * a, 0, 6.2832f, 0, 3); }
+            }
+            case SPOOKY -> {                                                                 // three wisps chase each other round it, each with a fading tail
+                for (int w = 0; w < 3; w++) for (int k = 0; k < 10; k++) { float an = t * 2.2f + w * 2.094f - k * 0.12f, r = R * grow * (0.85f + 0.15f * (float) Math.sin(t * 3 + w));
+                    float x = cx + (float) Math.cos(an) * r, y = cy + (float) Math.sin(an) * r * 0.55f - (float) Math.sin(t * 5 + w) * 2; int c = w == 1 ? 0xFF9A2E : 0xC8A8FF;
+                    if (k == 0) { Ritual.glowE(x, y, 4 * sz * isc, 4 * sz * isc, c, 0.6f * a); Ritual.glint(x, y, 1, WHITE, a); } else dot(x, y, c, (1f - k / 10f) * 0.8f * a); }
+            }
+            case WINTER -> {                                                                 // a snowflake of light grows behind it and turns slowly
+                for (int arm = 0; arm < 6; arm++) { float an = arm * 1.0472f + t * 0.3f, ux = (float) Math.cos(an), uy = (float) Math.sin(an), L = R * 1.1f * grow;
+                    Ritual.stroke(cx + ux * 4, cy + uy * 4, cx + ux * L, cy + uy * L, 0.5f, 0xDFF6FF, 0.75f * a);
+                    for (int b = 1; b <= 2; b++) { float bx = cx + ux * L * b / 3f, by = cy + uy * L * b / 3f, bl = L * 0.22f;
+                        Ritual.stroke(bx, by, bx + (float) Math.cos(an + 0.7f) * bl, by + (float) Math.sin(an + 0.7f) * bl, 0.4f, 0xBFE8FF, 0.6f * a);
+                        Ritual.stroke(bx, by, bx + (float) Math.cos(an - 0.7f) * bl, by + (float) Math.sin(an - 0.7f) * bl, 0.4f, 0xBFE8FF, 0.6f * a); }
+                    Ritual.glint(cx + ux * L, cy + uy * L, 1, WHITE, a * (0.6f + 0.4f * (float) Math.sin(t * 5 + arm))); }
+            }
+            case CRIMSON -> {                                                                // a ring of flame tongues licks upward round it
+                int n = rng ? 18 : 12;
+                for (int i = 0; i < n; i++) { float an = i * 6.2832f / n + t * 0.8f, bx = cx + (float) Math.cos(an) * R * grow, by = cy + (float) Math.sin(an) * R * grow * 0.45f + 4 * sz;
+                    float h = (4 + 4 * (0.5f + 0.5f * (float) Math.sin(t * 9 + i * 1.7f))) * sz * isc * (by > cy ? 1.2f : 0.8f);
+                    for (int k = 0; k < 5; k++) { float u = k / 5f; dot(bx + (float) Math.sin(t * 7 + i + u * 3) * 0.8f, by - u * h, u < 0.3f ? 0xFFE080 : u < 0.6f ? 0xFF8A2A : 0xC02A10, (1f - u) * a); } }
+            }
+            case MOBS -> {                                                                   // soul flames orbit it on a tilted ring
+                for (int i = 0; i < 5; i++) { float an = t * 1.8f + i * 1.2566f, x = (float) Math.cos(an) * R, y = (float) Math.sin(an) * R * 0.35f, d = 0.55f + 0.45f * (float) Math.sin(an);
+                    float fx = cx + x * 0.95f - y * 0.3f, fy = cy + x * 0.3f + y;
+                    for (int k = 0; k < 4; k++) dot(fx + (float) Math.sin(t * 8 + i + k) * 0.6f, fy - k * 1.3f, k == 0 ? 0xE8D0FF : 0xA060FF, (1f - k / 4f) * d * a);
+                    Ritual.glowE(fx, fy, 4 * sz * isc, 4 * sz * isc, 0xA060FF, 0.35f * d * a); }
+            }
+            default -> {                                                                     // DYE: petals of paint burst out and settle into a flower of its colour
+                int n = 8;
+                for (int i = 0; i < n; i++) { float an = i * 6.2832f / n + 0.3f * (float) Math.sin(t * 0.8f), r = R * eo(p / 0.5f) * (1f + 0.08f * (float) Math.sin(t * 3 + i));
+                    float px = cx + (float) Math.cos(an) * r, py = cy + (float) Math.sin(an) * r * 0.8f;
+                    Ritual.fillE(px, py, 3.2f * sz * isc, 2.2f * sz * isc, i % 2 == 0 ? tint : mix(tint, WHITE, 0.35f), 0.75f * a);
+                    dot(px - 0.6f, py - 0.6f, WHITE, 0.6f * a); }
+                if (rng) for (int j = 0; j < 20; j++) { float life = 1.1f, tau = (t + rnd(j * 5) * life) % life, an = rnd(j * 3) * 6.2832f; dot(cx + (float) Math.cos(an) * R * 1.6f * tau / life, cy + (float) Math.sin(an) * R * 1.2f * tau / life, j % 2 == 0 ? tint : WHITE, (1f - tau / life) * a); }
+            }
+        }
+    }
 }

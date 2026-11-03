@@ -1,21 +1,22 @@
 {
- "v": 1,
+ "v": 2,
  "sources": [
   {
-   "id": "ashfang",
-   "name": "Ashfang",
-   "boss": "Ashfang",
+   "id": "crimson_minibosses",
+   "name": "Crimson Minibosses",
+   "boss": "Crimson Minibosses",
    "icon": "blaze_powder",
    "color": "#FF6A3A",
+   "group": "crimson",
    "drops": [
     {
-     "name": "Magma Urchin",
-     "id": "MAGMA_URCHIN",
-     "icon": "paper",
+     "name": "Ragnarock",
+     "id": "RAGNAROCK_AXE",
+     "icon": "golden_sword",
      "skull": false,
-     "odds": "Occasional",
-     "chance": "1 in 50",
-     "rank": 0
+     "odds": "Rare",
+     "chance": "1 in 200",
+     "rank": 1
     },
     {
      "name": "Fire Veil Wand",
@@ -25,53 +26,6 @@
      "odds": "Rare",
      "chance": "1 in 200",
      "rank": 1
-    }
-   ],
-   "group": "crimson"
-  },
-  {
-   "id": "bladesoul",
-   "name": "Bladesoul",
-   "boss": "Bladesoul",
-   "icon": "blaze_powder",
-   "color": "#FF6A3A",
-   "drops": [
-    {
-     "name": "Magma Urchin",
-     "id": "MAGMA_URCHIN",
-     "icon": "paper",
-     "skull": false,
-     "odds": "Occasional",
-     "chance": "1 in 50",
-     "rank": 0
-    },
-    {
-     "name": "Ragnarock",
-     "id": "RAGNAROCK_AXE",
-     "icon": "golden_sword",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 200",
-     "rank": 1
-    }
-   ],
-   "group": "crimson"
-  },
-  {
-   "id": "barbarian_duke_x",
-   "name": "Barbarian Duke X",
-   "boss": "Barbarian Duke X",
-   "icon": "blaze_powder",
-   "color": "#FF6A3A",
-   "drops": [
-    {
-     "name": "Magma Urchin",
-     "id": "MAGMA_URCHIN",
-     "icon": "paper",
-     "skull": false,
-     "odds": "Occasional",
-     "chance": "1 in 50",
-     "rank": 0
     },
     {
      "name": "Flaming Fist",
@@ -81,25 +35,6 @@
      "odds": "Rare",
      "chance": "1 in 200",
      "rank": 1
-    }
-   ],
-   "group": "crimson"
-  },
-  {
-   "id": "mage_outlaw",
-   "name": "Mage Outlaw",
-   "boss": "Mage Outlaw",
-   "icon": "blaze_powder",
-   "color": "#FF6A3A",
-   "drops": [
-    {
-     "name": "Magma Urchin",
-     "id": "MAGMA_URCHIN",
-     "icon": "paper",
-     "skull": false,
-     "odds": "Occasional",
-     "chance": "1 in 50",
-     "rank": 0
     },
     {
      "name": "Fire Freeze Staff",
@@ -119,24 +54,24 @@
      "chance": "1 in 200",
      "rank": 1
     }
-   ],
-   "group": "crimson"
+   ]
   },
   {
    "id": "magma_boss",
    "name": "Magma Boss",
    "boss": "Magma Boss",
-   "icon": "blaze_powder",
+   "icon": "magma_cream",
    "color": "#FF6A3A",
+   "group": "crimson",
    "drops": [
     {
-     "name": "Magma Urchin",
-     "id": "MAGMA_URCHIN",
-     "icon": "paper",
-     "skull": false,
-     "odds": "Occasional",
-     "chance": "1 in 50",
-     "rank": 0
+     "name": "Legendary Magma Cube Pet",
+     "id": "MAGMA_CUBE;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare",
+     "chance": "1 in 250",
+     "rank": 1
     },
     {
      "name": "Epic Magma Cube Pet",
@@ -164,18 +99,63 @@
      "odds": "Rare",
      "chance": "1 in 200",
      "rank": 1
+    }
+   ]
+  },
+  {
+   "id": "isle_mobs",
+   "name": "Crimson Isle Mobs",
+   "boss": "Crimson Isle Mobs",
+   "icon": "blaze_rod",
+   "color": "#FF6A3A",
+   "group": "crimson",
+   "drops": [
+    {
+     "name": "Sword of Bad Health",
+     "id": "SWORD_OF_BAD_HEALTH",
+     "icon": "wooden_sword",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 2,000",
+     "rank": 3
     },
     {
-     "name": "Legendary Magma Cube Pet",
-     "id": "MAGMA_CUBE;4",
+     "name": "Rampart Helmet",
+     "id": "RAMPART_HELMET",
      "icon": "player_head",
      "skull": true,
      "odds": "Rare",
-     "chance": "1 in 250",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Chestplate",
+     "id": "RAMPART_CHESTPLATE",
+     "icon": "leather_chestplate",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Leggings",
+     "id": "RAMPART_LEGGINGS",
+     "icon": "leather_leggings",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
+     "rank": 1
+    },
+    {
+     "name": "Rampart Boots",
+     "id": "RAMPART_BOOTS",
+     "icon": "leather_boots",
+     "skull": false,
+     "odds": "Rare",
+     "chance": "1 in 400",
      "rank": 1
     }
-   ],
-   "group": "crimson"
+   ]
   }
  ]
 }

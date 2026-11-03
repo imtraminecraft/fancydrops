@@ -585,8 +585,8 @@ final class Ritual {
                 if (tau < 0.30f) {
                     int seed = k * 101 + (int) (op * 28);
                     float fl = (rnd(seed) > 0.3f ? 1f : 0.45f) * (1f - tau / 0.30f), x0 = icx + (rnd(k * 9) - 0.5f) * 36;
-                    if (!slayerMode) { bolt(x0, -4, icx + (rnd(k * 5) - 0.5f) * 5, gy, seed, energy, fl, 5, true);
-                    if (k == 2) bolt(x0 - 22, -4, icx - 6, gy, seed + 400, energy, fl * 0.7f, 4, false); }
+                    if (!slayerMode) { bolt(x0 * 0.5f + icx * 0.5f, Math.max(0f, icy - 70 * sz), icx + (rnd(k * 5) - 0.5f) * 5, gy, seed, energy, fl, 5, true);
+                    if (k == 2) bolt(x0 * 0.5f + icx * 0.5f - 14, Math.max(0f, icy - 66 * sz), icx - 6, gy, seed + 400, energy, fl * 0.7f, 4, false); }
                     glowE(icx, gy, 46 * sz * (1f - tau / 0.3f * 0.5f), 20 * sz, WHITE, 0.85f * fl);
                 }
                 if (tau < 0.7f) for (int j = 0; j < 12; j++) {                              // sparks thrown off the impact
@@ -609,7 +609,7 @@ final class Ritual {
         if (p < 0f) return;
         if (nod) {
             float fz = cl(p / 0.5f);
-            if (p < 0.4f && !slayerMode) { int seed = (int) (p * 20) + 900; float fl = (rnd(seed) > 0.4f ? 0.8f : 0.25f) * (1f - p / 0.4f); bolt(icx + 8, 18 * sz, icx, gy, seed, GREY, fl, 4, false); }
+            if (p < 0.4f && !slayerMode) { int seed = (int) (p * 20) + 900; float fl = (rnd(seed) > 0.4f ? 0.8f : 0.25f) * (1f - p / 0.4f); bolt(icx + 8, Math.max(0f, icy - 50 * sz), icx, gy, seed, GREY, fl, 4, false); }
             glowE(icx, gy - 4, (22 - 14 * fz) * sz, (14 - 8 * fz) * sz, tre ? GOLD : EMBER, 0.55f * (1f - fz) * bg);
             smoke(p, icx, gy, rx, sz, bg);
             if (tre) bone(p, icx, gy, sz);
@@ -667,30 +667,63 @@ final class Ritual {
             if (tre) { float cu = sm(p / 0.6f); chest(icx, gy - 13 * sz * cu - 2, sz * 1.0f, sm((p - 0.15f) / 0.35f), bg); }
             return;
         }
-        // ---- RNG: the big finish
-        for (int j = 0; j < 3; j++) {                                                      // shockwaves along the ground
-            float tau = (p - j * 0.14f) / 1.1f; if (tau < 0 || tau > 1) continue;
-            ringE(icx, gy, rx * (0.5f + 3.6f * eo(tau)), ry * (0.5f + 3.6f * eo(tau)), j == 1 ? WHITE : rc, (1f - tau) * 0.9f * bg, 0, 6.2832f, 0, 0);
-        }
-        float ab = p / 0.9f; if (ab < 1f) ringE(cx0, cy0, 12 + 150 * eo(ab), 12 + 150 * eo(ab), mixc(rc, WHITE, 0.6f), (1f - ab) * 0.8f, 0, 6.2832f, 0, 0);
-        rays(cx0, cy0, t * 0.35f, 14, mixc(rc, WHITE, 0.5f), 0.55f * bg * sm(p / 0.6f), 190);
-        rays(cx0, cy0, -t * 0.22f + 0.1f, 9, rc, 0.30f * bg * sm(p / 0.8f), 150);
-        glowE(cx0, cy0, 70 * sz * pulse, 70 * sz * pulse, rc, 0.55f * (bg * 0.6f + 0.4f * itemA));
-        for (float off : offs) {                                                           // each drop gets its own glow, halos, sparks and fountain
-            float cxo = cx0 + off;
-            glowE(cxo, cy0, 26 * sz * isc, 26 * sz * isc, WHITE, 0.3f * itemA);
-            ringE(cxo, cy0, 36 * sz * isc, 36 * sz * isc, rc, 0.8f * itemA, 0, 6.2832f, t * 0.9f, 4);                   // turning halos
-            ringE(cxo, cy0, 45 * sz * isc, 45 * sz * isc, mixc(rc, WHITE, 0.5f), 0.55f * itemA, 0, 6.2832f, -t * 0.6f, 2);
-            orbit(t, cxo, cy0, 40 * sz * isc, 12 * sz * isc, 0.35f, 8, rc, 0.95f * itemA, 1.8f);
-            orbit(t, cxo, cy0, 34 * sz * isc, 10 * sz * isc, -0.5f, 6, WHITE, 0.8f * itemA, -2.4f);
-            for (int k = 0; k < 5; k++) {                                                      // lightning round the item, never the same twice
-                int seed = k * 17 + (int) (t * 14) * 5;
-                float an = rnd(seed) * 6.2832f, len = (26 + 24 * rnd(seed + 1)) * sz;
-                if (rnd(seed + 2) < 0.55f * itemA) bolt(cxo + (float) Math.cos(an) * 14 * sz, cy0 + (float) Math.sin(an) * 14 * sz, cxo + (float) Math.cos(an) * (14 * sz + len), cy0 + (float) Math.sin(an) * (14 * sz + len), seed, rc, 0.9f * itemA, 3, false);
+        // ---- RNG: a finish of its own for each scene, kept inside a small stage round the item (never over the whole screen)
+        float R = 46 * sz * isc;                                                           // the stage radius the finish stays inside
+        float flash = 1f - cl(p / 0.35f);
+        glowE(cx0, cy0, R * (0.9f + 0.5f * flash), R * (0.9f + 0.5f * flash), mixc(rc, WHITE, 0.4f), (0.35f + 0.5f * flash) * (bg * 0.5f + 0.5f * itemA));   // a local flash, then a soft glow
+        if (tre) {                                                                         // TREASURE: the chest bursts open, a fountain of coins and gold glints
+            float cu = sm(p / 0.7f); chest(icx, gy - 15 * sz * cu - 2, sz * 1.5f, sm((p - 0.4f) / 0.4f), bg);
+            for (int j = 0; j < 36; j++) {
+                float life = 1.6f, tau = (p + rnd(j * 7) * life) % life, fl = tau / life;
+                float vx = (rnd(j * 3 + 1) - 0.5f) * 70 * sz, vy = -(60 + rnd(j * 5 + 2) * 50) * sz;
+                float x = icx + vx * tau, y = gy - 10 * sz + vy * tau + 120 * sz * tau * tau;
+                int c = j % 3 == 0 ? 0xFFF4A0 : GOLD; float al = (1f - fl) * itemA;
+                fillE(x, y, 1.6f, 1.1f, c, al); dot(x - 0.5f, y - 0.6f, WHITE, al * 0.8f);
             }
-            fountain(t, cxo, cy0 + 6, O + 0.1f, offs.length > 1 ? 34 : 50, rc, itemA, 1.5f, 0.85f);
+            for (float off : offs) orbit(t, cx0 + off, cy0, 24 * sz * isc, 8 * sz * isc, 0.2f, 7, GOLD, 0.9f * itemA, 1.6f);
+            return;
         }
-        if (tre) { float cu = sm(p / 0.7f); chest(icx, gy - 15 * sz * cu - 2, sz * 1.5f, sm((p - 0.4f) / 0.4f), bg); }
+        if (slayerMode) {                                                                  // SLAYER: three blade streaks cross the item, a crescent of the boss's colour turns round it, embers fly
+            for (int k = 0; k < 3; k++) {
+                float tau = p - k * 0.09f; if (tau < 0f || tau > 0.7f) continue;
+                float an = -0.6f + k * 0.62f + (rnd(slSeed + k) - 0.5f) * 0.3f, len = R * 1.15f, u = eo(tau / 0.16f), fade = 1f - cl((tau - 0.16f) / 0.5f);
+                float ux = (float) Math.cos(an), uy = (float) Math.sin(an), x0 = cx0 - ux * len, y0 = cy0 - uy * len;
+                stroke(x0, y0, x0 + ux * 2 * len * u, y0 + uy * 2 * len * u, 1.4f, energy, 0.55f * fade);
+                stroke(x0, y0, x0 + ux * 2 * len * u, y0 + uy * 2 * len * u, 0.5f, WHITE, fade);
+            }
+            for (float off : offs) {
+                float cxo = cx0 + off;
+                ringE(cxo, cy0, R * 0.62f, R * 0.62f, energy, 0.85f * itemA, t * 2.2f, t * 2.2f + 2.2f, 0, 0);
+                ringE(cxo, cy0, R * 0.62f, R * 0.62f, energy, 0.85f * itemA, t * 2.2f + 3.14f, t * 2.2f + 5.34f, 0, 0);
+                ringE(cxo, cy0, R * 0.5f, R * 0.5f, mixc(energy, WHITE, 0.5f), 0.5f * itemA, -t * 1.4f, -t * 1.4f + 1.2f, 0, 0);
+                glowE(cxo, cy0, 20 * sz * isc, 20 * sz * isc, WHITE, 0.25f * itemA);
+            }
+            for (int j = 0; j < 30; j++) {
+                float life = 1.2f, tau = (t + rnd(j * 11) * life) % life, fl = tau / life, an = rnd(j * 3) * 6.2832f, sp = (0.5f + rnd(j * 5)) * R;
+                dot(cx0 + (float) Math.cos(an) * sp * fl, cy0 + (float) Math.sin(an) * sp * fl * 0.8f - fl * 10 * sz, j % 3 == 0 ? 0xFFE0A0 : energy, (1f - fl) * itemA);
+            }
+            return;
+        }
+        // MYTHOLOGICAL: a crown of stars draws itself round the item, lines join them into a constellation, lightning jumps from star to star
+        for (float off : offs) {
+            float cxo = cx0 + off; int n = 7;
+            float[] sx = new float[n], sy = new float[n];
+            for (int i = 0; i < n; i++) { float an = -1.5708f + i * 6.2832f / n + t * 0.35f; sx[i] = cxo + (float) Math.cos(an) * R * 0.72f; sy[i] = cy0 + (float) Math.sin(an) * R * 0.72f * 0.9f; }
+            for (int i = 0; i < n; i++) {
+                float on = cl((p - 0.1f - i * 0.06f) / 0.2f); if (on <= 0f) continue;
+                int j2 = (i + 3) % n; float ln = cl((p - 0.3f - i * 0.06f) / 0.3f);
+                if (ln > 0f) stroke(sx[i], sy[i], lerp(sx[i], sx[j2], ln), lerp(sy[i], sy[j2], ln), 0.4f, mixc(rc, WHITE, 0.5f), 0.55f * itemA);
+                glowE(sx[i], sy[i], 5 * sz * isc, 5 * sz * isc, rc, 0.6f * on * itemA);
+                glint(sx[i], sy[i], 2, WHITE, on * itemA * (0.7f + 0.3f * (float) Math.sin(t * 6 + i)));
+            }
+            for (int k = 0; k < 2; k++) {
+                int seed = k * 17 + (int) (t * 12) * 5, i = (int) (rnd(seed) * n), j2 = (i + 1 + (int) (rnd(seed + 1) * 2)) % n;
+                if (p > 0.5f && rnd(seed + 2) < 0.6f) bolt(sx[i], sy[i], sx[j2], sy[j2], seed, mixc(rc, CYAN, 0.4f), 0.8f * itemA, 3, false);
+            }
+            float sw = p / 0.8f; if (sw < 1f) ringE(cxo, cy0, R * (0.2f + 0.8f * eo(sw)), R * (0.2f + 0.8f * eo(sw)) * 0.9f, WHITE, (1f - sw) * 0.8f, 0, 6.2832f, 0, 0);
+            glowE(cxo, cy0, 20 * sz * isc, 20 * sz * isc, WHITE, 0.25f * itemA);
+            fountain(t, cxo, cy0 + 6, O + 0.1f, offs.length > 1 ? 16 : 26, rc, itemA, 1.2f, 0.45f);
+        }
     }
 
 
@@ -705,16 +738,16 @@ final class Ritual {
         float swell = 1f - cl(p / 0.9f);
         glowE(icx, gy, 50 * sz * (1.1f + (rng ? 1.6f : 0.5f) * eo(p / 0.9f)), 13 * sz * (1.6f + (rng ? 1.6f : 0.5f) * eo(p / 0.9f)), energy, (rng ? 0.5f : 0.4f) * swell * bg);          // the ground gives a soft flash of light
         if (rng) {
-            rays(cx0, cy0, t * 0.30f, 14, mixc(energy, WHITE, 0.5f), 0.5f * bg * sm(p / 0.6f), 190);
-            rays(cx0, cy0, -t * 0.20f + 0.1f, 9, mixc(energy, rc, 0.4f), 0.28f * bg * sm(p / 0.8f), 150);
-            glowE(cx0, cy0, 76 * sz * pulse, 76 * sz * pulse, mixc(energy, rc, 0.5f), 0.5f * (bg * 0.6f + 0.4f * itemA));
+            rays(cx0, cy0, t * 0.30f, 10, mixc(energy, WHITE, 0.5f), 0.45f * bg * sm(p / 0.6f), 52 * sz * isc);
+            glowE(cx0, cy0, 44 * sz * isc * pulse, 44 * sz * isc * pulse, mixc(energy, rc, 0.5f), 0.5f * (bg * 0.6f + 0.4f * itemA));
         } else {
-            rays(cx0, cy0, t * 0.2f, 8, mixc(energy, WHITE, 0.6f), 0.22f * bg * sm(p / 0.6f), 90);
+            rays(cx0, cy0, t * 0.2f, 8, mixc(energy, WHITE, 0.6f), 0.22f * bg * sm(p / 0.6f), 40 * sz * isc);
         }
         for (float off : offs) {
             float cxo = cx0 + off, R = 16 * sz * isc;
             glowE(cxo, cy0, (rng ? 40 : 32) * sz * isc * pulse, (rng ? 40 : 32) * sz * isc * pulse, mixc(rc, energy, 0.35f), (rng ? 0.5f : 0.45f) * itemA);
             glowE(cxo, cy0, 15 * sz * isc, 15 * sz * isc, WHITE, 0.22f * itemA);
+            if (showMotif >= 0) { ShowScene.finish(t, p, cxo, cy0, sz, isc, showMotif, showTint, rng, itemA); continue; }          // fishing, Crimson, mobs, dyes: a finish of their own
             int n = rng ? 22 : 12;
             for (int i = 0; i < n; i++) {                                                  // petals, leaves or sparks drift up round the item and turn as they go
                 float u = (t * (rng ? 0.55f : 0.34f) + rnd(i * 7)) % 1f, ang = i * 2.4f + t * 0.6f;
@@ -728,7 +761,7 @@ final class Ritual {
                 float ph = (t * 1.3f + rnd(k * 11 + 3) * 4f) % 1.6f; if (ph > 0.5f) continue;
                 glint(cxo + (rnd(k * 5 + 2) - 0.5f) * 2.4f * R, cy0 + (rnd(k * 9 + 4) - 0.5f) * 2.2f * R, 2 + (k % 2), k % 2 == 0 ? WHITE : pal[1], (1f - ph / 0.5f) * itemA);
             }
-            if (rng) fountain(t, cxo, cy0 + 6, O + 0.1f, offs.length > 1 ? 30 : 46, pal[0], itemA, 1.5f, 0.8f);
+            if (rng) fountain(t, cxo, cy0 + 6, O + 0.1f, offs.length > 1 ? 18 : 28, pal[0], itemA, 1.2f, 0.45f);
         }
     }
 
@@ -849,6 +882,15 @@ final class Ritual {
     static final float TAIL = 3.2f;
     /** The scene is drawn 25% smaller than before: that is the new 100% of the Size slider. */
     static final float SMALLER = 0.6f;
+    /** The scene (everything round the item) is drawn this much smaller than the item's own scale, so it never takes over the screen. */
+    static final float SCENE_K = 0.72f;
+    /** Keeps the painted scene inside a small stage round the item: a soft ellipse, wider only when several drops sit side by side. */
+    static void stage(Anim a, float icy, float ssz, float sz, float isc) {
+        float[] o = offsetsOf(a, sz, isc); float span = 0f; for (float v : o) span = Math.max(span, Math.abs(v));
+        float k = ssz / (SMALLER * SCENE_K);
+        float rx = Math.max(76f * k, span + 36f * k), ry = 66f * k, cy = icy + 4f * ssz;
+        cv.mask(CW / 2f, cy, rx, ry, 0.7f);
+    }
 
     /** The scene canvas alone (320x180 ARGB) at time t: what AnimFrames writes out as pictures. */
     static int[] snapshot(Anim a, float t) {
@@ -858,11 +900,11 @@ final class Ritual {
         float S = Math.max(3.6f, cfg.secs), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale) * 1.5f;
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
-        float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
+        float barH = CH * Math.max(0.031f, Math.min(0.094f, c.barPx / 160f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
         if (c.animPos == 0) icy = topIcy(sz, hi, rng && cfg.bars ? barH + 1 : 0f);
         if (rng && cfg.bars) icy = Math.max(c.animPos == 0 ? 0f : barH + hi + 4, Math.min(CH - barH - hi - 14 * sz, icy));
-        begin(a, sz, isc);
-        try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { end(); }
+        begin(a, sz, isc); float ssz = sz * SCENE_K;
+        try { paint(t, tre, type, S, ssz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); stage(a, icy, ssz, sz, isc); } finally { end(); }
         return cv.px.clone();
     }
 
@@ -880,13 +922,13 @@ final class Ritual {
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
         float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;
-        float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)) * (rng ? 1f : Math.max(0.5f, Math.min(1f, c.normalSize / 100f))), sz = SMALLER * csz, isc = Math.max(0.4f, c.itemScale) * 1.5f;          // Normal and No Drops can play smaller, so they stay out of the way
+        float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)) * (rng ? 1f : Math.max(0.5f, Math.min(1f, c.normalSize / 100f))), sz = SMALLER * csz, ssz = sz * SCENE_K, isc = Math.max(0.4f, c.itemScale) * 1.5f;          // Normal and No Drops can play smaller, so they stay out of the way
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         boolean barsOn = (rng && cfg.bars) || TextFx.barsOnly, blurOn = rng && cfg.blur && !TextFx.barsOnly && !TextFx.itemOnly;
 
         // where everything is (canvas units)
-        float barH = CH * Math.max(0.052f, Math.min(0.156f, c.barPx / 96f));
+        float barH = CH * Math.max(0.031f, Math.min(0.094f, c.barPx / 160f));
         float hi = 16 * sz * isc * (rng ? 1.2f : 1f);
         float icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
         if (c.animPos == 0) icy = topIcy(sz, hi, barsOn ? barH + 1 : 0f);
@@ -902,9 +944,9 @@ final class Ritual {
         boolean sceneOff = TextFx.textOnly || TextFx.itemOnly || TextFx.barsOnly;            // the Changes previews show only the part being edited
         if (!sceneOff) {
             // ---- the blur: the world dims and softens at the edges (RNG, switchable)
-            if (blurOn && barSlide > 0.01f) {
-                g.fill(0, 0, W, H, Gfx.argb(Math.round(110 * barSlide), 0x04050E));
-                for (int i = 0; i < 7; i++) { int in = Math.round(W * 0.05f * i), inY = Math.round(H * 0.05f * i); int al = Math.round(26 * barSlide); g.fill(0, 0, W, inY + 1, Gfx.argb(al, 0x000000)); g.fill(0, H - inY - 1, W, H, Gfx.argb(al, 0x000000)); g.fill(0, 0, in + 1, H, Gfx.argb(al, 0x000000)); g.fill(W - in - 1, 0, W, H, Gfx.argb(al, 0x000000)); }
+            if (blurOn && barSlide > 0.01f) {                                             // a soft shade only behind the stage, so the item stands out (the rest of the screen stays as it is)
+                int rr = Math.round(78 * csz * u), ccy = Math.round(icy * u);
+                for (int i = 0; i < 6; i++) discFill(g, W / 2, ccy, Math.round(rr * (1f - i * 0.13f)), Gfx.argb(Math.round(16 * barSlide), 0x04050E));
             }
             int[] edited = AnimFrames.override(a, t);                                         // a frame you edited in config/fancydrops/art/animations replaces the drawn one
             if (edited != null && edited.length == cv.px.length) System.arraycopy(edited, 0, cv.px, 0, edited.length);
@@ -914,14 +956,14 @@ final class Ritual {
                 boolean reuse = id.equals(upKey) && nowMs >= upMs && nowMs - upMs < (AnimationManager.previewing ? 33 : 15);       // the pixel scene repaints at most ~60 fps in game (~30 in menu previews): at 144 fps the picture barely changes between frames
                 if (!reuse) {
                     begin(a, sz, isc);
-                    try { paint(t, tre, type, S, sz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); } finally { end(); }
+                    try { paint(t, tre, type, S, ssz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); stage(a, icy, ssz, sz, isc); } finally { end(); }
                     SceneTexture.upload(cv); upKey = id; upMs = nowMs;
                 }
             }
             if (edited != null && edited.length == cv.px.length) SceneTexture.upload(cv);
             if (!SceneTexture.draw(g, cv, sx, sy, W, H, 1f)) { int cell = Math.max(1, Math.round((float) W / CW)); cv.flush((x0, y0, x1, y1, col) -> g.fill(x0 + sx, y0 + sy, x1 + sx, y1 + sy, col), 0, 0, cell, 1f); }
-            if (rng && p > 0 && p < 0.45f) g.fill(0, 0, W, H, Gfx.argb(Math.round(235 * (1f - p / 0.45f) * (1f - p / 0.45f)), 0xFFFFFF));                  // the flash
-            else if (!tre && !rng) for (int k = 0; k < 3; k++) { float tau = t - 0.34f * O - k * 0.24f * O; if (tau > 0 && tau < 0.18f) g.fill(0, 0, W, H, Gfx.argb(Math.round(10 * (1f - tau / 0.18f)), 0xD8F6FF)); }          // only a faint flicker for everyday drops: the screen never flashes
+            if (rng && p > 0 && p < 0.45f) { float fl = (1f - p / 0.45f) * (1f - p / 0.45f); int rr = Math.round(46 * csz * u * (1f + 0.4f * p)); for (int i = 0; i < 4; i++) discFill(g, W / 2 + sx, Math.round(icy * u) + sy, Math.round(rr * (1f - i * 0.22f)), Gfx.argb(Math.round(60 * fl), 0xFFFFFF)); }                  // the flash: a burst of light on the item, not the whole screen
+
         }
 
         // ---- the bars
@@ -955,7 +997,7 @@ final class Ritual {
             if (pi < 0f) continue;
             float grow = 0.25f + 0.75f * eob(pi / 0.7f);
             float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f) * sizeOf(n);
-            float gcx = CW / 2f * W / CW + sx + offs[Math.min(ii, offs.length - 1)] * u, gcy = -liftOf(ii, n, sz) * u + itemY(tb, p, a.group.equals("exp") ? BookScene.baseY(icy, sz) : icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
+            float gcx = CW / 2f * W / CW + sx + offs[Math.min(ii, offs.length - 1)] * u, gcy = -liftOf(ii, n, sz) * u + itemY(tb, p, a.group.equals("exp") ? BookScene.baseY(icy, ssz) : icy + 22 * ssz, icy, ssz, c.itemBob, c.itemBobAmp) * u + sy;
             if (c.itemGlow > 0.02f) {                                                          // the glow behind the item (Item changes > Glow), in the drop's colour
                 int gr = Math.round(s * 11f), gcol = mixc(rc, WHITE, 0.25f); float ga = Math.max(0f, Math.min(1f, itemA)) * Math.min(1f, c.itemGlow);
                 for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }

@@ -10,6 +10,21 @@ final class Canvas {
 
     void clear() { java.util.Arrays.fill(px, 0); }
 
+    /** Fades everything outside an ellipse: full inside `inner` (0..1 of the radius), gone at the edge. Keeps a scene inside its stage. */
+    void mask(float cx, float cy, float rx, float ry, float inner) {
+        for (int y = 0; y < h; y++) {
+            float dy = (y + 0.5f - cy) / ry, dy2 = dy * dy;
+            for (int x = 0; x < w; x++) {
+                int i = y * w + x, d = px[i]; if (d == 0) continue;
+                float dx = (x + 0.5f - cx) / rx, r = (float) Math.sqrt(dx * dx + dy2);
+                if (r <= inner) continue;
+                if (r >= 1f) { px[i] = 0; continue; }
+                float f = 1f - (r - inner) / (1f - inner); f = f * f * (3 - 2 * f);
+                px[i] = (Math.round((d >>> 24) * f) << 24) | (d & 0xFFFFFF);
+            }
+        }
+    }
+
     /** Source-over blend of one cell. */
     void set(int x, int y, int argb) {
         if (x < 0 || y < 0 || x >= w || y >= h) return;
