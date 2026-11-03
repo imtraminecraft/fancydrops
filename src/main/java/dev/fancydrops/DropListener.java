@@ -33,6 +33,15 @@ public final class DropListener {
             if (slayerLine(line, now)) continue;                           // "SLAYER BOSS! The ... spawned!" and "SLAYER QUEST COMPLETE!": noted, never hidden
             if (expLine(line, now)) { drop = true; continue; }             // the Superpairs reward lines would show the items early
             if (playTreasureLine(line)) { drop = true; continue; }         // a treasure from a Mythological burrow
+            String[] dye = ChatParser.parseDye(line);                         // "WOW! tra found Flame Dye!": everyone sees it, only your own dye plays
+            if (dye != null) {
+                String me = Minecraft.getInstance().getUser() == null ? null : Minecraft.getInstance().getUser().getName();
+                if (me == null || !dye[0].equalsIgnoreCase(me)) { dlog("dye found by " + dye[0] + " (not you): " + dye[1]); continue; }
+                dlog("heard: " + line.trim() + "  ->  your dye: " + dye[1]);
+                if (ExtraData.sourceOf(dye[1]) != null && playExtra(new ChatParser.Drop("DYE", dye[1], 1, null))) drop = true;
+                else dlog("left in chat (not a listed dye): " + dye[1]);
+                continue;
+            }
             ChatParser.Drop d = ChatParser.parseDrop(line);
             if (d == null) { if (line.toUpperCase(java.util.Locale.ROOT).contains("DROP!")) dlog("not a drop line I can read: " + line.trim()); continue; }
             { FancyConfig fc = FancyConfig.get(); if (fc.dropsSeen < 100000) { fc.dropsSeen++; FancyConfig.save(); } }          // counts toward the cosmetics that unlock by drops

@@ -21,7 +21,8 @@ public final class ChatParser {
     // "RARE DROP! Scythe Blade (+120% ✯ Magic Find)"
     private static final Pattern DROP = Pattern.compile("(?:^|(?<=[\\s\\]>»:*]))((?:VERY |CRAZY )?RARE|CRAZY|INSANE|PET|SWEET|RNGESUS)\\s+(DROP|CROP)!\\s*(.+?)\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern BOUNTY = Pattern.compile("HARVEST BOUNTY!\\s*You found\\s+(?:an?\\s+|some\\s+)?(.+?)\\s+when harvesting\\b", Pattern.CASE_INSENSITIVE);
-    private static final Pattern DYE = Pattern.compile("\\bWOW!\\s*You found\\s+(?:an?\\s+)?(.+?\\bDye)\\b", Pattern.CASE_INSENSITIVE);
+    /** "{Random Word}! {Player} found {Dye}!": the rank tag ("[MVP+]") is optional, anything after the dye's name ("#1,234") is ignored. */
+    private static final Pattern DYE = Pattern.compile("^\\s*[A-Za-z]+!\\s+(?:\\[[^\\]]+\\]\\s*)?([A-Za-z0-9_]{1,16})\\s+found\\s+(?:an?\\s+)?(.+?\\bDye)\\b");
     private static final Pattern MF_ANY = Pattern.compile("\\(\\+([\\d.,]+)%");
     // farming lines carry Overbloom instead of Magic Find: "(+25 ☘ Overbloom)"
     private static final Pattern OVERBLOOM = Pattern.compile("\\s*\\(\\+?([\\d.,]+)%?[^)]*Overbloom[^)]*\\)\\s*$", Pattern.CASE_INSENSITIVE);
@@ -39,6 +40,14 @@ public final class ChatParser {
     }
 
 
+    /** A dye line: {player, dye}, or null. Whose drop it is gets checked by the caller (only your own plays). */
+    public static String[] parseDye(String line) {
+        if (line == null) return null;
+        line = line.replace('\u00a0', ' ').replaceAll("[\\u200b-\\u200f\\u2060\\ufeff]", "");
+        Matcher m = DYE.matcher(line);
+        return m.find() ? new String[]{m.group(1), m.group(2).trim().replaceAll("\\s+", " ")} : null;
+    }
+
     /** The drop on this line, or null. Tolerant: leading symbols / tags, odd spaces and any trailing "(...)" groups are fine. */
     public static Drop parseDrop(String line) {
         if (line == null) return null;
@@ -49,8 +58,6 @@ public final class ChatParser {
             int amt = 1; Matcher ap = AMOUNT_PREFIX.matcher(nm); if (ap.matches()) { amt = Integer.parseInt(ap.group(1)); nm = ap.group(2).trim(); }
             return nm.isEmpty() ? null : new Drop("HARVEST BOUNTY", nm, amt, null);
         }
-        Matcher dy = DYE.matcher(line);                                                      // "WOW! You found a Flame Dye!" (dyes have their own line)
-        if (dy.find()) return new Drop("DYE", dy.group(1).trim().replaceAll("\\s+", " "), 1, null);
         Matcher m = DROP.matcher(line);
         if (!m.find()) return null;
         String kind = m.group(1).toUpperCase(Locale.ROOT) + (m.group(2).equalsIgnoreCase("CROP") ? " CROP" : "");
