@@ -146,7 +146,7 @@ public final class DropListener {
         Anim an = new Anim(group, rng ? AnimationManager.RNG : AnimationManager.NORMAL, anim.get(0).it());
         an.kind = kind; an.helios = helios;
         if (group.equals("slayer") && takeCocoon()) an.speed = 1.8f;                 // a cocooned boss: the scene plays faster
-        if (anim.size() > 1) an.item2 = anim.get(1).it();
+        for (int k = 1; k < anim.size(); k++) an.add(anim.get(k).it());
         AnimationManager.play(an);
         return true;
     }
@@ -241,7 +241,7 @@ public final class DropListener {
         Item it2 = null;
         if (dr2 != null) { it2 = dropItem(src2, dr2, mf, true); it2.chance = dr2.chance; previewPrice(it2); }
         int ty = type >= 0 ? type : Math.max(previewType(it, src, dr), it2 == null ? 0 : previewType(it2, src2, dr2));
-        Anim a = new Anim("slayer", ty, it); a.kind = SlayerData.theme(src.id); a.item2 = it2;
+        Anim a = new Anim("slayer", ty, it); a.kind = SlayerData.theme(src.id); if (it2 != null) a.add(it2);
         AnimationManager.play(a);
     }
     /** Menu "play" button of a slayer drop (the Drop Library). */
@@ -368,7 +368,7 @@ public final class DropListener {
         Item it = expItem(a, true), it2 = b == null ? null : expItem(b, true);
         DropData.Source s = ExperimentData.SOURCE;
         int ty = type >= 0 ? type : Math.max(previewType(it, s, a), it2 == null ? 0 : previewType(it2, s, b));
-        Anim an = new Anim("exp", ty, it); an.item2 = it2;
+        Anim an = new Anim("exp", ty, it); if (it2 != null) an.add(it2);
         AnimationManager.play(an);
     }
 
@@ -588,6 +588,29 @@ public final class DropListener {
                 DropData.Drop dr = s.drops.get(0);
                 for (DropData.Drop x : s.drops) if (x.pct != null) { dr = x; break; }          // the creature's signature drop
                 launchMyth(s, dr, "+250%", type);
+            }
+        }
+    }
+
+    /** Menu "▶ 3 items": several sample drops at once, which stack into one animation. */
+    public static void playSampleMany(String group, int type, int n) {
+        List<DropData.Drop> pool; DropData.Source src = null;
+        switch (group) {
+            case "treasure" -> pool = TreasureData.drops(FancyConfig.get().mythSpade);
+            case "slayer" -> { if (SlayerData.ALL.isEmpty()) return; src = SlayerData.ALL.get(0); pool = src.drops; }
+            case "crops", "feast", "bounty", "pests" -> { src = FarmData.byId(group); if (src == null) return; pool = src.drops; }
+            case "exp" -> pool = ExperimentData.SOURCE.drops;
+            default -> { if (MythData.ALL.isEmpty()) return; src = MythData.ALL.get(Math.min(MythData.ALL.size() - 1, 6)); pool = src.drops; }
+        }
+        if (pool == null || pool.isEmpty()) return;
+        for (int i = 0; i < n; i++) {
+            DropData.Drop dr = pool.get(Math.max(0, pool.size() - 1 - i * Math.max(1, pool.size() / (n + 1))));        // spread over the list, rarest first
+            switch (group) {
+                case "treasure" -> launchTreasure(dr, type);
+                case "slayer" -> launchSlayer(src, dr, null, null, "+250%", type);
+                case "crops", "feast", "bounty", "pests" -> launchFarm(src, dr, 25, type);
+                case "exp" -> launchExp(dr, null, type);
+                default -> launchMyth(src, dr, "+250%", type);
             }
         }
     }

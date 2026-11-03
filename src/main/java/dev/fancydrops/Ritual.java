@@ -1,5 +1,7 @@
 package dev.fancydrops;
 
+import java.util.List;
+
 import dev.fancydrops.AnimationManager.Anim;
 import dev.fancydrops.AnimationManager.Item;
 import net.minecraft.client.gui.Font;
@@ -614,7 +616,7 @@ final class Ritual {
         }
         float cx0 = icx, cy0 = itemY(t, p, gy, icy, sz, itemBob, bobAmp);
         float pulse = 0.85f + 0.15f * (float) Math.sin(t * 5f);
-        float[] offs = spread > 0f ? new float[]{-spread, spread} : new float[]{0f};                 // one centre per drop
+        float[] offs = itemOffs;                                                           // one centre per drop
         if (farmMode || expMode) { softPivot(t, p, icx, gy, icy, sz, isc, rc, energy, rng, offs, bg, itemA, cx0, cy0, pulse, O); return; }          // no rings and no runes: a field gives petals, a book gives light
         if (!rng && variant == 1) {                                                        // ---- NORMAL, starburst: rays flash out from the item as it lands, then sparks drift
             float land = p - 0.42f;
@@ -732,7 +734,7 @@ final class Ritual {
     static boolean slayerMode;                                                          // set by the caller: paint() draws a slayer scene
     static boolean farmMode, expMode;                                                   // the Farming field (farmKind: 0 crops, 1 feast, 2 pest, 3 Ray of Helios, 4 bounty) and the Experimentation Table book
     static int farmKind;
-    static float spread;                                                                // canvas units between the middle and each of two drops (0 = one drop)
+    static float[] itemOffs = {0f};                                                     // canvas units from the middle to each drop (one entry per drop)
 
     /** Sets the scene flags for an animation; end() clears them again. */
     static void begin(Anim a, float sz, float isc) {
@@ -740,11 +742,26 @@ final class Ritual {
         farmMode = a.group.equals("crops") || a.group.equals("feast") || a.group.equals("bounty") || a.group.equals("pests");
         expMode = a.group.equals("exp");
         farmKind = a.group.equals("feast") ? FarmScene.FEAST : a.group.equals("bounty") ? FarmScene.BOUNTY : a.group.equals("pests") ? (a.helios ? FarmScene.HELIOS : FarmScene.PEST) : FarmScene.CROPS;
-        spread = spreadOf(a, sz, isc);
+        itemOffs = offsetsOf(a, sz, isc);
     }
-    /** Canvas units from the middle to each of two drops (0 for one). */
-    static float spreadOf(Anim a, float sz, float isc) { return a.count() == 2 ? 20 * sz * isc * (a.type == AnimationManager.RNG ? 1.15f : 1f) : 0f; }
-    static void end() { slayerMode = false; farmMode = false; expMode = false; spread = 0f; }
+    /** Canvas units from the middle to each drop: one drop sits in the middle, more are spaced evenly, closer together the more there are, never wider than about 60% of the screen. */
+    static float[] offsetsOf(Anim a, float sz, float isc) {
+        int n = Math.max(1, a.count());
+        if (n == 1) return new float[]{0f};
+        float gap = (n == 2 ? 40f : n == 3 ? 36f : 30f) * sz * isc * (a.type == AnimationManager.RNG ? 1.1f : 1f), span = CW * 0.6f;
+        if (gap * (n - 1) > span) gap = span / (n - 1);
+        float[] o = new float[n]; for (int i = 0; i < n; i++) o[i] = (i - (n - 1) / 2f) * gap;
+        return o;
+    }
+    /** How much higher drop i of n floats (canvas units): three or more sit on a gentle arc, the middle ones highest. */
+    static float liftOf(int i, int n, float sz) {
+        if (n < 3) return 0f;
+        float x = (i - (n - 1) / 2f) / ((n - 1) / 2f);
+        return 6f * sz * (1f - x * x);
+    }
+    /** Each drop's size when several share the scene. */
+    static float sizeOf(int n) { return n <= 1 ? 1f : n == 2 ? 0.85f : n == 3 ? 0.76f : Math.max(0.5f, 2.6f / n); }
+    static void end() { slayerMode = false; farmMode = false; expMode = false; itemOffs = new float[]{0f}; }
     /** The colour of each boss: zombie, spider, wolf, enderman, blaze, vampire. */
     private static final int[] SL_ENERGY = {0x7CD060, 0xE03030, 0xC8D4E8, 0xD060FF, 0xFFB030, 0xD01030};
     static boolean isSlayer(Anim a) { return a.group.equals("slayer"); }
@@ -839,13 +856,13 @@ final class Ritual {
         return cv.px.clone();
     }
 
-    private static float textH(Anim a, Item it, float sc, FancyConfig c) { return a.count() == 2 ? TextFx.blockHeight2(a.item, a.item2, sc, c) : TextFx.blockHeight(it, sc, c); }
+    private static float textH(Anim a, Item it, float sc, FancyConfig c) { return a.count() >= 2 ? TextFx.blockHeightN(a.items(), sc, c) : TextFx.blockHeight(it, sc, c); }
 
     /** Draws one animation at time t (seconds) in a W x H screen: the scene, the bars, the item and the words. */
     static void draw(GuiGraphicsExtractor g, Font font, Anim a, float t, int W, int H) {
         FancyConfig c = FancyConfig.get();
         FancyConfig.AnimCfg cfg = a.cfg();
-        Item it = a.lead(), second = a.item2;
+        Item it = a.lead();
         boolean tre = a.group.equals("treasure"), sl = isSlayer(a);
         kind = a.kind >= 0 ? a.kind : a.item != null && a.item.source != null ? kindOf(a.item.source.id) : 0;
         variant = a.type == AnimationManager.NORMAL ? a.variant : 0;
@@ -921,12 +938,14 @@ final class Ritual {
 
         // ---- the item (flat icons stay flat, skulls are 3D and turn)
         if (it != null && p >= 0f && !nod && !TextFx.textOnly && !TextFx.barsOnly) {
-            int n = a.count(); float spr = spreadOf(a, sz, isc);
+            List<Item> all = a.items(); int n = all.size(); float[] offs = offsetsOf(a, sz, isc);
             for (int ii = 0; ii < n; ii++) {
-            Item cur = ii == 0 ? a.item : a.item2;
-            float grow = 0.25f + 0.75f * eob(p / 0.7f);
-            float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f) * (n == 2 ? 0.85f : 1f);
-            float gcx = CW / 2f * W / CW + sx + (n == 2 ? (ii == 0 ? -spr : spr) * u : 0f), gcy = itemY(tb, p, a.group.equals("exp") ? BookScene.baseY(icy, sz) : icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
+            Item cur = all.get(ii);
+            float pi = p - (n > 1 ? ii * 0.07f : 0f);                                          // several drops pop in one after another, left to right
+            if (pi < 0f) continue;
+            float grow = 0.25f + 0.75f * eob(pi / 0.7f);
+            float s = 3f * (H / 270f) * sz * isc * grow * (rng ? 1.2f : 1f) * (TextFx.itemOnly ? 1.9f : 1f) * sizeOf(n);
+            float gcx = CW / 2f * W / CW + sx + offs[Math.min(ii, offs.length - 1)] * u, gcy = -liftOf(ii, n, sz) * u + itemY(tb, p, a.group.equals("exp") ? BookScene.baseY(icy, sz) : icy + 22 * sz, icy, sz, c.itemBob, c.itemBobAmp) * u + sy;
             if (c.itemGlow > 0.02f) {                                                          // the glow behind the item (Item changes > Glow), in the drop's colour
                 int gr = Math.round(s * 11f), gcol = mixc(rc, WHITE, 0.25f); float ga = Math.max(0f, Math.min(1f, itemA)) * Math.min(1f, c.itemGlow);
                 for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }
@@ -954,7 +973,7 @@ final class Ritual {
             if (barsOn) { float bhg = barH * u; top = Math.max(bhg + 6, Math.min(H - bhg - th - 6, top)); }
             float tl = TextFx.textOnly ? TextFx.loopClock(4.6f) : 0f;                                    // the Text editor replays the words on their own clock
             TextFx.revealT = TextFx.textOnly ? tl : textT; TextFx.waveT = TextFx.textOnly ? tl : t; TextFx.waveOut = TextFx.textOnly ? sm((tl - 2.9f) / 1.1f) : textOut; TextFx.lineDelay = 0f;
-            if (a.count() == 2) TextFx.block2(g, font, W / 2, Math.round(top), sc, a.item, a.item2, c, 255); else TextFx.block(g, font, W / 2, Math.round(top), sc, it, c, 255);
+            if (a.count() >= 2) TextFx.blockN(g, font, W / 2, Math.round(top), sc, a.items(), c, 255); else TextFx.block(g, font, W / 2, Math.round(top), sc, it, c, 255);
         }
     }
 }

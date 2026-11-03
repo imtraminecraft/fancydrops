@@ -395,3 +395,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Standing requirements added in 0.8.1
 - Reworked icons (author request Oct 31): raredrops (open book + floating gem), sounds (gold speaker + arcs), slayers (skull + sword, red eyes), mining (pickaxe striking an ore block), settings (slider panel, not a gear), snd_beat (front-view drum + ring), snd_linger (note with fading echoes), grp_crops (golden sheaf with red band), stats (chart window with a climbing gold line).
 - Critical (glitch) name effect: red with a lub-dub heartbeat, a white pulse from the middle outwards. No flashing letter, no siren.
+
+## Standing requirements added in 0.9.0
+- Drops stack: an animation holds up to 8 drops (`Anim.more`). A drop of the same group and kind joins a waiting animation, or the playing one before its items appear (0.35 s before the pivot). Items are spaced evenly (`Ritual.offsetsOf`, never wider than 60% of the screen), three or more sit on a gentle arc, they pop in left to right 0.07 s apart and shrink with the count (`sizeOf`). The words list up to three drops (rarest first) and "+ N more".
+- Calm mode is applied in `NameFx.color` (one still frame everywhere) and slows auras (moving and idle). The name effect speed setting is applied there too.
+- HARVEST BOUNTY! lines: "You found a {item} when harvesting a crop in the Greenhouse!" are farm drops.

@@ -1,5 +1,8 @@
 package dev.fancydrops;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import dev.fancydrops.AnimationManager.Item;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
@@ -46,25 +49,34 @@ final class TextFx {
         float big = 1.5f * sc * c.titleScale, small = 1.1f * sc * c.subScale;
         return 9 * big + 3 + (hasFacts(it, c) ? 9 * small : 0f);
     }
-    static float blockHeight2(Item a, Item b, float sc, FancyConfig c) {
-        float small = 1.1f * sc * c.subScale;
-        return entryHeight(a, sc, c) + 5 + entryHeight(b, sc, c) + (c.showMagicFind && a.mf != null ? 3 + 9 * small : 0f);
+    /** The entries a block of several drops lists by name: up to three (the rarest first when there are more), the rest are counted. */
+    private static List<Item> shown(List<Item> items) {
+        if (items.size() <= 3) return items;
+        List<Item> l = new ArrayList<>(items); l.sort((x, y) -> Integer.compare(y.rank, x.rank)); return l.subList(0, 3);
     }
-    /** Two drops: the first one's name and details, then the second's a moment later, then the shared Magic Find / Overbloom. */
-    static void block2(GuiGraphicsExtractor g, Font font, int cx, int y, float sc, Item a, Item b, FancyConfig c, int alpha) {
-        if (alpha <= 4) return;
+    static float blockHeightN(List<Item> items, float sc, FancyConfig c) {
+        float small = 1.1f * sc * c.subScale, h = 0f;
+        for (Item it : shown(items)) h += entryHeight(it, sc, c) + 5;
+        if (items.size() > 3) h += 9 * small + 4;
+        Item a = items.get(0);
+        return h + (c.showMagicFind && a.mf != null ? 3 + 9 * small : 0f);
+    }
+    /** Several drops: each one's name and details a moment after the one before (the rarest three when there are more, then "+ N more"), then the shared Magic Find / Overbloom. */
+    static void blockN(GuiGraphicsExtractor g, Font font, int cx, int y, float sc, List<Item> items, FancyConfig c, int alpha) {
+        if (alpha <= 4 || items.isEmpty()) return;
         float small = 1.1f * sc * c.subScale;
         float step = c.subDelay / 0.35f;
-        int y2 = y;
-        for (int i = 0; i < 2; i++) {
-            Item it = i == 0 ? a : b;
+        int y2 = y, i = 0;
+        for (Item it : shown(items)) {
             float big = 1.5f * sc * c.titleScale;
             lineDelay = i * 0.9f * step;
             line(g, font, cx, y2, big, alpha, lit(it.title()).withStyle(ChatFormatting.BOLD), it.color());
             if (hasFacts(it, c)) { lineDelay += 0.35f * step; detailAt(g, font, cx, y2 + Math.round(9 * big) + 3, small, it, c, alpha); }
-            y2 += Math.round(entryHeight(it, sc, c)) + 5;
+            y2 += Math.round(entryHeight(it, sc, c)) + 5; i++;
         }
-        if (c.showMagicFind && a.mf != null) { lineDelay = 1.9f * step; line(g, font, cx, y2 - 2, small, alpha, lit(mfText(a.mf)), mfColor(a.mf)); }
+        if (items.size() > 3) { lineDelay = i * 0.9f * step; line(g, font, cx, y2, small, alpha, lit("+ " + (items.size() - 3) + " more"), 0xFFE8B84A); y2 += Math.round(9 * small) + 4; i++; }
+        Item a = items.get(0);
+        if (c.showMagicFind && a.mf != null) { lineDelay = (i * 0.9f + 0.1f) * step; line(g, font, cx, y2 - 2, small, alpha, lit(mfText(a.mf)), mfColor(a.mf)); }
         lineDelay = 0f;
     }
 

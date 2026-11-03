@@ -5,6 +5,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Plays the drop animations, one at a time (the rest wait in a queue). An animation is a group ("myth", "treasure") and a type
@@ -34,9 +36,9 @@ public final class AnimationManager {
 
     public static final class Anim {
         final Item item;                         // null = nothing dropped
-        Item item2;                              // a second drop of the same kill / reward (Slayers and Experiments): both show side by side
+        final List<Item> more = new ArrayList<>();      // more drops shown in the same animation (one kill, one reward, or drops that arrived together): up to 8 side by side
         final String group;                      // "myth", "treasure", "slayer", "crops", "feast", "bounty", "pests" or "exp"
-        final int type;                          // NO_DROPS, NORMAL or RNG
+        int type;                                // NO_DROPS, NORMAL or RNG (a drop that joins before the scene starts can raise Normal to RNG)
         final long created = System.currentTimeMillis();
         float speed = 1f;                        // 1.8 after a cocooned slayer boss
         boolean helios;                          // the Ray of Helios pest drop: a sunbeam instead of the vacuum
@@ -46,16 +48,44 @@ public final class AnimationManager {
         String key() { return group + "." + TYPE_IDS[type]; }
         FancyConfig.AnimCfg cfg() { return FancyConfig.get().anim(key()); }
         float secs() { return cfg().secs; }
-        /** The drops this animation shows: none, one or two. */
-        int count() { return item == null ? 0 : item2 == null ? 1 : 2; }
-        /** The drop that decides the colour of the effects: the rarer of the two. */
-        Item lead() { return item2 != null && item2.rank > item.rank ? item2 : item; }
+        /** The drops this animation shows (0 to 8). */
+        int count() { return item == null ? 0 : 1 + more.size(); }
+        /** Every drop, in the order they came. */
+        List<Item> items() { List<Item> l = new ArrayList<>(); if (item != null) { l.add(item); l.addAll(more); } return l; }
+        /** The drop that decides the colour of the effects: the rarest one. */
+        Item lead() { Item b = item; for (Item i : more) if (b == null || i.rank > b.rank) b = i; return b; }
+        /** Adds a drop to this animation; false when it is already full. */
+        boolean add(Item it) { if (it == null || item == null || count() >= MAX_ITEMS) return false; more.add(it); return true; }
     }
 
     private static final ArrayDeque<Anim> QUEUE = new ArrayDeque<>();
     private static Anim cur;
 
-    public static void play(Anim a) { if (a != null) QUEUE.add(a); }
+    static final int MAX_ITEMS = 8;
+    /** Plays an animation. Drops of the same kind that arrive close together stack into one animation (8 pests killed at once show their drops side by side)
+     *  instead of queueing: they join a waiting animation, or the playing one while its items have not appeared yet. */
+    public static void play(Anim a) {
+        if (a == null) return;
+        if (a.item != null) {
+            Anim last = QUEUE.peekLast();
+            if (last != null && canStack(last, a)) { stack(last, a, false); return; }
+            if (last == null && cur != null && canStack(cur, a) && beforeItems(cur)) { stack(cur, a, true); return; }
+        }
+        QUEUE.add(a);
+    }
+    private static boolean canStack(Anim into, Anim a) {
+        return into.item != null && into.group.equals(a.group) && into.kind == a.kind && into.helios == a.helios && into.count() + a.count() <= MAX_ITEMS && System.currentTimeMillis() - into.created < 5000;
+    }
+    private static void stack(Anim into, Anim a, boolean started) {
+        for (Item i : a.items()) into.add(i);
+        if (!started && a.type == RNG) into.type = RNG;                                          // a rare one joining raises the whole scene, but only before it starts
+        if (started) for (Item i : a.items()) DropListener.announceNow(i);                         // the scene already sent its alerts: send these now
+    }
+    /** True while the playing scene has not shown its items yet (there is still time to add more). */
+    private static boolean beforeItems(Anim c) {
+        float t = (System.currentTimeMillis() - c.start) / 1000f * pace(c), O = Math.max(3.6f, c.secs()) - Ritual.TAIL;
+        return t < O - 0.35f;
+    }
     public static boolean isPlaying() { return cur != null || !QUEUE.isEmpty(); }
     /** True while the hotbar and hearts should slide away (a scene with cinematic bars). */
     public static boolean hidesHud() {
@@ -81,7 +111,7 @@ public final class AnimationManager {
     public static void render(GuiGraphicsExtractor g) {
         long now = System.currentTimeMillis();
         if (cur != null && (now - cur.start) / 1000f * pace(cur) > Math.max(3.6f, cur.secs()) + 0.001f) cur = null;
-        if (cur == null && !QUEUE.isEmpty()) { cur = QUEUE.poll(); cur.start = now; DropListener.announceNow(cur.item); DropListener.announceNow(cur.item2); }          // the chat alert goes out together with the animation
+        if (cur == null && !QUEUE.isEmpty()) { cur = QUEUE.poll(); cur.start = now; for (Item i : cur.items()) DropListener.announceNow(i); }          // the chat alert goes out together with the animation
         if (cur == null) return;
         Minecraft mc = Minecraft.getInstance();
         float t = (now - cur.start) / 1000f * pace(cur);                  // a scene shorter than its 3.6 s minimum plays a little faster
