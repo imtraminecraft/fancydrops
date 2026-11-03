@@ -149,6 +149,16 @@ final class IconArt {
                 }
                 outline();
             }
+            case "trophy" -> {                                                               // Achievements: a gold cup on a dark base, a glint sliding over it
+                quad(3, 2, 13, 2, 11.5f, 8, 4.5f, 8, 0xE8B84A);
+                rect(2, 3, 1, 3, 0xC8902A); rect(13, 3, 1, 3, 0xC8902A); px(3, 6, 0xC8902A); px(12, 6, 0xC8902A);       // handles
+                rect(7, 8, 2, 3, 0xC8902A);
+                bev(4, 11, 8, 2, 0xE8B84A); bev(3, 13, 10, 2, 0x5A4C86);
+                rect(4, 3, 8, 1, 0xFFE3A0);
+                outline();
+                int gx = 3 + Math.round(f * 12); for (int y = 2; y < 8; y++) pxa(gx + (y - 2) / 3, y, 0xFFFFFF, 0.55f);
+                glint(11, 3, 1, 0xFFFFFF, t);
+            }
             case "stats" -> {                                                                // Stats: a little chart window, a gold line climbing through blinking points
                 bev(1, 2, 14, 12, 0x2E2840);
                 for (int x = 3; x < 13; x += 3) for (int y = 4; y < 13; y++) if (y % 2 == 0) px(x, y, 0x3E3654);

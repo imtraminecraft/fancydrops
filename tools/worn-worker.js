@@ -107,7 +107,7 @@ function view(p) {
     return { id: a.id, ch: a.ch, chapter: CH[a.ch], name: a.name, desc: a.desc, icon: a.icon, goal: a.goal, progress: v, done, at: p.unlocked[a.id] || 0, reward: a.reward || "", secret: !!a.secret };
   });
   const cosmetics = ACH.filter((a) => p.unlocked[a.id] && a.reward).map((a) => a.reward);
-  const stats = { drops: p.drops, rng: p.rng, bigRng: p.bigRng, value: p.value, best: p.best, unique: Object.keys(p.uniq).length, days: Object.keys(p.days).length, groups: p.g, since: p.first };
+  const stats = { drops: p.drops, rng: p.rng, bigRng: p.bigRng, value: p.value, best: p.best, r3: p.r3, unique: Object.keys(p.uniq).length, days: Object.keys(p.days).length, bosses: Object.keys(p.bosses).length, vinyls: Object.keys(p.vinyl).length, groups: p.g, since: p.first };
   return { stats, achievements: list, cosmetics, chapters: CH };
 }
 

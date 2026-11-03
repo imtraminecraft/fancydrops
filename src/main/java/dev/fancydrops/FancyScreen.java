@@ -24,7 +24,7 @@ public class FancyScreen extends Screen {
         SOUNDS("Sounds", "note_block", "Volume and the sound of every moment"),
         CHAT("Chat", "writable_book", "Announce rare drops to your party or co-op"),
         GENERAL("Settings", "comparator", "Menu, prices and data"),
-        STATS("Stats", "map", "WIP: profit and drops are being rebuilt"),
+        STATS("Achievements", "map", "Your ledger: achievements and the cosmetics they unlock"),
         COSMETICS("Cosmetics", "nether_star", "Name icons, name effects and auras");
         final String label, icon, sub;
         Tab(String l, String i, String s) { label = l; icon = i; sub = s; }
@@ -218,7 +218,7 @@ public class FancyScreen extends Screen {
         }
     }
 
-    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13, SHOWBAR = 14, UPDATE = 16;
+    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13, SHOWBAR = 14, UPDATE = 16, BOOK = 17;
     private class Row {
         String fkey;                                                      // set on folding rows: lets the Show > All tile open or close them all
 
@@ -1508,7 +1508,7 @@ public class FancyScreen extends Screen {
             case SOUNDS -> Icons.draw(g, "sounds", x, y, now);
             case CHAT -> Icons.draw(g, "chat", x, y, now);
             case GENERAL -> Icons.draw(g, "settings", x, y, now);
-            case STATS -> Icons.draw(g, "stats", x, y, now);
+            case STATS -> Icons.draw(g, "trophy", x, y, now);
             case COSMETICS -> Icons.draw(g, "sparkle", x, y, now);
             default -> Gfx.item(g, t.icon, x, y);
         }
@@ -2427,7 +2427,7 @@ public class FancyScreen extends Screen {
             case CHAT -> chatPage(c);
             case GENERAL -> generalPage(c);
             case COSMETICS -> cosmeticsPage();
-            case STATS -> wipPanel(":stats:", "Stats", "Profit and drop history are being rebuilt. Back soon.");
+            case STATS -> { Row bk = new Row(); bk.kind = BOOK; bk.noSearch = true; bk.h = Math.max(170, lb - lt - 6); rows.add(bk); }
         }
     }
 
@@ -3073,7 +3073,6 @@ public class FancyScreen extends Screen {
             iconBack(g, b[0] + 14 + dx, b[1] + 11 + toff, 9, act, tabCol(t));
             tabIcon(g, t, b[0] + 6 + dx, b[1] + 3 + toff, act && cfg.menuIcons ? now : 2400L, act);   // only the open page's icon moves
             Gfx.text(g, font, t.label, b[0] + 28 + dx, b[1] + 7 + toff, act ? Ui.TEXT : Canvas.mix(Canvas.mix(Ui.DIM, tabCol(t), 0.2f), Ui.TEXT, hv * 0.6f));
-            if (t == Tab.STATS) { Gfx.push(g); Gfx.translate(g, b[2] - 20, b[1] + 8); Gfx.scale(g, 0.75f); Gfx.text(g, font, "WIP", 0, 0, 0xFFB08A20); Gfx.pop(g); }
             Gfx.pop(g);
         }
 
@@ -3211,6 +3210,7 @@ public class FancyScreen extends Screen {
             if (r.kind == CAT) { drawCat(g, r); continue; }
             if (r.kind == CHATPREV) { drawChatPrev(g, r); continue; }
             if (r.kind == COSPREV) { drawCosPreview(g, r); continue; }
+            if (r.kind == BOOK) { Ledger.draw(g, font, r.x, r.y, r.w, r.h, mx, my); if (Ledger.tip != null) { tipText = Ledger.tip; tipCol = Ledger.tipDone ? 0xFFE8B84A : 0xFF807891; } continue; }
             if (r.kind == PANEL || r.kind == HERO) {                                // a centred banner (HERO: just icon, title, words) or a construction site for a page that is not built yet
                 pill(g, r.x, r.y, r.w, r.h, r.kind == PANEL ? 0xFF16130B : Ui.ROW);
                 int mid = r.x + r.w / 2; long nw = System.currentTimeMillis(); float sec = (nw % 3600000L) / 1000f;
@@ -3452,6 +3452,7 @@ public class FancyScreen extends Screen {
 
 
     @Override public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) { dirty = true;
+        if (tab == Tab.STATS && event.button() == 0 && editor == 0 && !adminOpen && !adminHome && Ledger.click(event.x(), event.y())) return true;          // the ledger's ribbons and page arrows
         if (event.button() == 3 && editor == 0 && !adminOpen && !adminHome && hdrBack != null) { hdrBack.run(); return true; }        // the mouse's back button goes back a page
         if (searchField.isFocused() && !(event.x() >= searchField.getX() - 6 && event.x() < searchField.getX() + searchField.getWidth() + 6 && event.y() >= searchField.getY() - 3 && event.y() < searchField.getY() + 14)) searchField.setFocused(false);          // a click anywhere else leaves the search box
         if (adminOpen) return event.button() != 0 || adminClick(event.x(), event.y());
