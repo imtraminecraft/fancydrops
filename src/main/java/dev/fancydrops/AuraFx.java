@@ -300,14 +300,15 @@ final class AuraFx {
         float moveK = (float) Math.max(0.0, Math.min(1.0, (st[7] - 0.35) / 3.6)); moveK = moveK * moveK * (3f - 2f * moveK);
         boolean idle = now - (long) st[5] > 5000, going = now - (long) st[5] < 250;
         double want = going ? 1.6 : idle ? 0.55 : 1.0;
-        if (cf.cosCalm) want *= 0.4;
+        if (cf.cosCalm) want *= 0.35;
         double dtm = Math.min(100, now - st[1]); st[1] = now;
         st[6] += (want - st[6]) * Math.min(1.0, dtm / 250.0);
         st[0] += dtm * st[6] * Math.max(0.2, cf.cosSpeed / 100.0);
         float idleK = idle ? (float) Math.min(1.0, (now - st[5] - 5000) / 1200.0) : 0f;
         st[8] += dtm * (0.25 + st[7] * 0.35) / 1000.0;
         List<P> ps = fade(particles(aura, (long) st[0]), 1f - 0.6f * moveK);                                     // the aura stays on you while you run, a little fainter
-        if (idleK > 0f) ps.addAll(idleParticles(aura, now, idleK * (1f - moveK)));
+        long idleT = cf.cosCalm ? now * 2 / 5 : now;                                      // calm mode slows the resting swirl too
+        if (idleK > 0f) ps.addAll(idleParticles(aura, idleT, idleK * (1f - moveK)));
         if (moveK > 0.01f) ps.addAll(trail(aura, hist, now, ex, ey, ez, st[8], moveK));
         int keep = Math.min(100, cf.cosAmount);
         if (keep < 100) { List<P> o = new ArrayList<>(); for (int i = 0; i < ps.size(); i++) if ((i + 1) * keep / 100 != i * keep / 100) o.add(ps.get(i)); ps = o; }

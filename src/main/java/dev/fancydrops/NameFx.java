@@ -25,6 +25,8 @@ final class NameFx {
      *  Beta keeps the colour the server gave the name; the Special ones have a main colour of their own. */
     static int color(String fx, int i, int n, int base, long t) {
         base &= 0xFFFFFF;
+        FancyConfig cf = FancyConfig.get();
+        t = cf.cosCalm ? 1200L : t * Math.max(10, cf.cosSpeed) / 100;          // calm mode: every name stands still (one quiet frame); otherwise the speed setting applies, in chat, tab, name tags and the menu alike
         float ph;
         switch (fx) {
             case "pulse":                                                   // Beta: the name breathes between its own colour and white
