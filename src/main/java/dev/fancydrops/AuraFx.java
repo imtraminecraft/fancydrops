@@ -316,12 +316,21 @@ final class AuraFx {
                 List<P> safe = new ArrayList<>(ps.size());
                 for (P q : ps) if (Float.isFinite(q.x() + q.y() + q.z() + q.size()) && Math.abs(q.x()) < 4f && Math.abs(q.z()) < 4f && q.y() > -2f && q.y() < 5f && q.size() < 0.6f) safe.add(q);       // particles stay within a few blocks of you
                 // our own pose stack (camera-relative, nothing else pushed on it): another mod leaving a transform on the shared one made the quads land far away for a frame
-                ctx.submitNodeCollector().submitCustomGeometry(new com.mojang.blaze3d.vertex.PoseStack(), net.minecraft.client.renderer.rendertype.RenderTypes.lightning(), (pose, buf) -> {
+                ctx.submitNodeCollector().submitCustomGeometry(new com.mojang.blaze3d.vertex.PoseStack(), glowType(), (pose, buf) -> {
                     for (P q : safe) quad3d(pose, buf, ox + q.x(), oy + q.y(), oz + q.z(), q.size() * k, q, right, up);
                 });
             }
             worldOk = true;
         } catch (Throwable t) { if (!worldOk) { worldOk = true; System.err.println("[FancyDrops] aura draw failed: " + t); } }
+    }
+
+    /** The glowing additive look of lightning, but drawn into the main picture. Vanilla's lightning type draws into the weather layer, and with some
+     *  graphics settings and shader mods that layer is composed late: the aura's colour then washed over the whole sky for a frame (the green / yellow flicker). */
+    private static net.minecraft.client.renderer.rendertype.RenderType GLOW;
+    private static net.minecraft.client.renderer.rendertype.RenderType glowType() {
+        if (GLOW == null) GLOW = net.minecraft.client.renderer.rendertype.RenderType.create("fancydrops_aura",
+            net.minecraft.client.renderer.rendertype.RenderSetup.builder(net.minecraft.client.renderer.RenderPipelines.LIGHTNING).sortOnUpload().createRenderSetup());
+        return GLOW;
     }
 
     /** This frame's particles round one player: the resting aura, the idle swirl after 5 s still, and a short trail while moving. Positions are relative to the feet. */

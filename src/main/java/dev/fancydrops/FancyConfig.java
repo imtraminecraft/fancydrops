@@ -120,6 +120,7 @@ public class FancyConfig {
     public boolean selfSuffix = true, selfName = true, selfAura = true;            // show your own cosmetics
     public int cosRange = 32, cosMax = 8, cosSpeed = 100, cosAmount = 100, cosSize = 100;
     public boolean cosHideFirst = false, cosCalm = false;
+    public java.util.List<String> seenAch = new java.util.ArrayList<>();     // achievements whose star you have already seen light up (new ones ignite when the sky opens)
     public String adminToken = "";                             // Admin Panel: a GitHub token that lets Save write cosmetics.json
 
     public int ver;                                            // 3 = the rewrite: animation and drop settings start fresh

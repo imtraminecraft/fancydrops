@@ -6,7 +6,7 @@ import java.util.*;
 final class CosmeticData {
     private CosmeticData() {}
 
-    enum Line { BETA, RARE, SPECIAL, LEGENDARY, FREE }
+    enum Line { BETA, RARE, SPECIAL, LEGENDARY, FREE, ACHIEVEMENT }
     enum Kind { SUFFIX, NAME, AURA }
     record Def(String id, String name, Line line, Kind kind, String how, int color, String set) {
         Def(String id, String name, Line line, Kind kind, String how, int color) { this(id, name, line, kind, how, color, null); }
@@ -18,7 +18,7 @@ final class CosmeticData {
         new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, "bug", "glitch", "glitchaura", 4),
         new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "code", "contribfx", "stardust", 4),
         new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFB400, "patron", "royal", "patronaura", 4),
-        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "betamark", "pulse", null, 2));
+        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "betamark", "pulse", null, 3));          // Beta is Legendary
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
     private static final String BETA_HOW = "Downloaded the mod before v1.0";
@@ -30,23 +30,23 @@ final class CosmeticData {
         new Def("code", "Code", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFF55D8FF, "contributors"),
         new Def("patron", "Patreon", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFFFB400, "patreon"),
         new Def("betamark", "Beta", Line.BETA, Kind.SUFFIX, "Downloaded the mod before v1.0", 0xFF3FD16A, "beta"),
-        new Def("dice", "Lucky Dice", Line.LEGENDARY, Kind.SUFFIX, "Legendary", 0xFFF4F6FB),
-        new Def("chest", "Treasure Chest", Line.RARE, Kind.SUFFIX, "Rare", 0xFF8A5A2C),
-        new Def("anvil", "Anvil", Line.RARE, Kind.SUFFIX, "Rare", 0xFF9AA3B5),
-        new Def("disc", "Music Disc", Line.RARE, Kind.SUFFIX, "Rare", 0xFF22242E),
-        new Def("tractor", "Tractor", Line.FREE, Kind.SUFFIX, "Common", 0xFF3AA848),
-        new Def("bell", "Bell", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2B01E),
-        new Def("clock", "Clock", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2F4FA),
+        new Def("dice", "Lucky Dice", Line.ACHIEVEMENT, Kind.SUFFIX, "Achievement", 0xFFF4F6FB),
+        new Def("chest", "Treasure Chest", Line.ACHIEVEMENT, Kind.SUFFIX, "Achievement", 0xFF8A5A2C),
+        new Def("anvil", "Anvil", Line.ACHIEVEMENT, Kind.SUFFIX, "Achievement", 0xFF9AA3B5),
+        new Def("disc", "Music Disc", Line.ACHIEVEMENT, Kind.SUFFIX, "Achievement", 0xFF22242E),
+        new Def("tractor", "Tractor", Line.ACHIEVEMENT, Kind.SUFFIX, "Achievement", 0xFF3AA848),
+        new Def("bell", "Bell", Line.ACHIEVEMENT, Kind.SUFFIX, "Achievement", 0xFFF2B01E),
+        new Def("clock", "Clock", Line.ACHIEVEMENT, Kind.SUFFIX, "Achievement", 0xFFF2F4FA),
         // Name effects earned in the ledger: they keep your own name colour and add light or movement
-        new Def("sweep", "Light Sweep", Line.FREE, Kind.NAME, "Common", 0xFFF4F6FB),
-        new Def("ripple", "Ripple", Line.FREE, Kind.NAME, "Common", 0xFFB8E8FF),
-        new Def("spark", "Spark", Line.RARE, Kind.NAME, "Rare", 0xFFFFE680),
-        new Def("neon", "Neon", Line.LEGENDARY, Kind.NAME, "Legendary", 0xFF6AF2FF),
+        new Def("sweep", "Light Sweep", Line.ACHIEVEMENT, Kind.NAME, "Achievement", 0xFFF4F6FB),
+        new Def("ripple", "Ripple", Line.ACHIEVEMENT, Kind.NAME, "Achievement", 0xFFB8E8FF),
+        new Def("spark", "Spark", Line.ACHIEVEMENT, Kind.NAME, "Achievement", 0xFFFFE680),
+        new Def("neon", "Neon", Line.ACHIEVEMENT, Kind.NAME, "Achievement", 0xFF6AF2FF),
         // Auras earned in the ledger
-        new Def("bubbleaura", "Bubbles", Line.FREE, Kind.AURA, "Common", 0xFF8FE0FF),
-        new Def("fireflyaura", "Fireflies", Line.FREE, Kind.AURA, "Common", 0xFFE8FF70),
-        new Def("coinaura", "Coin Shower", Line.RARE, Kind.AURA, "Rare", 0xFFFFD24A),
-        new Def("runeaura", "Runes", Line.RARE, Kind.AURA, "Rare", 0xFFC9A0FF),
+        new Def("bubbleaura", "Bubbles", Line.ACHIEVEMENT, Kind.AURA, "Achievement", 0xFF8FE0FF),
+        new Def("fireflyaura", "Fireflies", Line.ACHIEVEMENT, Kind.AURA, "Achievement", 0xFFE8FF70),
+        new Def("coinaura", "Coin Shower", Line.ACHIEVEMENT, Kind.AURA, "Achievement", 0xFFFFD24A),
+        new Def("runeaura", "Runes", Line.ACHIEVEMENT, Kind.AURA, "Achievement", 0xFFC9A0FF),
         // Special: handed out by hand, one set at a time (suffix + name effect + aura)
         new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFB48CFF, "sparkle"),
         new Def("sparklefx", "Starlight", Line.SPECIAL, Kind.NAME, "Special Set", 0xFFA9BBFF, "sparkle"),
@@ -117,7 +117,7 @@ final class CosmeticData {
     static String lockText(Def d) {
         Achievements.Ach a = Achievements.unlocking(d.id());
         if (a != null) return "Achievement: " + a.name() + ". " + a.desc() + " (" + fmtN(a.progress()) + " / " + fmtN(a.goal()) + ")";
-        if (d.line() == Line.RARE || d.line() == Line.LEGENDARY || d.line() == Line.FREE) return "Earned through an achievement. Open Achievements to see which.";
+        if (d.line() == Line.ACHIEVEMENT || d.line() == Line.RARE || d.line() == Line.LEGENDARY || d.line() == Line.FREE) return "Earned through an achievement. Open Achievements to see which.";
         if (d.line() == Line.BETA) return "The beta is over. Only players who downloaded before v1.0 have it.";
         if (d.line() == Line.SPECIAL) return setById(d.set()).how();
         return switch (d.id()) {
@@ -128,8 +128,8 @@ final class CosmeticData {
         };
     }
     static String fmtN(double v) { return v >= 1e9 ? String.format(java.util.Locale.ROOT, "%.1fB", v / 1e9) : v >= 1e6 ? String.format(java.util.Locale.ROOT, "%.1fM", v / 1e6) : v >= 1e4 ? String.format(java.util.Locale.ROOT, "%.0fk", v / 1e3) : String.valueOf((long) v); }
-    static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 4 : d.line() == Line.LEGENDARY ? 3 : d.line() == Line.BETA ? 2 : d.line() == Line.RARE ? 1 : 0; }
-    static String rarityName(int r) { return r == 4 ? "Special" : r == 3 ? "Legendary" : r == 2 ? "Beta" : r == 1 ? "Rare" : "Common"; }
+    static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 4 : d.line() == Line.LEGENDARY || d.line() == Line.BETA ? 3 : d.line() == Line.ACHIEVEMENT ? 2 : d.line() == Line.RARE ? 1 : 0; }          // Beta counts as Legendary
+    static String rarityName(int r) { return r == 4 ? "Special" : r == 3 ? "Legendary" : r == 2 ? "Achievement" : r == 1 ? "Rare" : "Common"; }
     static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set())) o.add(d); return o; }
     static int owned(SetDef s) { int n = 0; for (Def d : members(s)) if (unlocked(d)) n++; return n; }
     static boolean unlockedId(String id) { return unlocked(byId(id)); }

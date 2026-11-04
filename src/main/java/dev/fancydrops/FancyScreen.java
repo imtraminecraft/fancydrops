@@ -829,7 +829,7 @@ public class FancyScreen extends Screen {
     }
     private static final Map<String, Long> lockShake = new HashMap<>();
     private static String tipText, hoverCos; private static int tipCol;                      // the hover card of the tile under the mouse (drawn last, on top of everything)
-    private static final int[] RAR_COL = {0xFF9AA3B5, 0xFF4B6BEB, 0xFF3FD16A, 0xFFFFB400, 0xFFC77DFF};      // common, rare, beta, legendary, special
+    private static final int[] RAR_COL = {0xFF9AA3B5, 0xFF4B6BEB, 0xFF8FB8FF, 0xFFFFB400, 0xFFC77DFF};      // common, rare, achievement, legendary (and Beta), special
     /** The little rarity pin: a tiny gem on a pin, in the colour of the rarity. */
     private static void rarityPin(GuiGraphicsExtractor g, int x, int y, int rar) {
         int c = RAR_COL[Math.max(0, Math.min(4, rar))], lt = Canvas.mix(c, 0xFFFFFFFF, 0.55f), dk = Canvas.mix(c, 0xFF000000, 0.45f);
@@ -926,7 +926,7 @@ public class FancyScreen extends Screen {
     /** The colour scheme every tile of a set shares (beta green, common grey for the rest). */
     private static int schemeOf(CosmeticData.Def d) {
         CosmeticData.SetDef sd = d.set() == null ? null : CosmeticData.setById(d.set());
-        return sd != null ? sd.color() : d.line() == CosmeticData.Line.BETA ? 0xFF3FD16A : d.line() == CosmeticData.Line.LEGENDARY ? 0xFFFFB400 : d.line() == CosmeticData.Line.RARE ? 0xFF3B5BDB : 0xFF9AA3B5;
+        return sd != null ? sd.color() : d.line() == CosmeticData.Line.ACHIEVEMENT ? 0xFF8FB8FF : d.line() == CosmeticData.Line.BETA || d.line() == CosmeticData.Line.LEGENDARY ? 0xFFFFB400 : d.line() == CosmeticData.Line.RARE ? 0xFF3B5BDB : 0xFF9AA3B5;
     }
     /** One line on what a name effect does, put in front of how to get it. */
     private static String effectNote(CosmeticData.Def d) {
