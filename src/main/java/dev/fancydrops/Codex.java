@@ -45,7 +45,7 @@ final class Codex {
     private static final int[] WARD_COL = {0xFFE8B84A, 0xFFFFC857, 0xFFFF9AC8, 0xFF8FD0FF, 0xFFC77DFF};
     private static final String[] WARD_ICON = {"trophy", "cos_suffix", "cos_name", "cos_aura", "cosmetics"};
     /** Chapter numbers: 0 contents, 1..7 the ledger, 8..12 the wardrobe. */
-    private static final int CONTENTS = 0, FIRST_ACH = 1, FIRST_WARD = 8, CHAPTERS = 13;
+    private static final int CONTENTS = 0, FIRST_ACH = 1, FIRST_WARD = 8, CHAPTERS = 8;          // achievements only: cosmetics have their own page again
 
     static boolean open;
     private static long openAt, closeAt;
@@ -239,7 +239,7 @@ final class Codex {
         int cx = x + w / 2, cy = y + h / 2 - 10;
         for (int r = 22; r > 0; r -= 2) { int hw = r; g.fill(cx - hw, cy - r / 4, cx + hw, cy + r / 4, argb(0.05f, 0xE8B84A)); }
         Gfx.push(g); Gfx.translate(g, cx - 12, cy - 18); Gfx.scale(g, 1.5f); Icons.draw(g, ":trophy:", 0, 0, 2400L); Gfx.pop(g);
-        String tt = "THE COLLECTION"; Gfx.push(g); Gfx.translate(g, cx - fw(tt) * 0.6f, cy + 14); Gfx.scale(g, 1.2f); g.text(font, tt, 1, 1, 0xFF2A140C, false); g.text(font, tt, 0, 0, GOLD, false); Gfx.pop(g);
+        String tt = "ACHIEVEMENTS"; Gfx.push(g); Gfx.translate(g, cx - fw(tt) * 0.6f, cy + 14); Gfx.scale(g, 1.2f); g.text(font, tt, 1, 1, 0xFF2A140C, false); g.text(font, tt, 0, 0, GOLD, false); Gfx.pop(g);
         if (shade > 0.01f) g.fill(x, y, x + w, y + h, argb(shade, 0));
     }
     private static void coverInside(GuiGraphicsExtractor g, int x, int y, int w, int h, float shade) {
@@ -278,8 +278,7 @@ final class Codex {
             int col = i == 0 ? 0xFFB8862A : ACH_COL[i - 1]; String ic = i == 0 ? "home" : ACH_ICON[i - 1]; String nm = i == 0 ? "Contents" : ACH_NAME[i - 1];
             tab(g, spine + pw + 9, y + i * (th + 3), th, col, ic, nm, i, true);
         }
-        int wt = Math.min(30, (bh - 16) / WARD.length - 4);
-        for (int i = 0; i < WARD.length; i++) tab(g, spine - pw - 9, top + 14 + i * (wt + 4), wt, WARD_COL[i], WARD_ICON[i], WARD_NAME[i], FIRST_WARD + i, false);
+        if (CHAPTERS > FIRST_WARD) for (int i = 0, wt = Math.min(30, (bh - 16) / WARD.length - 4); i < WARD.length; i++) tab(g, spine - pw - 9, top + 14 + i * (wt + 4), wt, WARD_COL[i], WARD_ICON[i], WARD_NAME[i], FIRST_WARD + i, false);
     }
     private static void tab(GuiGraphicsExtractor g, int edge, int y, int h, int col, String icon, String name, int c, boolean right) {
         boolean act = ch == c, hv = right ? mx >= edge && mx < edge + 24 && my >= y && my < y + h : mx >= edge - 24 && mx < edge && my >= y && my < y + h;
@@ -379,19 +378,20 @@ final class Codex {
     private static int achAll() { Achievements.Profile p = Achievements.profile(); return p == null ? 0 : p.list().size(); }
     private static int cosOwned() { int n = 0; for (CosmeticData.Def d : CosmeticData.ALL) if (CosmeticData.unlocked(d)) n++; return n; }
     private static void contentsLeft(GuiGraphicsExtractor g, int x, int y, int w, int h) {
-        title(g, "The Collection", x, y, GOLD_D);
+        title(g, "Achievements", x, y, GOLD_D);
         String who; try { who = net.minecraft.client.Minecraft.getInstance().getUser().getName(); } catch (Throwable e) { who = "you"; }
         small(g, "kept for " + who, x, y + 21, INK_SOFT);
         int r = Math.min(30, w / 5), cy = y + 46 + r;
         dial(g, x + w / 4, cy, r, achAll() == 0 ? 0f : achDone() / (float) achAll(), GOLD, achDone() + "/" + achAll(), "achievements");
-        dial(g, x + w * 3 / 4, cy, r, cosOwned() / (float) Math.max(1, CosmeticData.ALL.size()), 0xFFC77DFF, cosOwned() + "/" + CosmeticData.ALL.size(), "cosmetics");
+        int chDone = 0; for (String id : ACH) { List<Achievements.Ach> l = achOf(id); boolean all = !l.isEmpty(); for (Achievements.Ach a : l) all &= a.done(); if (all) chDone++; }
+        dial(g, x + w * 3 / 4, cy, r, chDone / (float) ACH.length, 0xFFC77DFF, chDone + "/" + ACH.length, "chapters done");
         int yy = cy + r + 22;
         Achievements.Profile p = Achievements.profile();
         if (p == null) { for (String l : wrap(Achievements.status.isEmpty() ? "Opening the ledger..." : Achievements.status, w, 1f)) { ink(g, l, x, yy, INK_SOFT); yy += 10; } return; }
         ink(g, "Latest", x, yy, INK); g.fill(x, yy + 10, x + w, yy + 11, INK_FAINT); yy += 15;
         List<Achievements.Ach> got = new ArrayList<>(); for (Achievements.Ach a : p.list()) if (a.done()) got.add(a);
         got.sort((a, b) -> Long.compare(b.at(), a.at()));
-        if (got.isEmpty()) { for (String l : wrap("Nothing yet. Your first rare drop opens the first page.", w, 0.75f)) { small(g, l, x, yy, INK_SOFT); yy += 8; } }
+        if (got.isEmpty()) { for (String l : wrap("Nothing yet. Your first rare drop opens the first page. Click a chapter on the right to see what you can earn.", w, 0.75f)) { small(g, l, x, yy, INK_SOFT); yy += 8; } }
         for (int i = 0; i < Math.min(3, got.size()) && yy < y + h - 12; i++) {
             Achievements.Ach a = got.get(i);
             disc(g, x + 5, yy + 3, 4, GOLD); ink(g, a.name(), x + 14, yy, INK);
@@ -405,7 +405,7 @@ final class Codex {
         small(g, label, cx - Math.round(fw(label) * 0.375f), cy + 4, INK_SOFT);
     }
     private static void contentsRight(GuiGraphicsExtractor g, int x, int y, int w, int h, boolean live) {
-        ink(g, "CONTENTS", x, y + 2, GOLD_D); g.fill(x, y + 12, x + w, y + 13, INK_FAINT);
+        ink(g, "CHAPTERS", x, y + 2, GOLD_D); g.fill(x, y + 12, x + w, y + 13, INK_FAINT);
         int yy = y + 20, rowH = Math.max(11, Math.min(16, (h - 40) / 13));
         Achievements.Profile p = Achievements.profile();
         for (int c = FIRST_ACH; c < CHAPTERS; c++) {
@@ -413,11 +413,11 @@ final class Codex {
             String nm = c < FIRST_WARD ? ACH_NAME[c - FIRST_ACH] : WARD_NAME[c - FIRST_WARD];
             int col = c < FIRST_WARD ? ACH_COL[c - FIRST_ACH] : WARD_COL[c - FIRST_WARD];
             String right;
-            if (c < FIRST_WARD) { List<Achievements.Ach> l = achOf(ACH[c - FIRST_ACH]); int d = 0; for (Achievements.Ach a : l) if (a.done()) d++; right = p == null ? "·" : d + "/" + l.size(); }
+            if (c < FIRST_WARD) { List<Achievements.Ach> l = achOf(ACH[c - FIRST_ACH]); int d = 0; for (Achievements.Ach a : l) if (a.done()) d++; right = p == null ? "·" : d + " of " + l.size() + " done"; }
             else { List<Object> l = wardItems(c - FIRST_WARD); int d = 0; for (Object o : l) if (o instanceof CosmeticData.Def df ? CosmeticData.unlocked(df) : o instanceof Achievements.Ach aa ? CosmeticData.unlockedId(aa.reward()) : CosmeticData.owned((CosmeticData.SetDef) o) > 0) d++; right = d + "/" + l.size(); }
             boolean hv = live && mx >= x && mx < x + w && my >= yy - 2 && my < yy + rowH - 2;
             g.fill(x, yy + 1, x + 3, yy + 7, col);
-            leader(g, nm, right + "  " + (pageNumber(c, 0) * 2 + 1), x + 7, yy, w - 7);
+            leader(g, nm, right, x + 7, yy, w - 7);          // how many of the chapter's achievements you have (click the row to open it)
             if (hv) g.fill(x + 7, yy + 9, x + 7 + fw(nm), yy + 10, col);
             final int cc = c; if (live) HITS.add(new Object[]{x, yy - 2, x + w, yy + rowH - 2, (Runnable) () -> jump(cc)});
             yy += rowH;
