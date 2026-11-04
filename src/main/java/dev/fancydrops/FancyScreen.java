@@ -41,7 +41,7 @@ public class FancyScreen extends Screen {
     private int[] achBtn() { int x = Math.min(px + pw + 6, width - 28), y = py + ph - 22; return new int[]{x, y, x + 22, y + 22}; }          // outside the menu, bottom right, under the community buttons
     private void openAch() { if (!hiddenTab(tab)) prevTab = tab; tab = Tab.STATS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; Achievements.refresh(true); }
     private int[] cosBtn() { int x = Math.max(2, px - 28), y = py + ph - 22; return new int[]{x, y, x + 22, y + 22}; }          // outside the menu, bottom right, under the community buttons
-    private int[] adminBtn() { int[] c = cosBtn(); return new int[]{c[0], c[1] - 28, c[2], c[3] - 28}; }          // admin only: just above the Cosmetics button
+    private int[] adminBtn() { return cosBtn(); }          // admin only: bottom left, outside the menu
     private void openCos() { if (!hiddenTab(tab)) prevTab = tab; tab = Tab.COSMETICS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
     private void closeCos() { tab = hiddenTab(prevTab) ? Tab.HOME : prevTab; scroll = 0; selY = Float.NaN; tabChanged = System.currentTimeMillis(); }
     private static int vi(int ord) { return switch (Tab.values()[ord]) { case HOME -> 0; case DROPS -> 1; case ANIMATIONS -> 2; case SOUNDS -> 3; case CHAT -> 4; case STATS -> 5; default -> 0; }; }          // the sidebar list: Settings sits pinned at the bottom, Cosmetics and Resources have their own doors
@@ -289,6 +289,7 @@ public class FancyScreen extends Screen {
     private long closeAt;                                    // set when Esc is pressed: the menu fades out, then closes
 
     /** Set by /fd stats and /fd <search>: the next menu opens on the Stats page, or with this text in the search box. */
+    private int codexPend = -2;          // the Collection opens on this chapter at the next frame (-2 = no)
     static boolean pendingStats, pendingCos; static String pendingSearch, pendingTab;
 
     private static boolean prefetchedAll;
@@ -306,9 +307,9 @@ public class FancyScreen extends Screen {
         super(Component.literal("FancyDrops"));
         prefetchAll();
         if (!skipIntro) { tab = Tab.HOME; subSel[Tab.HOME.ordinal()] = -1; dropSrc = null; dropSrcName = null; scroll = 0; query = ""; }          // a fresh /fd opens on the Home page itself, never on Resources
-        if (pendingStats) { pendingStats = false; prevTab = Tab.HOME; openAch(); }
+        if (pendingStats) { pendingStats = false; codexPend = 0; }
         if (pendingTab != null) { Tab pt = pendingTab.equals("sounds") ? Tab.SOUNDS : Tab.ANIMATIONS; pendingTab = null; tab = pt; subSel[pt.ordinal()] = -1; scroll = 0; query = ""; }          // /fd editor
-        if (pendingCos) { pendingCos = false; prevTab = Tab.HOME; tab = Tab.COSMETICS; query = ""; scroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; }
+        if (pendingCos) { pendingCos = false; codexPend = 9; }
         if (pendingSearch != null) { query = pendingSearch; pendingSearch = null; scroll = 0; }          // a fresh /fd opens on Home; coming back from a preview keeps your page
         born = skipIntro ? 0L : System.currentTimeMillis();
         skipIntro = false;
@@ -372,7 +373,7 @@ public class FancyScreen extends Screen {
         addRenderableWidget(hexField);
         hexField.setVisible(false);
         formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false);
-        if (pendingCos) { pendingCos = false; openCos(); }                       // /fd cosmetics
+        if (pendingCos) { pendingCos = false; codexPend = 9; }                   // /fd cosmetics: the book, at Name Icons
     }
 
     private void beginTyping(Slider s) {
@@ -385,7 +386,7 @@ public class FancyScreen extends Screen {
         typing = null; typingId = -1; numField.setFocused(false); numField.setVisible(false);
     }
 
-    @Override public void removed() { FancyConfig.save(); SoundFx.stopPreviews(); }
+    @Override public void removed() { FancyConfig.save(); SoundFx.stopPreviews(); Codex.open = false; }
     @Override public boolean isPauseScreen() { return false; }
 
     // ------------------------------------------------------------------ drawing helpers
@@ -1194,8 +1195,16 @@ public class FancyScreen extends Screen {
         if (hd != null && hd.kind() == CosmeticData.Kind.AURA) aura = hd.id(); else if (CosmeticData.unlockedId(c.aura)) aura = c.aura;
         CosmeticData.Def ad = aura == null ? null : CosmeticData.byId(aura);
         Gfx.text(g, font, ad == null ? "No aura worn" : ad.name(), x + 8, y + 17, ad == null ? Ui.DIM : Canvas.mix(Ui.SUB, ad.color(), 0.6f));
-        int fx = x + w / 2, feet0 = y + h - 22, bobY = STILL ? 0 : Math.round((float) Math.sin(System.currentTimeMillis() / 520.0) * 2f), feet = feet0 - bobY; float ppb = SkinMock.height() / 1.8f;   // the character bobs; the floor stays
         auraBox[0] = x; auraBox[1] = y + 28; auraBox[2] = x + w; auraBox[3] = y + h;
+        drawAuraStage(g, x, y + 28, w, h - 28, aura);
+        if (intro < 1f) { int al = Math.round((1f - intro) * 150); pill(g, tr.x, tr.y, tr.w, tr.h, Gfx.argb(al, 0x0C0E14)); pill(g, x, y, w, h, Gfx.argb(al, 0x0C0E14)); }
+    }
+
+    /** The aura stage: your skin on a little lit floor, wearing `aura` (null: none). x, sy, w, sh = the stage itself. */
+    private void drawAuraStage(GuiGraphicsExtractor g, int x, int sy, int w, int sh, String aura) {
+        long now = System.currentTimeMillis(); int y = sy - 28, h = sh + 28;
+        CosmeticData.Def ad = aura == null ? null : CosmeticData.byId(aura);
+        int fx = x + w / 2, feet0 = y + h - 22, bobY = STILL ? 0 : Math.round((float) Math.sin(System.currentTimeMillis() / 520.0) * 2f), feet = feet0 - bobY; float ppb = SkinMock.height() / 1.8f;   // the character bobs; the floor stays
         g.enableScissor(x + 1, y + 28, x + w - 1, y + h - 1);
         int pcol = ad == null ? 0xFF8A93B0 : ad.color();                                              // a little stage in the colour of the aura
         { int pc2 = pcol & 0xFFFFFF; float tt = now / 1000f, br = 0.5f + 0.5f * (float) Math.sin(tt * 2f);
@@ -1225,7 +1234,6 @@ public class FancyScreen extends Screen {
             }
         }
         g.disableScissor();
-        if (intro < 1f) { int al = Math.round((1f - intro) * 150); pill(g, tr.x, tr.y, tr.w, tr.h, Gfx.argb(al, 0x0C0E14)); pill(g, x, y, w, h, Gfx.argb(al, 0x0C0E14)); }
     }
 
     // ---- Chat > the typing preview
@@ -1522,7 +1530,7 @@ public class FancyScreen extends Screen {
     /** True while the search is about cosmetics: the Cosmetics button then glows and points at itself. */
     private boolean cosHint() {
         String q = query.trim().toLowerCase(Locale.ROOT); if (q.length() < 2) return false;
-        return "cosmetics".startsWith(q) || q.contains("cosmetic") || "suffix".startsWith(q) || "name icon".startsWith(q) || "icon".startsWith(q) || "aura".startsWith(q) || q.contains("name effect") || "name effects".startsWith(q);
+        return "cosmetics".startsWith(q) || q.contains("cosmetic") || "collection".startsWith(q) || "achievements".startsWith(q) || q.contains("achievement") || "suffix".startsWith(q) || "name icon".startsWith(q) || "icon".startsWith(q) || "aura".startsWith(q) || q.contains("name effect") || "name effects".startsWith(q);
     }
     private boolean masterLast; private long masterAt;
     private int[] masterBox() { int top = FancyConfig.get().previewAt == 0 ? Math.round((dockH() + DOCK_GAP) * dockK) : 0; int w = 100, y = Math.max(2, py - top - 25); return new int[]{px, y, px + w, y + 22}; }
@@ -2098,6 +2106,15 @@ public class FancyScreen extends Screen {
         g.fill(x + 2, y + 4, x + 3, y + 5, 0xFF1C1C28); g.fill(x + 5, y + 4, x + 6, y + 5, 0xFF1C1C28);
     }
 
+    private String simpleTip; private int simpleTipCol;
+    /** What the Collection book borrows from the menu. */
+    private final Codex.Host codexHost = new Codex.Host() {
+        public net.minecraft.client.gui.Font font() { return font; }
+        public void chatPreview(GuiGraphicsExtractor g, int x, int y, int w, int h) { Row r = new Row(); r.x = x; r.y = y; r.w = w; r.h = h; drawCosPreview(g, r); }
+        public void auraStage(GuiGraphicsExtractor g, int x, int y, int w, int h, String aura) { g.fill(x, y, x + w, y + h, 0xFF12141C); drawAuraStage(g, x, y, w, h, aura); }
+        public void toast(String text, int col) { FancyScreen.toast(text, col); if (text.startsWith("LOCKED")) toastShake = true; }
+        public void tip(String lines, int col) { if (lines == null) return; if (lines.contains("\n")) { tipText = lines; tipCol = col; } else { simpleTip = lines; simpleTipCol = col; } }
+    };
     private void drawCosPreview(GuiGraphicsExtractor g, Row r) {
         long now = System.currentTimeMillis(); float sec = (now % 3600000L) / 1000f;
         Cosmetics.Suffix cs = Cosmetics.chosen();
@@ -2381,7 +2398,7 @@ public class FancyScreen extends Screen {
                 }
             }
             rows.clear(); srcList.clear(); srcWip.clear();
-            if (cosHint()) { Row cn = note("Cosmetics has its own button, bottom left of the menu. Click the glowing one.", 0xFFC9A0FF); cn.noSearch = true; rows.add(cn); }
+            if (cosHint()) { Row cn = note("Cosmetics and achievements live in the Collection: the glowing button at the bottom right of the menu.", 0xFFE8B84A); cn.noSearch = true; rows.add(cn); }
             rows.add(section((pageCount + res.size()) + " result" + (pageCount + res.size() == 1 ? "" : "s") + " for \"" + query.trim() + "\""));
             rows.addAll(pages);
             if (!pages.isEmpty() && !res.isEmpty()) rows.add(section("Also matching"));
@@ -2972,7 +2989,9 @@ public class FancyScreen extends Screen {
     @Override public void extractRenderState(GuiGraphicsExtractor g, int mx0, int my0, float delta) {
         AnimFrames.tick();                                                                      // the first time the menu opens, the animation frames are written to config/fancydrops/art/animations
         Gfx.uiFont = 0;                                             // the menu font setting is gone: one font
-        final int mx = editor != 0 ? -9999 : mx0, my = editor != 0 ? -9999 : my0;       // an open editor sits on top: nothing behind it lights up
+        if (codexPend != -2 && width > 0) { Codex.open(achBtn(), codexPend); codexPend = -2; }
+        final boolean bookUp = Codex.open;
+        final int mx = editor != 0 || bookUp ? -9999 : mx0, my = editor != 0 || bookUp ? -9999 : my0;       // an open editor (or the Collection) sits on top: nothing behind it lights up
         formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false);
         searchField.setVisible(false); numShow = false; lastMx = mx; mouseX = mx0; mouseY = my0;
         if (dragCtl instanceof Slider ls && ls.live) {   // dragging a size slider: show the scene resizing live
@@ -3319,51 +3338,36 @@ public class FancyScreen extends Screen {
             pill(g, cx + cw + 2, by, sh ? 5 : 3, bh, sh ? Ui.ACCENT : Ui.BORDER);
         }
         drawCommunity(g, mx, my);
-        {                                                                           // the Achievements button: outside the menu, bottom right, like the community buttons
-            int[] b = achBtn(); boolean hv = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3], on = tab == Tab.STATS;
-            float k = anim("achBtn", hv || on ? 1f : 0f, 40f), pulse = 0.5f + 0.5f * (float) Math.sin(fxNow / 700.0);
-            int ac = 0xFFE8B84A;
-            pill(g, b[0] - 2, b[1] - 2, 26, 26, Gfx.argb(Math.round(12 + 16 * pulse + 22 * k), ac & 0xFFFFFF));
-            pill(g, b[0], b[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, ac, 0.14f), Ui.ROW_HOVER, k));
-            rout(g, b[0], b[1], 22, 22, Gfx.argb(Math.round(70 + 60 * pulse + 90 * k), ac & 0xFFFFFF));
-            Icons.draw(g, ":trophy:", b[0] + 3, b[1] + 3 - Math.round(k), hv ? System.currentTimeMillis() : 2400L);
-            for (int q = 0; q < 3; q++) {
-                float ph = ((fxNow / 1500f) + q * 0.34f) % 1f, al = (float) Math.sin(ph * Math.PI);
-                int sx = b[0] + 1 + (q * 9 + 4) % 20, sy = b[1] + 1 + (q * 13 + 2) % 20 - Math.round(ph * 3f);
-                int sc = Gfx.argb(Math.round(170 * al), q % 2 == 0 ? 0xFFF4C8 : 0xFFD87A);
+        {                                                                           // the Collection button (achievements and cosmetics): outside the menu, bottom right, like the community buttons
+            int[] b = achBtn(); boolean hv = mx >= b[0] && mx < b[2] && my >= b[1] && my < b[3], find = cosHint();
+            float k = anim("achBtn", hv ? 1f : 0f, 40f), pulse = 0.5f + 0.5f * (float) Math.sin(fxNow / (find ? 170.0 : 700.0));
+            int ac = 0xFFE8B84A, ac2 = 0xFFC77DFF;
+            for (int gl = 3; gl >= 1; gl--) pill(g, b[0] - gl * 2, b[1] - gl * 2, 22 + gl * 4, 22 + gl * 4, Gfx.argb(Math.round((10 + 18 * pulse + 30 * k) / gl), Canvas.mix(ac, ac2, 0.5f + 0.5f * (float) Math.sin(fxNow / 1300.0)) & 0xFFFFFF));
+            pill(g, b[0], b[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, ac, 0.18f + 0.08f * pulse), Ui.ROW_HOVER, k));
+            rout(g, b[0], b[1], 22, 22, Gfx.argb(Math.round(90 + 60 * pulse + 90 * k), ac & 0xFFFFFF));
+            Gfx.push(g); float tilt = hv ? (float) Math.sin(fxNow / 140.0) * 0.08f : 0f; Gfx.translate(g, b[0] + 11, b[1] + 11 - k); Gfx.rotate(g, tilt); Gfx.translate(g, -8, -8);
+            Icons.draw(g, ":collection:", 0, 0, hv ? System.currentTimeMillis() : 2400L); Gfx.pop(g);
+            for (int q = 0; q < 6; q++) {                                           // a few sparkles twinkle round it
+                float ph = ((fxNow / 1300f) + q * 0.17f) % 1f, al = (float) Math.sin(ph * Math.PI);
+                int sx = b[0] - 3 + (q * 9 + 4) % 28, sy = b[1] - 3 + (q * 13 + 2) % 28 - Math.round(ph * 4f);
+                int sc = Gfx.argb(Math.round(200 * al), q % 3 == 0 ? 0xFFFFFF : q % 3 == 1 ? 0xFFE3A0 : 0xE6C8FF);
                 g.fill(sx, sy - 1, sx + 1, sy + 2, sc); g.fill(sx - 1, sy, sx + 2, sy + 1, sc);
             }
-            if (hv) { String tt = "Achievements"; int w = Gfx.w(font, tt) + 8, x0 = Math.min(width - w - 2, b[2] - w); pill(g, x0, b[1] - 16, w, 13, 0xFF0D0F16); rout(g, x0, b[1] - 16, w, 13, Ui.BORDER); Gfx.text(g, font, tt, x0 + 4, b[1] - 13, Ui.TEXT); }
-        }
-        if (!cosWin()) {                                                            // the Cosmetics button: outside the menu, bottom right
-            int[] cb = cosBtn(); boolean ch = mx >= cb[0] && mx < cb[2] && my >= cb[1] && my < cb[3];
-            float hv2 = anim("cosBtn", ch ? 1f : 0f, 40f); int ac = 0xFFC77DFF;
-            boolean find = cosHint();
-            float bp = find ? 0.5f + 0.5f * (float) Math.sin(fxNow / 170.0) : 0.5f + 0.5f * (float) Math.sin(fxNow / 520.0);                                              // the button breathes so the eye finds it (faster while you search for cosmetics)
-            for (int gl = 3; gl >= 1; gl--) pill(g, cb[0] - gl * 2, cb[1] - gl * 2, 22 + gl * 4, 22 + gl * 4, Gfx.argb(Math.round((10 + 22 * bp + 30 * hv2) / gl), ac & 0xFFFFFF));
-            pill(g, cb[0], cb[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, ac, 0.32f + 0.12f * bp), ac, 0.3f * hv2));
-            rout(g, cb[0], cb[1], 22, 22, Gfx.argb(Math.round(170 + 60 * bp + 25 * hv2), ac & 0xFFFFFF));
-            Icons.draw(g, ":cosmetics:", cb[0] + 3, cb[1] + 3 - Math.round(hv2), ch ? System.currentTimeMillis() : 2400L);
-            for (int k = 0; k < 12; k++) {                                         // lots of sparkles twinkle in and around the button
-                float ph2 = ((fxNow / 900f) + k * 0.083f) % 1f, al = (float) Math.sin(ph2 * Math.PI);
-                int sx2 = cb[0] - 5 + (k * 7 + 3) % 31, sy2 = cb[1] - 5 + (k * 11 + 2) % 31 - Math.round(ph2 * 4f);
-                int sc = Gfx.argb(Math.round(255 * al), k % 3 == 0 ? 0xFFFFFF : k % 3 == 1 ? 0xFFF4A8 : 0xE6C8FF);
-                g.fill(sx2, sy2 - 1, sx2 + 1, sy2 + 2, sc); g.fill(sx2 - 1, sy2, sx2 + 2, sy2 + 1, sc);
-                if (k % 4 == 0) { g.fill(sx2 - 2, sy2, sx2 + 3, sy2 + 1, Gfx.argb(Math.round(110 * al), 0xFFFFFF)); g.fill(sx2, sy2 - 2, sx2 + 1, sy2 + 3, Gfx.argb(Math.round(110 * al), 0xFFFFFF)); }      // the big ones get longer rays
+            if (find) {                                                             // searching for cosmetics or achievements: rings spread from the button and a label points at it
+                for (int rg = 0; rg < 3; rg++) { float ph3 = ((fxNow / 1100f) + rg / 3f) % 1f; int rr = 12 + Math.round(ph3 * 22); rout(g, b[0] + 11 - rr, b[1] + 11 - rr, rr * 2, rr * 2, Gfx.argb(Math.round(190 * (1f - ph3)), ac & 0xFFFFFF)); }
+                int bob = Math.round((float) Math.abs(Math.sin(fxNow / 260.0)) * 3f), lw = Gfx.w(font, "Collection") + 12, lx0 = Math.min(width - lw - 2, b[0] + 11 - lw / 2), ly0 = b[1] - 22 - bob;
+                pill(g, lx0, ly0, lw, 15, 0xFF2A1B10); rout(g, lx0, ly0, lw, 15, ac); Gfx.text(g, font, "Collection", lx0 + 6, ly0 + 4, 0xFFFFFFFF);
+                for (int ar = 0; ar < 4; ar++) g.fill(b[0] + 11 - 3 + ar, ly0 + 15 + ar, b[0] + 11 + 4 - ar, ly0 + 16 + ar, ac);
             }
+            if (hv && !find) { String tt = "Collection"; String sub = "Achievements and cosmetics"; int w = Math.max(Gfx.w(font, tt), Gfx.w(font, sub)) + 8, x0 = Math.min(width - w - 2, b[2] - w); pill(g, x0, b[1] - 27, w, 24, 0xFF0D0F16); rout(g, x0, b[1] - 27, w, 24, Gfx.argb(160, ac & 0xFFFFFF)); Gfx.text(g, font, tt, x0 + 4, b[1] - 24, 0xFFFFE3A0); Gfx.text(g, font, sub, x0 + 4, b[1] - 14, Ui.SUB); }
+        }
+        if (!cosWin()) {
             if (Cosmetics.isAdmin()) {
                 int[] ab = adminBtn(); boolean ah = mx >= ab[0] && mx < ab[2] && my >= ab[1] && my < ab[3]; int rc = 0xFFFF6B6B;
                 pill(g, ab[0], ab[1], 22, 22, Canvas.mix(Canvas.mix(Ui.ROW, rc, 0.2f), rc, ah ? 0.3f : 0f)); rout(g, ab[0], ab[1], 22, 22, Gfx.argb(ah ? 230 : 140, rc & 0xFFFFFF));
                 Icons.draw(g, ":settings:", ab[0] + 3, ab[1] + 3, System.currentTimeMillis());
                 if (ah) { int w = Gfx.w(font, "Admin Panel") + 8; int x0 = Math.max(2, ab[0]), ty = ab[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Admin Panel", x0 + 4, ty + 3, Ui.TEXT); }
             }
-            if (find) {                                                                                      // searching for cosmetics: rings spread from the button and an arrow points at it
-                for (int rg = 0; rg < 3; rg++) { float ph3 = ((fxNow / 1100f) + rg / 3f) % 1f; int rr = 12 + Math.round(ph3 * 22); rout(g, cb[0] + 11 - rr, cb[1] + 11 - rr, rr * 2, rr * 2, Gfx.argb(Math.round(190 * (1f - ph3)), ac & 0xFFFFFF)); }
-                int bob = Math.round((float) Math.abs(Math.sin(fxNow / 260.0)) * 3f), lw = Gfx.w(font, "Cosmetics") + 12, lx0 = Math.max(2, cb[0] + 11 - lw / 2), ly0 = cb[1] - 22 - bob;
-                pill(g, lx0, ly0, lw, 15, 0xFF2A1B4A); rout(g, lx0, ly0, lw, 15, 0xFFC9A0FF); Gfx.text(g, font, "Cosmetics", lx0 + 6, ly0 + 4, 0xFFFFFFFF);
-                for (int ar = 0; ar < 4; ar++) g.fill(cb[0] + 11 - 3 + ar, ly0 + 15 + ar, cb[0] + 11 + 4 - ar, ly0 + 16 + ar, 0xFFC9A0FF);        // a little arrow pointing down at the button
-            }
-            if (ch && !find) { int w = Gfx.w(font, "Cosmetics") + 8; int x0 = Math.max(2, cb[0]), ty = cb[1] - 16; pill(g, x0, ty, w, 13, 0xFF0D0F16); rout(g, x0, ty, w, 13, Ui.BORDER); Gfx.text(g, font, "Cosmetics", x0 + 4, ty + 3, Ui.TEXT); }
         }
         if (intro < 1f) pill(g, px, py, pw, ph, Gfx.argb(Math.round((1f - intro) * 150), 0x0C0E14));
         Gfx.pop(g);
@@ -3375,6 +3379,7 @@ public class FancyScreen extends Screen {
         drawTileTip(g, mx, my);
         if (adminHome && !adminOpen) drawAdminHome(g, mx0, my0);
         if (adminOpen) drawAdmin(g, mx0, my0);
+        if (Codex.open) { Codex.draw(g, codexHost, width, height, mx0, my0); drawTileTip(g, mx0, my0); if (simpleTip != null) { int w = Gfx.w(font, simpleTip) + 8, x0 = Math.min(width - w - 2, mx0 + 10), y0 = Math.max(2, my0 - 16); pill(g, x0, y0, w, 13, 0xF40D0F16); rout(g, x0, y0, w, 13, Gfx.argb(200, simpleTipCol & 0xFFFFFF)); Gfx.text(g, font, simpleTip, x0 + 4, y0 + 3, Ui.TEXT); simpleTip = null; } }
         drawToast(g, now);
         if (editor == 0 && !adminHome && !adminOpen) drawX(g, mainClose(), in(mx0, my0, mainClose()), "mx");
         drawEditor(g, mx0, my0);
@@ -3475,6 +3480,7 @@ public class FancyScreen extends Screen {
 
 
     @Override public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) { dirty = true;
+        if (Codex.open) return event.button() != 0 || Codex.click(event.x(), event.y());
         if (tab == Tab.STATS && event.button() == 0 && editor == 0 && !adminOpen && !adminHome && Ledger.click(event.x(), event.y())) return true;          // the ledger's ribbons and page arrows
         if (event.button() == 3 && editor == 0 && !adminOpen && !adminHome && hdrBack != null) { hdrBack.run(); return true; }        // the mouse's back button goes back a page
         if (searchField.isFocused() && !(event.x() >= searchField.getX() - 6 && event.x() < searchField.getX() + searchField.getWidth() + 6 && event.y() >= searchField.getY() - 3 && event.y() < searchField.getY() + 14)) searchField.setFocused(false);          // a click anywhere else leaves the search box
@@ -3523,8 +3529,7 @@ public class FancyScreen extends Screen {
             return true;
         }
 
-        if (button == 0 && !cosWin() && mx >= cosBtn()[0] && mx < cosBtn()[2] && my >= cosBtn()[1] && my < cosBtn()[3]) { openCos(); return true; }
-        if (button == 0 && in2(mx, my, achBtn())) { if (tab == Tab.STATS) closeCos(); else openAch(); return true; }
+        if (button == 0 && in2(mx, my, achBtn())) { Codex.open(achBtn(), -1); return true; }
         if (button == 0 && !cosWin() && mx >= masterBox()[0] && mx < masterBox()[2] && my >= masterBox()[1] && my < masterBox()[3]) {
             FancyConfig mc = FancyConfig.get(); boolean on = !(mc.masterAnimate || mc.masterAnnounce);
             mc.setMaster(on, on); FancyConfig.save();
@@ -3616,6 +3621,7 @@ public class FancyScreen extends Screen {
     }
 
     @Override public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) { dirty = true;
+        if (Codex.open) return Codex.scroll(scrollY);
         if (adminOpen || adminHome) { adminScroll = Math.max(0, adminScroll - (int) (scrollY * 24)); return true; }
         if (editor != 0) return true;
         if (popup != null && mx >= popX0 && mx < popX1 && my >= popY && my < popY + popVis * POP_H + 4 && popup.pickLabels.size() > popVis) {
@@ -3629,6 +3635,7 @@ public class FancyScreen extends Screen {
 
     @Override public boolean keyPressed(KeyEvent event) { dirty = true;
         int key = event.key();
+        if (Codex.open) return Codex.key(key);
         if (adminOpen) { if (key == 256) adminOpen = false; return true; }
         if (adminHome) { if (key == 256) { adminHome = false; adminField.setFocused(false); return true; } if (adminField.isFocused() && (key == 257 || key == 335)) { openAdmin(); return true; } return super.keyPressed(event); }
         if (adminField.isFocused() && adminField.visible && (key == 257 || key == 335)) { openAdmin(); return true; }

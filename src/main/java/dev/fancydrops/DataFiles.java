@@ -32,7 +32,9 @@ public final class DataFiles {
     }
 
     public static Path dir() {
-        Path now = FabricLoader.getInstance().getConfigDir().resolve("fancydrops");
+        Path now;
+        try { now = FabricLoader.getInstance().getConfigDir().resolve("fancydrops"); }
+        catch (Throwable t) { return Path.of(System.getProperty("java.io.tmpdir"), "fancydrops"); }      // outside the game (tests): a scratch folder
         if (!Files.exists(now)) {                       // first run after the RNGDrops -> FancyDrops rename: bring the old data folder along
             Path old = FabricLoader.getInstance().getConfigDir().resolve("rngdrops");
             if (Files.isDirectory(old)) {

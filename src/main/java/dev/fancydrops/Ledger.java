@@ -164,7 +164,7 @@ final class Ledger {
     }
     private static void turnSound() { SoundFx.Fx fx = SoundFx.byName("exp_flip"); if (fx != null) SoundFx.play(fx, 1.1f, 0.6f); }
 
-    private static List<String[]> statRows(String ch, Achievements.Profile p) {
+    static List<String[]> statRows(String ch, Achievements.Profile p) {
         Map<String, Double> s = p.stats(); List<String[]> o = new ArrayList<>();
         java.util.function.Function<String, Double> st = k -> s.getOrDefault(k, 0.0);
         java.util.function.BiFunction<String, Integer, Double> gr = (k, i) -> p.groups().containsKey(k) ? p.groups().get(k)[i] : 0.0;
@@ -181,9 +181,9 @@ final class Ledger {
         }
         return o;
     }
-    private static String rewardName(String id) { CosmeticData.Def d = CosmeticData.byId(id); return d == null ? id : d.name() + " " + CosmeticData.kindLabel(d.kind()).toLowerCase(Locale.ROOT); }
+    static String rewardName(String id) { CosmeticData.Def d = CosmeticData.byId(id); return d == null ? id : d.name() + " " + CosmeticData.kindLabel(d.kind()).toLowerCase(Locale.ROOT); }
     /** The picture on a badge: the mod's own icons. */
-    private static String iconFor(String icon) {
+    static String iconFor(String icon) {
         String k = switch (icon) {
             case "bell" -> "bell"; case "clock" -> "clock"; case "dice" -> "dice"; case "chest" -> "treasure"; case "coin" -> "coin"; case "shovel" -> "shovel";
             case "horn" -> "mytho"; case "sword", "skull" -> "slayers"; case "anvil" -> "anvil"; case "wheat", "leaf" -> "grp_crops"; case "bug" -> "farm"; case "disc" -> "disc"; case "fish" -> "fishing"; case "flame" -> "grp_crimson"; case "dye" -> "dye";

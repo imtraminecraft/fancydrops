@@ -71,6 +71,30 @@ public final class SoundFx {
         reg("exp_reveal", "Rune chord", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
         reg("exp_reveal_epic", "Rune chord (epic)", SoundEvents.BEACON_ACTIVATE, 0.9f);
         reg("exp_end", "Book farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
+        // 0.9: one bank per animation (tools/make_scene_sounds.py): beat, burst, reveal (+ _big for RNG), glow (+ _big), end
+        String[][] banks = {{"rit", "Ritual", "Zap", "Thunderclap"}, {"tre", "Treasure", "Spade", "Chest of coins"}, {"sly", "Slayer", "Ringing blade", "Cleave"},
+            {"crp", "Crops", "Rustling scythe", "Earth pop"}, {"fst", "Feast", "Pumpkin knock", "Festival drum"}, {"bty", "Bounty", "Glass chimes", "Greenhouse whoosh"},
+            {"pst", "Pests", "Bug chirp", "Vacuum slurp"}, {"tab", "Table", "Page riffle", "Rune slam"}, {"wat", "Water", "Bobber plop", "Splash"},
+            {"lav", "Lava", "Magma blorp", "Eruption"}, {"spk", "Spooky", "Tolling bell", "Organ stab"}, {"ice", "Winter", "Ice crack", "Shatter"},
+            {"crm", "Crimson", "Meteor", "Boom"}, {"mob", "Mobs", "Rattling cage", "Bars snap"}, {"dye", "Dyes", "Drip", "Paint splash"}};
+        for (String[] b : banks) {
+            reg(b[0] + "_beat", b[1] + ": " + b[2], SoundEvents.AMETHYST_BLOCK_HIT, 0.8f);
+            reg(b[0] + "_burst", b[1] + ": " + b[3], SoundEvents.AMETHYST_BLOCK_BREAK, 0.85f);
+            reg(b[0] + "_reveal", b[1] + ": reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
+            reg(b[0] + "_reveal_big", b[1] + ": reveal (big)", SoundEvents.BEACON_ACTIVATE, 0.85f);
+            reg(b[0] + "_glow", b[1] + ": glow", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.45f);
+            reg(b[0] + "_glow_big", b[1] + ": glow (big)", SoundEvents.BEACON_AMBIENT, 0.5f);
+            reg(b[0] + "_end", b[1] + ": farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.6f);
+        }
+        reg("book_whoosh", "Book: fly", SoundEvents.PLAYER_ATTACK_SWEEP, 0.5f);                   // the Collection book
+        reg("book_open", "Book: open", SoundEvents.BOOK_PAGE_TURN, 0.8f);
+        reg("book_land", "Book: land", SoundEvents.BOOK_PUT, 0.7f);
+        reg("book_close", "Book: close", SoundEvents.BOOK_PUT, 0.8f);
+        reg("book_page", "Book: page", SoundEvents.BOOK_PAGE_TURN, 0.8f);
+        reg("book_tab", "Book: bookmark", SoundEvents.UI_BUTTON_CLICK.value(), 0.5f);
+        reg("book_locked", "Book: locked", SoundEvents.NOTE_BLOCK_BASS.value(), 0.7f);
+        reg("book_equip", "Book: wear", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
+        reg("book_unequip", "Book: take off", SoundEvents.AMETHYST_BLOCK_HIT, 0.6f);
     }
 
     // Minecraft's own sounds, picked to work as a set: bright notes for the stepping slices, a solid hit, a reward, a long glow, a soft close
@@ -163,40 +187,16 @@ public final class SoundFx {
     /** What each slot plays until the player changes it. */
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
     static {
-        String[][] d = {                                         // the Mythological bank, and the Slayer bank for the slayer scenes
-            {"myth.nodrops", "myth_bolt", "myth_fizzle", NONE, NONE, NONE},
-            {"myth.normal", "myth_bolt", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
-            {"myth.rng", "myth_bolt", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
-            {"treasure.nodrops", "myth_dig", "myth_fizzle", NONE, NONE, NONE},
-            {"treasure.normal", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"},
-            {"treasure.rng", "myth_dig", "myth_chest", "myth_reveal", "myth_glow", "myth_end"},
-            {"slayer.nodrops", "slay_slash", "slay_cleave", NONE, NONE, NONE},
-            {"slayer.normal", "slay_slash", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
-            {"slayer.rng", "slay_slash", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"},
-            {"crops.normal", "farm_cut", "farm_heave", "farm_bloom", "myth_glow", "farm_end"},
-            {"crops.rng", "farm_cut", "farm_heave", "farm_bloom_big", "myth_glow_big", "farm_end"},
-            {"feast.normal", "farm_cut", "farm_heave", "farm_bloom", "myth_glow", "farm_end"},
-            {"feast.rng", "farm_cut", "farm_heave", "farm_bloom_big", "myth_glow_big", "farm_end"},
-            {"bounty.normal", "farm_cut", "farm_heave", "farm_bloom", "myth_glow", "farm_end"},
-            {"bounty.rng", "farm_cut", "farm_heave", "farm_bloom_big", "myth_glow_big", "farm_end"},
-            {"pests.normal", "pest_vacuum", "pest_gulp", "pest_pop", "myth_glow", "farm_end"},
-            {"pests.rng", "pest_vacuum", "pest_gulp", "farm_bloom_big", "myth_glow_big", "farm_end"},
-            {"exp.normal", "exp_flip", "exp_open", "exp_reveal", "myth_glow", "exp_end"},
-            {"exp.rng", "exp_flip", "exp_open", "exp_reveal_epic", "myth_glow_big", "exp_end"},
-            {"fish_water.normal", "farm_heave", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
-            {"fish_water.rng", "farm_heave", "myth_shatter", "myth_reveal_big", "myth_glow_big", "myth_end"},
-            {"fish_lava.normal", "farm_heave", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
-            {"fish_lava.rng", "farm_heave", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"},
-            {"fish_spooky.normal", "farm_heave", "myth_fizzle", "myth_reveal", "myth_glow", "myth_end"},
-            {"fish_spooky.rng", "farm_heave", "myth_fizzle", "myth_reveal_big", "myth_glow_big", "myth_end"},
-            {"fish_winter.normal", "myth_shatter", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
-            {"fish_winter.rng", "myth_shatter", "myth_shatter", "myth_reveal_big", "myth_glow_big", "myth_end"},
-            {"crimson.normal", "myth_bolt", "slay_cleave", "slay_reveal", "slay_glow", "slay_end"},
-            {"crimson.rng", "myth_bolt", "slay_cleave", "slay_reveal_epic", "slay_glow", "slay_end"},
-            {"mobs.normal", "slay_slash", "myth_shatter", "myth_reveal", "myth_glow", "myth_end"},
-            {"mobs.rng", "slay_slash", "myth_shatter", "myth_reveal_big", "myth_glow_big", "myth_end"},
-            {"dyes.normal", "farm_cut", "farm_bloom", "exp_reveal", "myth_glow", "farm_end"},
-            {"dyes.rng", "farm_cut", "farm_bloom", "farm_bloom_big", "myth_glow_big", "farm_end"}};
+        String[][] grp = {{"myth", "rit"}, {"treasure", "tre"}, {"slayer", "sly"}, {"crops", "crp"}, {"feast", "fst"}, {"bounty", "bty"}, {"pests", "pst"}, {"exp", "tab"},
+            {"fish_water", "wat"}, {"fish_lava", "lav"}, {"fish_spooky", "spk"}, {"fish_winter", "ice"}, {"crimson", "crm"}, {"mobs", "mob"}, {"dyes", "dye"}};
+        java.util.List<String[]> d0 = new java.util.ArrayList<>();               // every animation has its own bank; RNG plays the _big reveal and glow of it
+        for (String[] gk : grp) {
+            String b = gk[1];
+            if (gk[0].equals("myth") || gk[0].equals("treasure") || gk[0].equals("slayer")) d0.add(new String[]{gk[0] + ".nodrops", b + "_beat", "myth_fizzle", NONE, NONE, NONE});
+            d0.add(new String[]{gk[0] + ".normal", b + "_beat", b + "_burst", b + "_reveal", b + "_glow", b + "_end"});
+            d0.add(new String[]{gk[0] + ".rng", b + "_beat", b + "_burst", b + "_reveal", b + "_glow", b + "_end"});
+        }
+        String[][] d = d0.toArray(new String[0][]);
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 

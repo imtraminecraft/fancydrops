@@ -149,6 +149,18 @@ final class IconArt {
                 }
                 outline();
             }
+            case "collection" -> {                                                           // the Collection: a leather book with gold corners and a star; the cover lifts a little and light spills out
+                float lift = Math.max(0f, sn(f * 2f - 0.5f)) * 1.5f; int ly = Math.round(lift);
+                rect(3, 3, 11, 11, 0xEDE0C2); rect(3, 13, 11, 1, 0xC8B48A); for (int y = 4; y < 13; y += 2) px(13, y, 0xC8B48A);     // the pages
+                if (ly > 0) { glow(9, 3, 5, 0xFFE3A0, 0.25f * lift); for (int i = 0; i < 3; i++) pxa(6 + i * 3, 2 - ly, 0xFFF4C8, 0.5f * lift); }
+                bev(2, 2 - ly, 11, 12, 0x6A3424); rect(2, 2 - ly, 2, 12, 0x4A2418);                               // the cover and its spine
+                px(3, 3 - ly, 0xE8B84A); px(12, 3 - ly, 0xE8B84A); px(3, 12 - ly, 0xE8B84A); px(12, 12 - ly, 0xE8B84A);
+                int sc = mix(0xE8B84A, 0xFFF4C8, t);
+                px(8, 5 - ly, sc); rect(7, 6 - ly, 3, 3, sc); px(6, 7 - ly, sc); px(10, 7 - ly, sc); px(8, 9 - ly, sc); px(8, 10 - ly, 0xC8902A);
+                rect(13, 7, 1, 3, 0xC8902A);                                                                 // the clasp
+                outline();
+                glint(11, 4 - ly, 1, 0xFFFFFF, t);
+            }
             case "trophy" -> {                                                               // Achievements: a gold cup on a dark base, a glint sliding over it
                 quad(3, 2, 13, 2, 11.5f, 8, 4.5f, 8, 0xE8B84A);
                 rect(2, 3, 1, 3, 0xC8902A); rect(13, 3, 1, 3, 0xC8902A); px(3, 6, 0xC8902A); px(12, 6, 0xC8902A);       // handles
