@@ -311,9 +311,13 @@ final class AuraFx {
                 List<P> ps = frameParticles(p.getUUID(), l.aura(), body[0], body[1], body[2], now, cf);
                 if (ps.isEmpty()) continue;
                 final float ox = (float) (body[0] - wcX), oy = (float) (body[1] - wcY), oz = (float) (body[2] - wcZ);
+                if (!Float.isFinite(ox + oy + oz) || ox * ox + oy * oy + oz * oz > 64f * 64f) continue;          // never draw from a stale or broken position
                 final float k = cf.cosSize / 100f;
-                ctx.submitNodeCollector().submitCustomGeometry(ctx.poseStack(), net.minecraft.client.renderer.rendertype.RenderTypes.lightning(), (pose, buf) -> {
-                    for (P q : ps) quad3d(pose, buf, ox + q.x(), oy + q.y(), oz + q.z(), q.size() * k, q, right, up);
+                List<P> safe = new ArrayList<>(ps.size());
+                for (P q : ps) if (Float.isFinite(q.x() + q.y() + q.z() + q.size()) && Math.abs(q.x()) < 4f && Math.abs(q.z()) < 4f && q.y() > -2f && q.y() < 5f && q.size() < 0.6f) safe.add(q);       // particles stay within a few blocks of you
+                // our own pose stack (camera-relative, nothing else pushed on it): another mod leaving a transform on the shared one made the quads land far away for a frame
+                ctx.submitNodeCollector().submitCustomGeometry(new com.mojang.blaze3d.vertex.PoseStack(), net.minecraft.client.renderer.rendertype.RenderTypes.lightning(), (pose, buf) -> {
+                    for (P q : safe) quad3d(pose, buf, ox + q.x(), oy + q.y(), oz + q.z(), q.size() * k, q, right, up);
                 });
             }
             worldOk = true;

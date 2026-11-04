@@ -24,27 +24,25 @@ public class FancyScreen extends Screen {
         SOUNDS("Sounds", "note_block", "Volume and the sound of every moment"),
         CHAT("Chat", "writable_book", "Announce rare drops to your party or co-op"),
         GENERAL("Settings", "comparator", "Menu, prices and data"),
-        STATS("Achievements", "map", "Your ledger: achievements and the cosmetics they unlock"),
         COSMETICS("Cosmetics", "nether_star", "Name icons, name effects and auras");
         final String label, icon, sub;
         Tab(String l, String i, String s) { label = l; icon = i; sub = s; }
     }
 
     /** One colour for each main page; its sub pages use a lighter shade of it. */
-    private static final int[] TAB_COL = {0xFFFFA45C, 0xFFFFC857, 0xFFFF72C6, 0xFF56D8FF, 0xFF7BE05A, 0xFFB0B6C2, 0xFFB56BFF, 0xFF6C86FF};
+    private static final int[] TAB_COL = {0xFFFFA45C, 0xFFFFC857, 0xFFFF72C6, 0xFF56D8FF, 0xFF7BE05A, 0xFFB0B6C2, 0xFF6C86FF};
     private int tabAcc;
     private Tab prevTab = Tab.HOME; private long cosAt;
     /** The Cosmetics page is its own window (no sidebar), opened from the button at the bottom left of the menu. */
-    private boolean cosWin() { return tab == Tab.COSMETICS || tab == Tab.STATS; }
+    private boolean cosWin() { return tab == Tab.COSMETICS; }
     /** Pages with their own door instead of a sidebar entry: Cosmetics (bottom left) and Achievements (bottom right). */
-    private static boolean hiddenTab(Tab t) { return t == Tab.COSMETICS || t == Tab.STATS; }
+    private static boolean hiddenTab(Tab t) { return t == Tab.COSMETICS; }
     private int[] achBtn() { int x = Math.min(px + pw + 6, width - 28), y = py + ph - 22; return new int[]{x, y, x + 22, y + 22}; }          // outside the menu, bottom right, under the community buttons
-    private void openAch() { if (!hiddenTab(tab)) prevTab = tab; tab = Tab.STATS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; Achievements.refresh(true); }
     private int[] cosBtn() { int x = Math.max(2, px - 28), y = py + ph - 22; return new int[]{x, y, x + 22, y + 22}; }          // outside the menu, bottom right, under the community buttons
     private int[] adminBtn() { int[] c = cosBtn(); return new int[]{c[0], c[1] - 28, c[2], c[3] - 28}; }          // admin only: just above the Cosmetics button
     private void openCos() { if (!hiddenTab(tab)) prevTab = tab; tab = Tab.COSMETICS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
     private void closeCos() { tab = hiddenTab(prevTab) ? Tab.HOME : prevTab; scroll = 0; selY = Float.NaN; tabChanged = System.currentTimeMillis(); }
-    private static int vi(int ord) { return switch (Tab.values()[ord]) { case HOME -> 0; case DROPS -> 1; case ANIMATIONS -> 2; case SOUNDS -> 3; case CHAT -> 4; case STATS -> 5; default -> 0; }; }          // the sidebar list: Settings sits pinned at the bottom, Cosmetics and Resources have their own doors
+    private static int vi(int ord) { return switch (Tab.values()[ord]) { case HOME -> 0; case DROPS -> 1; case ANIMATIONS -> 2; case SOUNDS -> 3; case CHAT -> 4; default -> 0; }; }          // the sidebar list: Settings sits pinned at the bottom, Cosmetics and Resources have their own doors
     private static int tabCol(Tab t) { return TAB_COL[t.ordinal()]; }
     private static int subCol(Tab t) { return Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.5f); }
     private static final String[] CHANNELS = {"PARTY", "COOP", "ALL", "OFF"};
@@ -222,7 +220,7 @@ public class FancyScreen extends Screen {
         }
     }
 
-    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13, SHOWBAR = 14, UPDATE = 16, BOOK = 17;
+    private static final int NORMAL = 0, SECTION = 1, BANNER = 2, NOTE = 3, PREVIEW = 4, TEXT = 5, PANEL = 6, HERO = 7, TIP = 8, CHATPREV = 9, PICKER = 11, COSPREV = 12, CAT = 13, SHOWBAR = 14, UPDATE = 16;
     private class Row {
         String fkey;                                                      // set on folding rows: lets the Show > All tile open or close them all
 
@@ -1520,7 +1518,6 @@ public class FancyScreen extends Screen {
             case SOUNDS -> Icons.draw(g, "sounds", x, y, now);
             case CHAT -> Icons.draw(g, "chat", x, y, now);
             case GENERAL -> Icons.draw(g, "settings", x, y, now);
-            case STATS -> Icons.draw(g, "trophy", x, y, now);
             case COSMETICS -> Icons.draw(g, "sparkle", x, y, now);
             default -> Gfx.item(g, t.icon, x, y);
         }
@@ -2112,8 +2109,6 @@ public class FancyScreen extends Screen {
     /** What the Collection book borrows from the menu. */
     private final Codex.Host codexHost = new Codex.Host() {
         public net.minecraft.client.gui.Font font() { return font; }
-        public void chatPreview(GuiGraphicsExtractor g, int x, int y, int w, int h) { Row r = new Row(); r.x = x; r.y = y; r.w = w; r.h = h; drawCosPreview(g, r); }
-        public void auraStage(GuiGraphicsExtractor g, int x, int y, int w, int h, String aura) { g.fill(x, y, x + w, y + h, 0xFF12141C); drawAuraStage(g, x, y, w, h, aura); }
         public void toast(String text, int col) { FancyScreen.toast(text, col); if (text.startsWith("LOCKED")) toastShake = true; }
         public void tip(String lines, int col) { if (lines == null) return; if (lines.contains("\n")) { tipText = lines; tipCol = col; } else { simpleTip = lines; simpleTipCol = col; } }
     };
@@ -2454,7 +2449,6 @@ public class FancyScreen extends Screen {
             case CHAT -> chatPage(c);
             case GENERAL -> generalPage(c);
             case COSMETICS -> cosmeticsPage();
-            case STATS -> { Row bk = new Row(); bk.kind = BOOK; bk.noSearch = true; bk.h = Math.max(170, lb - lt - 6); rows.add(bk); }
         }
     }
 
@@ -3240,7 +3234,6 @@ public class FancyScreen extends Screen {
             if (r.kind == CAT) { drawCat(g, r); continue; }
             if (r.kind == CHATPREV) { drawChatPrev(g, r); continue; }
             if (r.kind == COSPREV) { drawCosPreview(g, r); continue; }
-            if (r.kind == BOOK) { Ledger.draw(g, font, r.x, r.y, r.w, r.h, mx, my); if (Ledger.tip != null) { tipText = Ledger.tip; tipCol = Ledger.tipDone ? 0xFFE8B84A : 0xFF807891; } continue; }
             if (r.kind == PANEL || r.kind == HERO) {                                // a centred banner (HERO: just icon, title, words) or a construction site for a page that is not built yet
                 pill(g, r.x, r.y, r.w, r.h, r.kind == PANEL ? 0xFF16130B : Ui.ROW);
                 int mid = r.x + r.w / 2; long nw = System.currentTimeMillis(); float sec = (nw % 3600000L) / 1000f;
@@ -3507,8 +3500,7 @@ public class FancyScreen extends Screen {
 
 
     @Override public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) { dirty = true;
-        if (Codex.open) return event.button() != 0 || Codex.click(event.x(), event.y());
-        if (tab == Tab.STATS && event.button() == 0 && editor == 0 && !adminOpen && !adminHome && Ledger.click(event.x(), event.y())) return true;          // the ledger's ribbons and page arrows
+        if (Codex.open) return Codex.click(event.x(), event.y(), event.button());
         if (event.button() == 3 && editor == 0 && !adminOpen && !adminHome && hdrBack != null) { hdrBack.run(); return true; }        // the mouse's back button goes back a page
         if (searchField.isFocused() && !(event.x() >= searchField.getX() - 6 && event.x() < searchField.getX() + searchField.getWidth() + 6 && event.y() >= searchField.getY() - 3 && event.y() < searchField.getY() + 14)) searchField.setFocused(false);          // a click anywhere else leaves the search box
         if (adminOpen) return event.button() != 0 || adminClick(event.x(), event.y());

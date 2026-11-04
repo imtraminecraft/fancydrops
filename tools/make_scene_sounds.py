@@ -302,25 +302,23 @@ def paint_splash():
 bank('dye', drip(), paint_splash(), [70, 74, 77, 82, 86], [58, 65, 70, 74, 77, 82, 86, 89, 94], 'bell', [58, 65, 70, 74], sub=34,
      gl=[70, 77, 82], end_notes=[94, 89, 82], k=3.5, ratios=(1, 2.0, 3.01, 4.2), amps=(1, .45, .25, .1))
 
-# ------------------------------------------------------------------ The Collection book
-def whoosh(): return sweep_noise(.4, 300, 2500, .35) * .6
-def book_open():
-    b = mix(1.1); at(b, osc(160, .5, 'saw', glide=210, vib=.03, vibf=28) * env(T(.5), .08, .3) * .08, 0)        # the leather creaks
-    at(b, sweep_noise(.35, 500, 1500, .3) * .5, .15); at(b, thump(90, 55, .3, 10) * .7, .5)
-    at(b, chord([72, 76, 79, 84], 1.0, 'bell', .06, .22, k=4), .55); return b
-def book_land(): b = mix(.6); at(b, thump(110, 60, .25, 14) * .8, 0); at(b, lp(noise(.08), 2000) * dec(T(.08), 40) * .3, 0); return b
-def book_close():
-    b = mix(.8); at(b, sweep_noise(.25, 1500, 400, .3) * .5, 0); at(b, thump(100, 50, .3, 12) * 1.0, .22); at(b, lp(noise(.06), 3000) * dec(T(.06), 50) * .5, .22); return b
-def book_page():
-    b = mix(.5); x = bp(noise(.35), 1200, 7000); t = T(.35); at(b, x * np.sin(np.pi * t / .35) ** 2 * .5, 0)
-    at(b, hp(noise(.02), 3000) * dec(T(.02), 200) * .3, .3); return b
-def book_tab(): b = mix(.3); at(b, lp(noise(.05), 4000) * dec(T(.05), 70) * .5, 0); at(b, mallet(N(84), .2) * .3, .01); return b
-def book_locked():
-    b = mix(.5); at(b, bell(420, .25, ratios=(1, 2.3, 3.1), amps=(1, .5, .3), k=16) * .5, 0); at(b, bell(380, .25, ratios=(1, 2.3, 3.1), amps=(1, .5, .3), k=16) * .5, .09); return b
-def book_equip(): return chord([76, 83, 88], .7, 'bell', .05, .35, k=5)
-def book_unequip(): return chord([83, 76], .5, 'bell', .06, .3, k=7)
-S('book_whoosh', whoosh(), .1); S('book_open', book_open(), .25); S('book_land', book_land(), .15); S('book_close', book_close(), .2)
-S('book_page', book_page(), .1); S('book_tab', book_tab(), .1); S('book_locked', book_locked(), .15); S('book_equip', book_equip(), .25); S('book_unequip', book_unequip(), .2)
+# ------------------------------------------------------------------ the achievements sky
+def sky_open():
+    b = mix(1.8); t = T(1.6)
+    at(b, sweep_noise(0.9, 400, 4000, .3) * .35, 0)
+    for i, m in enumerate([72, 79, 84, 88, 91, 96]): at(b, bell(N(m), 1.2, k=3) * (.3 - .03 * i), .15 + i * .09)
+    at(b, pad([60, 67, 72], 1.6, 'sin', a=.4) * .4, 0)
+    return b
+def sky_close():
+    b = mix(.9)
+    for i, m in enumerate([91, 84, 79]): at(b, bell(N(m), .6, k=6) * .25, i * .07)
+    at(b, sweep_noise(.4, 3000, 500, .3) * .3, 0); return b
+def sky_zoom():
+    b = mix(1.0); at(b, sweep_noise(.6, 500, 3500, .35) * .5, 0)
+    for i in range(8): at(b, bell(rng.uniform(2500, 5000), .3, ratios=(1, 2.1), amps=(1, .3), k=12) * .12, .1 + rng.uniform(0, .5))
+    return b
+def sky_star(): return bell(N(88), .8, ratios=(1, 2.0, 3.0), amps=(1, .3, .12), k=5) * .5
+S('sky_open', sky_open(), .35); S('sky_close', sky_close(), .3); S('sky_zoom', sky_zoom(), .3); S('sky_star', sky_star(), .35)
 
 # ------------------------------------------------------------------ write
 def norm(x, peak=.8): return x / max(1e-6, np.abs(x).max()) * peak

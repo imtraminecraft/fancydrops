@@ -598,7 +598,6 @@ final class Cosmetics {
                 info.setTabListDisplayName(out); tabTouched++;
             }
             tabMoving = anyMoving;
-            if (now - tabLogAt > 4000 && (anyMoving || tabTouched > 0)) { tabLogAt = now; System.err.println("[FancyDrops] tab: moving=" + anyMoving + " entries restyled=" + tabTouched + " skyblocker hook=" + (sbkUpd != null ? "method" : sbkFlag != null ? "flag" : "none") + " nudges=" + sbkNudges + " nudgeErrors=" + sbkErr + " skysoft nudges=" + ssNudges); tabTouched = 0; }
             if (anyMoving) nudgeCustomTabs(now);
         } catch (Throwable ignored) { }
     }

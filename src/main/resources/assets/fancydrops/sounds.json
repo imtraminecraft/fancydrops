@@ -1071,74 +1071,34 @@
       }
     ]
   },
-  "book_whoosh": {
+  "sky_open": {
     "sounds": [
       {
-        "name": "fancydrops:book_whoosh",
+        "name": "fancydrops:sky_open",
         "stream": false
       }
     ]
   },
-  "book_open": {
+  "sky_close": {
     "sounds": [
       {
-        "name": "fancydrops:book_open",
+        "name": "fancydrops:sky_close",
         "stream": false
       }
     ]
   },
-  "book_land": {
+  "sky_zoom": {
     "sounds": [
       {
-        "name": "fancydrops:book_land",
+        "name": "fancydrops:sky_zoom",
         "stream": false
       }
     ]
   },
-  "book_close": {
+  "sky_star": {
     "sounds": [
       {
-        "name": "fancydrops:book_close",
-        "stream": false
-      }
-    ]
-  },
-  "book_page": {
-    "sounds": [
-      {
-        "name": "fancydrops:book_page",
-        "stream": false
-      }
-    ]
-  },
-  "book_tab": {
-    "sounds": [
-      {
-        "name": "fancydrops:book_tab",
-        "stream": false
-      }
-    ]
-  },
-  "book_locked": {
-    "sounds": [
-      {
-        "name": "fancydrops:book_locked",
-        "stream": false
-      }
-    ]
-  },
-  "book_equip": {
-    "sounds": [
-      {
-        "name": "fancydrops:book_equip",
-        "stream": false
-      }
-    ]
-  },
-  "book_unequip": {
-    "sounds": [
-      {
-        "name": "fancydrops:book_unequip",
+        "name": "fancydrops:sky_star",
         "stream": false
       }
     ]

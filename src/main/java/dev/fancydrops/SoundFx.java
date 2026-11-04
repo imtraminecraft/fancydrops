@@ -86,15 +86,10 @@ public final class SoundFx {
             reg(b[0] + "_glow_big", b[1] + ": glow (big)", SoundEvents.BEACON_AMBIENT, 0.5f);
             reg(b[0] + "_end", b[1] + ": farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.6f);
         }
-        reg("book_whoosh", "Book: fly", SoundEvents.PLAYER_ATTACK_SWEEP, 0.5f);                   // the Collection book
-        reg("book_open", "Book: open", SoundEvents.BOOK_PAGE_TURN, 0.8f);
-        reg("book_land", "Book: land", SoundEvents.BOOK_PUT, 0.7f);
-        reg("book_close", "Book: close", SoundEvents.BOOK_PUT, 0.8f);
-        reg("book_page", "Book: page", SoundEvents.BOOK_PAGE_TURN, 0.8f);
-        reg("book_tab", "Book: bookmark", SoundEvents.UI_BUTTON_CLICK.value(), 0.5f);
-        reg("book_locked", "Book: locked", SoundEvents.NOTE_BLOCK_BASS.value(), 0.7f);
-        reg("book_equip", "Book: wear", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
-        reg("book_unequip", "Book: take off", SoundEvents.AMETHYST_BLOCK_HIT, 0.6f);
+        reg("sky_open", "Achievements: open", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);              // the achievements sky
+        reg("sky_close", "Achievements: close", SoundEvents.AMETHYST_BLOCK_HIT, 0.6f);
+        reg("sky_zoom", "Achievements: fly", SoundEvents.PLAYER_ATTACK_SWEEP, 0.6f);
+        reg("sky_star", "Achievements: star", SoundEvents.AMETHYST_BLOCK_HIT, 0.5f);
     }
 
     // Minecraft's own sounds, picked to work as a set: bright notes for the stepping slices, a solid hit, a reward, a long glow, a soft close
