@@ -6,18 +6,18 @@
     ],
     "patreon": [
       "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
-      "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9"
+      "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9",
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
     ],
     "bughunter": [
       "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
-      "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9"
+      "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9",
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
     ],
     "contributor": [
       "199daf39a1a943b6e6dbdd94409b06a5d2e5b74d35fc0b7c3779fbbcb23ed8f7",
-      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8",
-      "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9"
+      "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9",
+      "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
     ]
   },
   "owners": {
@@ -47,39 +47,6 @@
       "wave",
       "glow"
     ],
-    "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8": [
-      "firstdrop",
-      "bolt",
-      "fresh",
-      "heart",
-      "crown",
-      "legend",
-      "flame",
-      "dice",
-      "discord",
-      "chest",
-      "clock",
-      "glow",
-      "betamark",
-      "disc",
-      "star",
-      "secret",
-      "pulse",
-      "ghost",
-      "clover",
-      "wave",
-      "minos",
-      "snow",
-      "collector",
-      "shimmer",
-      "newcomer",
-      "bell",
-      "gem",
-      "anvil",
-      "hoarder",
-      "tractor",
-      "rod"
-    ],
     "66df33f8bb09c87555ff0db5a6d6fa5e1dd52ebfb81e446b087190bab6d0bae9": [
       "pulse",
       "dice",
@@ -90,6 +57,25 @@
       "anvil",
       "disc",
       "tractor"
+    ],
+    "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8": [
+      "dice",
+      "chest",
+      "clock",
+      "betamark",
+      "disc",
+      "pulse",
+      "bell",
+      "anvil",
+      "tractor",
+      "sweep",
+      "ripple",
+      "spark",
+      "runeaura",
+      "coinaura",
+      "fireflyaura",
+      "bubbleaura",
+      "neon"
     ]
   },
   "wornUrl": "https://fancydrops-worn.imtraminecraft.workers.dev"
