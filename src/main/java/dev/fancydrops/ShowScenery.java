@@ -13,6 +13,7 @@ package dev.fancydrops;
  *   DYE       a painter's studio: a warm wall spattered with paint, a wooden floor, an easel
  *   MYTH      the Hub at twilight: stars, a crescent moon, ruined pillars on the hills (Mythological)
  *   TREASURE  a forest clearing at dusk, fireflies over the grass (Treasure)
+ *   9..14     the six slayer places (SlayerShow)
  */
 final class ShowScenery {
     private ShowScenery() {}
@@ -43,13 +44,14 @@ final class ShowScenery {
             case ShowScene.MOBS -> new int[]{0x0C0C10, 0x16161E, 0x22222C};
             case ShowScene.DYE -> new int[]{0xE8D8C0, 0xF2E6D2, 0xF8F0E2};
             case MYTH -> new int[]{0x1A1A48, 0x6A5A9A, 0xE8A8A0};
+            case 9, 10, 11, 12, 13, 14 -> SlayerShow.SKY[m - SlayerShow.BASE];
             default -> new int[]{0x1A2A3A, 0x5A5A4A, 0xE09A5A};
         };
         for (int y = y0; y < y1; y++) {
             float f = (y - y0) / (float) Math.max(1, hz - y0);
             rect(c, x0, y, x1, y + 1, f < 0.55f ? mix(sky[0], sky[1], f / 0.55f) : mix(sky[1], sky[2], (f - 0.55f) / 0.45f), a);
         }
-        int frame = m <= ShowScene.DYE ? ShowScene.ENERGY[m] : m == MYTH ? 0x55D8FF : 0xFFD25A;
+        int frame = m <= ShowScene.DYE ? ShowScene.ENERGY[m] : m == MYTH ? 0x55D8FF : m >= SlayerShow.BASE ? SlayerShow.ENERGY[m - SlayerShow.BASE] : 0xFFD25A;
         if (m == ShowScene.DYE) frame = tint;
         int r = Math.max(7, Math.round(7 * Ritual.K));
         SlayerScenery.corners(c, x0, y0, x1, y1, r, frame, a, false);
@@ -63,6 +65,7 @@ final class ShowScenery {
             case ShowScene.MOBS -> dungeon(c, t, x0, y0, x1, y1, hz, k, a);
             case ShowScene.DYE -> studio(c, t, x0, y0, x1, y1, hz, k, a, tint);
             case MYTH -> hub(c, t, x0, y0, x1, y1, hz, k, a);
+            case 9, 10, 11, 12, 13, 14 -> SlayerShow.place(c, m - SlayerShow.BASE, t, x0, y0, x1, y1, hz, k, a);
             default -> clearing(c, t, x0, y0, x1, y1, hz, k, a);
         }
         for (int y = y0; y < y1; y++) {                                                    // a soft vignette, darker at the edges
@@ -77,7 +80,7 @@ final class ShowScenery {
     }
 
     // ------------------------------------------------------------------ shared pieces
-    private static void stars(Canvas c, float t, int x0, int y0, int x1, int y1, float a, int n) {
+    static void stars(Canvas c, float t, int x0, int y0, int x1, int y1, float a, int n) {
         for (int i = 0; i < n; i++) {
             int x = x0 + (int) (rnd(i * 13 + 1) * (x1 - x0)), y = y0 + (int) (rnd(i * 7 + 3) * (y1 - y0));
             float tw = 0.4f + 0.6f * (0.5f + 0.5f * (float) Math.sin(t * (1.5f + rnd(i) * 2f) + i));
@@ -85,17 +88,17 @@ final class ShowScenery {
             if (i % 9 == 0) { px(c, x - 1, y, 0xFFFFFF, tw * a * 0.3f); px(c, x + 1, y, 0xFFFFFF, tw * a * 0.3f); px(c, x, y - 1, 0xFFFFFF, tw * a * 0.3f); px(c, x, y + 1, 0xFFFFFF, tw * a * 0.3f); }
         }
     }
-    private static void band(Canvas c, int x0, int x1, int ya, int yb, int top, int bot, float a) {
+    static void band(Canvas c, int x0, int x1, int ya, int yb, int top, int bot, float a) {
         for (int y = ya; y < yb; y++) rect(c, x0, y, x1, y + 1, mix(top, bot, (y - ya) / (float) Math.max(1, yb - ya)), a);
     }
-    private static void tree(Canvas c, int x, int base, int h, int rgb, float a) {               // a bare tree: a trunk and a few crooked branches
+    static void tree(Canvas c, int x, int base, int h, int rgb, float a) {               // a bare tree: a trunk and a few crooked branches
         for (int i = 0; i < h; i++) rect(c, x - Math.max(1, (h - i) / 8), base - i, x + Math.max(1, (h - i) / 8) + 1, base - i + 1, rgb, a);
         for (int k = 0; k < 4; k++) {
             int by = base - h / 2 - k * h / 9, dir = k % 2 == 0 ? 1 : -1; float len = h * (0.35f - k * 0.05f);
             for (int j = 0; j < len; j++) px(c, x + dir * j, by - j / 2 - (int) (Math.sin(j * 0.4f) * 1.5f), rgb, a);
         }
     }
-    private static void pine(Canvas c, int x, int base, int h, int rgb, int snow, float a) {
+    static void pine(Canvas c, int x, int base, int h, int rgb, int snow, float a) {
         for (int i = 0; i < h; i++) {
             float u = i / (float) h; int w = Math.round((1f - u) * h * 0.32f * (0.75f + 0.25f * (float) Math.sin(i * 1.3f)));
             rect(c, x - w, base - i, x + w + 1, base - i + 1, rgb, a);

@@ -437,3 +437,18 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Slayer scenes, one per boss (author request Nov 4: "redo all the animations")
 - The hologram, the three cuts and the shatter stay (rules above); what makes the cuts differs per boss: Revenant a scythe's curved cut dripping rot, Tarantula silk strands that snap then a cut dripping venom, Sven three claw marks with fur, Voidgloom a jagged rift pulling void motes in, Inferno a burning blade with flames along the cut, Bloodfiend a crimson crescent throwing blood (bats on the last cut).
 - Each boss has its own finish round the drop (`Ritual.slFinish`, big for RNG, lighter for Normal): Revenant green souls spiralling up over a ring of rot; Tarantula a web spinning itself with dew glints; Sven a moon ring, claw marks and wind; Voidgloom void cubes orbiting and motes pulled in; Inferno turning blaze rods and climbing flames; Bloodfiend a blood-moon crescent, circling bats and falling drops.
+
+## Slayer scenes rebuilt as Showcase scenes (author request Nov 5: "full revamp, make them look like the other animations")
+- SUPERSEDES every earlier slayer-scene rule (hologram, three sword cuts, opaque/tall slayer panel, SlayerScenery places). There is no boss hologram and no sword.
+- A slayer drop plays like the Fishing/Crimson/Mobs scenes: the same framed place panel (ShowScenery motifs 9..14, painted by `SlayerShow.place`), three beats at 0.34 / 0.58 / 0.80 of the opening (`SlayerShow.event`), then the drop bursts out, then the boss's finish (`Ritual.slFinish`).
+  - Revenant: graveyard under a green moon, iron fence, fog; a rotting hand claws out of the grave on each beat; the grave bursts in a column of souls.
+  - Tarantula: Spider's Den (stalactites, webs, red eyes, dangling spiders); a cocoon on a thread jolts and cracks each beat, little spiders scatter; it splits, silk flies.
+  - Sven: snowy pines under a full moon; a wolf on a rock howls each beat (rings on the moon, snow gusts); a moonbeam strikes the rock and the wolf leaps away.
+  - Voidgloom: the End (obsidian pillars with crystals, floating islets); crystals beam into a void orb over a portal frame; it implodes and bursts, void cubes fly.
+  - Inferno: Smoldering Tomb (lava falls, braziers, glowing cracks); three fire vents erupt one by one; a column of fire.
+  - Bloodfiend: the Rift château under a blood moon; a coffin rattles each beat (bats escape); its lid flies off and bats pour out.
+- No Drops: the place stirs, then falls quiet (the hands sink, the cocoon droops, the wolf fades, the orb shrinks, the vents smoke, the coffin stays shut).
+- SlayerScenery now holds only the shared frame corners, ridge and pine.
+
+## Every animation is 6 seconds by default (author request Nov 5)
+- AnimCfg.secs default 6 s; the (Default) button sets 6 s; config ver 7 moves picks still at the old 5 s default to 6 s (other picked lengths stay). Supersedes the 5 s rule.

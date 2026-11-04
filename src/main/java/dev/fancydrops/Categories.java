@@ -45,9 +45,9 @@ final class Categories {
     static final Type RNG = new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and the big finish.");
     private static final List<Type> MYTH_TYPES = List.of(NO_DROPS, NORMAL, RNG);
     private static final List<Type> SLAYER_TYPES = List.of(
-        new Type("nodrops", "No Drops", ":nodrops:", 0xFF9AA3B5, "The boss falls and nothing drops."),
-        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: a sword slices the boss and the item springs out with its text."),
-        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a huge finishing slice."));
+        new Type("nodrops", "No Drops", ":nodrops:", 0xFF9AA3B5, "The boss's place stirs three times, then falls quiet: nothing dropped."),
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: the boss's own place stirs three times (hands from a grave, a cocoon, a howl, crystal beams, fire vents, a coffin) and the item bursts out with its text."),
+        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and the boss's own big finish."));
 
     /** Farming and Experiments: each group has the normal and the RNG animation only (a crop or a book always drops something). */
     private static final Type FARM_NORMAL = new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: the plant grows and the item blooms with its text.");
