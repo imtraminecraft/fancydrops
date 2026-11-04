@@ -88,7 +88,15 @@ public class FancyConfig {
     // ------------------------------------------------------------------ the Drop Library
     public Map<String, SourceCfg> sources = new LinkedHashMap<>();
     public SourceCfg source(String id) { return sources.computeIfAbsent(id, k -> new SourceCfg()); }
-    public DropCfg drop(String sourceId, String name) { return source(sourceId).drops.computeIfAbsent(name, k -> new DropCfg()); }
+    /** A dye has one setting wherever it is listed (its slayer's page and the Dyes page): both read and change the Dyes entry. */
+    public DropCfg drop(String sourceId, String name) {
+        if (name != null && name.endsWith(" Dye") && !"dyes".equals(sourceId)) {
+            SourceCfg own = sources.get(sourceId); DropCfg old = own == null ? null : own.drops.remove(name);       // a setting made before they were shared moves over
+            if (old != null) source("dyes").drops.putIfAbsent(name, old);
+            sourceId = "dyes";
+        }
+        return source(sourceId).drops.computeIfAbsent(name, k -> new DropCfg());
+    }
     /** A drop that was never touched starts Normal (chat off); rare drops (rank 2 and up) start RNG (chat on). */
     public static void initDrop(DropCfg dc, int rank) {
         if (dc.anim == 0) dc.anim = rank >= 2 ? 2 : 1;                       // first start: every drop is Normal, rare drops are RNG (the old "Auto" is gone)

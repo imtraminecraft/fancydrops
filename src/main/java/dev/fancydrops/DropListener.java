@@ -38,6 +38,7 @@ public final class DropListener {
                 String me = Minecraft.getInstance().getUser() == null ? null : Minecraft.getInstance().getUser().getName();
                 if (me == null || !dye[0].equalsIgnoreCase(me)) { dlog("dye found by " + dye[0] + " (not you): " + dye[1]); continue; }
                 dlog("heard: " + line.trim() + "  ->  your dye: " + dye[1]);
+                if (dyeTwice(dye[1], now)) { dlog("dye already playing from its drop line: " + dye[1]); continue; }
                 if (ExtraData.sourceOf(dye[1]) != null && playExtra(new ChatParser.Drop("DYE", dye[1], 1, null))) drop = true;
                 else dlog("left in chat (not a listed dye): " + dye[1]);
                 continue;
@@ -48,11 +49,19 @@ public final class DropListener {
             dlog("heard: " + line.trim() + "  ->  " + d.kind() + " / " + d.name() + " x" + d.amount());
             if (FarmData.isFarm(d) && playFarm(d)) drop = true;             // farming drops have no kill: they play at once
             else if (MythData.isMyth(d) && playMyth(d)) drop = true;
+            else if (d.name().endsWith(" Dye") && dyeTwice(d.name(), now)) dlog("dye already played from the WOW line: " + d.name());
             else if (SlayerData.isSlayer(d)) { killDrops = true; if (queueSlayer(d, now)) drop = true; }
             else if (ExtraData.sourceOf(d.name()) != null) { if (playExtra(d)) drop = true; }      // fishing, the Crimson Isle, rare mobs, dyes
             else dlog("left in chat (not a listed drop): " + d.name());
         }
         return drop;
+    }
+
+    /** A dye drop comes as two lines (the slayer's RARE DROP and the "WOW! ... found ... Dye" one): only the first plays. True when this dye was heard in the last 20 s. */
+    private static final Map<String, Long> DYE_HEARD = new HashMap<>();
+    private static boolean dyeTwice(String dye, long now) {
+        String k = dye.toLowerCase(java.util.Locale.ROOT).trim(); Long t = DYE_HEARD.put(k, now);
+        return t != null && now - t < 20000;
     }
 
     /** Test hook: feed a chat line as if Hypixel had sent it. */
