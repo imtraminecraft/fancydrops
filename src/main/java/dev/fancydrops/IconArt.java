@@ -794,6 +794,39 @@ final class IconArt {
                 if (u < 0.5f) { cx2 = 5; cy2 = Math.round(13 - 10 * u); } else { float v = (u - 0.5f) * 2f; cx2 = Math.round(5.5f + 6 * v); cy2 = Math.round(8 - 4 * v); }
                 px(cx2, cy2, 0xFFFFFF); pxa(cx2, cy2 + 1, 0xFFFFFF, 0.5f);
             }
+            case "cx_bubbleaura" -> {                                                        // Bubbles: bubbles wobbling up
+                for (int i = 0; i < 4; i++) { float u = (f + i * 0.25f) % 1f; int x = Math.round(4 + i * 2.6f + (float) Math.sin(u * 9 + i) * 1.2f), y = Math.round(14 - u * 13); int r = i % 2 == 0 ? 2 : 1;
+                    for (int dy = -r; dy <= r; dy++) for (int dx = -r; dx <= r; dx++) { int d2 = dx * dx + dy * dy; if (d2 <= r * r && d2 >= (r - 1) * (r - 1) + (r > 1 ? 1 : 0)) pxa(x + dx, y + dy, 0x8FE0FF, 1f - u * 0.6f); }
+                    pxa(x - r + 1, y - r + 1, 0xFFFFFF, 1f - u); }
+            }
+            case "cx_fireflyaura" -> {                                                       // Fireflies: soft lights that blink in turn
+                int[][] pos = {{4, 5}, {11, 4}, {7, 10}, {12, 12}, {3, 12}};
+                for (int i = 0; i < pos.length; i++) { float b = Math.max(0f, (float) Math.sin((f + i * 0.2f) * TAU)); glow(pos[i][0], pos[i][1], 3, 0xE8FF70, 0.35f * b); px(pos[i][0], pos[i][1], b > 0.3f ? 0xF4FFB0 : 0x6A8A30); }
+            }
+            case "cx_coinaura" -> {                                                          // Coin Shower: coins tumbling down
+                for (int i = 0; i < 3; i++) { float u = (f + i / 3f) % 1f; int x = 3 + i * 5, y = Math.round(u * 13); float w = Math.abs((float) Math.cos((u * 3 + i) * TAU / 2)); int hw = Math.max(0, Math.round(w * 2));
+                    rect(x - hw, y, hw * 2 + 1, 3, 0xF2B01E); rect(x - hw, y, hw * 2 + 1, 1, 0xFFE27A); if (hw > 0) px(x, y + 1, 0xFFF4C8); }
+                outline();
+            }
+            case "cx_runeaura" -> {                                                          // Runes: glyphs on a turning ring, one lit
+                for (int i = 0; i < 6; i++) { float ang = f * TAU + i * TAU / 6; int x = Math.round(8 + (float) Math.cos(ang) * 6), y = Math.round(8 + (float) Math.sin(ang) * 3); boolean on = i == (int) (f * 6) % 6;
+                    int c = on ? 0xF4E8FF : 0xB56BFF; px(x, y, c); px(x, y - 1, c); if (i % 2 == 0) px(x + 1, y - 1, c); else px(x - 1, y, c); if (on) glow(x, y, 3, 0xC9A0FF, 0.4f); }
+            }
+            case "cx_sparkleaura" -> {                                                       // Twinkle: gold and pink stars twinkling
+                for (int i = 0; i < 4; i++) { float b = Math.max(0f, (float) Math.sin((f + i * 0.25f) * TAU)); int x = new int[]{4, 11, 7, 12}[i], y = new int[]{4, 6, 11, 12}[i]; int c = i % 2 == 0 ? 0xFFE680 : 0xFFB3E6; int r = Math.round(b * 2);
+                    px(x, y, 0xFFFFFF); for (int k = 1; k <= r; k++) { px(x + k, y, c); px(x - k, y, c); px(x, y + k, c); px(x, y - k, c); } }
+            }
+            case "cx_glitchaura" -> {                                                        // Alarm: red sparks round a rising amber ring
+                int ry = Math.round(14 - f * 12); for (int x = 3; x < 13; x++) pxa(x, ry, 0xFFC03D, 0.8f);
+                for (int i = 0; i < 5; i++) { float ang = f * TAU + i * TAU / 5; int x = Math.round(8 + (float) Math.cos(ang) * 6), y = 3 + i * 2; px(x, y, Math.abs(y - ry) < 2 ? 0xFFFFFF : i % 2 == 0 ? 0xFF4A2E : 0xFFB02E); }
+            }
+            case "cx_stardust" -> {                                                          // Stardust: two strands winding up, a halo above
+                for (int i = 0; i < 12; i++) { float u = i / 12f, ang = u * 9 + f * TAU; int y = Math.round(14 - u * 11); px(Math.round(8 + (float) Math.cos(ang) * 4), y, 0x4DD6FF); px(Math.round(8 - (float) Math.cos(ang) * 4), y, 0x8FA8FF); }
+                for (int x = 5; x < 12; x++) px(x, 1, 0xE8FFFF);
+            }
+            case "cx_patronaura" -> {                                                        // Embers: gold embers drifting up
+                for (int i = 0; i < 6; i++) { float u = (f + i / 6f) % 1f; int x = Math.round(3 + i * 2 + (float) Math.sin(u * 6 + i)), y = Math.round(14 - u * 13); pxa(x, y, u < 0.5f ? 0xFFD24A : 0xFF7A1E, 1f - u * 0.7f); if (i % 3 == 0) pxa(x, y + 1, 0xFF7A1E, 0.5f * (1 - u)); }
+            }
             default -> {
                 if (n.startsWith("cx_")) return generic(n, f);
                 if (n.startsWith("mob_")) { mob(n.substring(4), f); outline(); return true; }

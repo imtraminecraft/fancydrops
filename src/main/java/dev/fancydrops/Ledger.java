@@ -15,7 +15,7 @@ final class Ledger {
     private Ledger() {}
 
     private static final int INK = 0xFF3A2A1C, INK_SOFT = 0xFF7A6448, INK_FAINT = 0x5A7A6448, PAPER_L = 0xFFF2E7CF, PAPER_R = 0xFFEDE0C3, LEATHER = 0xFF3B1F18, LEATHER_HI = 0xFF5A3024, GOLD = 0xFFE8B84A, GOLD_D = 0xFF9A6A1E, GOLD_L = 0xFFFFE3A0;
-    private static final String[] ORDER = {"ledger", "fortune", "myth", "bosses", "farm", "table", "wild"};
+    private static final String[] ORDER = {"ledger", "fortune", "myth", "rare", "farm", "fish", "dye"};
     private static final int[] RIBBON = {0xFFC9A23A, 0xFF8A4FD8, 0xFFE07A2A, 0xFFC0392B, 0xFF4FA83A, 0xFF5A7AD8, 0xFF2E9AB0};
     private static final String[] QUOTE = {"Every find, written down.", "Fortune favours the patient.", "Dig, and the earth answers.", "They drop what they guard.", "The harvest remembers.", "Read twice, find once.", "Out past the map's edge."};
     private static int chapter, page; private static long flipAt; private static int flipDir = 1;
@@ -171,11 +171,12 @@ final class Ledger {
         switch (ch) {
             case "fortune" -> { o.add(new String[]{"RNG drops", fmt(st.apply("rng"))}); o.add(new String[]{"RNG worth 1M+", fmt(st.apply("bigRng"))}); o.add(new String[]{"Pray RNGesus+", fmt(st.apply("r3"))}); o.add(new String[]{"Coins found", fmt(st.apply("value"))}); o.add(new String[]{"Best drop", fmt(st.apply("best"))}); }
             case "myth" -> { o.add(new String[]{"Treasure finds", fmt(gr.apply("treasure", 0))}); o.add(new String[]{"Creature drops", fmt(gr.apply("myth", 0))}); o.add(new String[]{"Creature RNG", fmt(gr.apply("myth", 1))}); }
-            case "bosses" -> { o.add(new String[]{"Slayer drops", fmt(gr.apply("slayer", 0))}); o.add(new String[]{"Slayer RNG", fmt(gr.apply("slayer", 1))}); o.add(new String[]{"Bosses", fmt(st.apply("bosses"))}); }
+            case "rare" -> { o.add(new String[]{"Slayer drops", fmt(gr.apply("slayer", 0))}); o.add(new String[]{"Slayer RNG", fmt(gr.apply("slayer", 1))}); o.add(new String[]{"Bosses", fmt(st.apply("bosses"))});
+                o.add(new String[]{"Crimson Isle drops", fmt(gr.apply("crimson", 0))}); o.add(new String[]{"Rare mob drops", fmt(gr.apply("mobs", 0))}); o.add(new String[]{"Table rewards", fmt(gr.apply("exp", 0))}); o.add(new String[]{"Table RNG", fmt(gr.apply("exp", 1))}); }
             case "farm" -> { o.add(new String[]{"Rare Crops", fmt(gr.apply("crops", 0))}); o.add(new String[]{"Harvest Feast", fmt(gr.apply("feast", 0))}); o.add(new String[]{"Harvest Bounty", fmt(gr.apply("bounty", 0))}); o.add(new String[]{"Pest drops", fmt(gr.apply("pests", 0))}); o.add(new String[]{"Vinyls", fmt(st.apply("vinyls"))}); }
-            case "table" -> { o.add(new String[]{"Table rewards", fmt(gr.apply("exp", 0))}); o.add(new String[]{"Table RNG", fmt(gr.apply("exp", 1))}); }
-            case "wild" -> { double fd = 0, fr = 0; for (String k : new String[]{"fish_water", "fish_lava", "fish_spooky", "fish_winter"}) { fd += gr.apply(k, 0); fr += gr.apply(k, 1); }
-                o.add(new String[]{"Sea creature drops", fmt(fd)}); o.add(new String[]{"Sea creature RNG", fmt(fr)}); o.add(new String[]{"Crimson Isle drops", fmt(gr.apply("crimson", 0))}); o.add(new String[]{"Rare mob drops", fmt(gr.apply("mobs", 0))}); o.add(new String[]{"Dyes", fmt(st.apply("dyes"))}); }
+            case "fish" -> { double fd = 0, fr = 0; for (String k : new String[]{"fish_water", "fish_lava", "fish_spooky", "fish_winter"}) { fd += gr.apply(k, 0); fr += gr.apply(k, 1); }
+                o.add(new String[]{"Sea creature drops", fmt(fd)}); o.add(new String[]{"Sea creature RNG", fmt(fr)}); o.add(new String[]{"Water", fmt(gr.apply("fish_water", 0))}); o.add(new String[]{"Lava", fmt(gr.apply("fish_lava", 0))}); o.add(new String[]{"Festivals", fmt(gr.apply("fish_spooky", 0) + gr.apply("fish_winter", 0))}); }
+            case "dye" -> { o.add(new String[]{"Dyes found", fmt(gr.apply("dyes", 0))}); o.add(new String[]{"Different dyes", fmt(st.apply("dyes"))}); }
             default -> { o.add(new String[]{"Rare drops", fmt(st.apply("drops"))}); o.add(new String[]{"Different items", fmt(st.apply("unique"))}); o.add(new String[]{"RNG drops", fmt(st.apply("rng"))}); o.add(new String[]{"Coins found", fmt(st.apply("value"))}); o.add(new String[]{"Days with drops", fmt(st.apply("days"))});
                 if (p.since() > 0) o.add(new String[]{"Ledger since", new java.text.SimpleDateFormat("d MMM yyyy").format(new Date(p.since()))}); }
         }

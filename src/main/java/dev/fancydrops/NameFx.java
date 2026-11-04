@@ -65,6 +65,32 @@ final class NameFx {
                 float pos = (t % 1900L) / 1900f * (n + 10) - 5, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.2f);
                 return mix(c, 0xFFFFFF, k);
             }
+            case "sweep": {                                                 // Light Sweep: a soft, wide band of white light crosses your name now and then
+                long cyc = t % 3400L; if (cyc > 2000L) return base;
+                float pos = cyc / 2000f * (n + 8) - 4, k = Math.max(0f, 1f - Math.abs(i - pos) / 2.6f);
+                return mix(base, 0xFFFFFF, 0.85f * k * k * (3 - 2 * k));
+            }
+            case "ripple": {                                                // Ripple: two soft swells of light roll along the letters, your colour in between
+                float w = (float) Math.sin(t / 260.0 - i * 0.75);
+                return mix(base, 0xFFFFFF, 0.38f * (float) Math.pow(Math.max(0f, w), 3));
+            }
+            case "spark": {                                                 // Spark: single letters flash white for a moment, two at a time, here and there
+                int c = base;
+                for (int k = 0; k < 2; k++) {
+                    long per = 520L, off = k * 260L, st = (t + off) / per; float u = ((t + off) % per) / (float) per;
+                    if (n > 0 && hash(k * 11 + 3, st) % n == i) c = mix(c, 0xFFFFFF, 0.95f * (float) Math.sin(Math.PI * Math.min(1f, u * 1.6f)));
+                }
+                return c;
+            }
+            case "neon": {                                                  // Neon: your colour turned up like a lit tube, a soft hum of brightness, and now and then a letter flickers
+                float[] hsv = java.awt.Color.RGBtoHSB((base >> 16) & 255, (base >> 8) & 255, base & 255, null);
+                float sat = hsv[1] < 0.08f ? 0f : Math.min(1f, hsv[1] * 1.15f + 0.1f);
+                int c = java.awt.Color.HSBtoRGB(hsv[0], sat, 1f) & 0xFFFFFF;
+                c = mix(c, 0xFFFFFF, 0.12f + 0.1f * (float) Math.sin(t / 140.0) * (float) Math.sin(t / 370.0));
+                long st = t / 90L; if (n > 0 && hash(5, t / 1800L) % n == i && (t % 1800L) < 300L && hash(9, st) % 3 == 0) c = mix(c, 0x000000, 0.55f);       // a flicker
+                if ((t % 7000L) < 120L) c = mix(c, 0x000000, 0.35f);                                       // the whole tube blinks once in a while
+                return c;
+            }
             case "shimmer": {                                               // a band of white sweeps over the name
                 float pos = (t % 2400L) / 2400f * (n + 6) - 3, k = Math.max(0f, 1f - Math.abs(i - pos) / 1.6f);
                 return mix(base, 0xFFFFFF, 0.9f * k);

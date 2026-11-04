@@ -86,6 +86,42 @@ final class AuraFx {
                 }
                 break;
             }
+            case "bubbleaura": {                                                     // Bubbles: bubbles wobble up round you and pop at the top with a tiny star
+                for (int i = 0; i < 12; i++) {
+                    float ph = (float) (((t / 3200.0) + i / 12.0) % 1.0), ang = i * 2.4f + (float) Math.sin(t / 900.0 + i) * 0.4f, r = 0.45f + 0.15f * (float) Math.sin(i * 1.3);
+                    float x = (float) Math.cos(ang) * r + 0.05f * (float) Math.sin(t / 220.0 + i), z = (float) Math.sin(ang) * r;
+                    if (ph < 0.9f) o.add(new P(x, ph * 2.1f, z, 0.03f + 0.03f * ph, argb(0.35f + 0.45f * (float) Math.sin(Math.PI * ph / 0.9f), mix(0x6AC8FF, 0xE8FFFF, ph)), 0, ph * 0.8f));
+                    else o.add(new P(x, 1.9f, z, 0.06f * (1f - (ph - 0.9f) / 0.1f), argb(0.9f, 0xFFFFFF), 1, 0.7f));
+                }
+                break;
+            }
+            case "fireflyaura": {                                                    // Fireflies: a few soft lights wander round you and blink
+                for (int i = 0; i < 7; i++) {
+                    double tt = t / 1000.0, sp = 0.5 + 0.13 * i;
+                    float x = (float) (Math.sin(tt * sp + i * 1.7) * (0.45 + 0.12 * (i % 3))), z = (float) (Math.cos(tt * sp * 1.3 + i) * (0.45 + 0.1 * (i % 2))), y = 0.4f + 0.8f * (float) (0.5 + 0.5 * Math.sin(tt * sp * 0.7 + i * 2.1));
+                    float blink = (float) Math.max(0.0, Math.sin(tt * 2.2 + i * 2.3));
+                    o.add(new P(x, y, z, 0.03f + 0.03f * blink, argb(0.25f + 0.75f * blink, mix(0xB8E860, 0xF4FFB0, blink)), 0, 0.4f));
+                }
+                break;
+            }
+            case "coinaura": {                                                       // Coin Shower: gold coins tumble down round you and glint
+                for (int i = 0; i < 10; i++) {
+                    float ph = (float) (((t / 2600.0) + i / 10.0) % 1.0), ang = i * 2.1f + (float) (t / 3000.0), r = 0.5f + 0.12f * (float) Math.sin(i * 1.9);
+                    float spin = Math.abs((float) Math.cos(t / 180.0 + i));
+                    o.add(new P((float) Math.cos(ang) * r, 2.2f - ph * 2.2f, (float) Math.sin(ang) * r, 0.025f + 0.025f * spin, argb(0.85f * (float) Math.sin(Math.PI * ph), spin > 0.8f ? 0xFFF4C8 : 0xFFC83A), spin > 0.92f ? 1 : 0, 0.3f));
+                }
+                break;
+            }
+            case "runeaura": {                                                       // Runes: violet runes circle your waist on a slow tilted ring; one lights up now and then
+                int n = 8; long lit = (t / 700L) % n;
+                for (int i = 0; i < n; i++) {
+                    float ang = (float) (i * Math.PI * 2 / n + t / 2400.0), y = 0.95f + 0.18f * (float) Math.sin(ang + t / 1600.0);
+                    boolean on = i == lit;
+                    o.add(new P((float) Math.cos(ang) * 0.62f, y, (float) Math.sin(ang) * 0.62f, on ? 0.06f : 0.035f, argb(on ? 1f : 0.65f, on ? 0xF4E8FF : (i % 2 == 0 ? 0xB56BFF : 0x9AF0FF)), on ? 1 : 0, 0.2f));
+                }
+                for (int i = 0; i < 5; i++) { float ph = (float) (((t / 2800.0) + i / 5.0) % 1.0), ang = i * 1.3f; o.add(new P((float) Math.cos(ang) * 0.4f, 0.4f + ph * 1.4f, (float) Math.sin(ang) * 0.4f, 0.022f, argb(0.6f * (float) Math.sin(Math.PI * ph), 0xE6D2FF), 0, ph * 0.6f)); }
+                break;
+            }
             default: break;
         }
         return o;
@@ -95,7 +131,7 @@ final class AuraFx {
     private static final Map<UUID, double[]> STATE = new HashMap<>();
     private static final Map<UUID, ArrayDeque<double[]>> HIST = new HashMap<>();
     private static int auraRgb(String aura) {
-        return switch (aura == null ? "" : aura) { case "glitchaura" -> 0xFF7A2E; case "stardust" -> 0x8FD0FF; case "patronaura" -> 0xFF9B2E; default -> 0xFFE680; };
+        return switch (aura == null ? "" : aura) { case "glitchaura" -> 0xFF7A2E; case "stardust" -> 0x8FD0FF; case "patronaura" -> 0xFF9B2E; case "bubbleaura" -> 0x8FE0FF; case "fireflyaura" -> 0xE8FF70; case "coinaura" -> 0xFFD24A; case "runeaura" -> 0xC9A0FF; default -> 0xFFE680; };
     }
     /** The resting animation (after 5 seconds without moving): two strands of light slowly wind up from the feet past the head, and a soft ring breathes round the waist. */
     static List<P> idleParticles(String aura, long now, float k) {

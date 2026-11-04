@@ -18,12 +18,12 @@ const OWNER = "7ad5d2b31b239f2ed148d1de18f8214967bf7d1a411c838d466e9829ab7c2bf8"
 
 // ---------------------------------------------------------------- achievements (the only place they are defined)
 // stat(p) reads the player's stats; goal is the number to reach. reward: the cosmetic it unlocks.
-const CH = { ledger: "The Ledger", fortune: "Fortune", myth: "Mythological", bosses: "Bosses", farm: "Farming", table: "Rare Drops", wild: "The Wilds" };
+const CH = { ledger: "The Ledger", fortune: "Fortune", myth: "Mythological", rare: "Rare Drops", farm: "Farming", fish: "Fishing", dye: "Dyes" };          // the same pages as the menu
 const ACH = [
   // The Ledger: everything together
-  { id: "first_find", ch: "ledger", name: "First Find", desc: "Get your first rare drop.", icon: "seal", goal: 1, stat: (p) => p.drops },
+  { id: "first_find", ch: "ledger", name: "First Find", desc: "Get your first rare drop.", icon: "seal", goal: 1, stat: (p) => p.drops, reward: "sweep" },
   { id: "town_crier", ch: "ledger", name: "Town Crier", desc: "Get 10 rare drops.", icon: "bell", goal: 10, stat: (p) => p.drops, reward: "bell" },
-  { id: "hoarder", ch: "ledger", name: "Hoarder", desc: "Get 100 rare drops.", icon: "sack", goal: 100, stat: (p) => p.drops },
+  { id: "hoarder", ch: "ledger", name: "Hoarder", desc: "Get 100 rare drops.", icon: "sack", goal: 100, stat: (p) => p.drops, reward: "ripple" },
   { id: "packrat", ch: "ledger", name: "Pack Rat", desc: "Get 500 rare drops.", icon: "sack", goal: 500, stat: (p) => p.drops },
   { id: "collector", ch: "ledger", name: "Collector", desc: "Find 25 different items.", icon: "shelf", goal: 25, stat: (p) => Object.keys(p.uniq).length },
   { id: "curator", ch: "ledger", name: "Curator", desc: "Find 75 different items.", icon: "shelf", goal: 75, stat: (p) => Object.keys(p.uniq).length },
@@ -34,36 +34,37 @@ const ACH = [
   { id: "treasure_hunter", ch: "fortune", name: "Treasure Hunter", desc: "Get 10 RNG drops worth 1M coins or more each.", icon: "chest", goal: 10, stat: (p) => p.bigRng, reward: "chest" },
   { id: "blessed", ch: "fortune", name: "Blessed", desc: "Get 50 RNG drops.", icon: "dice", goal: 50, stat: (p) => p.rng, reward: "dice" },
   { id: "chosen", ch: "fortune", name: "The Chosen One", desc: "Get 100 RNG drops.", icon: "crown", goal: 100, stat: (p) => p.rng },
-  { id: "millionaire", ch: "fortune", name: "Millionaire", desc: "Find 10M coins worth of drops.", icon: "coin", goal: 10_000_000, stat: (p) => p.value },
+  { id: "millionaire", ch: "fortune", name: "Millionaire", desc: "Find 10M coins worth of drops.", icon: "coin", goal: 10_000_000, stat: (p) => p.value, reward: "coinaura" },
   { id: "tycoon", ch: "fortune", name: "Tycoon", desc: "Find 1B coins worth of drops.", icon: "coin", goal: 1_000_000_000, stat: (p) => p.value },
   { id: "jackpot", ch: "fortune", name: "Jackpot", desc: "One drop worth 100M coins or more.", icon: "gem", goal: 1, stat: (p) => (p.best >= 100_000_000 ? 1 : 0), secret: true },
-  { id: "pray", ch: "fortune", name: "Answered Prayers", desc: "Get 5 drops rated Pray RNGesus or rarer.", icon: "star", goal: 5, stat: (p) => p.r3 },
+  { id: "pray", ch: "fortune", name: "Answered Prayers", desc: "Get 5 drops rated Pray RNGesus or rarer.", icon: "star", goal: 5, stat: (p) => p.r3, reward: "neon" },
   // Mythological
   { id: "digger", ch: "myth", name: "Digger", desc: "Get 25 treasure finds from burrows.", icon: "shovel", goal: 25, stat: (p) => g(p, "treasure").d },
-  { id: "myth_hunter", ch: "myth", name: "Mythic Hunter", desc: "Get 25 drops from mythological creatures.", icon: "horn", goal: 25, stat: (p) => g(p, "myth").d },
+  { id: "myth_hunter", ch: "myth", name: "Mythic Hunter", desc: "Get 25 drops from mythological creatures.", icon: "horn", goal: 25, stat: (p) => g(p, "myth").d, reward: "spark" },
   { id: "minos_bane", ch: "myth", name: "Minos' Bane", desc: "Get 5 RNG drops from mythological creatures.", icon: "horn", goal: 5, stat: (p) => g(p, "myth").rng },
   { id: "deep_digger", ch: "myth", name: "Deep Digger", desc: "Get 200 treasure finds.", icon: "shovel", goal: 200, stat: (p) => g(p, "treasure").d },
-  // Bosses
-  { id: "first_blood", ch: "bosses", name: "First Blood", desc: "Get your first slayer rare drop.", icon: "sword", goal: 1, stat: (p) => g(p, "slayer").d },
-  { id: "executioner", ch: "bosses", name: "Executioner", desc: "Get 25 slayer rare drops.", icon: "anvil", goal: 25, stat: (p) => g(p, "slayer").d, reward: "anvil" },
-  { id: "boss_breaker", ch: "bosses", name: "Boss Breaker", desc: "Get 10 RNG slayer drops.", icon: "skull", goal: 10, stat: (p) => g(p, "slayer").rng },
-  { id: "all_bosses", ch: "bosses", name: "Monster Hunter", desc: "Get a rare drop from 4 different slayer bosses.", icon: "sword", goal: 4, stat: (p) => Object.keys(p.bosses).length },
+  // Rare Drops: slayers, the Crimson Isle, rare mobs and the Experimentation Table
+  { id: "first_blood", ch: "rare", name: "First Blood", desc: "Get your first slayer rare drop.", icon: "sword", goal: 1, stat: (p) => g(p, "slayer").d },
+  { id: "executioner", ch: "rare", name: "Executioner", desc: "Get 25 slayer rare drops.", icon: "anvil", goal: 25, stat: (p) => g(p, "slayer").d, reward: "anvil" },
+  { id: "boss_breaker", ch: "rare", name: "Boss Breaker", desc: "Get 10 RNG slayer drops.", icon: "skull", goal: 10, stat: (p) => g(p, "slayer").rng },
+  { id: "all_bosses", ch: "rare", name: "Monster Hunter", desc: "Get a rare drop from 4 different slayer bosses.", icon: "sword", goal: 4, stat: (p) => Object.keys(p.bosses).length },
   // Farming
   { id: "green_thumb", ch: "farm", name: "Green Thumb", desc: "Get 100 farming drops.", icon: "wheat", goal: 100, stat: (p) => farm(p), reward: "tractor" },
-  { id: "exterminator", ch: "farm", name: "Exterminator", desc: "Get 50 pest drops.", icon: "bug", goal: 50, stat: (p) => g(p, "pests").d },
+  { id: "exterminator", ch: "farm", name: "Exterminator", desc: "Get 50 pest drops.", icon: "bug", goal: 50, stat: (p) => g(p, "pests").d, reward: "fireflyaura" },
   { id: "crate_digger", ch: "farm", name: "Crate Digger", desc: "Find 5 different Vinyls.", icon: "disc", goal: 5, stat: (p) => Object.keys(p.vinyl).length, reward: "disc" },
   { id: "greenhouse", ch: "farm", name: "Greenhouse Keeper", desc: "Get 10 Harvest Bounty finds.", icon: "leaf", goal: 10, stat: (p) => g(p, "bounty").d },
   { id: "feast", ch: "farm", name: "Feast", desc: "Get 25 Harvest Feast drops.", icon: "wheat", goal: 25, stat: (p) => g(p, "feast").d },
-  // Rare Drops (Experimentation Table)
-  { id: "scholar", ch: "table", name: "Scholar", desc: "Get 10 Experimentation Table rewards.", icon: "book", goal: 10, stat: (p) => g(p, "exp").d },
-  { id: "mastermind", ch: "table", name: "Mastermind", desc: "Get 5 RNG Experimentation Table rewards.", icon: "book", goal: 5, stat: (p) => g(p, "exp").rng },
-  // the Wilds: fishing, the Crimson Isle, rare mobs and dyes
-  { id: "angler", ch: "wild", name: "Angler", desc: "Get 10 rare drops from sea creatures.", icon: "fish", goal: 10, stat: (p) => fish(p).d },
-  { id: "deep_sea", ch: "wild", name: "Deep Sea Legend", desc: "Get 3 RNG drops from sea creatures.", icon: "fish", goal: 3, stat: (p) => fish(p).rng },
-  { id: "isle_raider", ch: "wild", name: "Isle Raider", desc: "Get 10 rare drops from Crimson Isle bosses.", icon: "flame", goal: 10, stat: (p) => g(p, "crimson").d },
-  { id: "rare_breed", ch: "wild", name: "Rare Breed", desc: "Get 10 rare mob drops.", icon: "skull", goal: 10, stat: (p) => g(p, "mobs").d },
-  { id: "living_colour", ch: "wild", name: "Living Colour", desc: "Find a dye.", icon: "dye", goal: 1, stat: (p) => g(p, "dyes").d, secret: true },
-  { id: "palette", ch: "wild", name: "Palette", desc: "Find 3 different dyes.", icon: "dye", goal: 3, stat: (p) => Object.keys(p.dyes || {}).length },
+    { id: "scholar", ch: "rare", name: "Scholar", desc: "Get 10 Experimentation Table rewards.", icon: "book", goal: 10, stat: (p) => g(p, "exp").d },
+  { id: "mastermind", ch: "rare", name: "Mastermind", desc: "Get 5 RNG Experimentation Table rewards.", icon: "book", goal: 5, stat: (p) => g(p, "exp").rng, reward: "runeaura" },
+  // Fishing and Dyes
+  { id: "angler", ch: "fish", name: "Angler", desc: "Get 10 rare drops from sea creatures.", icon: "fish", goal: 10, stat: (p) => fish(p).d, reward: "bubbleaura" },
+  { id: "deep_sea", ch: "fish", name: "Deep Sea Legend", desc: "Get 3 RNG drops from sea creatures.", icon: "fish", goal: 3, stat: (p) => fish(p).rng },
+  { id: "isle_raider", ch: "rare", name: "Isle Raider", desc: "Get 10 rare drops from Crimson Isle bosses.", icon: "flame", goal: 10, stat: (p) => g(p, "crimson").d },
+  { id: "rare_breed", ch: "rare", name: "Rare Breed", desc: "Get 10 rare mob drops.", icon: "skull", goal: 10, stat: (p) => g(p, "mobs").d },
+  { id: "living_colour", ch: "dye", name: "Living Colour", desc: "Find a dye.", icon: "dye", goal: 1, stat: (p) => g(p, "dyes").d, secret: true },
+  { id: "palette", ch: "dye", name: "Palette", desc: "Find 3 different dyes.", icon: "dye", goal: 3, stat: (p) => Object.keys(p.dyes || {}).length },
+  { id: "rainbow", ch: "dye", name: "Every Colour", desc: "Find 10 different dyes.", icon: "dye", goal: 10, stat: (p) => Object.keys(p.dyes || {}).length },
+  { id: "sea_hunter", ch: "fish", name: "Sea Hunter", desc: "Get 100 rare drops from sea creatures.", icon: "fish", goal: 100, stat: (p) => fish(p).d },
 ];
 const g = (p, k) => p.g[k] || { d: 0, rng: 0 };
 const fish = (p) => ["fish_water", "fish_lava", "fish_spooky", "fish_winter"].reduce((a, k) => ({ d: a.d + g(p, k).d, rng: a.rng + g(p, k).rng }), { d: 0, rng: 0 });

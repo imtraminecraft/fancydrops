@@ -37,6 +37,16 @@ final class CosmeticData {
         new Def("tractor", "Tractor", Line.FREE, Kind.SUFFIX, "Common", 0xFF3AA848),
         new Def("bell", "Bell", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2B01E),
         new Def("clock", "Clock", Line.FREE, Kind.SUFFIX, "Common", 0xFFF2F4FA),
+        // Name effects earned in the ledger: they keep your own name colour and add light or movement
+        new Def("sweep", "Light Sweep", Line.FREE, Kind.NAME, "Common", 0xFFF4F6FB),
+        new Def("ripple", "Ripple", Line.FREE, Kind.NAME, "Common", 0xFFB8E8FF),
+        new Def("spark", "Spark", Line.RARE, Kind.NAME, "Rare", 0xFFFFE680),
+        new Def("neon", "Neon", Line.LEGENDARY, Kind.NAME, "Legendary", 0xFF6AF2FF),
+        // Auras earned in the ledger
+        new Def("bubbleaura", "Bubbles", Line.FREE, Kind.AURA, "Common", 0xFF8FE0FF),
+        new Def("fireflyaura", "Fireflies", Line.FREE, Kind.AURA, "Common", 0xFFE8FF70),
+        new Def("coinaura", "Coin Shower", Line.RARE, Kind.AURA, "Rare", 0xFFFFD24A),
+        new Def("runeaura", "Runes", Line.RARE, Kind.AURA, "Rare", 0xFFC9A0FF),
         // Special: handed out by hand, one set at a time (suffix + name effect + aura)
         new Def("sparkle", "Sparkle", Line.SPECIAL, Kind.SUFFIX, "Special Set", 0xFFB48CFF, "sparkle"),
         new Def("sparklefx", "Starlight", Line.SPECIAL, Kind.NAME, "Special Set", 0xFFA9BBFF, "sparkle"),

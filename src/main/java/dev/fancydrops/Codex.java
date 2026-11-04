@@ -33,17 +33,19 @@ final class Codex {
             INK = 0xFF3A2A1C, INK_SOFT = 0xFF7A6448, INK_FAINT = 0x557A6448, GOLD = 0xFFE8B84A, GOLD_D = 0xFF9A6A1E, GOLD_L = 0xFFFFE3A0;
 
     // ---- chapters: the ledger on the right edge, the wardrobe on the left
-    private static final String[] ACH = {"ledger", "fortune", "myth", "bosses", "farm", "table", "wild"};
-    private static final String[] ACH_NAME = {"The Ledger", "Fortune", "Mythological", "Bosses", "Farming", "Rare Drops", "The Wilds"};
-    private static final int[] ACH_COL = {0xFFC9A23A, 0xFF8A4FD8, 0xFF3AA8D8, 0xFFC0392B, 0xFF4FA83A, 0xFF5A7AD8, 0xFF2E9AB0};
-    private static final String[] ACH_ICON = {"stats", "dice", "mytho", "slayers", "grp_crops", "raredrops", "fishing"};
-    private static final String[] QUOTE = {"Every find, written down.", "Fortune favours the patient.", "Dig, and the earth answers.", "They drop what they guard.", "The harvest remembers.", "Read twice, find once.", "Out past the map's edge."};
-    private static final String[] WARD = {"sets", "icons", "effects", "auras"};
-    private static final String[] WARD_NAME = {"Sets", "Name Icons", "Name Effects", "Auras"};
-    private static final int[] WARD_COL = {0xFFC77DFF, 0xFFFFC857, 0xFFFF9AC8, 0xFF8FD0FF};
-    private static final String[] WARD_ICON = {"cosmetics", "cos_suffix", "cos_name", "cos_aura"};
-    /** Chapter numbers: 0 contents, 1..7 the ledger, 8..11 the wardrobe. */
-    private static final int CONTENTS = 0, FIRST_ACH = 1, FIRST_WARD = 8, CHAPTERS = 12;
+    // the ledger's chapters are the menu's own pages, in the same order
+    private static final String[] ACH = {"ledger", "fortune", "myth", "rare", "farm", "fish", "dye"};
+    private static final String[] ACH_NAME = {"The Ledger", "Fortune", "Mythological", "Rare Drops", "Farming", "Fishing", "Dyes"};
+    private static final int[] ACH_COL = {0xFFC9A23A, 0xFF8A4FD8, 0xFF3AA8D8, 0xFFC0392B, 0xFF4FA83A, 0xFF2E9AB0, 0xFFE8489A};
+    private static final String[] ACH_ICON = {"stats", "coin", "mytho", "raredrops", "farm", "fishing", "dye"};
+    private static final String[] QUOTE = {"Every find, written down.", "Fortune favours the patient.", "Dig, and the earth answers.", "They drop what they guard.", "The harvest remembers.", "Patience, then a splash.", "Every colour has a story."};
+    // the wardrobe: Rewards first (every cosmetic the ledger gives, next to the achievement that gives it), then each kind, then the sets
+    private static final String[] WARD = {"rewards", "icons", "effects", "auras", "sets"};
+    private static final String[] WARD_NAME = {"Rewards", "Name Icons", "Name Effects", "Auras", "Sets"};
+    private static final int[] WARD_COL = {0xFFE8B84A, 0xFFFFC857, 0xFFFF9AC8, 0xFF8FD0FF, 0xFFC77DFF};
+    private static final String[] WARD_ICON = {"trophy", "cos_suffix", "cos_name", "cos_aura", "cosmetics"};
+    /** Chapter numbers: 0 contents, 1..7 the ledger, 8..12 the wardrobe. */
+    private static final int CONTENTS = 0, FIRST_ACH = 1, FIRST_WARD = 8, CHAPTERS = 13;
 
     static boolean open;
     private static long openAt, closeAt;
@@ -64,6 +66,7 @@ final class Codex {
         sound("book_whoosh", 1f, 0.8f);
     }
     static void openWardrobe(int[] btn) { open(btn, FIRST_WARD + 1); }
+    static final int ICONS_CHAPTER = FIRST_WARD + 1;
     static void close() { if (open && closeAt == 0) { closeAt = System.currentTimeMillis(); sound("book_close", 1f, 0.9f); } }
     static boolean busy() { return open; }
 
@@ -78,9 +81,9 @@ final class Codex {
     private static int spreads(int c) {
         if (c == CONTENTS) return 1;
         if (c < FIRST_WARD) { int n = achOf(ACH[c - FIRST_ACH]).size(); return Math.max(1, (n + perAch - 1) / perAch); }
-        int n = wardItems(c - FIRST_WARD).size(); return Math.max(1, (n + perWard - 1) / perWard);
+        int n = wardItems(c - FIRST_WARD).size(), per = c == FIRST_WARD ? perReward : perWard; return Math.max(1, (n + per - 1) / per);
     }
-    private static int perAch = 9, perWard = 9;
+    private static int perAch = 9, perWard = 9, perReward = 5;
     private static List<Achievements.Ach> achOf(String id) {
         Achievements.Profile p = Achievements.profile(); List<Achievements.Ach> l = new ArrayList<>();
         if (p != null) for (Achievements.Ach a : p.list()) if (a.ch().equals(id)) l.add(a);
@@ -88,7 +91,12 @@ final class Codex {
     }
     private static List<Object> wardItems(int w) {
         List<Object> l = new ArrayList<>();
-        if (w == 0) { for (int r = 4; r >= 0; r--) for (CosmeticData.SetDef s : CosmeticData.SETS) if (s.rarity() == r) l.add(s); return l; }
+        if (w == 4) { for (int r = 4; r >= 0; r--) for (CosmeticData.SetDef s : CosmeticData.SETS) if (s.rarity() == r) l.add(s); return l; }
+        if (w == 0) {                                                                      // Rewards: in the ledger's order
+            Achievements.Profile p = Achievements.profile();
+            if (p != null) for (Achievements.Ach a : p.list()) if (!a.reward().isEmpty() && CosmeticData.byId(a.reward()) != null) l.add(a);
+            return l;
+        }
         CosmeticData.Kind k = w == 1 ? CosmeticData.Kind.SUFFIX : w == 2 ? CosmeticData.Kind.NAME : CosmeticData.Kind.AURA;
         List<Object> got = new ArrayList<>(), rest = new ArrayList<>();
         for (int r = 4; r >= 0; r--) {                                                     // what you own first, then the rest, rarest first in each
@@ -120,8 +128,9 @@ final class Codex {
     static void draw(GuiGraphicsExtractor g, Host h, int width, int height, int mx0, int my0) {
         if (!open) return;
         now = System.currentTimeMillis(); host = h; font = h.font(); W = width; H = height; mx = mx0; my = my0; HITS.clear(); hoverAura = null;
-        bh = Math.min(H - 48, 300); pw = Math.max(150, Math.min((W - 96) / 2, Math.round(bh * 0.8f))); top = (H - bh) / 2 + 4;
-        perAch = 3 * Math.max(1, (bh - 84) / 50); perWard = 3 * Math.max(1, (bh - 80) / 54);
+        tryIcon = nTryIcon; tryFx = nTryFx; tryAura = nTryAura; nTryIcon = nTryFx = nTryAura = null;
+        bh = Math.min(H - 34, 340); pw = Math.max(160, Math.min((W - 110) / 2, Math.round(bh * 0.86f))); top = (H - bh) / 2 + 4;
+        perAch = 3 * Math.max(1, (bh - 84) / 52); perWard = 3 * Math.max(1, (bh - 80) / 56); perReward = Math.max(2, (bh - 64) / 40);
         long t = now - openAt;
         float closeT = closeAt == 0 ? -1f : (now - closeAt);
         if (closeT >= CLOSE_COVER + CLOSE_FLY) { open = false; return; }
@@ -269,8 +278,8 @@ final class Codex {
             int col = i == 0 ? 0xFFB8862A : ACH_COL[i - 1]; String ic = i == 0 ? "home" : ACH_ICON[i - 1]; String nm = i == 0 ? "Contents" : ACH_NAME[i - 1];
             tab(g, spine + pw + 9, y + i * (th + 3), th, col, ic, nm, i, true);
         }
-        int wt = Math.min(30, (bh - 16) / 4 - 4);
-        for (int i = 0; i < 4; i++) tab(g, spine - pw - 9, top + 14 + i * (wt + 4), wt, WARD_COL[i], WARD_ICON[i], WARD_NAME[i], FIRST_WARD + i, false);
+        int wt = Math.min(30, (bh - 16) / WARD.length - 4);
+        for (int i = 0; i < WARD.length; i++) tab(g, spine - pw - 9, top + 14 + i * (wt + 4), wt, WARD_COL[i], WARD_ICON[i], WARD_NAME[i], FIRST_WARD + i, false);
     }
     private static void tab(GuiGraphicsExtractor g, int edge, int y, int h, int col, String icon, String name, int c, boolean right) {
         boolean act = ch == c, hv = right ? mx >= edge && mx < edge + 24 && my >= y && my < y + h : mx >= edge - 24 && mx < edge && my >= y && my < y + h;
@@ -405,7 +414,7 @@ final class Codex {
             int col = c < FIRST_WARD ? ACH_COL[c - FIRST_ACH] : WARD_COL[c - FIRST_WARD];
             String right;
             if (c < FIRST_WARD) { List<Achievements.Ach> l = achOf(ACH[c - FIRST_ACH]); int d = 0; for (Achievements.Ach a : l) if (a.done()) d++; right = p == null ? "·" : d + "/" + l.size(); }
-            else { List<Object> l = wardItems(c - FIRST_WARD); int d = 0; for (Object o : l) if (o instanceof CosmeticData.Def df ? CosmeticData.unlocked(df) : CosmeticData.owned((CosmeticData.SetDef) o) > 0) d++; right = d + "/" + l.size(); }
+            else { List<Object> l = wardItems(c - FIRST_WARD); int d = 0; for (Object o : l) if (o instanceof CosmeticData.Def df ? CosmeticData.unlocked(df) : o instanceof Achievements.Ach aa ? CosmeticData.unlockedId(aa.reward()) : CosmeticData.owned((CosmeticData.SetDef) o) > 0) d++; right = d + "/" + l.size(); }
             boolean hv = live && mx >= x && mx < x + w && my >= yy - 2 && my < yy + rowH - 2;
             g.fill(x, yy + 1, x + 3, yy + 7, col);
             leader(g, nm, right + "  " + (pageNumber(c, 0) * 2 + 1), x + 7, yy, w - 7);
@@ -454,6 +463,16 @@ final class Codex {
                 if (prog > 0f) { ring(g, bx, byy, 13.5f, GOLD, 0, prog); ring(g, bx, byy, 14f, GOLD, 0, prog); }
                 ink(g, "?", bx - 2, byy - 4, hv ? INK_SOFT : INK_FAINT);
             }
+            CosmeticData.Def rw = a.reward().isEmpty() ? null : CosmeticData.byId(a.reward());
+            if (rw != null) {                                                                // the reward hangs off the coin as a small medal
+                int rx = bx + 11, ry = byy + 9;
+                disc(g, rx, ry, 7, 0x50000000); disc(g, rx, ry - 1, 7, a.done() ? mix(rw.color() | 0xFF000000, 0xFF000000, 0.3f) : 0xFFD8CCB0); disc(g, rx, ry - 1, 5.5f, a.done() ? 0xFF1A1622 : 0xFFE8DCC0);
+                Gfx.push(g); Gfx.translate(g, rx - 5, ry - 6); Gfx.scale(g, 0.625f);
+                if (rw.kind() == CosmeticData.Kind.NAME) { var cp = Cosmetics.nameComp("A", 0x55FFFF, rw.id(), true, now); g.text(font, cp, 5, 4, 0xFFFFFFFF, false); }
+                else Icons.draw(g, rw.kind() == CosmeticData.Kind.SUFFIX ? Cosmetics.token(rw.id()) : Icons.tok("cx_" + rw.id()), 0, 0, 2400L);
+                Gfx.pop(g);
+                if (!a.done()) disc(g, rx, ry - 1, 5.5f, 0x80E8DCC0);
+            }
             String nm = a.secret() && !a.done() ? "???" : a.name();
             List<String> lines = wrap(nm, cw - 4, 0.75f);
             for (int li = 0; li < Math.min(2, lines.size()); li++) small(g, lines.get(li), bx - Math.round(fw(lines.get(li)) * 0.375f), byy + 17 + li * 8, a.done() ? INK : INK_SOFT);
@@ -468,40 +487,117 @@ final class Codex {
     }
 
     // ---- a wardrobe chapter
+    // what the mouse rests on (read by the left page next frame, so you can try a cosmetic on before you own or wear it)
+    private static String tryIcon, tryFx, tryAura, nTryIcon, nTryFx, nTryAura;
     private static void wardLeft(GuiGraphicsExtractor g, int i, int x, int y, int w, int h, boolean live) {
         title(g, WARD_NAME[i], x, y, WARD_COL[i]);
-        List<Object> l = wardItems(i); int d = 0; for (Object o : l) if (o instanceof CosmeticData.Def df ? CosmeticData.unlocked(df) : CosmeticData.owned((CosmeticData.SetDef) o) > 0) d++;
-        ink(g, d + " / " + l.size() + " unlocked", x, y + 21, INK_SOFT);
-        String worn = switch (i) {
-            case 1 -> nameOf(FancyConfig.get().suffix); case 2 -> nameOf(FancyConfig.get().nameFx); case 3 -> nameOf(FancyConfig.get().aura);
-            default -> { String sn = ""; for (CosmeticData.SetDef sd : CosmeticData.SETS) if (CosmeticData.owned(sd) > 0 && CosmeticData.wearingSet(sd)) sn = sd.name(); yield sn; }
-        };
-        small(g, worn.isEmpty() ? "Nothing worn" : "Wearing: " + worn, x, y + 32, worn.isEmpty() ? INK_SOFT : INK);
-        int fx = x - 2, fy = y + 44, fw = w + 4, fh = h - 58; if (i == 1 || i == 2 || (i == 0 && fh <= 150)) fh = Math.min(fh, 80);                                     // the picture: a print pasted on the page with photo corners
-        g.fill(fx - 3, fy - 3, fx + fw + 3, fy + fh + 3, 0xFFFBF6EA); g.fill(fx - 3, fy + fh + 3, fx + fw + 3, fy + fh + 4, 0x30000000);
-        if (live) {
-            if (i == 3 || (i == 0 && fh > 150)) {
-                int ah = i == 3 ? fh : fh / 2; host.auraStage(g, fx, fy + (i == 3 ? 0 : fh - ah), fw, ah, hoverAura != null ? hoverAura : CosmeticData.unlockedId(FancyConfig.get().aura) ? FancyConfig.get().aura : null);
-                if (i == 0) host.chatPreview(g, fx, fy, fw, fh - ah - 2);
-            } else host.chatPreview(g, fx, fy, fw, fh);
-        } else { g.fill(fx, fy, fx + fw, fy + fh, 0xFF14161E); }
-        for (int q = 0; q < 4; q++) { int cx = q % 2 == 0 ? fx - 3 : fx + fw + 3, cy = q < 2 ? fy - 3 : fy + fh + 3, dx = q % 2 == 0 ? 1 : -1, dy = q < 2 ? 1 : -1; for (int k = 0; k < 7; k++) g.fill(Math.min(cx, cx + dx * (7 - k)), cy + dy * k, Math.max(cx, cx + dx * (7 - k)), cy + dy * k + 1, 0xFF5A3A24); }
-        small(g, i == 0 ? "A set is a name icon, a name effect and an aura that go together." : i == 3 ? "Hover an aura to try it on." : "How it looks in chat and in the tab list.", x, y + h - 10, INK_SOFT);
+        List<Object> l = wardItems(i); int d = 0;
+        for (Object o : l) if (o instanceof CosmeticData.Def df ? CosmeticData.unlocked(df) : o instanceof Achievements.Ach a ? CosmeticData.unlockedId(a.reward()) : CosmeticData.owned((CosmeticData.SetDef) o) > 0) d++;
+        ink(g, d + " / " + l.size() + (i == 0 ? " earned" : " unlocked"), x, y + 21, INK_SOFT);
+        int yy = y + 34;
+        if (i == 0) { for (String ln : wrap("Every cosmetic the ledger gives, next to the achievement that earns it. Click one you have to wear it.", w, 0.85f)) { med(g, ln, x, yy, INK_SOFT); yy += 9; } yy += 4; }
+        String[] kinds = {"Name icon", "Name effect", "Aura"};
+        String[] worn = {nameOf(FancyConfig.get().suffix), nameOf(FancyConfig.get().nameFx), nameOf(FancyConfig.get().aura)};
+        for (int k = 0; k < 3; k++) { leader(g, kinds[k], worn[k].isEmpty() ? "-" : worn[k], x, yy, w); yy += 11; }
+        yy += 4;
+        // the mirror: how you look right now, or with the thing under the mouse tried on
+        boolean auraPage = i == 3 || i == 4 || i == 0;
+        int fx = x - 2, fw = w + 4, fy = yy + 2, fh = y + h - 14 - fy;
+        if (fh < 40) return;
+        int mh = Math.min(fh, auraPage ? 52 : 70);
+        frameCard(g, fx, fy, fw, auraPage ? fh : mh);
+        if (!live) { g.fill(fx, fy, fx + fw, fy + (auraPage ? fh : mh), 0xFF14161E); return; }
+        g.enableScissor(fx, fy, fx + fw, fy + (auraPage ? fh : mh));
+        mirror(g, fx, fy, fw, mh);
+        if (auraPage && fh - mh > 30) {
+            String au = tryAura != null ? tryAura : CosmeticData.unlockedId(FancyConfig.get().aura) ? FancyConfig.get().aura : null;
+            host.auraStage(g, fx, fy + mh, fw, fh - mh, au);
+        }
+        g.disableScissor();
+        small(g, tryIcon != null || tryFx != null || tryAura != null ? "Trying it on" : i == 3 ? "Hover an aura to try it on." : "Hover anything to try it on.", x, y + h - 10, INK_SOFT);
     }
+    /** A dark card with photo corners, pasted on the page. */
+    private static void frameCard(GuiGraphicsExtractor g, int fx, int fy, int fw, int fh) {
+        g.fill(fx - 3, fy - 3, fx + fw + 3, fy + fh + 3, 0xFFFBF6EA); g.fill(fx - 3, fy + fh + 3, fx + fw + 3, fy + fh + 4, 0x30000000);
+        g.fill(fx, fy, fx + fw, fy + fh, 0xFF16141C);
+        for (int q = 0; q < 4; q++) { int cx = q % 2 == 0 ? fx - 3 : fx + fw + 3, cy = q < 2 ? fy - 3 : fy + fh + 3, dx = q % 2 == 0 ? 1 : -1, dy = q < 2 ? 1 : -1; for (int k = 0; k < 7; k++) g.fill(Math.min(cx, cx + dx * (7 - k)), cy + dy * k, Math.max(cx, cx + dx * (7 - k)), cy + dy * k + 1, 0xFF5A3A24); }
+    }
+    /** Your name in chat and on your name tag, wearing what you wear (or what is being tried on). */
+    private static void mirror(GuiGraphicsExtractor g, int x, int y, int w, int h) {
+        String who; try { who = net.minecraft.client.Minecraft.getInstance().getUser().getName(); } catch (Throwable e) { who = "You"; }
+        String fx = tryFx != null ? tryFx : CosmeticData.unlockedId(FancyConfig.get().nameFx) ? FancyConfig.get().nameFx : null;
+        String ic = tryIcon != null ? tryIcon : CosmeticData.unlockedId(FancyConfig.get().suffix) ? FancyConfig.get().suffix : null;
+        Cosmetics.Suffix suf = ic == null ? null : Cosmetics.byId(ic);
+        net.minecraft.network.chat.Style plain = net.minecraft.network.chat.Style.EMPTY;
+        net.minecraft.network.chat.MutableComponent name = Component.empty().append(Component.literal("[MVP+] ").withStyle(plain.withColor(0x55FFFF))).append(Cosmetics.nameComp(who, 0x55FFFF, fx, true, now));
+        if (suf != null) name.append(Component.literal(" ")).append(Cosmetics.chatGlyph(suf).copy().withStyle(plain.withColor(0xFFFFFF)));
+        net.minecraft.network.chat.MutableComponent chat = name.copy().append(Component.literal(": gg!").withStyle(plain.withColor(0xFFFFFF)));
+        small(g, "IN CHAT", x + 5, y + 4, 0xFF8A8296);
+        fitText(g, chat, x + 5, y + 13, w - 10);
+        small(g, "NAME TAG", x + 5, y + 28, 0xFF8A8296);
+        int tw = Math.min(w - 10, host.width(name.getString()) + 8), tx = x + (w - tw) / 2, ty = y + 37;
+        g.fill(tx, ty, tx + tw, ty + 11, 0x66000000);
+        fitText(g, name, tx + 4, ty + 2, tw - 8);
+    }
+    /** Draws a line, squeezed to fit `max` when it is wider. */
+    private static void fitText(GuiGraphicsExtractor g, Component c, int x, int y, int max) {
+        int wd = host.width(c.getString()); float k = wd > max ? max / (float) wd : 1f;
+        Gfx.push(g); Gfx.translate(g, x, y + (1 - k) * 4); Gfx.scale(g, k); g.text(font, c, 0, 0, 0xFFFFFFFF, true); Gfx.pop(g);
+    }
+    private static void med(GuiGraphicsExtractor g, String s, int x, int y, int c) { Gfx.push(g); Gfx.translate(g, x, y); Gfx.scale(g, 0.85f); g.text(font, s, 0, 0, c, false); Gfx.pop(g); }
     private static String nameOf(String id) { CosmeticData.Def d = id == null ? null : CosmeticData.byId(id); return d != null && CosmeticData.unlocked(d) ? d.name() : ""; }
 
     private static void wardRight(GuiGraphicsExtractor g, int i, int s, int x, int y, int w, int h, boolean live) {
         ink(g, WARD_NAME[i].toUpperCase(Locale.ROOT), x, y + 2, mix(WARD_COL[i], 0xFF000000, 0.35f)); g.fill(x, y + 12, x + w, y + 13, INK_FAINT);
-        List<Object> l = wardItems(i); int cols = 3, cw = w / cols;
-        for (int k = 0; k < perWard; k++) {
-            int idx = s * perWard + k; if (idx >= l.size()) break;
-            Object o = l.get(idx);
-            int bx = x + (k % cols) * cw + cw / 2, byy = y + 36 + (k / cols) * 54;
-            boolean hv = live && Math.abs(mx - bx) <= cw / 2 - 2 && my >= byy - 17 && my <= byy + 32;
-            if (o instanceof CosmeticData.SetDef sd) setTile(g, sd, bx, byy, cw, hv, live);
-            else defTile(g, (CosmeticData.Def) o, bx, byy, cw, hv, live, i);
+        List<Object> l = wardItems(i);
+        if (i == 0) {                                                                       // Rewards: one row each, the cosmetic, the achievement that gives it and how far along you are
+            for (int k = 0; k < perReward; k++) {
+                int idx = s * perReward + k; if (idx >= l.size()) break;
+                rewardRow(g, (Achievements.Ach) l.get(idx), x, y + 20 + k * 40, w, live);
+            }
+            if (Achievements.profile() == null) for (String ln : wrap(Achievements.status.isEmpty() ? "Opening the ledger..." : Achievements.status, w, 1f)) { ink(g, ln, x, y + 24, INK_SOFT); y += 10; }
+        } else {
+            int cols = 3, cw = w / cols;
+            for (int k = 0; k < perWard; k++) {
+                int idx = s * perWard + k; if (idx >= l.size()) break;
+                Object o = l.get(idx);
+                int bx = x + (k % cols) * cw + cw / 2, byy = y + 36 + (k / cols) * 56;
+                boolean hv = live && Math.abs(mx - bx) <= cw / 2 - 2 && my >= byy - 17 && my <= byy + 32;
+                if (o instanceof CosmeticData.SetDef sd) setTile(g, sd, bx, byy, cw, hv, live);
+                else defTile(g, (CosmeticData.Def) o, bx, byy, cw, hv, live, i);
+            }
         }
         int n = spreads(FIRST_WARD + i); if (n > 1) small(g, (s + 1) + " of " + n, x + w / 2 - 8, y + h - 10, INK_SOFT);
+    }
+    /** One reward: its medallion, its name and kind, the achievement (and chapter) that earns it, and a progress bar. */
+    private static void rewardRow(GuiGraphicsExtractor g, Achievements.Ach a, int x, int y, int w, boolean live) {
+        CosmeticData.Def d = CosmeticData.byId(a.reward()); if (d == null) return;
+        boolean owned = CosmeticData.unlocked(d), worn = owned && CosmeticData.isEquipped(d);
+        boolean hv = live && mx >= x && mx < x + w && my >= y - 2 && my < y + 36;
+        if (hv) g.fill(x - 3, y - 2, x + w + 3, y + 36, 0x14604830);
+        int bx = x + 15, byy = y + 15;
+        medallion(g, bx, byy, d.color() | 0xFF000000, owned, worn, hv);
+        drawCos(g, d, bx, byy, owned, hv || worn);
+        ink(g, d.name(), x + 36, y + 2, owned ? INK : INK_SOFT);
+        String kind = CosmeticData.kindLabel(d.kind()); int kx = x + 36 + fw(d.name()) + 5;
+        if (kx + Math.round(fw(kind) * 0.75f) < x + w) small(g, kind, kx, y + 3, mix(d.color() | 0xFF000000, 0xFF000000, 0.35f));
+        String chap = ""; for (int c = 0; c < ACH.length; c++) if (ACH[c].equals(a.ch())) chap = ACH_NAME[c];
+        small(g, (a.done() ? "Earned with " : "Earn ") + "\"" + (a.secret() && !a.done() ? "???" : a.name()) + "\"  ·  " + chap, x + 36, y + 13, INK_SOFT);
+        float fr = (float) Math.min(1.0, a.goal() <= 0 ? 0 : a.progress() / a.goal());
+        String st = worn ? "worn" : owned ? "click to wear" : Ledger.fmt(a.progress()) + " / " + Ledger.fmt(a.goal());
+        int sw = Math.round(fw(st) * 0.75f);
+        bar(g, x + 36, y + 24, w - 36 - sw - 6, fr, a.done() ? GOLD : mix(GOLD, PAPER_D, 0.35f));
+        small(g, st, x + w - sw, y + 23, worn ? GOLD_D : INK_SOFT);
+        if (!live) return;
+        HITS.add(new Object[]{x - 3, y - 2, x + w + 3, y + 36, (Runnable) () -> clickDef(d)});
+        if (hv) { tryOn(d); host.tip(d.name() + "\n" + kind + "\n" + CosmeticData.rarityOf(d) + "\n" + (owned ? "1" : "0") + "\n" + (worn ? "Worn now. Click to take it off." : owned ? "Click to wear it." : "Earn \"" + a.name() + "\" first.") + "\n" + a.desc(), d.color() | 0xFF000000); }
+    }
+    private static void tryOn(CosmeticData.Def d) { if (d.kind() == CosmeticData.Kind.SUFFIX) nTryIcon = d.id(); else if (d.kind() == CosmeticData.Kind.NAME) nTryFx = d.id(); else nTryAura = d.id(); }
+    /** The cosmetic's own picture on its medallion: the icon, "Aa" in the name effect, or the aura's picture. */
+    private static void drawCos(GuiGraphicsExtractor g, CosmeticData.Def d, int bx, int byy, boolean owned, boolean moving) {
+        if (d.kind() == CosmeticData.Kind.NAME) { var comp = Cosmetics.nameComp("Aa", 0x55FFFF, d.id(), true, now); g.text(font, comp, bx - fw("Aa") / 2, byy - 4, 0xFFFFFFFF, true); }
+        else Icons.draw(g, d.kind() == CosmeticData.Kind.SUFFIX ? Cosmetics.token(d.id()) : Icons.tok("cx_" + d.id()), bx - 8, byy - 8, moving ? now : 2400L);
+        if (!owned) disc(g, bx, byy, 11.5f, argb(0.45f, 0xD8CCB0));
     }
     private static float shake(String id) { Long t = SHAKE.get(id); if (t == null) return 0f; float u = (now - t) / 400f; if (u >= 1f) { SHAKE.remove(id); return 0f; } return (float) Math.sin(u * 30) * 3f * (1f - u); }
     private static void medallion(GuiGraphicsExtractor g, int bx, int byy, int col, boolean owned, boolean worn, boolean hv) {
@@ -523,25 +619,18 @@ final class Codex {
         int col = sd != null ? sd.color() : d.color();
         medallion(g, bx, byy, col, owned, worn, hv);
         int bob = hv ? 1 : 0;
-        if (owned || hv) {
-            float a = owned ? 1f : 0.45f;
-            if (d.kind() == CosmeticData.Kind.NAME) {
-                var comp = Cosmetics.nameComp("Aa", d.color() & 0xFFFFFF, d.id(), true, now);
-                g.text(font, comp, bx - fw("Aa") / 2, byy - 4 - bob, 0xFFFFFFFF, true);
-            } else {
-                String tok = d.kind() == CosmeticData.Kind.SUFFIX ? Cosmetics.token(d.id()) : Icons.tok("cx_" + d.id());
-                Icons.draw(g, tok, bx - 8, byy - 8 - bob, owned && (hv || worn) ? now : 2400L);
-            }
-            if (!owned) disc(g, bx, byy, 11.5f, argb(1f - a, 0xD8CCB0));
-        } else lockGlyph(g, bx, byy);
+        if (owned || hv) drawCos(g, d, bx, byy - bob, owned, hv || worn);
+        else lockGlyph(g, bx, byy);
         String nm = !owned && d.id().equals("secret") ? "???" : d.name();
         List<String> lines = wrap(nm, cw - 4, 0.75f);
         for (int li = 0; li < Math.min(2, lines.size()); li++) small(g, lines.get(li), bx0 - Math.round(fw(lines.get(li)) * 0.375f), byy + 19 + li * 8, owned ? INK : INK_SOFT);
-        if (worn) small(g, "worn", bx0 - Math.round(fw("worn") * 0.375f), byy + 19 + Math.min(2, lines.size()) * 8, GOLD_D);
+        Achievements.Ach via0 = Achievements.unlocking(d.id());
+        String sub = worn ? "worn" : !owned && via0 != null ? "\u2192 " + via0.name() : "";
+        if (!sub.isEmpty()) { List<String> sl = wrap(sub, cw - 2, 0.75f); small(g, sl.get(0), bx0 - Math.round(fw(sl.get(0)) * 0.375f), byy + 19 + Math.min(2, lines.size()) * 8, worn ? GOLD_D : mix(GOLD_D, INK_SOFT, 0.5f)); }
         if (!live) return;
         HITS.add(new Object[]{bx0 - cw / 2 + 2, byy - 17, bx0 + cw / 2 - 2, byy + 32, (Runnable) () -> clickDef(d)});
         if (hv) {
-            if (d.kind() == CosmeticData.Kind.AURA) hoverAura = d.id();
+            tryOn(d); if (d.kind() == CosmeticData.Kind.AURA) hoverAura = d.id();
             Achievements.Ach via = Achievements.unlocking(d.id());
             String how = owned ? d.how() : via != null ? "Earn \"" + via.name() + "\" in the ledger: " + via.desc() + (via.goal() > 1 ? "  (" + Ledger.fmt(via.progress()) + " / " + Ledger.fmt(via.goal()) + ")" : "") : CosmeticData.lockText(d);
             host.tip(nm + "\n" + CosmeticData.kindLabel(d.kind()) + "\n" + CosmeticData.rarityOf(d) + "\n" + (owned ? "1" : "0") + "\n" + (sd != null ? sd.name() + " set" : worn ? "Worn now. Click to take it off." : owned ? "Click to wear it." : "") + "\n" + how, col);
@@ -558,7 +647,7 @@ final class Codex {
         String cnt = CosmeticData.owned(sd) + "/" + ms.size(); small(g, cnt, bx0 - Math.round(fw(cnt) * 0.375f), byy + 27, worn ? GOLD_D : INK_SOFT);
         if (!live) return;
         HITS.add(new Object[]{bx0 - cw / 2 + 2, byy - 17, bx0 + cw / 2 - 2, byy + 32, (Runnable) () -> clickSet(sd)});
-        if (hv) { if (sd.aura() != null) hoverAura = sd.aura(); host.tip(sd.name() + "\nSet\n" + sd.rarity() + "\n" + (owned ? "1" : "0") + "\nItems " + CosmeticData.owned(sd) + " / " + ms.size() + "\n" + sd.how(), sd.color()); }
+        if (hv) { if (sd.aura() != null) { hoverAura = sd.aura(); nTryAura = sd.aura(); } if (sd.fx() != null) nTryFx = sd.fx(); if (sd.suffix() != null) nTryIcon = sd.suffix(); host.tip(sd.name() + "\nSet\n" + sd.rarity() + "\n" + (owned ? "1" : "0") + "\nItems " + CosmeticData.owned(sd) + " / " + ms.size() + "\n" + sd.how(), sd.color()); }
     }
     private static void clickDef(CosmeticData.Def d) {
         if (!CosmeticData.unlocked(d)) { SHAKE.put(d.id(), now); sound("book_locked", 1f, 0.8f); Achievements.Ach via = Achievements.unlocking(d.id()); host.toast("LOCKED!\n" + (via != null ? "Earn \"" + via.name() + "\" to unlock it." : CosmeticData.lockText(d)), 0xFFFF5A5A); return; }
