@@ -752,6 +752,7 @@ final class Ritual {
             glowE(cxo, cy0, (rng ? 40 : 32) * sz * isc * pulse, (rng ? 40 : 32) * sz * isc * pulse, mixc(rc, energy, 0.35f), (rng ? 0.5f : 0.45f) * itemA);
             glowE(cxo, cy0, 15 * sz * isc, 15 * sz * isc, WHITE, 0.22f * itemA);
             if (showMotif >= 0) { ShowScene.finish(t, p, cxo, cy0, sz, isc, showMotif, showTint, rng, itemA); continue; }          // fishing, Crimson, mobs, dyes: a finish of their own
+            if (expMode || farmKind != FarmScene.CROPS) { groupFinish(t, p, cxo, cy0, R, rng, itemA, pal); continue; }          // each Garden scene and the Table have a finish of their own
             int n = rng ? 22 : 12;
             for (int i = 0; i < n; i++) {                                                  // petals, leaves or sparks drift up round the item and turn as they go
                 float u = (t * (rng ? 0.55f : 0.34f) + rnd(i * 7)) % 1f, ang = i * 2.4f + t * 0.6f;
@@ -767,6 +768,57 @@ final class Ritual {
             }
             if (rng) fountain(t, cxo, cy0 + 6, O + 0.1f, offs.length > 1 ? 18 : 28, pal[0], itemA, 1.2f, 0.45f);
         }
+    }
+
+    /** The finishes that tell the Garden scenes and the Table apart (Rare Crops keeps the drifting petals). */
+    private static void groupFinish(float t, float p, float cx, float cy, float R, boolean rng, float a, int[] pal) {
+        if (expMode) {                                                                     // the Table: rings of runes turn round the item on a tilted orbit
+            for (int ring = 0; ring < (rng ? 2 : 1); ring++) {
+                int n = rng ? 10 : 8; float dir = ring == 0 ? 1f : -1.3f, rx = R * (1.9f + 0.6f * ring), ry = rx * 0.32f, rot = t * 0.9f * dir;
+                float grow = eo(p / 0.6f);
+                for (int i = 0; i < n; i++) {
+                    float an = rot + i * 6.2832f / n, x = cx + (float) Math.cos(an) * rx * grow, y = cy + 2 + (float) Math.sin(an) * ry * grow, depth = 0.55f + 0.45f * (float) Math.sin(an);
+                    int col = ring == 0 ? 0xE6D2FF : 0x9AF0FF; float al = a * depth * (0.7f + 0.3f * (float) Math.sin(t * 4 + i));
+                    int gl = (i * 7 + ring) % 4;                                                // four little glyph shapes
+                    dot(x, y, col, al); if (gl == 0) { dot(x - 1, y, col, al); dot(x + 1, y, col, al); } else if (gl == 1) { dot(x, y - 1, col, al); dot(x, y + 1, col, al); } else if (gl == 2) { dot(x - 1, y - 1, col, al); dot(x + 1, y + 1, col, al); } else { dot(x + 1, y - 1, col, al); dot(x - 1, y + 1, col, al); }
+                    if (i % 3 == 0) glowE(x, y, 3, 3, col, 0.3f * al);
+                }
+            }
+            if (rng) for (int k = 0; k < 6; k++) { float ph = (t * 0.8f + k / 6f) % 1f; glint(cx + (rnd(k * 9) - 0.5f) * R * 2.6f, cy - ph * R * 3f, 2, WHITE, (float) Math.sin(ph * Math.PI) * a); }
+            return;
+        }
+        if (farmKind == FarmScene.FEAST) {                                                 // the Feast: little paper lanterns bob round the item
+            int n = rng ? 9 : 6;
+            for (int i = 0; i < n; i++) {
+                float an = t * 0.6f + i * 6.2832f / n, x = cx + (float) Math.cos(an) * R * 2.1f, y = cy + (float) Math.sin(an) * R * 0.55f - R * 0.3f + (float) Math.sin(t * 2.2f + i) * 1.5f;
+                float depth = 0.55f + 0.45f * (float) Math.sin(an), al = a * depth * eo(p / 0.5f);
+                glowE(x, y + 1, 5, 5, 0xFFA63A, 0.35f * al);
+                for (int yy = 0; yy < 3; yy++) for (int xx = -1; xx <= 1; xx++) dot(x + xx, y + yy, yy == 1 ? 0xFFD070 : 0xE8502A, al);
+                dot(x, y - 1, 0x3A2A1C, al); dot(x, y - 2, 0x3A2A1C, al * 0.6f);
+            }
+            return;
+        }
+        if (farmKind == FarmScene.BOUNTY) {                                                // the Bounty: two strands of leaves spiral up round the item
+            int n = rng ? 26 : 16;
+            for (int strand = 0; strand < 2; strand++) for (int i = 0; i < n; i++) {
+                float u = (t * 0.45f + i / (float) n) % 1f, an = u * 9f + strand * 3.1416f + t, rr = R * (1.7f - 0.9f * u);
+                float x = cx + (float) Math.cos(an) * rr, y = cy + R * 1.2f - u * R * 3.4f, depth = 0.5f + 0.5f * (float) Math.sin(an);
+                float al = (float) Math.sin(u * Math.PI) * a * depth;
+                int col = i % 3 == 0 ? 0xE8FFB0 : strand == 0 ? 0xB8E860 : 0x7CCB4F;
+                dot(x, y, col, al); dot(x + 1, y - 1, col, al * 0.7f);
+            }
+            return;
+        }
+        int n = rng ? 7 : 4;                                                               // pests and the Ray of Helios: fireflies loop round the item, blinking
+        for (int i = 0; i < n; i++) {
+            for (int tr = 0; tr < 5; tr++) {
+                float tt = t - tr * 0.035f, sp = 1.3f + 0.25f * i;
+                float x = cx + (float) Math.sin(tt * sp + i * 1.7f) * R * (1.6f + 0.3f * (i % 3)), y = cy - R * 0.2f + (float) Math.sin(tt * sp * 2f + i) * R * 0.9f;
+                float blink = 0.4f + 0.6f * Math.max(0f, (float) Math.sin(t * 3f + i * 2.1f)), al = a * blink * (1f - tr / 5f) * eo(p / 0.5f);
+                if (tr == 0) { glowE(x, y, 4, 4, 0xE8FF70, 0.4f * al); glint(x, y, 1, 0xF4FFB0, al); } else dot(x, y, 0xB8E860, al * 0.5f);
+            }
+        }
+        if (rng) for (int k = 0; k < 10; k++) { float ph = (t * 0.6f + rnd(k * 3)) % 1f; dot(cx + (rnd(k * 5) - 0.5f) * R * 3f, cy + R - ph * R * 3.5f, pal[k % pal.length], (float) Math.sin(ph * Math.PI) * a); }
     }
 
     // ------------------------------------------------------------------ the slayer bosses: the same ritual as Mythological, a sword slashes the boss instead of lightning

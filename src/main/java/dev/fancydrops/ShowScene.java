@@ -193,16 +193,22 @@ final class ShowScene {
         float pulse = 0f; for (int k = 0; k < 3; k++) { float tau = beat(op, O, k); if (tau >= 0 && tau < 0.5f) pulse = Math.max(pulse, 1 - tau / 0.5f); }
         float flame = 0.6f + 0.4f * (float) Math.sin(t * 9f) * (float) Math.sin(t * 5.3f) + pulse;
         Ritual.glowE(cx, gy - s, s * (1.3f + 0.6f * pulse), s * (1.3f + 0.6f * pulse), 0xB070FF, (0.35f + 0.4f * pulse) * a);
+        cx += (float) Math.sin(t * 70f) * (pulse * 1.6f + rumble * 1.2f) * sz * 2f;                   // the cage jolts on every beat and shakes before it breaks
+        if (p < 0f) {                                                                         // the cage's dark inside, its flame, and a mob spinning in it
+            for (int yy = Math.round(top); yy < Math.round(gy); yy++) for (int xx = Math.round(cx - s); xx < Math.round(cx + s); xx++) Ritual.cv.set(xx, yy, Ritual.A(0.55f * a, 0x0E0A16));
+            Ritual.glowE(cx, gy - s * 0.4f, s * 0.8f, s * 0.6f, 0xFF7A2A, (0.25f + 0.25f * cl(flame)) * a);
+        }
         if (p < 0f) {                                                                         // the little mob spinning inside
             float sp = t * (2.4f + 3f * rumble), w = (float) Math.abs(Math.cos(sp)) * 7 * sz;
             Ritual.fillE(cx, gy - s - 2 * sz, Math.max(1f, w), 5 * sz, 0x2A1A3A, 0.9f * a);
             Ritual.fillE(cx, gy - s - 9 * sz, Math.max(1f, w * 0.7f), 3.5f * sz, 0x2A1A3A, 0.9f * a);
+            if (Math.cos(sp) > 0.2f) { float ex = (float) Math.cos(sp) * 2f * sz; dot(cx - ex, gy - s - 9.5f * sz, 0xD060FF, a); dot(cx + ex, gy - s - 9.5f * sz, 0xD060FF, a); }       // its eyes, when it faces you
             for (int i = 0; i < 10; i++) { float u = (t * 1.6f + rnd(i * 5)) % 1f; dot(cx + (rnd(i * 3) - 0.5f) * s * 1.4f, gy - s * 0.2f - u * s * 1.6f, i % 2 == 0 ? 0xFF8A2A : 0xFFD060, (float) Math.sin(u * Math.PI) * cl(flame) * a); }
         }
         float brk = p >= 0f ? eo(p / 0.7f) : 0f;
         for (int i = 0; i <= 4; i++) {                                                        // the bars: a cube seen a little from above
             float x = cx - s + i * s / 2f, fly = brk * (i - 2) * 30 * sz, fall = brk * brk * 40 * sz;
-            Ritual.stroke(x + fly, top + fall * 0.3f, x + fly * 1.2f, gy + fall * 0.5f, 0.9f, 0x2A2A36, a * (1 - brk));
+            Ritual.stroke(x + fly, top + fall * 0.3f, x + fly * 1.2f, gy + fall * 0.5f, 1.3f, 0x22222E, a * (1 - brk));
             Ritual.stroke(x + fly + 0.6f, top + fall * 0.3f, x + fly * 1.2f + 0.6f, gy + fall * 0.5f, 0.4f, 0x7A7A90, a * (1 - brk));
         }
         if (brk < 1f) for (int r = 0; r < 3; r++) { float y = top + r * s; Ritual.stroke(cx - s - brk * 50 * sz, y - brk * 20 * sz, cx + s + brk * 50 * sz, y - brk * 10 * sz, 0.9f, 0x2A2A36, a * (1 - brk)); Ritual.stroke(cx - s, y + 0.6f, cx + s, y + 0.6f, 0.4f, 0x8A8AA0, a * (1 - brk)); }
