@@ -288,7 +288,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
     /** /fd simulate <mode> ...: the source (a mob, a boss, a farming page), one drop (two for Slayer and Experiments; Nothing for none), then the magic find or Overbloom. */
     private static int simulate(FabricClientCommandSource source, String args, String mode) {
         String t = args.trim(); boolean exp = mode.equals("Experiments"), farm = mode.equals("Farming");
-        String extraCat = switch (mode) { case "Fishing" -> "fishing"; case "Crimson" -> "bosses"; case "Mobs" -> "experiments"; case "Dyes" -> "dyes"; default -> null; };
+        String extraCat = switch (mode) { case "Fishing" -> "fishing"; case "Crimson" -> "crimson"; case "Mobs" -> "mobs"; case "Dyes" -> "dyes"; default -> null; };
         if (extraCat != null) { DropListener.simulateExtra(extraCat, t, m -> source.sendFeedback(Chat.msg(m))); return Command.SINGLE_SUCCESS; }
         int mf = farm ? 25 : 250;
         String[] w = t.split("\\s+");

@@ -333,7 +333,7 @@ final class AuraFx {
             }
             return;
         }
-        disc(pose, buf, x, y, z, size * 2.0f, r, u, cr, cg, cb, Math.round(a * 0.35f));                 // a round soft halo (no square edges)
+        if (q.shape() != 1) disc(pose, buf, x, y, z, size * 1.3f, r, u, cr, cg, cb, Math.round(a * 0.18f));     // dots get a faint soft halo; stars have none (it showed as a round disc)
         if (q.shape() == 1) {                                                                    // a four-point star: two soft pointed arms and a bright core
             arm(pose, buf, x, y, z, size * 1.6f, size * 0.22f, r, u, cr, cg, cb, a);
             arm(pose, buf, x, y, z, size * 1.6f, size * 0.22f, u, new org.joml.Vector3f(r).negate(), cr, cg, cb, a);      // turned a quarter, same winding (so it is not culled)
@@ -343,14 +343,18 @@ final class AuraFx {
     /** A round, soft dot facing the camera: full colour in the middle fading to nothing at the rim (a fan of thin triangles). */
     private static void disc(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float rad, org.joml.Vector3f r, org.joml.Vector3f u, int cr, int cg, int cb, int a) {
         if (a < 4 || rad <= 0.0005f) return;
-        int seg = 10;
+        int seg = 14;
+        float[] rr = {0f, 0.3f, 0.62f, 1f}; int[] aa = {a, Math.round(a * 0.55f), Math.round(a * 0.16f), 0};      // a smooth fall-off (no visible rim)
         for (int i = 0; i < seg; i++) {
             double a0 = i * Math.PI * 2 / seg, a1 = (i + 1) * Math.PI * 2 / seg;
-            float c0 = (float) Math.cos(a0) * rad, s0 = (float) Math.sin(a0) * rad, c1 = (float) Math.cos(a1) * rad, s1 = (float) Math.sin(a1) * rad;
-            buf.addVertex(pose, x, y, z).setColor(cr, cg, cb, a);
-            buf.addVertex(pose, x + r.x * c0 + u.x * s0, y + r.y * c0 + u.y * s0, z + r.z * c0 + u.z * s0).setColor(cr, cg, cb, 0);
-            buf.addVertex(pose, x + r.x * c1 + u.x * s1, y + r.y * c1 + u.y * s1, z + r.z * c1 + u.z * s1).setColor(cr, cg, cb, 0);
-            buf.addVertex(pose, x, y, z).setColor(cr, cg, cb, a);
+            float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
+            for (int k = 0; k < 3; k++) {
+                float i0 = rr[k] * rad, o0 = rr[k + 1] * rad;
+                buf.addVertex(pose, x + (r.x * c0 + u.x * s0) * i0, y + (r.y * c0 + u.y * s0) * i0, z + (r.z * c0 + u.z * s0) * i0).setColor(cr, cg, cb, aa[k]);
+                buf.addVertex(pose, x + (r.x * c0 + u.x * s0) * o0, y + (r.y * c0 + u.y * s0) * o0, z + (r.z * c0 + u.z * s0) * o0).setColor(cr, cg, cb, aa[k + 1]);
+                buf.addVertex(pose, x + (r.x * c1 + u.x * s1) * o0, y + (r.y * c1 + u.y * s1) * o0, z + (r.z * c1 + u.z * s1) * o0).setColor(cr, cg, cb, aa[k + 1]);
+                buf.addVertex(pose, x + (r.x * c1 + u.x * s1) * i0, y + (r.y * c1 + u.y * s1) * i0, z + (r.z * c1 + u.z * s1) * i0).setColor(cr, cg, cb, aa[k]);
+            }
         }
     }
     /** One arm of a star along `along`: bright at the centre, thin and fading to a point at both tips. */

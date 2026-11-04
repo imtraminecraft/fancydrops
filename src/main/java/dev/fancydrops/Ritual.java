@@ -556,7 +556,7 @@ final class Ritual {
     /** The canvas of the scene at time t: the opening, then the pivot of the type. Everything except the item and the words. */
     static void paint(float t, boolean tre, int type, float S, float sz, float isc, int rc, float icy, int blade, boolean itemBob, float bobAmp) {
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float O = S - TAIL, p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
+        float O = S - TAIL - hold, p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
         int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : farmMode ? FarmScene.ENERGY[farmKind] : expMode ? 0xB56BFF : showMotif == ShowScene.DYE ? showTint : showMotif >= 0 ? ShowScene.ENERGY[showMotif] : CYAN;
         float bg = 1f - sm((p - 0.5f) / 0.9f);                                             // the background fades while the words show
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
@@ -829,7 +829,9 @@ final class Ritual {
     static float[] itemOffs = {0f};                                                     // canvas units from the middle to each drop (one entry per drop)
 
     /** Sets the scene flags for an animation; end() clears them again. */
+    static float hold;                                                                  // seconds the finish of the animation being drawn is held (several drops: time to read them)
     static void begin(Anim a, float sz, float isc) {
+        hold = a.hold();
         slayerMode = isSlayer(a); if (slayerMode) { kind = 12 + slTheme(a); slSeed = System.identityHashCode(a) & 0xFFFF; }
         farmMode = a.group.equals("crops") || a.group.equals("feast") || a.group.equals("bounty") || a.group.equals("pests");
         expMode = a.group.equals("exp");
@@ -860,7 +862,7 @@ final class Ritual {
     }
     /** Each drop's size when several share the scene. */
     static float sizeOf(int n) { return n <= 1 ? 1f : n == 2 ? 0.85f : n == 3 ? 0.76f : Math.max(0.5f, 2.6f / n); }
-    static void end() { slayerMode = false; farmMode = false; expMode = false; showMotif = -1; itemOffs = new float[]{0f}; }
+    static void end() { hold = 0f; slayerMode = false; farmMode = false; expMode = false; showMotif = -1; itemOffs = new float[]{0f}; }
     /** The colour of each boss: zombie, spider, wolf, enderman, blaze, vampire. */
     private static final int[] SL_ENERGY = {0x7CD060, 0xE03030, 0xC8D4E8, 0xD060FF, 0xFFB030, 0xD01030};
     static boolean isSlayer(Anim a) { return a.group.equals("slayer"); }
@@ -953,7 +955,7 @@ final class Ritual {
         FancyConfig c = FancyConfig.get(); FancyConfig.AnimCfg cfg = a.cfg(); Item it = a.lead();
         boolean tre = a.group.equals("treasure"); kind = Math.max(0, a.kind); int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float S = Math.max(3.6f, cfg.secs), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz * K, isc = Math.max(0.4f, c.itemScale) * 1.5f;
+        float S = Math.max(3.6f, cfg.secs) + a.hold(), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz * K, isc = Math.max(0.4f, c.itemScale) * 1.5f;
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         float barH = CH * Math.max(0.031f, Math.min(0.094f, c.barPx / 160f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
@@ -977,7 +979,7 @@ final class Ritual {
         if (sl) kind = 12 + slTheme(a);
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float S = Math.max(3.6f, cfg.secs), O = S - TAIL, p = t - O;
+        float hd = a.hold(), S = Math.max(3.6f, cfg.secs) + hd, O = S - TAIL - hd, p = t - O;
         float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)) * (rng ? 1f : Math.max(0.5f, Math.min(1f, c.normalSize / 100f))), sz = SMALLER * csz, szc = sz * K, ssz = szc * SCENE_K, isc = Math.max(0.4f, c.itemScale) * 1.5f;          // Normal and No Drops can play smaller, so they stay out of the way
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);

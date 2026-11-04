@@ -69,14 +69,14 @@ final class TextFx {
         int y2 = y, i = 0;
         for (Item it : shown(items)) {
             float big = 1.5f * sc * c.titleScale;
-            lineDelay = i * 0.9f * step;
+            lineDelay = i * 0.4f * step;                                                  // several drops come in quickly, one after another, and then stay (the animation holds a second per extra drop)
             line(g, font, cx, y2, big, alpha, lit(it.title()).withStyle(ChatFormatting.BOLD), it.color());
-            if (hasFacts(it, c)) { lineDelay += 0.35f * step; detailAt(g, font, cx, y2 + Math.round(9 * big) + 3, small, it, c, alpha); }
+            if (hasFacts(it, c)) { lineDelay += 0.25f * step; detailAt(g, font, cx, y2 + Math.round(9 * big) + 3, small, it, c, alpha); }
             y2 += Math.round(entryHeight(it, sc, c)) + 5; i++;
         }
-        if (items.size() > 3) { lineDelay = i * 0.9f * step; line(g, font, cx, y2, small, alpha, lit("+ " + (items.size() - 3) + " more"), 0xFFE8B84A); y2 += Math.round(9 * small) + 4; i++; }
+        if (items.size() > 3) { lineDelay = i * 0.4f * step; line(g, font, cx, y2, small, alpha, lit("+ " + (items.size() - 3) + " more"), 0xFFE8B84A); y2 += Math.round(9 * small) + 4; i++; }
         Item a = items.get(0);
-        if (c.showMagicFind && a.mf != null) { lineDelay = (i * 0.9f + 0.1f) * step; line(g, font, cx, y2 - 2, small, alpha, lit(mfText(a.mf)), mfColor(a.mf)); }
+        if (c.showMagicFind && a.mf != null) { lineDelay = (i * 0.4f + 0.1f) * step; line(g, font, cx, y2 - 2, small, alpha, lit(mfText(a.mf)), mfColor(a.mf)); }
         lineDelay = 0f;
     }
 

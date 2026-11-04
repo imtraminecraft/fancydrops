@@ -444,22 +444,17 @@ final class IconArt {
                 outline();
                 for (int i = 0; i < 3; i++) { float u = (f + i / 3f) % 1f; pxa(2 + i * 4, 14 - Math.round(u * 3), 0xBDEBFF, (1f - u) * 0.9f * (f < 0.2f || f > 0.8f ? 1f : 0.3f)); }
             }
-            case "dye" -> {                                                                  // a paint drop falls, splashes, and spreads into a puddle
-                int col = hue(0.9f - 0.9f * f, 0.7f, 1f);
-                float fall = Math.min(1f, f / 0.4f), splash = f < 0.4f ? 0f : (f - 0.4f) / 0.6f;
-                rect(0, 14, 16, 2, 0x4E4034); rect(0, 14, 16, 1, 0x6E5A46);                              // the ground
-                if (splash <= 0f) {                                                                    // the drop falls
-                    float dy = 0.5f + fall * 7;
-                    poly(new float[]{8, 10.4f, 11, 8, 5, 5.6f}, new float[]{dy, dy + 3.4f, dy + 6, dy + 7, dy + 6, dy + 3.4f}, col);
-                    px(7, Math.round(dy + 4f), 0xFFFFFF); px(7, Math.round(dy + 5f), lite(col, 0.6f));
-                } else {                                                                               // the puddle spreads, droplets fly up
-                    float rx = 2.5f + splash * 4.5f, ry = 1.2f + splash * 1.3f;
-                    for (int y = 11; y < 16; y++) for (int x = 0; x < 16; x++) { float dx = (x + 0.5f - 8) / rx, dy2 = (y + 0.5f - 13.6f) / ry; if (dx * dx + dy2 * dy2 <= 1f) px(x, y, dy2 < -0.4f ? lite(col, 0.45f) : dy2 > 0.45f ? dark(col, 0.3f) : col); }
-                    float h = (float) Math.sin(Math.min(1f, splash * 1.3f) * 3.14f) * 6f;
-                    for (int i = 0; i < 5; i++) { float dir = (i - 2) / 2f; int fx = Math.round(8 + dir * (2 + splash * 5.5f)), fy = Math.round(12 - h * (1f - Math.abs(dir) * 0.45f)); rect(fx, fy, i % 2 == 0 ? 2 : 1, i % 2 == 0 ? 2 : 1, i % 2 == 0 ? col : lite(col, 0.45f)); }
-                    if (splash < 0.45f) { rect(7, 9, 2, 3, col); px(7, 9, lite(col, 0.5f)); }
-                }
+            case "dye" -> {                                                                  // a glass vial of one dye (pink), the liquid sloshing gently, a glint on the glass
+                int col = 0xE8489A, li = 0xFF8AC8, dk = 0x9A2466;
+                rect(6, 1, 4, 2, 0x8A5A34); rect(6, 1, 4, 1, 0xB07A48);                              // the cork
+                rect(6, 3, 4, 2, 0xCFE6F0); px(6, 3, 0xFFFFFF);                                       // the neck
+                for (int y = 5; y < 15; y++) { int hw = y < 7 ? 3 + (y - 5) : y > 12 ? 5 - (y - 12) : 5; rect(8 - hw, y, hw * 2, 1, 0xBFDCE8); }      // the glass body
+                float slosh = sn(f) * 0.9f;
+                for (int y = 7; y < 14; y++) { int hw = y > 12 ? 4 - (y - 13) : 4; for (int x = 8 - hw; x < 8 + hw; x++) { float surf = 8.2f + slosh * (x - 7.5f) / 4f; if (y + 0.5f >= surf) px(x, y, y == Math.round(surf) ? li : y >= 12 ? dk : col); } }
+                rect(5, 8, 1, 4, 0xFFFFFF); pxa(5, 7, 0xFFFFFF, 0.6f);                                 // the shine on the glass
                 outline();
+                for (int i = 0; i < 2; i++) { float u = (f * 1.3f + i * 0.5f) % 1f; pxa(9 - i * 2, Math.round(12 - u * 4), li, 1f - u); }   // a bubble rising
+                glint(11, 6, 1, 0xFFFFFF, t);
             }
             case "nodrops" -> {                                                              // an empty box, a puff of dust
                 bev(2, 8, 12, 6, 0x6A7388);

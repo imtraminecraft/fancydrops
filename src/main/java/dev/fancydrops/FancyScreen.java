@@ -2489,7 +2489,8 @@ public class FancyScreen extends Screen {
         // three levels: the category hub (Mythological Mobs / Treasure), a group page (the creatures), and one source page (a creature or the burrow)
         for (Categories.Group gr : cat.groups()) {
             srcList.add(new String[]{gr.id(), gr.name(), gr.icon(), String.valueOf(gr.color())}); if (gr.wip()) srcWip.add(gr.id());
-            if (Categories.hasSubs(gr)) for (DropData.Source s : cat.sources(gr.id())) srcList.add(new String[]{gr.id() + "/" + s.id, srcName(s), srcIcon(s), String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
+            boolean inGrp = dropSrc != null && (dropSrc.equals(gr.id()) || dropSrc.startsWith(gr.id() + "/"));          // a group's creatures show only once you are inside that group
+            if (Categories.hasSubs(gr) && inGrp) for (DropData.Source s : cat.sources(gr.id())) srcList.add(new String[]{gr.id() + "/" + s.id, srcName(s), srcIcon(s), String.valueOf(s.color()), "sub"});          // the creatures sit under Mythological Mobs
         }
         String ds = dropSrc == null ? "" : dropSrc;
         String gid = ds.contains("/") ? ds.substring(0, ds.indexOf('/')) : ds;

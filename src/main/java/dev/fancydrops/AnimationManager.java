@@ -48,6 +48,10 @@ public final class AnimationManager {
         String key() { return group + "." + TYPE_IDS[type]; }
         FancyConfig.AnimCfg cfg() { return FancyConfig.get().anim(key()); }
         float secs() { return cfg().secs; }
+        /** Extra seconds the finish is held so the words of several drops can be read (1 s per extra drop, at most 3). */
+        float hold() { int n = count(); return n <= 1 ? 0f : Math.min(3f, (n - 1) * 1.0f); }
+        /** The whole length: the scene plus the hold. */
+        float total() { return Math.max(3.6f, secs()) + hold(); }
         /** The drops this animation shows (0 to 8). */
         int count() { return item == null ? 0 : 1 + more.size(); }
         /** Every drop, in the order they came. */
@@ -91,7 +95,7 @@ public final class AnimationManager {
     public static boolean hidesHud() {
         if (cur == null || cur.type != RNG || !cur.cfg().bars) return false;
         float t = (System.currentTimeMillis() - cur.start) / 1000f * pace(cur), S = Math.max(3.6f, cur.cfg().secs), O = S - Ritual.TAIL;
-        return t >= O - 0.8f && t < S - 0.05f;                                           // only while the cinematic bars are on screen (they slide in at O - 0.8 s, out at the end)
+        return t >= O - 0.8f && t < S + cur.hold() - 0.05f;                                           // only while the cinematic bars are on screen (they slide in at O - 0.8 s, out at the end)
     }
 
     /** Which type a drop plays: its own pick in the Drop Library, else RNG for rare drops (rank 2 up, or worth the RNG price), else Normal. -1 = it has no animation. */
@@ -110,7 +114,7 @@ public final class AnimationManager {
     /** Called every frame from the HUD. */
     public static void render(GuiGraphicsExtractor g) {
         long now = System.currentTimeMillis();
-        if (cur != null && (now - cur.start) / 1000f * pace(cur) > Math.max(3.6f, cur.secs()) + 0.001f) cur = null;
+        if (cur != null && (now - cur.start) / 1000f * pace(cur) > cur.total() + 0.001f) cur = null;
         if (cur == null && !QUEUE.isEmpty()) { cur = QUEUE.poll(); cur.start = now; for (Item i : cur.items()) DropListener.announceNow(i); }          // the chat alert goes out together with the animation
         if (cur == null) return;
         Minecraft mc = Minecraft.getInstance();
@@ -120,18 +124,20 @@ public final class AnimationManager {
     }
 
     /** The moments (seconds) each sound slot (chop, split, reveal, linger, end) plays in a scene of this length. */
-    static float[][] cueTimes(String scene, float secs) {
+    static float[][] cueTimes(String scene, float secs) { return cueTimes(scene, secs, 0f); }
+    static float[][] cueTimes(String scene, float secs, float hold) {
         float S = Math.max(3.6f, secs), O = S - Ritual.TAIL; boolean tre = scene.startsWith("treasure"), nod = scene.endsWith("nodrops");
         float[] beats = tre ? new float[]{0.215f * O, 0.505f * O, 0.795f * O} : new float[]{0.34f * O, 0.58f * O, 0.80f * O};
         if (scene.startsWith("exp.")) beats = BookScene.flipStarts(scene.endsWith("rng"), O);        // the sound plays as the page lifts, not when it lands
-        return new float[][]{beats, {O}, nod ? new float[0] : new float[]{O + 0.25f}, {O + 1.0f}, {S - 1.4f}};
+        return new float[][]{beats, {O}, nod ? new float[0] : new float[]{O + 0.25f}, {O + 1.0f}, {S + hold - 1.4f}};
     }
 
     /** The sounds of the timeline: a beat for every strike or dig, the burst when the animation pivots, then the reveal, the linger and the end. */
-    private static void cues(Anim a, float prev, float t) { cues(a.key(), a.secs(), prev, t); }
-    private static void cues(String scene, float secs, float prev, float t) {
+    private static void cues(Anim a, float prev, float t) { cues(a.key(), a.secs(), a.hold(), prev, t); }
+    private static void cues(String scene, float secs, float prev, float t) { cues(scene, secs, 0f, prev, t); }
+    private static void cues(String scene, float secs, float hold, float prev, float t) {
         boolean big = scene.endsWith("rng"), nod = scene.endsWith("nodrops");
-        float[][] tm = cueTimes(scene, secs);
+        float[][] tm = cueTimes(scene, secs, hold);
         for (int k = 0; k < tm[0].length; k++) if (prev < tm[0][k] && t >= tm[0][k]) SoundFx.playSlot(scene, "chop", 0.9f + 0.12f * k, big);
         if (prev < tm[1][0] && t >= tm[1][0]) SoundFx.playSlot(scene, "split", nod ? 0.8f : 1f, big);
         if (tm[2].length > 0 && prev < tm[2][0] && t >= tm[2][0]) SoundFx.playSlot(scene, "reveal", 1f, big);

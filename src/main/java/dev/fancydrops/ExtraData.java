@@ -43,6 +43,7 @@ public final class ExtraData {
     public static DropData.Source sourceOf(String name) { Object[] h = hit(name); return h == null ? null : (DropData.Source) h[0]; }
     private static Object[] hit(String name) {
         String n = FarmData.stripRarity(name), low = n.toLowerCase(java.util.Locale.ROOT);
+        if (low.endsWith(" dye")) for (DropData.Source s : group("dyes")) for (DropData.Drop d : s.drops) if (DropData.loose(d.name, n)) return new Object[]{s, d};      // a dye always plays the Dyes scene
         for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) if (DropData.loose(d.name, n) || DropData.loose(d.name, name)) return new Object[]{s, d};
         for (DropData.Source s : ALL) for (DropData.Drop d : s.drops) {
             String dl = d.name.toLowerCase(java.util.Locale.ROOT);

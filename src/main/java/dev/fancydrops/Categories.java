@@ -28,9 +28,8 @@ final class Categories {
         List<DropData.Source> sources(String groupId) {
             List<DropData.Source> l = new ArrayList<>();
             if (ExtraData.BY_GROUP.containsKey(groupId)) { l.addAll(ExtraData.group(groupId)); return l; }
-            if (id.equals("bosses")) { if (groupId.equals("slayer")) l.addAll(SlayerData.ALL); return l; }
+            if (id.equals("bosses")) { if (groupId.equals("slayer")) l.addAll(SlayerData.ALL); if (groupId.equals("exp") && !ExperimentData.SOURCE.id.isEmpty()) l.add(ExperimentData.SOURCE); return l; }
             if (id.equals("farming")) { DropData.Source f = FarmData.byId(groupId); if (f != null) l.add(f); return l; }
-            if (id.equals("experiments")) { if (groupId.equals("exp") && !ExperimentData.SOURCE.id.isEmpty()) l.add(ExperimentData.SOURCE); return l; }
             if (!id.equals("mythological")) return l;
             if (groupId.equals("myth")) l.addAll(MythData.spawnable(FancyConfig.get().mythPet));
             if (groupId.equals("treasure")) {
@@ -78,23 +77,22 @@ final class Categories {
         new Cat("mythological", "Mythological", ":mytho:", 0xFF55D8FF, false, "Mythological Ritual is an event that occurs with the Mythological Ritual perk.", List.of(
             new Group("myth", "Mythological Mobs", ":mytho:", 0xFF55D8FF, "What plays when a ritual creature dies.", MYTH_TYPES),
             new Group("treasure", "Treasure", ":treasure:", 0xFFFFD25A, "What plays when a burrow holds treasure.", MYTH_TYPES))),
-        new Cat("bosses", "Bosses", ":slayers:", 0xFFFF5A5A, false, "Bosses of every kind and their rare drops.", List.of(
+        new Cat("bosses", "Rare Drops", ":raredrops:", 0xFFFF5A5A, false, "Bosses, rare mobs and the Experimentation Table: every rare drop that isn't farmed, fished or dug up.", List.of(
             new Group("slayer", "Slayers", ":grp_slayers:", 0xFFFF5A5A, "What plays when a slayer boss drops something.", SLAYER_TYPES),
+            new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "The Crimson Isle's minibosses, the Magma Boss and its mobs.", SHOW_TYPES),
+            new Group("mobs", "Rare Mob Drops", ":grp_mobs:", 0xFFFF8A5A, "Rare drops of the End, the Dwarven Mines and the Crystal Hollows.", SHOW_TYPES),
+            new Group("exp", "Experimentation Table", ":grp_exp:", 0xFFB56BFF, "What plays when the Table gives out rewards.", EXP_TYPES),
             new Group("rift", "The Rift", ":grp_rift:", 0xFFB56BFF, "A mirror dimension of the main server.", SLAYER_TYPES, true),
-            new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "Ashfang, Bladesoul, the Barbarian Duke, the Mage Outlaw and the Magma Boss.", SHOW_TYPES))),
+            new Group("events", "Events", ":grp_events:", 0xFF55D8FF, "Rare drops of the server's events.", EXP_TYPES, true))),
         new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, false, "Every rare drop you can find in the Garden.", List.of(
             new Group("crops", "Rare Crops", ":grp_crops:", 0xFF7CCB4F, "What plays when a crop turns out rare.", FARM_TYPES),
             new Group("feast", "Harvest Feast", ":grp_feast:", 0xFFFFA63A, "What plays when the Harvest Feast serves a rare crop.", FARM_TYPES),
             new Group("bounty", "Harvest Bounty", ":grp_bounty:", 0xFFB8E860, "What plays when a Harvest Bounty drops something.", FARM_TYPES),
             new Group("pests", "Pest Drops", ":grp_pests:", 0xFFD2603F, "What plays when a pest drops something.", PEST_TYPES))),
-        new Cat("experiments", "Rare Drops", ":raredrops:", 0xFFB56BFF, false, "Rare drops from the Experimentation Table, rare mobs and events.", List.of(
-            new Group("exp", "Experimentation Table", ":grp_exp:", 0xFFB56BFF, "What plays when the Table gives out rewards.", EXP_TYPES),
-            new Group("mobs", "Rare Mob Drops", ":grp_mobs:", 0xFFFF8A5A, "Rare drops of everyday mobs: Zealots, Ghosts, Spiders, Golems and more.", SHOW_TYPES),
-            new Group("events", "Events", ":grp_events:", 0xFF55D8FF, "Rare drops of the server's events.", EXP_TYPES, true))),
         new Cat("mining", "Mining", ":mining:", 0xFF9AB8FF, true, "Rare finds underground.", List.of()),
         new Cat("fishing", "Fishing", ":fishing:", 0xFF4FC3FF, false, "Sea creatures and the rare things they carry.", List.of(
-            new Group("fish_water", "Water", ":grp_water:", 0xFF4FC3FF, "Sea creatures of the open water and the Crystal Hollows.", SHOW_TYPES),
-            new Group("fish_lava", "Lava", ":grp_lava:", 0xFFFF7A2E, "Lava sea creatures of the Crimson Isle and the Magma Fields.", SHOW_TYPES),
+            new Group("fish_water", "Water", ":grp_water:", 0xFF4FC3FF, "Open water, Backwater Bayou, Galatea's waters, the Fishing Festival, hotspots and special catches.", SHOW_TYPES),
+            new Group("fish_lava", "Lava", ":grp_lava:", 0xFFFF7A2E, "The Crimson Isle, its hotspots, the Magma Fields and the Plhlegblast Pool.", SHOW_TYPES),
             new Group("fish_spooky", "Spooky", ":grp_spooky:", 0xFFFF9A2E, "The Spooky Festival's sea creatures.", SHOW_TYPES),
             new Group("fish_winter", "Winter", ":grp_winter:", 0xFF9FE4FF, "Jerry's Workshop's sea creatures.", SHOW_TYPES))),
         new Cat("dyes", "Dyes", ":dye:", 0xFFFF72C6, false, "Every dye in the game and where it comes from.", List.of(

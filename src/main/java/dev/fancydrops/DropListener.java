@@ -298,7 +298,7 @@ public final class DropListener {
     /** The menu category a newer group lives in. */
     static String catOfGroup(String g) {
         if (g.startsWith("fish_")) return "fishing";
-        return switch (g) { case "crimson" -> "bosses"; case "mobs" -> "experiments"; case "dyes" -> "dyes"; default -> "experiments"; };
+        return switch (g) { case "dyes" -> "dyes"; default -> "bosses"; };          // Crimson Isle, rare mobs: the Rare Drops page
     }
     /** The scene variant of a source: its place in its group (drops of the same creature stack into one animation). */
     private static int extraKind(DropData.Source src) { return Math.max(0, ExtraData.group(src.group).indexOf(src)); }
@@ -320,7 +320,7 @@ public final class DropListener {
     /** /fd simulate Fishing|Crimson|Mobs|Dyes [Creature] [Drop] [Drop 2]: a pretend drop of the newer libraries. */
     static void simulateExtra(String cat, String name, Consumer<String> reply) {
         List<DropData.Source> pool = new ArrayList<>();
-        for (DropData.Source s : ExtraData.ALL) if (catOfGroup(s.group).equals(cat) && (!cat.equals("bosses") || s.group.equals("crimson")) && (!cat.equals("experiments") || s.group.equals("mobs"))) pool.add(s);
+        for (DropData.Source s : ExtraData.ALL) if (cat.equals("fishing") ? s.group.startsWith("fish_") : s.group.equals(cat)) pool.add(s);          // cat: fishing, crimson, mobs or dyes
         if (pool.isEmpty()) { reply.accept("No drops loaded for that."); return; }
         DropData.Source from = null;
         for (DropData.Source s : pool) {
@@ -417,7 +417,7 @@ public final class DropListener {
         List<Plan> plans = new ArrayList<>();
         for (String nm : names) {
             DropData.Drop dr = ExperimentData.find(nm); if (dr == null) continue;
-            Plan pl = plan(s, dr, expItem(dr, false), "experiments", "experiment");
+            Plan pl = plan(s, dr, expItem(dr, false), "bosses", "experiment");
             if (pl != null) plans.add(pl);
         }
         for (int i = 0; i < plans.size(); i += 2) show("exp", plans.get(i), i + 1 < plans.size() ? plans.get(i + 1) : null, 0, false);
@@ -533,7 +533,7 @@ public final class DropListener {
         if (it.source.group != null && !it.source.group.isEmpty()) return catOfGroup(it.source.group);
         if (SlayerData.byId(it.source.id) == it.source) return "bosses";
         if (FarmData.byId(it.source.id) == it.source) return "farming";
-        if (it.source == ExperimentData.SOURCE) return "experiments";
+        if (it.source == ExperimentData.SOURCE) return "bosses";
         return "mythological";
     }
 
@@ -568,7 +568,7 @@ public final class DropListener {
             DropData.Source f = FarmData.ALL.get(0); it.source = f; it.name = f.drops.isEmpty() ? "Cropie" : f.drops.get(f.drops.size() - 1).name;
             return message(it, 4_500_000, "OB:+25", format);
         }
-        if ("experiments".equals(cat) && !ExperimentData.SOURCE.drops.isEmpty()) {
+        if ("bosses".equals(cat) && !ExperimentData.SOURCE.drops.isEmpty()) {
             it.source = ExperimentData.SOURCE; it.name = ExperimentData.SOURCE.drops.get(0).name;
             return message(it, 8_500_000, null, format);
         }

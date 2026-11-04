@@ -1,151 +1,130 @@
 {
- "v": 2,
+ "v": 3,
  "sources": [
   {
-   "id": "lord_jawbus",
-   "name": "Lord Jawbus",
-   "boss": "Lord Jawbus",
-   "icon": "magma_cream",
-   "color": "#FF6A2A",
-   "group": "fish_lava",
+   "id": "open_water",
+   "name": "Open Water",
+   "boss": "Open Water",
+   "icon": "cod",
+   "color": "#3FA9FF",
+   "group": "fish_water",
    "drops": [
     {
-     "name": "Radioactive Vial",
-     "id": "RADIOACTIVE_VIAL",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
+     "name": "Enchanted Ink Sac",
+     "id": "ENCHANTED_INK_SACK",
+     "icon": "dye",
+     "skull": false,
+     "odds": "Rare · Squid",
      "chance": "1 in 200",
      "rank": 1
-    }
-   ]
-  },
-  {
-   "id": "thunder",
-   "name": "Thunder",
-   "boss": "Thunder",
-   "icon": "magma_cream",
-   "color": "#FF6A2A",
-   "group": "fish_lava",
-   "drops": [
-    {
-     "name": "Flash I",
-     "id": "FLASH;1",
-     "icon": "enchanted_book",
-     "skull": false,
-     "odds": "Occasional",
-     "chance": "1 in 66.7",
-     "rank": 0
-    }
-   ]
-  },
-  {
-   "id": "ragnarok",
-   "name": "Ragnarok",
-   "boss": "Ragnarok",
-   "icon": "magma_cream",
-   "color": "#FF6A2A",
-   "group": "fish_lava",
-   "drops": [
-    {
-     "name": "Chain of the End Times",
-     "id": "CHAIN_END_TIMES",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 100",
-     "rank": 1
-    },
-    {
-     "name": "Brimstone Handle",
-     "id": "BRIMSTONE_HANDLE",
-     "icon": "stick",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 200",
-     "rank": 1
-    },
-    {
-     "name": "Burnt Texts",
-     "id": "BURNT_TEXTS",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 400",
-     "rank": 1
-    }
-   ]
-  },
-  {
-   "id": "lava_creatures",
-   "name": "Lava Sea Creatures",
-   "boss": "Lava Sea Creatures",
-   "icon": "magma_cream",
-   "color": "#FF6A2A",
-   "group": "fish_lava",
-   "drops": [
-    {
-     "name": "Scuttler Shell",
-     "id": "SCUTTLER_SHELL",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Pray RNGesus",
-     "chance": "1 in 1,000",
-     "rank": 3
     },
     {
      "name": "Squid Boots",
      "id": "SQUID_BOOTS",
      "icon": "leather_boots",
      "skull": false,
-     "odds": "Rare",
+     "odds": "Rare · Squid",
      "chance": "1 in 100",
      "rank": 1
     },
     {
-     "name": "Staff of the Volcano",
-     "id": "STAFF_OF_THE_VOLCANO",
-     "icon": "wheat",
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Squid, Sea Walker, Sea Witch +7",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Tropical Fish",
+     "id": "RAW_FISH-2",
+     "icon": "fish",
      "skull": false,
-     "odds": "Occasional",
-     "chance": "1 in 20",
+     "odds": "Occasional · Sea Witch",
+     "chance": "1 in 5",
      "rank": 0
     },
     {
-     "name": "Taurus Helmet",
-     "id": "TAURUS_HELMET",
+     "name": "Enchanted Bone",
+     "id": "ENCHANTED_BONE",
+     "icon": "bone",
+     "skull": false,
+     "odds": "Rare · Sea Archer",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Bone Dye",
+     "id": "DYE_BONE",
      "icon": "player_head",
      "skull": true,
-     "odds": "Occasional",
+     "odds": "RNGesus Incarnate · Sea Archer",
+     "chance": "1 in 3,000,000",
+     "rank": 3
+    },
+    {
+     "name": "Sponge",
+     "id": "SPONGE",
+     "icon": "sponge",
+     "skull": false,
+     "odds": "Occasional · Rider of the Deep, Catfish",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Magnet VI",
+     "id": "MAGNET;6",
+     "icon": "enchanted_book",
+     "skull": false,
+     "odds": "Occasional · Rider of the Deep",
      "chance": "1 in 50",
      "rank": 0
     },
     {
-     "name": "Blazen Sphere",
-     "id": "BLAZEN_SPHERE",
-     "icon": "paper",
+     "name": "Frail VI",
+     "id": "FRAIL;6",
+     "icon": "enchanted_book",
      "skull": false,
-     "odds": "Rare",
+     "odds": "Rare · Catfish",
      "chance": "1 in 100",
      "rank": 1
     },
     {
-     "name": "Eternal Flame Ring",
-     "id": "ETERNAL_FLAME_RING",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 200",
-     "rank": 1
+     "name": "Spiked Hook VI",
+     "id": "SPIKED_HOOK;6",
+     "icon": "enchanted_book",
+     "skull": false,
+     "odds": "Occasional · Sea Leech",
+     "chance": "1 in 50",
+     "rank": 0
     },
     {
-     "name": "Magma Core",
-     "id": "MAGMA_CORE",
-     "icon": "paper",
+     "name": "Lure VI",
+     "id": "LURE;6",
+     "icon": "enchanted_book",
      "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 200",
-     "rank": 1
+     "odds": "Occasional · Guardian Defender",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Angler VI",
+     "id": "ANGLER;6",
+     "icon": "enchanted_book",
+     "skull": false,
+     "odds": "Occasional · Deep Sea Protector",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Water Hydra Head",
+     "id": "WATER_HYDRA_HEAD",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional · Water Hydra",
+     "chance": "1 in 7.1",
+     "rank": 0
     }
    ]
   },
@@ -154,136 +133,288 @@
    "name": "Backwater Bayou",
    "boss": "Backwater Bayou",
    "icon": "lily_pad",
-   "color": "#3FA9FF",
+   "color": "#6FA24A",
    "group": "fish_water",
    "drops": [
     {
-     "name": "Titanoboa Shed",
-     "id": "TITANOBOA_SHED",
+     "name": "Can of Worms",
+     "id": "CAN_OF_WORMS",
      "icon": "paper",
      "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 500",
-     "rank": 1
+     "odds": "Occasional · Trash Gobbler",
+     "chance": "1 in 20",
+     "rank": 0
     },
     {
-     "name": "Tiki Mask",
-     "id": "TIKI_MASK",
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
      "icon": "player_head",
      "skull": true,
-     "odds": "Pray RNGesus",
-     "chance": "1 in 1,000",
+     "odds": "RNGesus Incarnate · Trash Gobbler, Dumpster Diver, Banshee +3",
+     "chance": "1 in 50,000",
      "rank": 3
     },
     {
-     "name": "Octopus Tendril",
-     "id": "OCTOPUS_TENDRIL",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Pray RNGesus",
+     "name": "Bronze Bowl",
+     "id": "BRONZE_BOWL",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Dumpster Diver",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Lily Pad",
+     "id": "ENCHANTED_WATER_LILY",
+     "icon": "waterlily",
+     "skull": false,
+     "odds": "Occasional · Dumpster Diver, Banshee, Bayou Sludge",
+     "chance": "1 in 25",
+     "rank": 0
+    },
+    {
+     "name": "Overflowing Trash Can",
+     "id": "OVERFLOWING_TRASH_CAN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Dumpster Diver",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Torn Cloth",
+     "id": "TORN_CLOTH",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Banshee",
+     "chance": "1 in 33.3",
+     "rank": 0
+    },
+    {
+     "name": "Calcified Heart",
+     "id": "CALCIFIED_HEART",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Extraordinary · Banshee",
      "chance": "1 in 1,000",
-     "rank": 3
+     "rank": 2
     },
     {
-     "name": "Snake Eyes",
-     "id": "SNAKE_EYES",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 909",
-     "rank": 1
-    },
-    {
-     "name": "Troubled Bubble",
-     "id": "TROUBLED_BUBBLE",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
-     "chance": "1 in 500",
-     "rank": 1
+     "name": "Enchanted Slimeball",
+     "id": "ENCHANTED_SLIME_BALL",
+     "icon": "slime_ball",
+     "skull": false,
+     "odds": "Occasional · Bayou Sludge",
+     "chance": "1 in 25",
+     "rank": 0
     },
     {
      "name": "Poison Sample",
      "id": "POISON_SAMPLE",
      "icon": "paper",
      "skull": false,
-     "odds": "Rare",
+     "odds": "Rare · Bayou Sludge",
      "chance": "1 in 200",
      "rank": 1
-    }
-   ]
-  },
-  {
-   "id": "great_white_shark",
-   "name": "Great White Shark",
-   "boss": "Great White Shark",
-   "icon": "prismarine_shard",
-   "color": "#3FA9FF",
-   "group": "fish_water",
-   "drops": [
+    },
     {
-     "name": "Megalodon Pet",
-     "id": "MEGALODON;4",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Rare",
+     "name": "Blessing VI",
+     "id": "BLESSING;6",
+     "icon": "enchanted_book",
+     "skull": false,
+     "odds": "Extraordinary · Bayou Sludge",
+     "chance": "1 in 1,000",
+     "rank": 2
+    },
+    {
+     "name": "Enchanted Slime Block",
+     "id": "ENCHANTED_SLIME_BLOCK",
+     "icon": "slime",
+     "skull": false,
+     "odds": "Pray RNGesus · Bayou Sludge",
+     "chance": "1 in 2,000",
+     "rank": 3
+    },
+    {
+     "name": "Condensed Lily Pad",
+     "id": "CONDENSED_WATER_LILY",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Alligator, Titanoboa",
      "chance": "1 in 100",
      "rank": 1
     },
     {
-     "name": "Carnival Ticket",
-     "id": "CARNIVAL_TICKET",
-     "icon": "name_tag",
+     "name": "Bobbin' Scriptures",
+     "id": "BOBBIN_SCRIPTURES",
+     "icon": "paper",
      "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 200",
+     "odds": "Rare · Titanoboa",
+     "chance": "1 in 100",
      "rank": 1
+    },
+    {
+     "name": "Titanoboa Shed",
+     "id": "TITANOBOA_SHED",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Extraordinary · Titanoboa",
+     "chance": "1 in 500",
+     "rank": 2
+    },
+    {
+     "name": "Snake Eyes",
+     "id": "SNAKE_EYES",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Extraordinary · Titanoboa",
+     "chance": "1 in 909",
+     "rank": 2
     }
    ]
   },
   {
-   "id": "the_loch_emperor",
-   "name": "The Loch Emperor",
-   "boss": "The Loch Emperor",
-   "icon": "prismarine_shard",
-   "color": "#3FA9FF",
+   "id": "lotus_atoll",
+   "name": "Lotus Atoll",
+   "boss": "Lotus Atoll",
+   "icon": "pink_petals",
+   "color": "#FF9AC8",
    "group": "fish_water",
    "drops": [
     {
-     "name": "Legendary Flying Fish Pet",
-     "id": "FLYING_FISH;4",
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
      "icon": "player_head",
      "skull": true,
-     "odds": "Rare",
+     "odds": "RNGesus Incarnate · Atoll Croaker, Lotus Guardian, gorF +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Frogcoin",
+     "id": "FROGCOIN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Lotus Guardian",
+     "chance": "1 in 20",
+     "rank": 0
+    },
+    {
+     "name": "Silver Lotus",
+     "id": "LOTUS_SILVER",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · gorF, Drowned Captain",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "eroC enotS egrofeR",
+     "id": "REVERSE_REFORGE_STONE_CORE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · gorF",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Enchanted Gold Block",
+     "id": "ENCHANTED_GOLD_BLOCK",
+     "icon": "gold_block",
+     "skull": false,
+     "odds": "Rare · Drowned Captain",
      "chance": "1 in 200",
      "rank": 1
     },
     {
-     "name": "Epic Flying Fish Pet",
-     "id": "FLYING_FISH;3",
-     "icon": "player_head",
-     "skull": true,
-     "odds": "Occasional",
-     "chance": "1 in 50",
+     "name": "Unlucky Doubloon",
+     "id": "UNLUCKY_DOUBLOON",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Drowned Captain",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Gold Lotus",
+     "id": "LOTUS_GOLD",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Puddle Jumper, Frog Prince",
+     "chance": "1 in 20",
      "rank": 0
+    },
+    {
+     "name": "Prince's Crown Jewel",
+     "id": "PRINCE_CROWN_JEWEL",
+     "icon": "gold_nugget",
+     "skull": false,
+     "odds": "Extraordinary · Frog Prince",
+     "chance": "1 in 400",
+     "rank": 2
     }
    ]
   },
   {
-   "id": "open_water",
-   "name": "Open Water",
-   "boss": "Open Water",
-   "icon": "prismarine_shard",
-   "color": "#3FA9FF",
+   "id": "moonglade_marsh",
+   "name": "Moonglade Marsh",
+   "boss": "Moonglade Marsh",
+   "icon": "mangrove_log",
+   "color": "#7AA8E8",
    "group": "fish_water",
    "drops": [
     {
-     "name": "Lucky Clover Core",
-     "id": "PET_ITEM_LUCKY_CLOVER_DROP",
-     "icon": "dye",
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Bogged, Wetwing, Tadgang +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Enchanted Mangrove Log",
+     "id": "ENCHANTED_MANGROVE_LOG",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional · Wetwing, Tadgang",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Wet Water",
+     "id": "WET_WATER",
+     "icon": "paper",
      "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 152",
+     "odds": "Occasional · Wetwing",
+     "chance": "1 in 40",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Sea Lumies",
+     "id": "ENCHANTED_SEA_LUMIES",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Tadgang, Ent, The Loch Emperor",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Gill Membrane",
+     "id": "GILL_MEMBRANE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Tadgang",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Uncommon Foraging Exp Boost",
+     "id": "PET_ITEM_FORAGING_SKILL_BOOST_UNCOMMON",
+     "icon": "iron_axe",
+     "skull": false,
+     "odds": "Rare · Ent",
+     "chance": "1 in 100",
      "rank": 1
     },
     {
@@ -291,35 +422,916 @@
      "id": "MANGCORE",
      "icon": "paper",
      "skull": false,
-     "odds": "Rare",
+     "odds": "Occasional · Ent, The Loch Emperor, Nessie",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Emperor's Skull",
+     "id": "DIVER_FRAGMENT",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · The Loch Emperor",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Rare Flying Fish Pet",
+     "id": "FLYING_FISH;2",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional · The Loch Emperor",
+     "chance": "1 in 25",
+     "rank": 0
+    },
+    {
+     "name": "Epic Flying Fish Pet",
+     "id": "FLYING_FISH;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional · The Loch Emperor",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Legendary Flying Fish Pet",
+     "id": "FLYING_FISH;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare · The Loch Emperor",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Mound of Seagrass",
+     "id": "MOUND_OF_SEAGRASS",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Nessie",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Bobbin' Scriptures",
+     "id": "BOBBIN_SCRIPTURES",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Nessie",
      "chance": "1 in 100",
      "rank": 1
     },
     {
-     "name": "Piscary VI",
-     "id": "PISCARY;6",
-     "icon": "enchanted_book",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 50",
+     "name": "Vibrant Coral",
+     "id": "VIBRANT_CORAL",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare · Nessie",
+     "chance": "1 in 200",
      "rank": 1
+    },
+    {
+     "name": "Carmine Dye",
+     "id": "DYE_CARMINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Stridersurfer",
+     "chance": "1 in 2,500,000",
+     "rank": 3
+    }
+   ]
+  },
+  {
+   "id": "torrhus_canyon",
+   "name": "Torrhus Canyon",
+   "boss": "Torrhus Canyon",
+   "icon": "red_mushroom",
+   "color": "#C86A4A",
+   "group": "fish_water",
+   "drops": [
+    {
+     "name": "Enchanted Bone",
+     "id": "ENCHANTED_BONE",
+     "icon": "bone",
+     "skull": false,
+     "odds": "Occasional · Haggard",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Helix Log",
+     "id": "ENCHANTED_HELIX_LOG",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Haggard, Brineling",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Ruby Veilshroom",
+     "id": "ENCHANTED_RUBY_VEILSHROOM",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Haggard, Brineling, Sprawl +1",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Haggard, Brineling, Sprawl +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Sea Brine",
+     "id": "SEA_BRINE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Brineling",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Helixis",
+     "id": "HELIXIS",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Torrid, Silkbreeze, Giant Isopod",
+     "chance": "1 in 20",
+     "rank": 0
+    },
+    {
+     "name": "Veilshroom Bunch",
+     "id": "VEILSHROOM_BUNCH",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Torrid, Silkbreeze, Giant Isopod",
+     "chance": "1 in 20",
+     "rank": 0
+    },
+    {
+     "name": "Water Hyacinth",
+     "id": "WATER_HYACINTH",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Torrid",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Sublime Silk",
+     "id": "SUBLIME_SILK",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Silkbreeze",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Distant Echo",
+     "id": "DISTANT_ECHO",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Silkbreeze",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Isopod Husk",
+     "id": "ISOPOD_HUSK",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Giant Isopod",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Reinforced Netting",
+     "id": "REINFORCED_NETTING",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Giant Isopod",
+     "chance": "1 in 100",
+     "rank": 1
+    }
+   ]
+  },
+  {
+   "id": "fishing_festival",
+   "name": "Fishing Festival",
+   "boss": "Fishing Festival",
+   "icon": "prismarine_shard",
+   "color": "#4FB8D8",
+   "group": "fish_water",
+   "drops": [
+    {
+     "name": "Nurse Shark Tooth",
+     "id": "NURSE_SHARK_TOOTH",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Nurse Shark",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Carnival Ticket",
+     "id": "CARNIVAL_TICKET",
+     "icon": "name_tag",
+     "skull": false,
+     "odds": "Rare · Nurse Shark, Blue Shark, Tiger Shark +1",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Nurse Shark, Blue Shark, Tiger Shark +1",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Blue Shark Tooth",
+     "id": "BLUE_SHARK_TOOTH",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Blue Shark",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Tiger Shark Tooth",
+     "id": "TIGER_SHARK_TOOTH",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Tiger Shark",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Epic Megalodon Pet",
+     "id": "MEGALODON;3",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare · Tiger Shark",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Great White Shark Tooth",
+     "id": "GREAT_WHITE_SHARK_TOOTH",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Great White Shark",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Legendary Megalodon Pet",
+     "id": "MEGALODON;4",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare · Great White Shark",
+     "chance": "1 in 100",
+     "rank": 1
+    }
+   ]
+  },
+  {
+   "id": "water_hotspots",
+   "name": "Water Hotspots",
+   "boss": "Water Hotspots",
+   "icon": "heart_of_the_sea",
+   "color": "#38D2FF",
+   "group": "fish_water",
+   "drops": [
+    {
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Frog Man, Inkling, Snapping Turtle +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Ink Splat",
+     "id": "INK_SPLAT",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Inkling",
+     "chance": "1 in 25",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Ink Sac",
+     "id": "ENCHANTED_INK_SACK",
+     "icon": "dye",
+     "skull": false,
+     "odds": "Rare · Inkling",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Enchanted Clay Ball",
+     "id": "ENCHANTED_CLAY_BALL",
+     "icon": "clay_ball",
+     "skull": false,
+     "odds": "Occasional · Inkling, Snapping Turtle, Manta Ray",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Uncommon Fishing Exp Boost",
+     "id": "PET_ITEM_FISHING_SKILL_BOOST_UNCOMMON",
+     "icon": "fish",
+     "skull": false,
+     "odds": "Pray RNGesus · Inkling",
+     "chance": "1 in 2,000",
+     "rank": 3
+    },
+    {
+     "name": "Broken Radar",
+     "id": "BROKEN_RADAR",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Snapping Turtle",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Edible Seaweed",
+     "id": "EDIBLE_SEAWEED",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Extraordinary · Snapping Turtle",
+     "chance": "1 in 1,000",
+     "rank": 2
+    },
+    {
+     "name": "Rare Fishing Exp Boost",
+     "id": "PET_ITEM_FISHING_SKILL_BOOST_RARE",
+     "icon": "fish",
+     "skull": false,
+     "odds": "Pray RNGesus · Snapping Turtle",
+     "chance": "1 in 2,000",
+     "rank": 3
+    },
+    {
+     "name": "Enchanted Clay Block",
+     "id": "ENCHANTED_CLAY_BLOCK",
+     "icon": "clay",
+     "skull": false,
+     "odds": "Rare · Manta Ray, Blue Ringed Octopus, Wiki Tiki",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Epic Fishing Exp Boost",
+     "id": "PET_ITEM_FISHING_SKILL_BOOST_EPIC",
+     "icon": "fish",
+     "skull": false,
+     "odds": "Pray RNGesus · Manta Ray",
+     "chance": "1 in 2,000",
+     "rank": 3
+    },
+    {
+     "name": "Octopus Tendril",
+     "id": "OCTOPUS_TENDRIL",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Extraordinary · Blue Ringed Octopus",
+     "chance": "1 in 1,000",
+     "rank": 2
+    },
+    {
+     "name": "Bobbin' Scriptures",
+     "id": "BOBBIN_SCRIPTURES",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Wiki Tiki",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Troubled Bubble",
+     "id": "TROUBLED_BUBBLE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Extraordinary · Wiki Tiki",
+     "chance": "1 in 500",
+     "rank": 2
+    },
+    {
+     "name": "Tiki Mask",
+     "id": "TIKI_MASK",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Extraordinary · Wiki Tiki",
+     "chance": "1 in 1,000",
+     "rank": 2
+    }
+   ]
+  },
+  {
+   "id": "special_catches",
+   "name": "Special Catches",
+   "boss": "Special Catches",
+   "icon": "carrot",
+   "color": "#8FD06A",
+   "group": "fish_water",
+   "drops": [
+    {
+     "name": "Enchanted Mithril",
+     "id": "ENCHANTED_MITHRIL",
+     "icon": "prismarine_crystals",
+     "skull": false,
+     "odds": "Occasional · Mithril Grubber",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Plasma",
+     "id": "PLASMA",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Mithril Grubber",
+     "chance": "1 in 40",
+     "rank": 0
+    },
+    {
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Mithril Grubber, Oasis Sheep, Oasis Rabbit +5",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Enchanted Raw Mutton",
+     "id": "ENCHANTED_MUTTON",
+     "icon": "mutton",
+     "skull": false,
+     "odds": "Occasional · Oasis Sheep",
+     "chance": "1 in 20",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Cooked Mutton",
+     "id": "ENCHANTED_COOKED_MUTTON",
+     "icon": "cooked_mutton",
+     "skull": false,
+     "odds": "Extraordinary · Oasis Sheep",
+     "chance": "1 in 1,000",
+     "rank": 2
+    },
+    {
+     "name": "Enchanted Raw Rabbit",
+     "id": "ENCHANTED_RABBIT",
+     "icon": "rabbit",
+     "skull": false,
+     "odds": "Occasional · Oasis Rabbit",
+     "chance": "1 in 20",
+     "rank": 0
     },
     {
      "name": "Caster VI",
      "id": "CASTER;6",
      "icon": "enchanted_book",
      "skull": false,
-     "odds": "Occasional",
+     "odds": "Occasional · Carrot King",
      "chance": "1 in 50",
      "rank": 0
     },
     {
-     "name": "Blessing VI",
-     "id": "BLESSING;6",
+     "name": "Lucky Clover Core",
+     "id": "PET_ITEM_LUCKY_CLOVER_DROP",
+     "icon": "dye",
+     "skull": false,
+     "odds": "Rare · Carrot King",
+     "chance": "1 in 152",
+     "rank": 1
+    },
+    {
+     "name": "Worm Membrane",
+     "id": "WORM_MEMBRANE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Water Worm, Poisoned Water Worm",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Flawed Amethyst Gemstone",
+     "id": "FLAWED_AMETHYST_GEM",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Abyssal Miner",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Flawed Jade Gemstone",
+     "id": "FLAWED_JADE_GEM",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Abyssal Miner",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Flawed Sapphire Gemstone",
+     "id": "FLAWED_SAPPHIRE_GEM",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Abyssal Miner",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Piscary VI",
+     "id": "PISCARY;6",
      "icon": "enchanted_book",
      "skull": false,
-     "odds": "Pray RNGesus",
+     "odds": "Occasional · Abyssal Miner",
+     "chance": "1 in 50",
+     "rank": 0
+    }
+   ]
+  },
+  {
+   "id": "crimson_isle",
+   "name": "Crimson Isle",
+   "boss": "Crimson Isle",
+   "icon": "magma_cream",
+   "color": "#FF6A2A",
+   "group": "fish_lava",
+   "drops": [
+    {
+     "name": "Slug Boots",
+     "id": "SLUG_BOOTS",
+     "icon": "leather_boots",
+     "skull": false,
+     "odds": "Occasional · Magma Slug",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Carmine Dye",
+     "id": "DYE_CARMINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Magma Slug, Moogma, Lava Leech +6",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Moogma Leggings",
+     "id": "MOOGMA_LEGGINGS",
+     "icon": "leather_leggings",
+     "skull": false,
+     "odds": "Occasional · Moogma",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Blade of the Volcano",
+     "id": "BLADE_OF_THE_VOLCANO",
+     "icon": "iron_sword",
+     "skull": false,
+     "odds": "Occasional · Lava Leech",
+     "chance": "1 in 20",
+     "rank": 0
+    },
+    {
+     "name": "Pitchin' Koi",
+     "id": "PITCHIN_KOI",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Extraordinary · Lava Leech",
+     "chance": "1 in 250",
+     "rank": 2
+    },
+    {
+     "name": "Charm I",
+     "id": "CHARM;1",
+     "icon": "enchanted_book",
+     "skull": false,
+     "odds": "Rare · Pyroclastic Worm",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Flaming Chestplate",
+     "id": "FLAMING_CHESTPLATE",
+     "icon": "leather_chestplate",
+     "skull": false,
+     "odds": "Occasional · Lava Flame",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Staff of the Volcano",
+     "id": "STAFF_OF_THE_VOLCANO",
+     "icon": "wheat",
+     "skull": false,
+     "odds": "Occasional · Fire Eel",
+     "chance": "1 in 20",
+     "rank": 0
+    },
+    {
+     "name": "Taurus Helmet",
+     "id": "TAURUS_HELMET",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional · Taurus",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Flash I",
+     "id": "FLASH;1",
+     "icon": "enchanted_book",
+     "skull": false,
+     "odds": "Rare · Thunder",
+     "chance": "1 in 66.7",
+     "rank": 1
+    },
+    {
+     "name": "Lord Jawbus Shard",
+     "id": "ATTRIBUTE_SHARD_DOUBLE_HOOK;1",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional · Lord Jawbus",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Bobbin' Scriptures",
+     "id": "BOBBIN_SCRIPTURES",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Lord Jawbus",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Radioactive Vial",
+     "id": "RADIOACTIVE_VIAL",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare · Lord Jawbus",
+     "chance": "1 in 200",
+     "rank": 1
+    }
+   ]
+  },
+  {
+   "id": "lava_hotspots",
+   "name": "Lava Hotspots",
+   "boss": "Lava Hotspots",
+   "icon": "blaze_powder",
+   "color": "#FF9A3A",
+   "group": "fish_lava",
+   "drops": [
+    {
+     "name": "Fried Feather",
+     "id": "FRIED_FEATHER",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Fried Chicken",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Carmine Dye",
+     "id": "DYE_CARMINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Fried Chicken, Volcanic Snail, Fireproof Witch +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Seared Escargot",
+     "id": "SEARED_ESCARGOT",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Volcanic Snail",
+     "chance": "1 in 25",
+     "rank": 0
+    },
+    {
+     "name": "Silver Magmafish",
+     "id": "MAGMA_FISH_SILVER",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Volcanic Snail",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Enchanted Glowstone Dust",
+     "id": "ENCHANTED_GLOWSTONE_DUST",
+     "icon": "glowstone_dust",
+     "skull": false,
+     "odds": "Occasional · Fireproof Witch",
+     "chance": "1 in 5",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Gunpowder",
+     "id": "ENCHANTED_GUNPOWDER",
+     "icon": "gunpowder",
+     "skull": false,
+     "odds": "Occasional · Fireproof Witch",
+     "chance": "1 in 20",
+     "rank": 0
+    },
+    {
+     "name": "Singed Powder",
+     "id": "SINGED_POWDER",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Fireproof Witch",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Enchanted Glowstone",
+     "id": "ENCHANTED_GLOWSTONE",
+     "icon": "glowstone",
+     "skull": false,
+     "odds": "Extraordinary · Fireproof Witch",
+     "chance": "1 in 400",
+     "rank": 2
+    },
+    {
+     "name": "Fire Protection VI",
+     "id": "FIRE_PROTECTION;6",
+     "icon": "enchanted_book",
+     "skull": false,
+     "odds": "Pray RNGesus · Fireproof Witch",
+     "chance": "1 in 10,000",
+     "rank": 3
+    },
+    {
+     "name": "Pyroclasm VI",
+     "id": "PYROCLASM;6",
+     "icon": "enchanted_book",
+     "skull": false,
+     "odds": "Pray RNGesus · Magma Pillar",
+     "chance": "1 in 2,000",
+     "rank": 3
+    },
+    {
+     "name": "Severed Pincer",
+     "id": "SEVERED_PINCER",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Extraordinary · Fiery Scuttler",
+     "chance": "1 in 500",
+     "rank": 2
+    },
+    {
+     "name": "Scuttler Shell",
+     "id": "SCUTTLER_SHELL",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Extraordinary · Fiery Scuttler",
      "chance": "1 in 1,000",
+     "rank": 2
+    },
+    {
+     "name": "Bobbin' Scriptures",
+     "id": "BOBBIN_SCRIPTURES",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Ragnarok",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Chain of the End Times",
+     "id": "CHAIN_END_TIMES",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare · Ragnarok",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Brimstone Handle",
+     "id": "BRIMSTONE_HANDLE",
+     "icon": "stick",
+     "skull": false,
+     "odds": "Rare · Ragnarok",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Burnt Texts",
+     "id": "BURNT_TEXTS",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Extraordinary · Ragnarok",
+     "chance": "1 in 400",
+     "rank": 2
+    }
+   ]
+  },
+  {
+   "id": "magma_fields",
+   "name": "Magma Fields",
+   "boss": "Magma Fields",
+   "icon": "magma_block",
+   "color": "#FF8A2A",
+   "group": "fish_lava",
+   "drops": [
+    {
+     "name": "Eternal Flame Ring",
+     "id": "ETERNAL_FLAME_RING",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Rare · Flaming Worm, Lava Blaze, Lava Pigman",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Carmine Dye",
+     "id": "DYE_CARMINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Flaming Worm, Lava Blaze, Lava Pigman",
+     "chance": "1 in 2,500,000",
+     "rank": 3
+    },
+    {
+     "name": "Blazen Sphere",
+     "id": "BLAZEN_SPHERE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Lava Blaze",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Magma Core",
+     "id": "MAGMA_CORE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Lava Blaze, Lava Pigman",
+     "chance": "1 in 200",
+     "rank": 1
+    }
+   ]
+  },
+  {
+   "id": "plhlegblast_pool",
+   "name": "Plhlegblast Pool",
+   "boss": "Plhlegblast Pool",
+   "icon": "ink_sac",
+   "color": "#D83A2A",
+   "group": "fish_lava",
+   "drops": [
+    {
+     "name": "Enchanted Ink Sac",
+     "id": "ENCHANTED_INK_SACK",
+     "icon": "dye",
+     "skull": false,
+     "odds": "Rare · Plhlegblast",
+     "chance": "1 in 200",
+     "rank": 1
+    },
+    {
+     "name": "Squid Boots",
+     "id": "SQUID_BOOTS",
+     "icon": "leather_boots",
+     "skull": false,
+     "odds": "Rare · Plhlegblast",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Bobbin' Scriptures",
+     "id": "BOBBIN_SCRIPTURES",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Plhlegblast",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Carmine Dye",
+     "id": "DYE_CARMINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Plhlegblast",
+     "chance": "1 in 50,000",
      "rank": 3
     }
    ]
@@ -328,16 +1340,61 @@
    "id": "spooky_festival",
    "name": "Spooky Festival",
    "boss": "Spooky Festival",
-   "icon": "jack_o_lantern",
+   "icon": "carved_pumpkin",
    "color": "#B56BFF",
    "group": "fish_spooky",
    "drops": [
+    {
+     "name": "Purple Candy",
+     "id": "PURPLE_CANDY",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Jumpin' Jack",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Pumpkin",
+     "id": "ENCHANTED_PUMPKIN",
+     "icon": "pumpkin",
+     "skull": false,
+     "odds": "Occasional · Jumpin' Jack, Scarecrow, Nightmare +1",
+     "chance": "1 in 6.7",
+     "rank": 0
+    },
+    {
+     "name": "Midnight Dye",
+     "id": "DYE_MIDNIGHT",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Jumpin' Jack, Scarecrow, Nightmare +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Jumpin' Jack, Scarecrow, Nightmare +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Lucky Hoof",
+     "id": "LUCKY_HOOF",
+     "icon": "iron_horse_armor",
+     "skull": false,
+     "odds": "Rare · Nightmare",
+     "chance": "1 in 200",
+     "rank": 1
+    },
     {
      "name": "Deep Sea Orb",
      "id": "DEEP_SEA_ORB",
      "icon": "paper",
      "skull": false,
-     "odds": "Rare",
+     "odds": "Rare · Werewolf, Phantom Fisher, Grim Reaper",
      "chance": "1 in 100",
      "rank": 1
     },
@@ -346,7 +1403,34 @@
      "id": "PHANTOM_HOOK",
      "icon": "paper",
      "skull": false,
-     "odds": "Rare",
+     "odds": "Rare · Phantom Fisher",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Vampire Fang",
+     "id": "PET_ITEM_VAMPIRE_FANG",
+     "icon": "ghast_tear",
+     "skull": false,
+     "odds": "Occasional · Grim Reaper",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Polished Pumpkin",
+     "id": "POLISHED_PUMPKIN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Occasional · Grim Reaper",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Bobbin' Scriptures",
+     "id": "BOBBIN_SCRIPTURES",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Grim Reaper",
      "chance": "1 in 100",
      "rank": 1
     },
@@ -355,7 +1439,7 @@
      "id": "SHREDDED_LINE",
      "icon": "paper",
      "skull": false,
-     "odds": "Rare",
+     "odds": "Rare · Grim Reaper",
      "chance": "1 in 100",
      "rank": 1
     }
@@ -370,11 +1454,83 @@
    "group": "fish_winter",
    "drops": [
     {
+     "name": "Icy Sinker",
+     "id": "ICY_SINKER",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Frozen Steve",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Iceberg Dye",
+     "id": "DYE_ICEBERG",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Frozen Steve, Frosty, Grinch +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Aquamarine Dye",
+     "id": "DYE_AQUAMARINE",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "RNGesus Incarnate · Frozen Steve, Frosty, Grinch +3",
+     "chance": "1 in 50,000",
+     "rank": 3
+    },
+    {
+     "name": "Enchanted Snow Block",
+     "id": "ENCHANTED_SNOW_BLOCK",
+     "icon": "snow",
+     "skull": false,
+     "odds": "Occasional · Frosty",
+     "chance": "1 in 25",
+     "rank": 0
+    },
+    {
+     "name": "Red Gift",
+     "id": "RED_GIFT",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional · Frosty, Grinch",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Ice",
+     "id": "ENCHANTED_ICE",
+     "icon": "ice",
+     "skull": false,
+     "odds": "Occasional · Frosty",
+     "chance": "1 in 25",
+     "rank": 0
+    },
+    {
+     "name": "Enchanted Packed Ice",
+     "id": "ENCHANTED_PACKED_ICE",
+     "icon": "packed_ice",
+     "skull": false,
+     "odds": "Occasional · Grinch, Nutcracker",
+     "chance": "1 in 50",
+     "rank": 0
+    },
+    {
+     "name": "Walnut",
+     "id": "WALNUT",
+     "icon": "player_head",
+     "skull": true,
+     "odds": "Occasional · Nutcracker",
+     "chance": "1 in 10",
+     "rank": 0
+    },
+    {
      "name": "Baby Yeti Pet",
      "id": "BABY_YETI;4",
      "icon": "player_head",
      "skull": true,
-     "odds": "Occasional",
+     "odds": "Occasional · Yeti",
      "chance": "1 in 50",
      "rank": 0
     },
@@ -383,7 +1539,16 @@
      "id": "HILT_OF_TRUE_ICE",
      "icon": "paper",
      "skull": false,
-     "odds": "Rare",
+     "odds": "Rare · Yeti",
+     "chance": "1 in 100",
+     "rank": 1
+    },
+    {
+     "name": "Bobbin' Scriptures",
+     "id": "BOBBIN_SCRIPTURES",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Rare · Reindrake",
      "chance": "1 in 100",
      "rank": 1
     }
