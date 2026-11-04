@@ -433,3 +433,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - slayers.json v6: every slayer drop is back (91 items, as in 0.7.8), the six slayer dyes included. The overnight trim was too much.
 - A dye has one setting wherever it is listed: `FancyConfig.drop()` stores any "* Dye" under the "dyes" source, so the slayer page and the Dyes page show and change the same thing (older per-slayer settings move over).
 - A dye heard twice within 20 s (the slayer's RARE DROP line and the "WOW! ... found ... Dye" line) plays once.
+
+## Slayer scenes, one per boss (author request Nov 4: "redo all the animations")
+- The hologram, the three cuts and the shatter stay (rules above); what makes the cuts differs per boss: Revenant a scythe's curved cut dripping rot, Tarantula silk strands that snap then a cut dripping venom, Sven three claw marks with fur, Voidgloom a jagged rift pulling void motes in, Inferno a burning blade with flames along the cut, Bloodfiend a crimson crescent throwing blood (bats on the last cut).
+- Each boss has its own finish round the drop (`Ritual.slFinish`, big for RNG, lighter for Normal): Revenant green souls spiralling up over a ring of rot; Tarantula a web spinning itself with dew glints; Sven a moon ring, claw marks and wind; Voidgloom void cubes orbiting and motes pulled in; Inferno turning blaze rods and climbing flames; Bloodfiend a blood-moon crescent, circling bats and falling drops.

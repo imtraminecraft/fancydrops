@@ -623,6 +623,7 @@ final class Ritual {
         float pulse = 0.85f + 0.15f * (float) Math.sin(t * 5f);
         float[] offs = itemOffs;                                                           // one centre per drop
         if (farmMode || expMode || showMotif >= 0) { softPivot(t, p, icx, gy, icy, sz, isc, rc, energy, rng, offs, bg, itemA, cx0, cy0, pulse, O); return; }          // no rings and no runes: a field gives petals, a book gives light
+        if (slayerMode && !rng) { glowE(icx, gy, rx * 1.1f * (1f - cl(p / 0.9f)), ry * 1.6f * (1f - cl(p / 0.9f)), energy, 0.4f * bg); slFinish(t, p, cx0, cy0, 34 * sz * isc, false, energy, itemA, offs, sz, isc); return; }
         if (!rng && variant == 1) {                                                        // ---- NORMAL, starburst: rays flash out from the item as it lands, then sparks drift
             float land = p - 0.42f;
             if (land > 0f && land < 0.6f) for (int r = 0; r < 12; r++) {
@@ -687,27 +688,7 @@ final class Ritual {
             for (float off : offs) orbit(t, cx0 + off, cy0, 24 * sz * isc, 8 * sz * isc, 0.2f, 7, GOLD, 0.9f * itemA, 1.6f);
             return;
         }
-        if (slayerMode) {                                                                  // SLAYER: three blade streaks cross the item, a crescent of the boss's colour turns round it, embers fly
-            for (int k = 0; k < 3; k++) {
-                float tau = p - k * 0.09f; if (tau < 0f || tau > 0.7f) continue;
-                float an = -0.6f + k * 0.62f + (rnd(slSeed + k) - 0.5f) * 0.3f, len = R * 1.15f, u = eo(tau / 0.16f), fade = 1f - cl((tau - 0.16f) / 0.5f);
-                float ux = (float) Math.cos(an), uy = (float) Math.sin(an), x0 = cx0 - ux * len, y0 = cy0 - uy * len;
-                stroke(x0, y0, x0 + ux * 2 * len * u, y0 + uy * 2 * len * u, 1.4f, energy, 0.55f * fade);
-                stroke(x0, y0, x0 + ux * 2 * len * u, y0 + uy * 2 * len * u, 0.5f, WHITE, fade);
-            }
-            for (float off : offs) {
-                float cxo = cx0 + off;
-                ringE(cxo, cy0, R * 0.62f, R * 0.62f, energy, 0.85f * itemA, t * 2.2f, t * 2.2f + 2.2f, 0, 0);
-                ringE(cxo, cy0, R * 0.62f, R * 0.62f, energy, 0.85f * itemA, t * 2.2f + 3.14f, t * 2.2f + 5.34f, 0, 0);
-                ringE(cxo, cy0, R * 0.5f, R * 0.5f, mixc(energy, WHITE, 0.5f), 0.5f * itemA, -t * 1.4f, -t * 1.4f + 1.2f, 0, 0);
-                glowE(cxo, cy0, 20 * sz * isc, 20 * sz * isc, WHITE, 0.25f * itemA);
-            }
-            for (int j = 0; j < 30; j++) {
-                float life = 1.2f, tau = (t + rnd(j * 11) * life) % life, fl = tau / life, an = rnd(j * 3) * 6.2832f, sp = (0.5f + rnd(j * 5)) * R;
-                dot(cx0 + (float) Math.cos(an) * sp * fl, cy0 + (float) Math.sin(an) * sp * fl * 0.8f - fl * 10 * sz, j % 3 == 0 ? 0xFFE0A0 : energy, (1f - fl) * itemA);
-            }
-            return;
-        }
+        if (slayerMode) { slFinish(t, p, cx0, cy0, R, true, energy, itemA, offs, sz, isc); return; }          // SLAYER: each boss has its own finish
         // MYTHOLOGICAL: a crown of stars draws itself round the item, lines join them into a constellation, lightning jumps from star to star
         for (float off : offs) {
             float cxo = cx0 + off; int n = 7;
@@ -880,31 +861,136 @@ final class Ritual {
         len = Math.min(len, 38f / Math.max(0.35f, Math.abs(uy)));                           // a cut stays inside the panel: it never pokes out of the top or bottom
         return new float[]{mx - ux * len, my - uy * len, mx + ux * len, my + uy * len};
     }
+    /** One cut across the boss, in the boss's own way: Revenant a scythe's curved cut that drips rot, Tarantula silk that snaps then a fang cut
+     *  dripping venom, Sven three claw marks, Voidgloom a jagged rift that pulls void motes in, Inferno a burning cut with flames along it,
+     *  Bloodfiend a crimson crescent that throws blood and bats. The cut stays (the hologram opens along it) while its glow fades. */
     private static void slash(float tau, int k, float cx, float gy, float kk, int rgb, float a, float keep) {
         if (tau < 0f) return;
-        float[][] segs = {slashSeg(k)};
+        int th = Math.floorMod(kind - 12, 6);
         float fade = tau < 0.09f ? 1f : Math.max(1f - cl((tau - 0.09f) / 0.4f), 0.55f * keep);   // the glow fades, the cut stays
         if (fade <= 0.01f) return;
-        for (int si = 0; si < segs.length; si++) {
-            float[] sg = segs[si];
-            if (tau < si * 0.08f) continue;
-            float su = cl((tau - si * 0.08f) / 0.09f);
-            float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk;
-            float hx = lerp(x0, x1, su), hy = lerp(y0, y1, su);
-            stroke(x0, y0, hx, hy, 0.9f + 0.9f * kk, rgb, 0.32f * fade * a);                     // one smooth tapered cut, thin at any scale
-            stroke(x0, y0, hx, hy, 0.4f + 0.3f * kk, WHITE, fade * a);
-            if (tau < 0.5f) glowE((x0 + hx) / 2, (y0 + hy) / 2, Math.abs(hx - x0) * 0.5f + 4, Math.abs(hy - y0) * 0.5f + 4, rgb, 0.35f * fade * a);
-            if (su < 1f) {                                                                // the sword itself, leading the cut
-                float dx = x1 - x0, dy = y1 - y0, len = (float) Math.sqrt(dx * dx + dy * dy), ux = dx / len, uy = dy / len;
-                float bx = hx - ux * 20 * kk, by = hy - uy * 20 * kk;
-                line(bx, by, hx, hy, 0xE8EEF8, a); line(bx + 1, by, hx + 1, hy, 0x9AA8C0, a * 0.8f);
-                line(hx - ux * 20 * kk - uy * 4 * kk, hy - uy * 20 * kk + ux * 4 * kk, hx - ux * 20 * kk + uy * 4 * kk, hy - uy * 20 * kk - ux * 4 * kk, 0xE8C040, a);
-                line(bx, by, bx - ux * 7 * kk, by - uy * 7 * kk, 0x6A4A2A, a);
-                glint(hx, hy, 2, WHITE, a * 0.8f);
+        float[] sg = slashSeg(k);
+        float x0 = cx + sg[0] * kk, y0 = gy + sg[1] * kk, x1 = cx + sg[2] * kk, y1 = gy + sg[3] * kk;
+        float dx = x1 - x0, dy = y1 - y0, len = (float) Math.max(1, Math.sqrt(dx * dx + dy * dy)), ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+        float su = cl(tau / (th == 2 ? 0.07f : th == 3 ? 0.05f : 0.09f)), hx = lerp(x0, x1, su), hy = lerp(y0, y1, su);
+        float bulge = th == 0 ? 9f * kk : th == 5 ? 12f * kk : 0f;                          // the scythe and the crescent cut along a curve
+        int seg = 14; float px = x0, py = y0;
+        for (int i = 1; i <= seg; i++) {
+            float u = i / (float) seg * su; float jag = th == 3 ? (rnd(slSeed + k * 50 + i) - 0.5f) * 7f * kk : 0f;
+            float qx = lerp(x0, x1, u) + nx * (bulge * (float) Math.sin(Math.PI * u) + jag), qy = lerp(y0, y1, u) + ny * (bulge * (float) Math.sin(Math.PI * u) + jag);
+            if (th == 2) for (int c = -1; c <= 1; c++) {                                   // three claw marks side by side
+                float o = c * 3.6f * kk, w = 1f - 0.25f * Math.abs(c);
+                stroke(px + nx * o, py + ny * o, qx + nx * o, qy + ny * o, (0.7f + 0.6f * kk) * w, rgb, 0.32f * fade * a);
+                stroke(px + nx * o, py + ny * o, qx + nx * o, qy + ny * o, (0.3f + 0.25f * kk) * w, WHITE, fade * a * w);
+            } else {
+                stroke(px, py, qx, qy, 0.9f + 0.9f * kk, rgb, 0.32f * fade * a);
+                stroke(px, py, qx, qy, 0.4f + 0.3f * kk, th == 3 ? 0xF0D0FF : th == 4 ? 0xFFF0B0 : th == 5 ? 0xFFB0B8 : WHITE, fade * a);
+            }
+            px = qx; py = qy;
+        }
+        if (tau < 0.5f) glowE((x0 + hx) / 2, (y0 + hy) / 2, Math.abs(hx - x0) * 0.5f + 4, Math.abs(hy - y0) * 0.5f + 4, rgb, 0.35f * fade * a);
+        // what the cut leaves behind
+        for (int j = 0; j < 10; j++) {
+            float u = rnd(slSeed + k * 31 + j * 7), bx = lerp(x0, x1, u) + nx * bulge * (float) Math.sin(Math.PI * u), by = lerp(y0, y1, u) + ny * bulge * (float) Math.sin(Math.PI * u);
+            float life = 0.9f + rnd(j * 13 + k) * 0.6f, tt = tau - 0.05f - u * 0.08f; if (tt < 0f || tt > life) continue;
+            float f = tt / life, al = (1f - f) * a;
+            switch (th) {
+                case 0 -> { dot(bx, by + 30 * kk * f * f, 0x8CE070, al); dot(bx, by + 30 * kk * f * f - 1, 0x4A8A3A, al * 0.7f); }                       // rot drips
+                case 1 -> { dot(bx + (rnd(j) - 0.5f) * 6 * f, by + 26 * kk * f * f, j % 2 == 0 ? 0xFF3A3A : 0xA0FF60, al); }                                    // venom
+                case 2 -> { float an = rnd(j * 3 + k) * 6.28f; dot(bx + (float) Math.cos(an) * 10 * kk * f, by + (float) Math.sin(an) * 6 * kk * f + 8 * kk * f * f, 0xD8DCE6, al * 0.8f); }   // fur
+                case 3 -> { float r = (1f - f) * 16 * kk, an = rnd(j * 5 + k) * 6.28f + f * 3f; dot(bx + (float) Math.cos(an) * r, by + (float) Math.sin(an) * r, j % 3 == 0 ? 0xFFFFFF : 0xC060FF, al); }   // void motes pulled into the rift
+                case 4 -> { float fx = bx + (float) Math.sin(f * 9 + j) * 2, fy = by - 20 * kk * f; dot(fx, fy, f < 0.3f ? 0xFFF0A0 : f < 0.6f ? 0xFFA030 : 0xC03A10, al); dot(fx, fy + 1, 0xFF7020, al * 0.6f); }   // flames along the cut
+                default -> { float vx = nx * (j % 2 == 0 ? 1 : -1) * 18 * kk, vy = -14 * kk; dot(bx + vx * f, by + vy * f + 40 * kk * f * f, 0xC01020, al); }   // blood thrown off
+            }
+        }
+        if (th == 1 && tau < 0.22f) for (int w = 0; w < 4; w++) {                              // silk strands across the cut, snapping as the fang passes
+            float u = 0.2f + 0.2f * w, sx = lerp(x0, x1, u), sy = lerp(y0, y1, u), snap = cl((su - u) / 0.15f), r = 9 * kk * (1f - 0.8f * snap);
+            float al = a * (1f - cl(tau / 0.22f)) * 0.9f;
+            line(sx - nx * 9 * kk, sy - ny * 9 * kk, sx - nx * (9 * kk - r), sy - ny * (9 * kk - r), 0xF0F0F0, al);
+            line(sx + nx * 9 * kk, sy + ny * 9 * kk, sx + nx * (9 * kk - r), sy + ny * (9 * kk - r), 0xF0F0F0, al);
+        }
+        if (th == 5 && k == 2 && tau < 1.2f) for (int b = 0; b < 4; b++) bat(lerp(x0, x1, 0.5f) + (b - 1.5f) * 10 * kk * (1 + tau * 2), lerp(y0, y1, 0.5f) - tau * 40 * kk * (0.6f + 0.2f * b), kk, tau * 14 + b, a * (1f - cl(tau / 1.2f)));
+        if (su < 1f) {                                                                    // what leads the cut
+            switch (th) {
+                case 0 -> { float bx = hx - ux * 6 * kk, by = hy - uy * 6 * kk; for (int i = 0; i < 6; i++) { float an = (float) Math.atan2(uy, ux) - 1.6f + i * 0.28f; dot(bx + (float) Math.cos(an) * 9 * kk, by + (float) Math.sin(an) * 9 * kk, 0xD8E0E8, a); }   // a scythe blade
+                    line(bx, by, bx - ux * 22 * kk, by - uy * 22 * kk, 0x5A3A22, a); }
+                case 2 -> { for (int c = -1; c <= 1; c++) glint(hx + nx * c * 3.6f * kk, hy + ny * c * 3.6f * kk, 1, WHITE, a); }
+                case 3 -> { glowE(hx, hy, 6 * kk, 6 * kk, 0xC060FF, 0.8f * a); glint(hx, hy, 2, 0xF0D0FF, a); }
+                default -> { float bx = hx - ux * 20 * kk, by = hy - uy * 20 * kk; int bl = th == 4 ? 0xFFD080 : th == 5 ? 0xF0C8D0 : 0xE8EEF8;
+                    line(bx, by, hx, hy, bl, a); line(bx + 1, by, hx + 1, hy, 0x9AA8C0, a * 0.8f);
+                    line(hx - ux * 20 * kk - uy * 4 * kk, hy - uy * 20 * kk + ux * 4 * kk, hx - ux * 20 * kk + uy * 4 * kk, hy - uy * 20 * kk - ux * 4 * kk, 0xE8C040, a);
+                    line(bx, by, bx - ux * 7 * kk, by - uy * 7 * kk, 0x6A4A2A, a);
+                    if (th == 4) glowE(hx, hy, 7 * kk, 7 * kk, 0xFF8020, 0.6f * a);
+                    glint(hx, hy, 2, WHITE, a * 0.8f); }
             }
         }
     }
+    /** A little bat, wings up or down with the flap phase. */
+    private static void bat(float x, float y, float k, float flap, float a) {
+        if (a < 0.03f) return; float w = 5 * Math.max(0.6f, k), up = (float) Math.sin(flap) * 2.5f * Math.max(0.6f, k);
+        line(x - w, y - up, x, y, 0x1A0408, a); line(x + w, y - up, x, y, 0x1A0408, a); line(x - w * 0.6f, y - up * 0.6f + 1, x, y + 1, 0x2A0810, a);
+        line(x + w * 0.6f, y - up * 0.6f + 1, x, y + 1, 0x2A0810, a); dot(x, y, 0x3A0A14, a); dot(x - 1, y - 1, 0xFF3040, a * 0.8f); dot(x + 1, y - 1, 0xFF3040, a * 0.8f);
+    }
 
+    /** The finish round a slayer drop, one per boss. rng = the big version. */
+    private static void slFinish(float t, float p, float cx0, float cy0, float R, boolean rng, int energy, float itemA, float[] offs, float sz, float isc) {
+        int th = Math.floorMod(kind - 12, 6); float a = itemA, grow = eo(p / 0.6f);
+        for (float off : offs) {
+            float cx = cx0 + off, cy = cy0;
+            glowE(cx, cy, R * 0.7f, R * 0.7f, energy, (rng ? 0.45f : 0.3f) * a);
+            glowE(cx, cy, 15 * sz * isc, 15 * sz * isc, WHITE, 0.22f * a);
+            switch (th) {
+                case 0 -> {                                                                // Revenant: green souls spiral up out of the ground, a ring of rot below
+                    int n = rng ? 14 : 8;
+                    for (int i = 0; i < n; i++) for (int tr = 0; tr < 4; tr++) {
+                        float u = ((t - tr * 0.04f) * 0.45f + i / (float) n) % 1f, an = u * 10f + i * 2.4f, rr = R * (0.75f - 0.35f * u) * grow;
+                        float x = cx + (float) Math.cos(an) * rr, y = cy + R * 0.6f - u * R * 1.8f, al = (float) Math.sin(u * Math.PI) * a * (1f - tr / 4f) * (0.55f + 0.45f * (float) Math.sin(an));
+                        if (tr == 0) { glowE(x, y, 3, 3, 0x8CE070, 0.4f * al); glint(x, y, 1, 0xD8FFC0, al); } else dot(x, y, 0x5AA048, al * 0.6f);
+                    }
+                    ringE(cx, cy + R * 0.62f, R * 0.7f * grow, R * 0.16f * grow, 0x7CD060, 0.55f * a, t * 0.8f, t * 0.8f + 5.2f, 0, rng ? 0 : 3);
+                }
+                case 1 -> {                                                                // Tarantula: a web spins itself round the item, dew glints on it
+                    int sp = 8; float rr = R * 0.85f;
+                    for (int i = 0; i < sp; i++) { float an = i * 6.2832f / sp + 0.2f, on = cl((p - i * 0.04f) / 0.3f); if (on > 0f) line(cx, cy, cx + (float) Math.cos(an) * rr * on, cy + (float) Math.sin(an) * rr * on * 0.85f, 0xE8E8EE, 0.55f * a); }
+                    int turns = rng ? 5 : 3;
+                    for (int r0 = 1; r0 <= turns; r0++) { float on = cl((p - 0.25f - r0 * 0.08f) / 0.25f); if (on <= 0f) continue; float r1 = rr * r0 / (turns + 0.4f);
+                        for (int i = 0; i < sp * on; i++) { float a0 = i * 6.2832f / sp + 0.2f, a1 = (i + 1) * 6.2832f / sp + 0.2f; line(cx + (float) Math.cos(a0) * r1, cy + (float) Math.sin(a0) * r1 * 0.85f, cx + (float) Math.cos(a1) * r1, cy + (float) Math.sin(a1) * r1 * 0.85f, 0xD0D0DA, 0.45f * a); } }
+                    for (int k = 0; k < (rng ? 8 : 4); k++) { float ph = (t * 0.9f + rnd(k * 7) * 3f) % 1.5f; if (ph > 0.6f) continue; float an = rnd(k * 3) * 6.28f, r1 = rr * (0.3f + 0.6f * rnd(k * 5)); glint(cx + (float) Math.cos(an) * r1, cy + (float) Math.sin(an) * r1 * 0.85f, 2, k % 2 == 0 ? WHITE : 0xFF6060, (1f - ph / 0.6f) * a); }
+                }
+                case 2 -> {                                                                // Sven: a full moon rises behind the item, claw marks flash across it, wind streaks
+                    float my = cy - R * 0.1f, mr = R * 0.62f;
+                    glowE(cx, my, mr * 1.3f, mr * 1.3f, 0xC8D4E8, 0.18f * a * grow); ringE(cx, my, mr * grow, mr * grow, 0xE8ECF4, 0.55f * a, 0, 6.2832f, 0, 0); fillE(cx + mr * 0.3f, my - mr * 0.2f, mr * 0.16f * grow, mr * 0.12f * grow, 0xB8C0D0, 0.15f * a);
+                    for (int c = -1; c <= 1; c++) { float tau = p - 0.15f - (c + 1) * 0.05f; if (tau < 0f) continue; float u = eo(tau / 0.15f), fd = rng ? 0.7f : 1f - cl((tau - 0.2f) / 0.6f);
+                        float x0 = cx - R * 0.6f + c * 3 * sz, y0 = cy - R * 0.6f; stroke(x0, y0, lerp(x0, x0 + R * 1.1f, u), lerp(y0, y0 + R * 1.2f, u), 0.6f * sz, 0xC8D4E8, 0.4f * fd * a); stroke(x0, y0, lerp(x0, x0 + R * 1.1f, u), lerp(y0, y0 + R * 1.2f, u), 0.25f * sz, WHITE, fd * a); }
+                    for (int i = 0; i < (rng ? 10 : 5); i++) { float u = (t * 0.9f + rnd(i * 9)) % 1f, y = cy - R * 0.8f + rnd(i * 3) * R * 1.6f, x = cx - R * 1.2f + u * R * 2.4f; line(x, y, x + 8 * sz, y, 0xC8D4E8, (float) Math.sin(u * Math.PI) * 0.5f * a); }
+                }
+                case 3 -> {                                                                // Voidgloom: void cubes orbit in and out of sight, purple motes pulled into the item
+                    int n = rng ? 6 : 4;
+                    for (int i = 0; i < n; i++) { float an = t * 1.4f + i * 6.2832f / n, x = cx + (float) Math.cos(an) * R * 0.8f * grow, y = cy + (float) Math.sin(an) * R * 0.3f, d = 0.5f + 0.5f * (float) Math.sin(an), s0 = (1.5f + d * 1.5f) * sz;
+                        float gl = rnd((int) (t * 8) + i * 13) < 0.08f ? 0.3f : 1f;
+                        glowE(x, y, s0 * 2.5f, s0 * 2.5f, 0xD060FF, 0.5f * a * d * gl); for (int yy = -1; yy <= 1; yy++) for (int xx = -1; xx <= 1; xx++) dot(x + xx * s0 * 0.6f, y + yy * s0 * 0.6f, xx == 0 && yy == 0 ? 0xF0D0FF : 0x2A0A40, a * gl); dot(x - s0 * 0.6f, y - s0 * 0.6f, 0xD060FF, a * d * gl); }
+                    for (int j = 0; j < (rng ? 40 : 22); j++) { float life = 1.1f, tau = (t + rnd(j * 11) * life) % life, f = tau / life, an = rnd(j * 3) * 6.2832f + f * 2f, r1 = R * (1.1f - f);
+                        dot(cx + (float) Math.cos(an) * r1, cy + (float) Math.sin(an) * r1 * 0.8f, j % 4 == 0 ? WHITE : 0xC060FF, f * (1f - f) * 3f * a); }
+                }
+                case 4 -> {                                                                // Inferno: blaze rods turn round the item like the blaze's own, flames climb
+                    int n = rng ? 10 : 6;
+                    for (int ring = 0; ring < 2; ring++) for (int i = 0; i < n / 2; i++) {
+                        float an = t * (ring == 0 ? 1.6f : -1.1f) + i * 6.2832f / (n / 2f) + ring, rr = R * (0.55f + 0.25f * ring) * grow, x = cx + (float) Math.cos(an) * rr, y = cy - R * 0.1f + ring * R * 0.3f + (float) Math.sin(an) * rr * 0.25f, d = 0.55f + 0.45f * (float) Math.sin(an);
+                        for (int yy = -4; yy <= 4; yy++) { dot(x, y + yy * sz, yy % 3 == 0 ? 0xFFF0A0 : 0xFFB030, a * d); dot(x + 1, y + yy * sz, 0xC86A10, a * d * 0.9f); } glowE(x, y, 5 * sz, 7 * sz, 0xFF7020, 0.5f * a * d); }
+                    for (int j = 0; j < (rng ? 34 : 18); j++) { float life = 1.0f, tau = (t + rnd(j * 7) * life) % life, f = tau / life, x = cx + (rnd(j * 3) - 0.5f) * R * 1.4f + (float) Math.sin(f * 8 + j) * 2, y = cy + R * 0.5f - f * R * 1.6f;
+                        dot(x, y, f < 0.3f ? 0xFFF0A0 : f < 0.65f ? 0xFFA030 : 0xA02A10, (1f - f) * a); }
+                }
+                default -> {                                                               // Bloodfiend: a blood moon crescent, bats circling, drops of blood falling
+                    float mr = R * 0.6f, my = cy - R * 0.1f;
+                    glowE(cx, my, mr * 1.5f, mr * 1.5f, 0xD01030, 0.3f * a * grow);
+                    ringE(cx, my, mr * grow, mr * grow, 0xFF3A4A, 0.8f * a, 2.3f + t * 0.3f, 2.3f + t * 0.3f + 3.6f, 0, 0); ringE(cx, my, mr * 0.92f * grow, mr * 0.92f * grow, 0xA00818, 0.6f * a, 2.5f + t * 0.3f, 2.5f + t * 0.3f + 3.2f, 0, 0);
+                    int n = rng ? 7 : 4;
+                    for (int i = 0; i < n; i++) { float an = t * (1.1f + 0.15f * i) + i * 6.2832f / n; bat(cx + (float) Math.cos(an) * R * 0.9f, cy + (float) Math.sin(an) * R * 0.35f - R * 0.2f, sz * isc * 0.8f, t * 14 + i * 2, a * grow); }
+                    for (int j = 0; j < (rng ? 12 : 6); j++) { float life = 1.3f, tau = (t + rnd(j * 5) * life) % life, f = tau / life; dot(cx + (rnd(j * 3) - 0.5f) * R * 1.2f, cy - R * 0.5f + f * f * R * 1.8f, 0xC01020, (1f - f) * a); }
+                }
+            }
+        }
+    }
 
     /** Where the animation sits when it is at the Top Center: its highest point (the boss, or the item) just touches the top of the screen, or the bottom of the top bar. */
     private static float topIcy(float sz, float hi, float topM) {
