@@ -18,7 +18,7 @@ final class CosmeticData {
         new SetDef("bugfinder", "Bug Finder", "Only given to bug finders who reported bugs that could break the whole mod.", 0xFFFF5A36, "bug", "glitch", "glitchaura", 4),
         new SetDef("contributors", "Contributors", "Only given to the mod contributors.", 0xFF55D8FF, "code", "contribfx", "stardust", 4),
         new SetDef("patreon", "Patreon", "Only given to Patreon supporters.", 0xFFFFB400, "patron", "royal", "patronaura", 4),
-        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "betamark", "pulse", null, 3));          // Beta is Legendary
+        new SetDef("beta", "Beta", "Only given to players who downloaded the mod before v1.0.", 0xFF3FD16A, "betamark", "pulse", null, 4));          // Beta is a Special set (its own green and sparkle)
     static SetDef setById(String id) { for (SetDef d : SETS) if (d.id().equals(id)) return d; return null; }
 
     private static final String BETA_HOW = "Downloaded the mod before v1.0";
@@ -128,7 +128,7 @@ final class CosmeticData {
         };
     }
     static String fmtN(double v) { return v >= 1e9 ? String.format(java.util.Locale.ROOT, "%.1fB", v / 1e9) : v >= 1e6 ? String.format(java.util.Locale.ROOT, "%.1fM", v / 1e6) : v >= 1e4 ? String.format(java.util.Locale.ROOT, "%.0fk", v / 1e3) : String.valueOf((long) v); }
-    static int rarityOf(Def d) { return d.line() == Line.SPECIAL ? 4 : d.line() == Line.LEGENDARY || d.line() == Line.BETA ? 3 : d.line() == Line.ACHIEVEMENT ? 2 : d.line() == Line.RARE ? 1 : 0; }          // Beta counts as Legendary
+    static int rarityOf(Def d) { return d.line() == Line.SPECIAL || d.line() == Line.BETA ? 4 : d.line() == Line.LEGENDARY ? 3 : d.line() == Line.ACHIEVEMENT ? 2 : d.line() == Line.RARE ? 1 : 0; }          // Beta is a Special set
     static String rarityName(int r) { return r == 4 ? "Special" : r == 3 ? "Legendary" : r == 2 ? "Achievement" : r == 1 ? "Rare" : "Common"; }
     static List<Def> members(SetDef s) { List<Def> o = new ArrayList<>(); for (Def d : ALL) if (s.id().equals(d.set())) o.add(d); return o; }
     static int owned(SetDef s) { int n = 0; for (Def d : members(s)) if (unlocked(d)) n++; return n; }

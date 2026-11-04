@@ -298,6 +298,7 @@ final class AuraFx {
                 allowed = new HashSet<>(); for (int i = 0; i < Math.min(cf.cosMax, near.size()); i++) allowed.add(near.get(i).getUUID());
             }
             org.joml.Vector3f right = CAM_ROT.transform(new org.joml.Vector3f(1, 0, 0)), up = CAM_ROT.transform(new org.joml.Vector3f(0, 1, 0));
+            if (!right.isFinite() || !up.isFinite() || right.lengthSquared() < 0.5f) return;                 // a broken camera this frame: draw nothing rather than garbage
             float pt = 1f; try { pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false); } catch (Throwable ignored) { }
             for (var p : mc.level.players()) {
                 Cosmetics.Look l = looks.get(p.getUUID());
@@ -374,7 +375,8 @@ final class AuraFx {
             for (int i = 0; i < seg; i++) {
                 double a0 = i * Math.PI * 2 / seg, a1 = (i + 1) * Math.PI * 2 / seg;
                 float x0 = x + (float) Math.cos(a0) * rad - q.x(), z0 = z + (float) Math.sin(a0) * rad - q.z(), x1 = x + (float) Math.cos(a1) * rad - q.x(), z1 = z + (float) Math.sin(a1) * rad - q.z();
-                float h = 0.025f;
+                float h = 0.025f, mx0 = (x0 + x1) / 2f, mz0 = (z0 + z1) / 2f;
+                if (mx0 * mx0 + y * y + mz0 * mz0 < 0.8f) continue;                              // never right at the eye
                 buf.addVertex(pose, x0, y - h, z0).setColor(cr, cg, cb, a); buf.addVertex(pose, x1, y - h, z1).setColor(cr, cg, cb, a);
                 buf.addVertex(pose, x1, y + h, z1).setColor(cr, cg, cb, a); buf.addVertex(pose, x0, y + h, z0).setColor(cr, cg, cb, a);
                 buf.addVertex(pose, x0, y + h, z0).setColor(cr, cg, cb, a); buf.addVertex(pose, x1, y + h, z1).setColor(cr, cg, cb, a);       // the back face too, so it shows from any side
@@ -382,6 +384,12 @@ final class AuraFx {
             }
             return;
         }
+        // the screen flash: a particle passing right in front of the eye (first person, or the camera pushed into the body) is a quad covering the
+        // whole view, added on top of everything in the aura's colour. Fade particles out as they get close to the camera, gone inside ~0.9 blocks.
+        float d = (float) Math.sqrt(x * x + y * y + z * z), near = (d - size * 2f - 0.5f) / 0.6f;
+        if (!(near > 0f)) return;
+        if (near < 1f) a = Math.round(a * near * near);
+        if (a < 6) return;
         if (q.shape() != 1) disc(pose, buf, x, y, z, size * 1.3f, r, u, cr, cg, cb, Math.round(a * 0.18f));     // dots get a faint soft halo; stars have none (it showed as a round disc)
         if (q.shape() == 1) {                                                                    // a four-point star: two soft pointed arms and a bright core
             arm(pose, buf, x, y, z, size * 1.6f, size * 0.22f, r, u, cr, cg, cb, a);

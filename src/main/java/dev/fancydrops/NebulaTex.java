@@ -66,6 +66,39 @@ final class NebulaTex {
         return canvas = c;
     }
 
+    // ---- a soft round light (white, fading to nothing at the rim), tinted and stretched by the caller: one picture instead of dozens of fills
+    private static final Identifier GLOW_ID = Identifier.fromNamespaceAndPath("fancydrops", "soft_glow");
+    private static boolean glowMade, glowFailed;
+    static final int G = 64;
+    /** Tests draw glows themselves: {x, y, w, h, argb} in float. */
+    static java.util.function.Consumer<float[]> testGlow;
+    static int[] glowPixels() {
+        int[] px = new int[G * G];
+        for (int y = 0; y < G; y++) for (int x = 0; x < G; x++) {
+            float dx = (x + 0.5f - G / 2f) / (G / 2f), dy = (y + 0.5f - G / 2f) / (G / 2f), d = (float) Math.sqrt(dx * dx + dy * dy);
+            float a = d >= 1f ? 0f : (1f - d); a = a * a * (0.6f + 0.4f * a);
+            px[y * G + x] = (Math.round(a * 255) << 24) | 0xFFFFFF;
+        }
+        return px;
+    }
+    /** A soft light centred on cx, cy with radii rx, ry in the colour argb (its alpha is the strength). */
+    static void glow(GuiGraphicsExtractor g, float cx, float cy, float rx, float ry, int argb) {
+        if ((argb >>> 24) < 2 || rx < 0.5f || ry < 0.5f) return;
+        if (testGlow != null) { testGlow.accept(new float[]{cx - rx, cy - ry, rx * 2, ry * 2, Float.intBitsToFloat(argb)}); return; }
+        if (glowFailed) return;
+        try {
+            if (!glowMade) {
+                DynamicTexture t = new DynamicTexture(() -> "fancydrops soft glow", G, G, true);
+                NativeImage img = t.getPixels(); if (img == null) { glowFailed = true; return; }
+                int[] px = glowPixels(); for (int y = 0; y < G; y++) for (int x = 0; x < G; x++) img.setPixelABGR(x, y, px[y * G + x]);
+                t.upload(); Minecraft.getInstance().getTextureManager().register(GLOW_ID, t); glowMade = true;
+            }
+            Gfx.push(g); Gfx.translate(g, cx - rx, cy - ry); g.pose().scale(rx * 2f / G, ry * 2f / G);
+            g.blit(RenderPipelines.GUI_TEXTURED, GLOW_ID, 0, 0, 0f, 0f, G, G, G, G, G, G, argb);
+            Gfx.pop(g);
+        } catch (Throwable e) { glowFailed = true; }
+    }
+
     /** Draws the sky into x, y, w, h (the picture is stretched). False when no texture could be made. */
     static boolean draw(GuiGraphicsExtractor g, int x, int y, int w, int h) {
         if (testDraw != null) { canvas(); testDraw.accept(new int[]{x, y, w, h}); return true; }

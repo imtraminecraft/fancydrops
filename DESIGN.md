@@ -420,3 +420,11 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Star map look (Nov 4 night): a painted deep-sky texture (`NebulaTex`: violet/teal/rose nebula, Milky Way band with dust lanes, 1400 stars) with parallax and a slow drift; twinkling near stars; a warp of streaking stars when it opens and when you fly in/out; shooting stars; telescope vignette; gold star-chart frame with degree ticks and a turning compass rose. Unearned stars are real cool-white stars; earned ones burn in the chapter colour with rays, a halo and sparks running along lit lines; a progress arc and a row of dots per constellation; hovering traces the figure. Stars earned since you last looked ignite (flash + ring) when the sky opens (`FancyConfig.seenAch`). Drawn on its own GUI stratum so the menu's text never shows through.
 - Cosmetic rarities: every ledger reward is rarity **Achievement** (light blue); Beta counts as **Legendary**.
 - Auras use their own render type (the lightning pipeline drawn into the main target). Vanilla's lightning type draws into the weather layer, which some setups compose late: that washed the aura's colour over the sky for a frame.
+
+## Star map v3 (performance, stargazer) and the aura flash
+- Codex lights are one soft-glow texture each (NebulaTex.glow, 64x64 radial, tinted/stretched); lines, rings and streaks are rotated single fills. ~800 fills + ~180 glows a frame (was many thousands).
+- Bottom left of the overview: a hill silhouette with a stargazer, a lantern and a telescope that turns to the hovered constellation (faint sight line). Fades out when zoomed in.
+- Progress arcs only show while hovering a constellation; completed constellations get a turning halo of lights. Dyes moved on screen (HOME table).
+- Codex.openAt(btn, achId): clicking a locked Achievement cosmetic flies to its constellation and makes that star blink (three pulses of rings).
+- Aura flash fix: particles fade out near the camera (gone inside ~0.9 blocks + their size); a particle right at the eye was a screen-filling additive quad in the aura colour. Broken camera vectors skip the frame.
+- Beta set is Special rarity with its own green rising-sparkle tile effect; Achievement rarity tiles are light blue with tiny twinkling stars.

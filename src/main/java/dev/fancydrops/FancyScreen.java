@@ -739,7 +739,23 @@ public class FancyScreen extends Screen {
                     g.fill(sx, sy, sx + 2, sy + 2, Gfx.argb(Math.round(150 * (float) Math.sin(Math.PI * ph)), k % 2 == 0 ? 0xFFC832 : 0xFF8A2E));
                 }
             }
-            default -> {                                                                                // beta: a slanted light passes over the tile now and then
+            case "beta" -> {                                                                            // Beta: green four-point sparkles rise and burst, a fresh-leaf light passes over
+                for (int k = 0; k < 6; k++) {
+                    float ph = ((t + k * 610L + i * 173L) % 2600L) / 2600f; long st = (t + k * 610L + i * 173L) / 2600L;
+                    int sx = x + 5 + Math.abs((int) (st * 7907 + k * 3571 + i * 13) % Math.max(1, w - 10)), sy = y + h - 3 - Math.round(ph * (h - 6));
+                    float a = (float) Math.sin(Math.PI * ph); int arm = ph > 0.75f ? 2 : 1, c = Gfx.argb(Math.round(170 * a), k % 2 == 0 ? 0xB8FFCA : 0x3FD16A);
+                    g.fill(sx - arm, sy, sx + arm + 1, sy + 1, c); g.fill(sx, sy - arm, sx + 1, sy + arm + 1, c);
+                }
+                int px = x - 20 + (int) ((t / 16L + i * 60L) % (w + 200));
+                if (px < x + w) for (int j = 0; j < h - 2; j++) g.fill(px + (h - j) / 3, y + 1 + j, px + (h - j) / 3 + 6, y + 2 + j, Gfx.argb(hv ? 40 : 24, 0xB8FFCA));
+            }
+            case "achievement" -> {                                                                     // Achievement: a few tiny stars, one joined to the next by a faint line
+                for (int k = 0; k < 4; k++) {
+                    float tw = (float) Math.max(0, Math.sin(t / 420.0 + k * 1.7 + i)); int sx = x + 6 + (k * 37 + i * 11) % Math.max(1, w - 12), sy = y + 4 + (k * 23 + i * 7) % Math.max(1, h - 8);
+                    int c = Gfx.argb(Math.round(60 + 140 * tw), 0xCFE0FF); g.fill(sx, sy, sx + 1, sy + 1, c); if (tw > 0.7f) { g.fill(sx - 1, sy, sx + 2, sy + 1, Gfx.argb(Math.round(90 * tw), 0xCFE0FF)); g.fill(sx, sy - 1, sx + 1, sy + 2, Gfx.argb(Math.round(90 * tw), 0xCFE0FF)); }
+                }
+            }
+            default -> {                                                                                // a slanted light passes over the tile now and then
                 int px = x - 20 + (int) ((t / 14L + i * 60L) % (w + 160));
                 if (px < x + w) for (int j = 0; j < h - 2; j++) g.fill(px + (h - j) / 3, y + 1 + j, px + (h - j) / 3 + 7, y + 2 + j, Gfx.argb(hv ? 44 : 26, 0xFFFFFF));
             }
@@ -774,14 +790,14 @@ public class FancyScreen extends Screen {
             float k = anim("pick|" + r.title + "|" + r.pLabels[i], on ? 1f : hv ? 0.4f : 0f, 40f);
             if (hv && r.pTips != null) { tipText = r.pTips[i]; tipCol = r.pBg != null ? r.pBg[i] : col; }
             if (hv && r.pIds != null) hoverCos = r.pIds[i];
-            int rar = r.pRar == null ? -1 : r.pRar[i];                                                  // rarity: 0 common (grey), 1 beta (green), 2 special (the colours of its set)
-            int sch = r.pBg != null ? r.pBg[i] : rar == 2 ? 0xFF3FD16A : rar == 1 ? 0xFF3B5BDB : rar == 0 ? 0xFF9AA3B5 : col;     // the colour scheme of the tile: every tile of a set shares it
+            int rar = r.pRar == null ? -1 : r.pRar[i];                                                  // rarity: 0 common, 1 rare, 2 achievement, 3 legendary, 4 special (the colours of its set)
+            int sch = r.pBg != null ? r.pBg[i] : rar == 2 ? 0xFF8FB8FF : rar == 1 ? 0xFF3B5BDB : rar == 0 ? 0xFF9AA3B5 : col;     // the colour scheme of the tile: every tile of a set shares it
             int bgBase = rar < 0 ? Ui.PANEL2 : Canvas.mix(Ui.PANEL2, sch, rar == 4 ? 0.12f : rar == 2 ? 0.13f : rar == 1 ? 0.14f : rar == 3 ? 0.08f : 0.07f);
             pill(g, b[0], b[1], b[2], b[3], Canvas.mix(bgBase, Canvas.mix(Ui.ROW_HOVER, sch, 0.22f), k));
-            if (rar == 4 || rar == 2) {                                                                  // special and beta tiles have a background of their own (legendary, rare and common have none)
+            if (rar == 4 || rar == 2) {                                                                  // special and achievement tiles have a background of their own (legendary, rare and common have none)
                 g.enableScissor(b[0] + 1, b[1] + 1, b[0] + b[2] - 1, b[1] + b[3] - 1);
                 if (rar == 4) { int seg = 8, sw2 = b[2] / seg + 1; for (int q = 0; q < seg; q++) g.fill(b[0] + q * b[2] / seg, b[1] + 1, b[0] + q * b[2] / seg + sw2, b[1] + b[3] - 1, Gfx.argb(Math.round(52 * (1f - q / (float) seg) + 6), Canvas.mix(sch, 0xFFFFFFFF, 0.25f * (1f - q / (float) seg)) & 0xFFFFFF)); }
-                if (hv || on || rar == 4) tileFx(g, b, i, sch, rar == 4 && r.pSetId != null ? r.pSetId[i] : "beta", now, hv);          // Special tiles always play their effect; the others only when you point at or wear them
+                if (hv || on || rar == 4) tileFx(g, b, i, sch, rar == 4 && r.pSetId != null ? r.pSetId[i] : "achievement", now, hv);          // Special tiles always play their effect; the others only when you point at or wear them
                 g.disableScissor();
             }
             if (on) {
@@ -920,7 +936,11 @@ public class FancyScreen extends Screen {
             boolean had = CosmeticData.unlocked(d); CosmeticData.force.put(d.id(), !had); CosmeticData.changed();
             toast((had ? "Removed " : "Added ") + d.name() + "\n(test only, nothing is saved)", had ? 0xFFFF8A5A : 0xFF62E6A8); return;
         }
-        if (!CosmeticData.unlocked(d)) { lockShake.put(label, System.currentTimeMillis()); lockedToast(d); }
+        if (!CosmeticData.unlocked(d)) {
+            Achievements.Ach via = d.line() == CosmeticData.Line.ACHIEVEMENT ? Achievements.unlocking(d.id()) : null;
+            if (via != null) { Codex.openAt(achBtn(), via.id()); return; }                       // an achievement cosmetic: fly to the star that earns it, which blinks
+            lockShake.put(label, System.currentTimeMillis()); lockedToast(d);
+        }
         else CosmeticData.toggle(d);
     }
     /** The colour scheme every tile of a set shares (beta green, common grey for the rest). */
