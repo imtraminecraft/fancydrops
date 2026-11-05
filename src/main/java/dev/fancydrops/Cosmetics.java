@@ -216,7 +216,6 @@ final class Cosmetics {
         }
         return m;
     }
-    static String frameNow(Suffix s, long now) { return s.frames()[(int) ((now / 100L) % s.frames().length)]; }
     /** A suffix written like a Discord emoji: ":discord:". Every place that shows a suffix (menu tiles, previews, chat, tab list) goes through its id, and the picture is only ever read from textures/font/suffix_<id>.png, so changing that one file changes it everywhere. */
     static String token(String id) { return id == null ? "" : ":" + id + ":"; }
     /** Logs any suffix whose picture file or font entry is missing, so a wrong id never shows up as an empty box silently. */

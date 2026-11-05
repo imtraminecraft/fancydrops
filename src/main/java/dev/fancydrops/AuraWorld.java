@@ -55,11 +55,10 @@ final class AuraWorld {
     private static boolean warned;
     private static void kill(AuraSim s) { for (AuraSim.Part p : s.parts) p.dead = true; }
 
-    private static final Map<String, TextureAtlasSprite> SPRITES = new HashMap<>();
+    /** Looked up each time (cheap), so a resource reload never leaves a particle with an old sprite. */
     static TextureAtlasSprite sprite(String name) {
-        return SPRITES.computeIfAbsent(name, n -> Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.PARTICLES).getSprite(Identifier.fromNamespaceAndPath("fancydrops", n)));
+        return Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.PARTICLES).getSprite(Identifier.fromNamespaceAndPath("fancydrops", name));
     }
-    static void reloaded() { SPRITES.clear(); }
     static String spriteName(AuraSim.Part p) { return p.sprite == AuraSim.RUNE ? "aura_rune" + (p.rune & 3) : AuraSim.SPRITE[p.sprite]; }
 
     /** One aura particle: it reads its simulated particle every tick and follows the body when it should. */

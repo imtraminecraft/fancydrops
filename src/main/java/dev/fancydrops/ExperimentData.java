@@ -41,7 +41,6 @@ public final class ExperimentData {
         return null;
     }
     /** RNG items (pets, collectibles, dyes) get the longer book; the enchantment books and Extraordinary items get the normal one. */
-    public static boolean isRng(DropData.Drop d) { return d != null && d.rank >= 3; }
 
     public static void initDefaults(FancyConfig c) {
         for (DropData.Drop d : SOURCE.drops) FancyConfig.initDrop(c.drop(SOURCE.id, d.name), d.rank);
