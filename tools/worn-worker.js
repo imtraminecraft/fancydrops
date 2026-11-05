@@ -91,11 +91,19 @@ async function codeOf(uuid) {
 /** Asks Mojang which account just called joinServer with this serverId. Returns its code, or null. */
 async function verify(b) {
   const name = String(b.name || ""), serverId = String(b.serverId || "");
-  if (!/^[A-Za-z0-9_]{1,16}$/.test(name) || !/^[0-9a-f]{8,64}$/.test(serverId)) return null;
-  const r = await fetch(`https://sessionserver.mojang.com/session/minecraft/hasJoined?username=${name}&serverId=${serverId}`);
-  if (r.status !== 200) return null;
-  const id = (await r.json()).id;
-  return codeOf(`${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`.toLowerCase());
+  if (!/^[A-Za-z0-9_]{1,16}$/.test(name) || !/^[0-9a-f]{8,64}$/.test(serverId)) { verify.why = "bad request"; return null; }
+  // Mojang's session server is shared by every Cloudflare worker and often answers 429 (too many requests) or 204 for a moment:
+  // ask again a few times before giving up, and say why in the answer so the game's log shows it.
+  for (let i = 0; i < 5; i++) {
+    const r = await fetch(`https://sessionserver.mojang.com/session/minecraft/hasJoined?username=${encodeURIComponent(name)}&serverId=${serverId}`, { headers: { "user-agent": "FancyDrops-worker" } });
+    if (r.status === 200) {
+      const id = (await r.json()).id;
+      return codeOf(`${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`.toLowerCase());
+    }
+    verify.why = "mojang " + r.status;
+    await new Promise((res) => setTimeout(res, 300 + i * 400));
+  }
+  return null;
 }
 /** Cosmetics given by hand (cosmetics.json), cached for 5 minutes. */
 async function grantsFor(env, code) {
@@ -137,7 +145,7 @@ export default {
     let b;
     try { b = await req.json(); } catch { return new Response("bad json", { status: 400 }); }
     const code = await verify(b);
-    if (!code) return new Response("not verified", { status: 403 });
+    if (!code) return new Response("not verified (" + (verify.why || "?") + ")", { status: 403 });
 
     if (path === "/worn") {
       const p = await load(env, code), { owned, admin } = await grantsFor(env, code);

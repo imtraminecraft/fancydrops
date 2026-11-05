@@ -29,7 +29,7 @@ final class Spotify {
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(8)).build();
 
     /** What is playing right now. */
-    record Track(String id, String name, String artists, String album, long durationMs) {}
+    record Track(String id, String name, String artists, String album, long durationMs, String art) {}
     static volatile Track track;
     static volatile boolean playing;
     private static volatile long progressMs, progressAt;                 // the position Spotify gave us, and when
@@ -114,11 +114,16 @@ final class Spotify {
             StringBuilder ar = new StringBuilder();
             if (it.has("artists")) for (var a : it.getAsJsonArray("artists")) { if (ar.length() > 0) ar.append(", "); ar.append(a.getAsJsonObject().get("name").getAsString()); }
             String album = it.has("album") && it.get("album").isJsonObject() ? it.getAsJsonObject("album").get("name").getAsString() : "";
-            Track tr = new Track(it.has("id") && !it.get("id").isJsonNull() ? it.get("id").getAsString() : it.get("name").getAsString(), it.get("name").getAsString(), ar.toString(), album, it.has("duration_ms") ? it.get("duration_ms").getAsLong() : 0);
+            String art = "";                                                              // the smallest album picture that is at least 64 px
+            if (it.has("album") && it.get("album").isJsonObject() && it.getAsJsonObject("album").has("images")) {
+                int best = Integer.MAX_VALUE;
+                for (var im : it.getAsJsonObject("album").getAsJsonArray("images")) { var io = im.getAsJsonObject(); int w = io.has("width") && !io.get("width").isJsonNull() ? io.get("width").getAsInt() : 300; if (w >= 64 && w < best) { best = w; art = io.get("url").getAsString(); } }
+            }
+            Track tr = new Track(it.has("id") && !it.get("id").isJsonNull() ? it.get("id").getAsString() : it.get("name").getAsString(), it.get("name").getAsString(), ar.toString(), album, it.has("duration_ms") ? it.get("duration_ms").getAsLong() : 0, art);
             long prog = o.has("progress_ms") && !o.get("progress_ms").isJsonNull() ? o.get("progress_ms").getAsLong() : 0;
             boolean pl = o.has("is_playing") && o.get("is_playing").getAsBoolean();
             progressMs = prog; progressAt = System.currentTimeMillis(); playing = pl;
-            if (track == null || !track.id().equals(tr.id())) { track = tr; Lyrics.load(tr); }
+            if (track == null || !track.id().equals(tr.id())) { track = tr; Lyrics.load(tr); AlbumArt.load(tr.art()); }
             status = (pl ? "Playing: " : "Paused: ") + tr.name() + " - " + tr.artists();
         } catch (Throwable e) { status = "Couldn't reach Spotify."; }
     }

@@ -133,7 +133,9 @@ public class FancyConfig {
     public String spotifyRefresh = "";                         // the login, kept so you stay linked (no password, no secret)
     public boolean lyricsOn = true;
     public int lyricsSize = 100, lyricsDistance = 9;
-    public int lyricsColor = 0xFFC8A0;
+    public int lyricsStyle = 0, lyricsFont = 0, lyricsColorIdx = 0, lyricsPos = 0;      // style: 0 cinematic (on screen), 1 in the world; pos: 0 low, 1 middle, 2 high
+    public boolean lyricsGlow = true, lyricsNext = true, lyricsShadow = true;
+    public boolean npOn = true; public int npScale = 100;                // the Now Playing card at the top middle
     public String adminToken = "";                             // Admin Panel: a GitHub token that lets Save write cosmetics.json
 
     public int ver;                                            // 3 = the rewrite: animation and drop settings start fresh

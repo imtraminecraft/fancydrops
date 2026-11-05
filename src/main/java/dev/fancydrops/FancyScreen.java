@@ -2891,9 +2891,26 @@ public class FancyScreen extends Screen {
                 else lk.ctls.add(new Btn("Log in", 0xFF1DB954, () -> Spotify.login(m -> toast(m, 0xFF1ED760))));
                 rows.add(lk);
                 if (!Lyrics.status.isEmpty()) rows.add(note(Lyrics.status, 0xFF8A93B0));
+                rows.add(section("Now Playing"));
+                rows.add(toggle(":sounds:", "Now Playing card", "The song, its cover and the time, at the top middle of your screen", () -> c.npOn, v -> c.npOn = v));
+                Row nps = row(0, ":format:", "Card size", "How big the Now Playing card is", Ui.ACCENT);
+                nps.ctls.add(new Slider(60, 160, 5, () -> c.npScale, v -> c.npScale = (int) v, () -> c.npScale + "%").typed(1)); rows.add(nps);
+                rows.add(section("Lyrics look"));
+                rows.add(picker("Style", "Where the words show", new String[]{"Cinematic", "In the world"}, new String[]{"Always on screen, karaoke", "Pinned in the scene"},
+                    new String[]{":note:", ":grp_water:"}, new int[]{0xFF1ED760, 0xFF6C86FF}, null, 2, () -> c.lyricsStyle, i -> c.lyricsStyle = i));
+                rows.add(picker("Font", "The letters of the lyrics", LyricsHud.FONTS, new String[]{"", "", "", ""}, new String[]{":format:", ":format:", ":format:", ":format:"},
+                    new int[]{0xFFB0B6C2, 0xFF8FD0FF, 0xFFFFC857, 0xFFC9A0FF}, null, 4, () -> c.lyricsFont, i -> c.lyricsFont = i));
+                { String[] sb2 = new String[LyricsHud.COLOURS.length], ic2 = new String[LyricsHud.COLOURS.length]; int[] co2 = new int[LyricsHud.COLOURS.length];
+                  for (int i = 0; i < co2.length; i++) { int cc = LyricsHud.COLOURS[i] < 0 ? 0x1ED760 : LyricsHud.COLOURS[i]; co2[i] = 0xFF000000 | cc; sb2[i] = LyricsHud.COLOURS[i] < 0 ? "From the album cover" : ""; ic2[i] = String.format(":dye:#%06X", cc); }
+                  rows.add(picker("Colour", "The colour of the words", LyricsHud.COLOUR_NAMES, sb2, ic2, co2, null, 4, () -> c.lyricsColorIdx, i -> c.lyricsColorIdx = i)); }
+                rows.add(picker("Height", "Where on the screen (Cinematic)", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
+                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
+                rows.add(toggle(":glass:", "Glow", "A soft light behind the words being sung", () -> c.lyricsGlow, v -> c.lyricsGlow = v));
+                rows.add(toggle(":format:", "Next line", "Shows the coming line faintly below (Cinematic)", () -> c.lyricsNext, v -> c.lyricsNext = v));
+                rows.add(toggle(":format:", "Text shadow", "A dark shadow under the letters", () -> c.lyricsShadow, v -> c.lyricsShadow = v));
                 Row ls = row(0, ":format:", "Lyrics size", "How big the words are", Ui.ACCENT);
                 ls.ctls.add(new Slider(60, 160, 5, () -> c.lyricsSize, v -> c.lyricsSize = (int) v, () -> c.lyricsSize + "%").typed(1)); rows.add(ls);
-                Row ld = row(0, ":format:", "Lyrics distance", "How far in front of you each line appears", Ui.ACCENT);
+                Row ld = row(0, ":format:", "Lyrics distance", "How far in front of you each line appears (In the world)", Ui.ACCENT);
                 ld.ctls.add(new Slider(4, 16, 1, () -> c.lyricsDistance, v -> c.lyricsDistance = (int) v, () -> c.lyricsDistance + " blocks").typed(1)); rows.add(ld);
                 }
 
