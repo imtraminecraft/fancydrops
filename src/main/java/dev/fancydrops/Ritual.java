@@ -533,11 +533,12 @@ final class Ritual {
     /** The canvas of the scene at time t: the opening, then the pivot of the type. Everything except the item and the words. */
     static void paint(float t, boolean tre, int type, float S, float sz, float isc, int rc, float icy, int blade, boolean itemBob, float bobAmp) {
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float O = S - TAIL - hold, p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
+        float O = AnimationManager.opening(type), p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
         int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : farmMode ? FarmScene.ENERGY[farmKind] : expMode ? 0xB56BFF : showMotif == ShowScene.DYE ? showTint : showMotif >= 0 ? ShowScene.ENERGY[showMotif] : CYAN;
         float bg = 1f - sm((p - 0.5f) / 0.9f);                                             // the background fades while the words show
-        float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (S - 1.0f)) / 0.9f));
-        float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene                  // the item fades slowly at the end
+        float fxEnd = AnimationManager.animLen(type) + hold;                                     // the finish ends with the animation; the words stay on after it
+        float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (fxEnd - 0.6f)) / 0.6f));
+        float tb = TextFx.itemOnly ? (System.currentTimeMillis() % 100000L) / 1000f : t;                // the item keeps bobbing while the Item editor holds the scene
         cv.clear();
         float inh = cl((t - 0.78f * O) / (0.22f * O));                                     // the last stretch of the opening: power drawn in
         float op = Math.min(t, O);
@@ -928,7 +929,6 @@ final class Ritual {
     }
 
     /** Seconds from the pivot (the moment the drop appears) to the end. */
-    static final float TAIL = 3.2f;
     /** The scene is drawn 25% smaller than before: that is the new 100% of the Size slider. */
     static final float SMALLER = 0.6f;
     /** The scene (everything round the item) is drawn this much smaller than the item's own scale, so it never takes over the screen. */
@@ -946,7 +946,7 @@ final class Ritual {
         FancyConfig c = FancyConfig.get(); FancyConfig.AnimCfg cfg = a.cfg(); Item it = a.lead();
         boolean tre = a.group.equals("treasure"); kind = Math.max(0, a.kind); int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float S = Math.max(3.6f, cfg.secs) + a.hold(), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz * K, isc = Math.max(0.4f, c.itemScale) * 1.5f;
+        float S = a.secs() + a.hold(), csz = Math.max(0.5f, Math.min(1.5f, c.animScale)), sz = SMALLER * csz * K, isc = Math.max(0.4f, c.itemScale) * 1.5f;
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);
         float barH = CH * Math.max(0.031f, Math.min(0.094f, c.barPx / 160f)), hi = 16 * sz * isc * (rng ? 1.2f : 1f), icy = CH * POS[Math.max(0, Math.min(2, c.animPos))];
@@ -970,7 +970,7 @@ final class Ritual {
         if (sl) kind = 12 + slTheme(a);
         int type = a.type;
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
-        float hd = a.hold(), S = Math.max(3.6f, cfg.secs) + hd, O = S - TAIL - hd, p = t - O;
+        float hd = a.hold(), S = a.secs() + hd, O = AnimationManager.opening(type), p = t - O;
         float csz = Math.max(0.5f, Math.min(1.5f, c.animScale)) * (rng ? 1f : Math.max(0.5f, Math.min(1f, c.normalSize / 100f))), sz = SMALLER * csz, szc = sz * K, ssz = szc * SCENE_K, isc = Math.max(0.4f, c.itemScale) * 1.5f;          // Normal and No Drops can play smaller, so they stay out of the way
         int rc = it != null ? (it.color() & 0xFFFFFF) : GREY;
         if (!tre && !rng && !nod) rc = mixc(rc, WHITE, 0.15f);

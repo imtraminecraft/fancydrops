@@ -47,11 +47,11 @@ public final class AnimationManager {
         Anim(String group, int type, Item item) { this.group = group; this.type = type; this.item = type == NO_DROPS ? null : item; }
         String key() { return group + "." + TYPE_IDS[type]; }
         FancyConfig.AnimCfg cfg() { return FancyConfig.get().anim(key()); }
-        float secs() { return cfg().secs; }
+        float secs() { return sceneLen(type); }
         /** Extra seconds the finish is held so the words of several drops can be read (1 s per extra drop, at most 3). */
         float hold() { int n = count(); return n <= 1 ? 0f : Math.min(3f, (n - 1) * 1.0f); }
         /** The whole length: the scene plus the hold. */
-        float total() { return Math.max(3.6f, secs()) + hold(); }
+        float total() { return secs() + hold(); }
         /** The drops this animation shows (0 to 8). */
         int count() { return item == null ? 0 : 1 + more.size(); }
         /** Every drop, in the order they came. */
@@ -87,14 +87,14 @@ public final class AnimationManager {
     }
     /** True while the playing scene has not shown its items yet (there is still time to add more). */
     private static boolean beforeItems(Anim c) {
-        float t = (System.currentTimeMillis() - c.start) / 1000f * pace(c), O = Math.max(3.6f, c.secs()) - Ritual.TAIL;
+        float t = (System.currentTimeMillis() - c.start) / 1000f * pace(c), O = opening(c.type);
         return t < O - 0.35f;
     }
     public static boolean isPlaying() { return cur != null || !QUEUE.isEmpty(); }
     /** True while the hotbar and hearts should slide away (a scene with cinematic bars). */
     public static boolean hidesHud() {
         if (cur == null || cur.type != RNG || !cur.cfg().bars) return false;
-        float t = (System.currentTimeMillis() - cur.start) / 1000f * pace(cur), S = Math.max(3.6f, cur.cfg().secs), O = S - Ritual.TAIL;
+        float t = (System.currentTimeMillis() - cur.start) / 1000f * pace(cur), S = cur.secs(), O = opening(cur.type);
         return t >= O - 0.8f && t < S + cur.hold() - 0.05f;                                           // only while the cinematic bars are on screen (they slide in at O - 0.8 s, out at the end)
     }
 
@@ -108,8 +108,18 @@ public final class AnimationManager {
         return it.rank >= 2 ? RNG : NORMAL;
     }
 
-    /** How much faster than real time a scene plays: the scenes are built for at least 3.6 s, so a shorter length (3 s) squeezes that into the time asked for. */
-    static float pace(Anim a) { float s = Math.max(0.5f, a.secs()); return Math.max(3.6f, s) / s * a.speed; }
+    /** How much faster than real time a scene plays (1.8 after a cocooned slayer boss). */
+    static float pace(Anim a) { return a.speed; }
+
+    // ---- the fixed lengths (author request Nov 6): No Drops 4 s, Normal 4 s, RNG 6 s; the words stay 2.5 s after the animation ends
+    static final float TEXT_HOLD = 2.5f;
+    static int typeOfKey(String key) { return key.endsWith("rng") ? RNG : key.endsWith("nodrops") ? NO_DROPS : NORMAL; }
+    /** The animation itself: the opening, the drop appearing and its finish. */
+    static float animLen(int type) { return type == RNG ? 6f : 4f; }
+    /** The whole scene without the multi-drop hold: the animation, then the words alone for 2.5 s (No Drops has no words). */
+    static float sceneLen(int type) { return type == NO_DROPS ? animLen(type) : animLen(type) + TEXT_HOLD; }
+    /** When the drop appears: the opening takes all but the last 1.4 s of the animation (the finish). */
+    static float opening(int type) { return animLen(type) - 1.4f; }
 
     /** Called every frame from the HUD. */
     public static void render(GuiGraphicsExtractor g) {
@@ -124,20 +134,19 @@ public final class AnimationManager {
     }
 
     /** The moments (seconds) each sound slot (chop, split, reveal, linger, end) plays in a scene of this length. */
-    static float[][] cueTimes(String scene, float secs) { return cueTimes(scene, secs, 0f); }
-    static float[][] cueTimes(String scene, float secs, float hold) {
-        float S = Math.max(3.6f, secs), O = S - Ritual.TAIL; boolean tre = scene.startsWith("treasure"), nod = scene.endsWith("nodrops");
+    static float[][] cueTimes(String scene) { return cueTimes(scene, 0f); }
+    static float[][] cueTimes(String scene, float hold) {
+        int ty = typeOfKey(scene); float S = sceneLen(ty), O = opening(ty), A = animLen(ty); boolean tre = scene.startsWith("treasure"), nod = scene.endsWith("nodrops");
         float[] beats = tre ? new float[]{0.215f * O, 0.505f * O, 0.795f * O} : new float[]{0.34f * O, 0.58f * O, 0.80f * O};
         if (scene.startsWith("exp.")) beats = BookScene.flipStarts(scene.endsWith("rng"), O);        // the sound plays as the page lifts, not when it lands
-        return new float[][]{beats, {O}, nod ? new float[0] : new float[]{O + 0.25f}, {O + 1.0f}, {S + hold - 1.4f}};
+        return new float[][]{beats, {O}, nod ? new float[0] : new float[]{O + 0.25f}, {O + 1.0f}, {A - 0.5f + hold}};
     }
 
     /** The sounds of the timeline: a beat for every strike or dig, the burst when the animation pivots, then the reveal, the linger and the end. */
-    private static void cues(Anim a, float prev, float t) { cues(a.key(), a.secs(), a.hold(), prev, t); }
-    private static void cues(String scene, float secs, float prev, float t) { cues(scene, secs, 0f, prev, t); }
-    private static void cues(String scene, float secs, float hold, float prev, float t) {
+    private static void cues(Anim a, float prev, float t) { cues(a.key(), a.hold(), prev, t); }
+    private static void cues(String scene, float hold, float prev, float t) {
         boolean big = scene.endsWith("rng"), nod = scene.endsWith("nodrops");
-        float[][] tm = cueTimes(scene, secs, hold);
+        float[][] tm = cueTimes(scene, hold);
         for (int k = 0; k < tm[0].length; k++) if (prev < tm[0][k] && t >= tm[0][k]) SoundFx.playSlot(scene, "chop", 0.9f + 0.12f * k, big);
         if (prev < tm[1][0] && t >= tm[1][0]) SoundFx.playSlot(scene, "split", nod ? 0.8f : 1f, big);
         if (tm[2].length > 0 && prev < tm[2][0] && t >= tm[2][0]) SoundFx.playSlot(scene, "reveal", 1f, big);
@@ -152,9 +161,9 @@ public final class AnimationManager {
     /** Call every frame while the menu is open: fires the due sounds of a sounds-only playback. */
     public static void tickSounds() {
         if (!sndOn) return;
-        float t = (System.currentTimeMillis() - sndT0) / 1000f, secs = FancyConfig.get().anim(sndKey).secs;
-        cues(sndKey, secs, sndLast, t); sndLast = t;
-        if (t > Math.max(3.6f, secs) + 0.4f) sndOn = false;
+        float t = (System.currentTimeMillis() - sndT0) / 1000f;
+        cues(sndKey, 0f, sndLast, t); sndLast = t;
+        if (t > sceneLen(typeOfKey(sndKey)) + 0.4f) sndOn = false;
     }
     /** Seconds into the playback of this scene (a sounds-only playback or the real animation), or -1 when nothing of it is playing. */
     public static float playingT(String key) {
@@ -214,12 +223,12 @@ public final class AnimationManager {
         String group = key.substring(0, key.indexOf('.')), tid = key.substring(key.indexOf('.') + 1);
         int type = NORMAL; for (int i = 0; i < TYPE_IDS.length; i++) if (TYPE_IDS[i].equals(tid)) type = i;
         Anim a = new Anim(group, type, TextFx.itemOnly ? sampleHead() : sampleFor(group, type));
-        a.kind = (int) (((System.currentTimeMillis() - (key.equals(previewKey) ? previewT0 : System.currentTimeMillis())) / 1000L) / Math.max(1, (long) (FancyConfig.get().anim(key).secs + 1f))) % Ritual.KINDS.length;      // the preview cycles through all twelve creatures
+        a.kind = (int) (((System.currentTimeMillis() - (key.equals(previewKey) ? previewT0 : System.currentTimeMillis())) / 1000L) / Math.max(1, (long) (sceneLen(type) + 1f))) % Ritual.KINDS.length;      // the preview cycles through all twelve creatures
         long now = System.currentTimeMillis();
         if (!key.equals(previewKey)) { previewKey = key; previewT0 = now; }
         float secs = a.secs();
         float t = syncSec >= 0 ? syncSec : ((now - previewT0) / 1000f) % (secs + 1f);
-        float pivot = Math.max(3.6f, secs) - Ritual.TAIL;
+        float pivot = opening(type);
         if (TextFx.freezeT >= 0) t = pivot + TextFx.freezeT;                       // held that many seconds after the drop appears
         else if (TextFx.itemOnly || TextFx.barsOnly) t = pivot + 1.6f;                                // the Item editor shows the scene held, with the item living on its own clock
         else if (TextFx.textOnly) t = pivot + 1.6f;                                // the Text editor draws the words alone (they loop on the text clock)

@@ -3,184 +3,18 @@ package dev.fancydrops;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 import java.util.*;
 
 /**
- * The auras. Every particle is our own: a little square or star that we place and draw ourselves (nothing from Minecraft's particle system).
- * The same recipe draws them in the world (projected onto the screen round each player) and in the menu preview.
+ * Name tags over players (their name effect and suffix), and the menu preview of an aura. The auras themselves are AuraSim
+ * (the particles) drawn in the world by AuraWorld.
  */
 final class AuraFx {
     private AuraFx() {}
 
     /** One particle: x/z in blocks round the player, y up from the feet, size in blocks, colour with alpha, shape 0 = square, 1 = star, 2 = flat slice. */
-    record P(float x, float y, float z, float size, int argb, int shape, float lag) {
-        P(float x, float y, float z, float size, int argb, int shape) { this(x, y, z, size, argb, shape, 0f); }
-    }
-    // lag: seconds the particle stays behind in the world while you move (0 = it follows you)
-
-    private static int hash(int a, long b) {
-        int h = a * 73856093 ^ (int) b * 19349663; h ^= h >>> 13; h *= 0x5bd1e995; h ^= h >>> 15;
-        return Math.abs(h);
-    }
-    private static int mix(int a, int b, float k) {
-        k = Math.max(0f, Math.min(1f, k));
-        int r = Math.round(((a >> 16) & 255) * (1 - k) + ((b >> 16) & 255) * k), g = Math.round(((a >> 8) & 255) * (1 - k) + ((b >> 8) & 255) * k), bl = Math.round((a & 255) * (1 - k) + (b & 255) * k);
-        return (r << 16) | (g << 8) | bl;
-    }
-    private static int argb(float alpha, int rgb) { return (Math.max(0, Math.min(255, Math.round(alpha * 255))) << 24) | (rgb & 0xFFFFFF); }
-
-    static List<P> particles(String aura, long t) {
-        List<P> o = new ArrayList<>();
-        t %= 1_000_000L;                                                         // keeps the angles small: a float can not hold the full clock without losing the turn
-        switch (aura == null ? "" : aura) {
-            case "stardust": {                                                       // two strands of light wind up the body, a thin halo ring circles above the head, and stars rise off the strands
-                for (int strand = 0; strand < 2; strand++) for (int i = 0; i < 14; i++) {
-                    float ph = (float) (((t / 3600.0) + i / 14.0) % 1.0), ang = (float) (ph * Math.PI * 3 + strand * Math.PI + t / 1700.0), r = 0.5f + 0.06f * (float) Math.sin(ph * 9);
-                    float al = (float) Math.sin(Math.PI * ph);
-                    o.add(new P((float) Math.cos(ang) * r, 0.05f + ph * 1.95f, (float) Math.sin(ang) * r, 0.04f + 0.012f * al, argb(0.3f + 0.7f * al, mix(strand == 0 ? 0x4DD6FF : 0x8FA8FF, 0xE8FFFF, ph)), 0, ph * 0.7f));
-                }
-                for (int i = 0; i < 5; i++) {                                          // stars that rise and fade
-                    long off = i * 560L, step = (t + off) / 2800L; float ph = ((t + off) % 2800L) / 2800f;
-                    float ang = hash(i, step) % 628 / 100f;
-                    o.add(new P((float) Math.cos(ang) * 0.62f, 0.2f + ph * 1.6f, (float) Math.sin(ang) * 0.62f, 0.08f * (float) Math.sin(Math.PI * ph), argb(0.95f, 0xE8FFFF), 1, ph * 0.9f));
-                }
-                break;
-            }
-            case "sparkleaura": {                                                    // two slow rings of stars (one gold, one pink) turn around you; bright bursts pop up now and then; light dust rises
-                for (int i = 0; i < 10; i++) {                                         // stars twinkle here and there round you, never in a ring
-                    long step = (t + i * 410L) / 2100L; float ph = ((t + i * 410L) % 2100L) / 2100f, tw = (float) Math.sin(Math.PI * ph);
-                    float ang = hash(i + 7, step) % 628 / 100f, r = 0.35f + (hash(i + 31, step) % 40) / 100f, y = 0.15f + (hash(i + 63, step) % 185) / 100f;
-                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.035f + 0.04f * tw, argb(0.35f + 0.6f * tw, i % 2 == 0 ? 0xFFE680 : 0xFFB3E6), 1));
-                }
-                for (int i = 0; i < 5; i++) {                                          // bursts: a star that swells and dies
-                    long off = i * 330L, step = (t + off) / 1500L; float ph = ((t + off) % 1500L) / 1500f;
-                    float ang = hash(i, step) % 628 / 100f, r = 0.35f + (hash(i + 50, step) % 45) / 100f, y = 0.1f + (hash(i + 99, step) % 180) / 100f;
-                    o.add(new P((float) Math.cos(ang) * r, y, (float) Math.sin(ang) * r, 0.13f * (float) Math.sin(Math.PI * ph), argb(1f, 0xFFFFFF), 1, ph * 0.8f));
-                }
-                for (int i = 0; i < 8; i++) {
-                    float ph = (float) (((t / 3000.0) + i / 8.0) % 1.0), ang = i * 1.9f;
-                    o.add(new P((float) Math.cos(ang) * 0.5f, ph * 2f, (float) Math.sin(ang) * 0.5f, 0.03f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0xFFF2C0), 0, ph * 0.9f));
-                }
-                break;
-            }
-            case "glitchaura": {                                                     // Alarm: red and amber sparks circle you, a thin ring of amber light climbs from your feet to your head and makes the sparks flare white as it passes
-                float ringY = ((t % 2800L) / 2800f) * 2.3f - 0.1f;
-                for (int i = 0; i < 10; i++) {
-                    float ang = (float) (i * Math.PI * 2 / 10 + t / 1500.0), y = 0.25f + 0.17f * i + 0.1f * (float) Math.sin(t / 600.0 + i);
-                    boolean hit = Math.abs(y - ringY) < 0.14f;
-                    o.add(new P((float) Math.cos(ang) * 0.58f, y, (float) Math.sin(ang) * 0.58f, hit ? 0.075f : 0.045f, hit ? argb(1f, 0xFFFFFF) : argb(0.9f, i % 2 == 0 ? 0xFF4A2E : 0xFFB02E), hit ? 1 : 0, 0.35f));
-                }
-                if (ringY > 0f && ringY < 2.1f) o.add(new P(0f, ringY, 0f, 0.05f, argb(0.75f * (1f - ringY / 2.3f), 0xFFC03D), 2));          // a thin slice of amber light climbs, not a ring
-                for (int i = 0; i < 6; i++) {                                         // slow red embers lifting off you
-                    float ph = (float) (((t / 3400.0) + i / 6.0) % 1.0), ang = i * 1.7f;
-                    o.add(new P((float) Math.cos(ang) * 0.5f, ph * 2f, (float) Math.sin(ang) * 0.5f, 0.032f, argb(0.7f * (float) Math.sin(Math.PI * ph), 0xFF5A36), 0, ph * 0.8f));
-                }
-                break;
-            }
-            case "patronaura": {                                                     // gold embers drift slowly up, now and then a glint
-                for (int i = 0; i < 16; i++) {
-                    float ph = (float) (((t / 3800.0) + i / 16.0) % 1.0), ang = (float) (i * 2.1 + Math.sin(t / 1300.0 + i) * 0.6), r = 0.45f + 0.2f * (float) Math.sin(i * 1.7 + t / 900.0);
-                    float al = (float) Math.sin(Math.PI * ph);
-                    o.add(new P((float) Math.cos(ang) * r, ph * 2.1f, (float) Math.sin(ang) * r, 0.04f * (1f - 0.5f * ph) + 0.018f, argb(al, mix(0xFFD24A, 0xFF7A1E, ph)), i % 6 == 0 ? 1 : 0));
-                }
-                break;
-            }
-            case "bubbleaura": {                                                     // Bubbles: bubbles wobble up round you and pop at the top with a tiny star
-                for (int i = 0; i < 12; i++) {
-                    float ph = (float) (((t / 3200.0) + i / 12.0) % 1.0), ang = i * 2.4f + (float) Math.sin(t / 900.0 + i) * 0.4f, r = 0.45f + 0.15f * (float) Math.sin(i * 1.3);
-                    float x = (float) Math.cos(ang) * r + 0.05f * (float) Math.sin(t / 220.0 + i), z = (float) Math.sin(ang) * r;
-                    if (ph < 0.9f) o.add(new P(x, ph * 2.1f, z, 0.03f + 0.03f * ph, argb(0.35f + 0.45f * (float) Math.sin(Math.PI * ph / 0.9f), mix(0x6AC8FF, 0xE8FFFF, ph)), 0, ph * 0.8f));
-                    else o.add(new P(x, 1.9f, z, 0.06f * (1f - (ph - 0.9f) / 0.1f), argb(0.9f, 0xFFFFFF), 1, 0.7f));
-                }
-                break;
-            }
-            case "fireflyaura": {                                                    // Fireflies: a few soft lights wander round you and blink
-                for (int i = 0; i < 7; i++) {
-                    double tt = t / 1000.0, sp = 0.5 + 0.13 * i;
-                    float x = (float) (Math.sin(tt * sp + i * 1.7) * (0.45 + 0.12 * (i % 3))), z = (float) (Math.cos(tt * sp * 1.3 + i) * (0.45 + 0.1 * (i % 2))), y = 0.4f + 0.8f * (float) (0.5 + 0.5 * Math.sin(tt * sp * 0.7 + i * 2.1));
-                    float blink = (float) Math.max(0.0, Math.sin(tt * 2.2 + i * 2.3));
-                    o.add(new P(x, y, z, 0.03f + 0.03f * blink, argb(0.25f + 0.75f * blink, mix(0xB8E860, 0xF4FFB0, blink)), 0, 0.4f));
-                }
-                break;
-            }
-            case "coinaura": {                                                       // Coin Shower: gold coins tumble down round you and glint
-                for (int i = 0; i < 10; i++) {
-                    float ph = (float) (((t / 2600.0) + i / 10.0) % 1.0), ang = i * 2.1f + (float) (t / 3000.0), r = 0.5f + 0.12f * (float) Math.sin(i * 1.9);
-                    float spin = Math.abs((float) Math.cos(t / 180.0 + i));
-                    o.add(new P((float) Math.cos(ang) * r, 2.2f - ph * 2.2f, (float) Math.sin(ang) * r, 0.025f + 0.025f * spin, argb(0.85f * (float) Math.sin(Math.PI * ph), spin > 0.8f ? 0xFFF4C8 : 0xFFC83A), spin > 0.92f ? 1 : 0, 0.3f));
-                }
-                break;
-            }
-            case "runeaura": {                                                       // Runes: violet runes circle your waist on a slow tilted ring; one lights up now and then
-                int n = 8; long lit = (t / 700L) % n;
-                for (int i = 0; i < n; i++) {
-                    float ang = (float) (i * Math.PI * 2 / n + t / 2400.0), y = 0.95f + 0.18f * (float) Math.sin(ang + t / 1600.0);
-                    boolean on = i == lit;
-                    o.add(new P((float) Math.cos(ang) * 0.62f, y, (float) Math.sin(ang) * 0.62f, on ? 0.06f : 0.035f, argb(on ? 1f : 0.65f, on ? 0xF4E8FF : (i % 2 == 0 ? 0xB56BFF : 0x9AF0FF)), on ? 1 : 0, 0.2f));
-                }
-                for (int i = 0; i < 5; i++) { float ph = (float) (((t / 2800.0) + i / 5.0) % 1.0), ang = i * 1.3f; o.add(new P((float) Math.cos(ang) * 0.4f, 0.4f + ph * 1.4f, (float) Math.sin(ang) * 0.4f, 0.022f, argb(0.6f * (float) Math.sin(Math.PI * ph), 0xE6D2FF), 0, ph * 0.6f)); }
-                break;
-            }
-            default: break;
-        }
-        return o;
-    }
-
-    // ------------------------------------------------------------------ in the world: our particles projected onto the screen
-    private static final Map<UUID, double[]> STATE = new HashMap<>();
-    private static final Map<UUID, ArrayDeque<double[]>> HIST = new HashMap<>();
-    private static int auraRgb(String aura) {
-        return switch (aura == null ? "" : aura) { case "glitchaura" -> 0xFF7A2E; case "stardust" -> 0x8FD0FF; case "patronaura" -> 0xFF9B2E; case "bubbleaura" -> 0x8FE0FF; case "fireflyaura" -> 0xE8FF70; case "coinaura" -> 0xFFD24A; case "runeaura" -> 0xC9A0FF; default -> 0xFFE680; };
-    }
-    /** The resting animation (after 5 seconds without moving): two strands of light slowly wind up from the feet past the head, and a soft ring breathes round the waist. */
-    static List<P> idleParticles(String aura, long now, float k) {
-        List<P> o = new ArrayList<>(); int col = auraRgb(aura), pale = mix(col, 0xFFFFFF, 0.55f);
-        float u = (now % 6000L) / 6000f;
-        for (int strand = 0; strand < 2; strand++) for (int i = 0; i < 9; i++) {
-            float ph = (u + i / 9f) % 1f, al = (float) Math.sin(ph * Math.PI) * k;
-            double an = ph * Math.PI * 3.0 + strand * Math.PI + (now % 9000L) / 9000.0 * Math.PI * 2;
-            float r = 0.55f + 0.08f * (float) Math.sin(ph * 9 + strand);
-            o.add(new P((float) Math.cos(an) * r, ph * 2.2f, (float) Math.sin(an) * r, 0.045f, argb(al * 0.95f, i % 3 == 0 ? pale : col), i % 2 == 0 ? 1 : 0));
-        }
-        float br = 0.5f + 0.5f * (float) Math.sin(now / 900.0);
-        for (int i = 0; i < 12; i++) {
-            double an = i * Math.PI / 6 + (now % 12000L) / 12000.0 * Math.PI * 2;
-            o.add(new P((float) Math.cos(an) * (0.62f + 0.06f * br), 0.9f + 0.05f * br, (float) Math.sin(an) * (0.62f + 0.06f * br), 0.035f, argb((0.35f + 0.45f * br) * k, col), 0));
-        }
-        return o;
-    }
-    /** Every particle's alpha times k. */
-    private static List<P> fade(List<P> in, float k) {
-        if (k >= 0.999f) return in;
-        List<P> o = new ArrayList<>(in.size());
-        for (P q : in) { int al = Math.round((q.argb() >>> 24) * k); if (al > 0) o.add(new P(q.x(), q.y(), q.z(), q.size(), (al << 24) | (q.argb() & 0xFFFFFF), q.shape(), q.lag())); }
-        return o;
-    }
-    /** The moving animation: a short tail of light follows right behind you along the path you just walked. Slower steps, shorter and fainter tail. */
-    static List<P> trail(String aura, ArrayDeque<double[]> hist, long now, double ex, double ey, double ez, double turn, float k) {
-        List<P> o = new ArrayList<>(); int col = auraRgb(aura), pale = mix(col, 0xFFFFFF, 0.55f);
-        int n = 18;
-        for (int i = 0; i < n; i++) {
-            float u = i / (float) n;
-            double[] h = at(hist, now - (long) (u * 400f));                                                  // where you were u * 0.4 s ago: a short tail that stays close
-            float hgt = 0.1f + 1.9f * (float) ((i * 0.618034) % 1.0);                                        // each particle keeps its own height: together they make a curtain
-            double an = turn * 3.0 + i * 0.75; float r = 0.3f * (1f - 0.4f * u);
-            float fl = (1f - u) * (1f - u * 0.4f);
-            float tail = 0.25f * u * (float) Math.sin(turn * 2 + i);
-            o.add(new P((float) (h[0] - ex + Math.cos(an) * r), hgt + tail, (float) (h[2] - ez + Math.sin(an) * r), 0.05f * (1f - 0.55f * u) + 0.012f, argb(fl * k * 0.95f, i % 3 == 0 ? pale : col), i % 4 == 0 ? 1 : 0));
-        }
-        return o;
-    }
-    /** The player's position at time t (ms), from the recorded history. */
-    private static double[] at(ArrayDeque<double[]> h, long t) {
-        double[] prev = null;
-        for (double[] e : h) {
-            if (e[0] >= t) { if (prev == null) return new double[]{e[1], e[2], e[3]}; double k = (t - prev[0]) / Math.max(1.0, e[0] - prev[0]); return new double[]{prev[1] + (e[1] - prev[1]) * k, prev[2] + (e[2] - prev[2]) * k, prev[3] + (e[3] - prev[3]) * k}; }
-            prev = e;
-        }
-        return new double[]{prev[1], prev[2], prev[3]};
-    }
     private static Object call(Object o, String... names) {
         if (o == null) return null;
         for (String n : names) { try { var m = o.getClass().getMethod(n); m.setAccessible(true); return m.invoke(o); } catch (Throwable ignored) { } }
@@ -242,19 +76,11 @@ final class AuraFx {
 
     // ------------------------------------------------------------------ in the world: real 3D particles, drawn in the level pass so blocks and bodies hide them
     /** Where each player's body is drawn this frame (entity id -> x, y, z), read from the game's own render states, so the aura sits exactly on the body. */
-    private static final Map<Integer, double[]> BODY = new HashMap<>();
-    private static double wcX, wcY, wcZ; private static final org.joml.Quaternionf CAM_ROT = new org.joml.Quaternionf();
-    private static boolean worldOk;
-
-    /** End of the game's extraction step: remember where every player body and the camera are this frame. */
+    private static boolean warned;
+    /** End of the game's extraction step: style the name tags about to be drawn. */
     static void extract(net.fabricmc.fabric.api.client.rendering.v1.level.LevelExtractionContext ctx) {
-        try {
-            BODY.clear();
-            var ls = ctx.levelState(); var cs = ls.cameraRenderState;
-            wcX = cs.pos.x(); wcY = cs.pos.y(); wcZ = cs.pos.z(); CAM_ROT.set(cs.orientation);
-            for (var st : ls.entityRenderStates) if (st instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState av && !av.isInvisible) BODY.put(av.id, new double[]{av.x, av.y, av.z});
-            styleNameTags(ls);
-        } catch (Throwable t) { if (!worldOk) System.err.println("[FancyDrops] aura extract failed: " + t); }
+        try { styleNameTags(ctx.levelState()); }
+        catch (Throwable t) { if (!warned) { warned = true; System.err.println("[FancyDrops] name tags failed: " + t); } }
     }
 
     /** Every name tag about to be drawn this frame: a player's own tag, or the floating text a server (Hypixel) hangs over them, gets that player's name effect and icon.
@@ -278,152 +104,6 @@ final class AuraFx {
             if (owner != mc.player && owner.distanceTo(mc.player) > cf.cosRange) continue;
             Component c = Cosmetics.styleTag(st.nameTag, owner.getUUID(), owner.getName().getString());
             if (c != null) st.nameTag = c;
-        }
-    }
-
-    /** The level is collecting what to draw: add the aura particles of every player who wears one, as glowing camera-facing quads in the world. */
-    static void submit(net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext ctx) {
-        try {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.level == null || mc.player == null) return;
-            Map<UUID, Cosmetics.Look> looks = Cosmetics.looks();
-            if (looks.isEmpty()) return;
-            FancyConfig cf = FancyConfig.get();
-            long now = System.currentTimeMillis();
-            java.util.Set<UUID> allowed = null;                                                      // "most players with an aura": only the nearest few get drawn
-            if (cf.cosMax > 0) {
-                List<net.minecraft.world.entity.player.Player> near = new ArrayList<>();
-                for (var p : mc.level.players()) if (p != mc.player) { Cosmetics.Look l0 = looks.get(p.getUUID()); if (l0 != null && l0.aura() != null) near.add(p); }
-                near.sort(Comparator.comparingDouble(q -> mc.player.distanceToSqr(q)));
-                allowed = new HashSet<>(); for (int i = 0; i < Math.min(cf.cosMax, near.size()); i++) allowed.add(near.get(i).getUUID());
-            }
-            org.joml.Vector3f right = CAM_ROT.transform(new org.joml.Vector3f(1, 0, 0)), up = CAM_ROT.transform(new org.joml.Vector3f(0, 1, 0));
-            if (!right.isFinite() || !up.isFinite() || right.lengthSquared() < 0.5f) return;                 // a broken camera this frame: draw nothing rather than garbage
-            float pt = 1f; try { pt = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false); } catch (Throwable ignored) { }
-            for (var p : mc.level.players()) {
-                Cosmetics.Look l = looks.get(p.getUUID());
-                if (l == null || l.aura() == null) continue;
-                if (p != mc.player && (mc.player.distanceTo(p) > cf.cosRange || (allowed != null && !allowed.contains(p.getUUID())))) continue;
-                double[] body = BODY.get(p.getId());
-                if (body == null) {                                                                 // not drawn this frame (first person, invisible, out of view)
-                    if (p != mc.player || cf.cosHideFirst) continue;
-                    var v = p.getPosition(pt); body = new double[]{v.x, v.y, v.z};                // first person: your own aura still round you, if you want it
-                }
-                List<P> ps = frameParticles(p.getUUID(), l.aura(), body[0], body[1], body[2], now, cf);
-                if (ps.isEmpty()) continue;
-                final float ox = (float) (body[0] - wcX), oy = (float) (body[1] - wcY), oz = (float) (body[2] - wcZ);
-                if (!Float.isFinite(ox + oy + oz) || ox * ox + oy * oy + oz * oz > 64f * 64f) continue;          // never draw from a stale or broken position
-                final float k = cf.cosSize / 100f;
-                List<P> safe = new ArrayList<>(ps.size());
-                for (P q : ps) if (Float.isFinite(q.x() + q.y() + q.z() + q.size()) && Math.abs(q.x()) < 4f && Math.abs(q.z()) < 4f && q.y() > -2f && q.y() < 5f && q.size() < 0.6f) safe.add(q);       // particles stay within a few blocks of you
-                // our own pose stack (camera-relative, nothing else pushed on it): another mod leaving a transform on the shared one made the quads land far away for a frame
-                ctx.submitNodeCollector().submitCustomGeometry(new com.mojang.blaze3d.vertex.PoseStack(), glowType(), (pose, buf) -> {
-                    for (P q : safe) quad3d(pose, buf, ox + q.x(), oy + q.y(), oz + q.z(), q.size() * k, q, right, up);
-                });
-            }
-            worldOk = true;
-        } catch (Throwable t) { if (!worldOk) { worldOk = true; System.err.println("[FancyDrops] aura draw failed: " + t); } }
-    }
-
-    /** The glowing additive look of lightning, but drawn into the main picture. Vanilla's lightning type draws into the weather layer, and with some
-     *  graphics settings and shader mods that layer is composed late: the aura's colour then washed over the whole sky for a frame (the green / yellow flicker). */
-    private static net.minecraft.client.renderer.rendertype.RenderType GLOW;
-    private static net.minecraft.client.renderer.rendertype.RenderType glowType() {
-        if (GLOW == null) GLOW = net.minecraft.client.renderer.rendertype.RenderType.create("fancydrops_aura",
-            net.minecraft.client.renderer.rendertype.RenderSetup.builder(net.minecraft.client.renderer.RenderPipelines.LIGHTNING).sortOnUpload().createRenderSetup());
-        return GLOW;
-    }
-
-    /** This frame's particles round one player: the resting aura, the idle swirl after 5 s still, and a short trail while moving. Positions are relative to the feet. */
-    private static List<P> frameParticles(UUID id, String aura, double ex, double ey, double ez, long now, FancyConfig cf) {
-        double[] st = STATE.get(id); if (st == null) { st = new double[]{0, now, ex, ey, ez, now, 1, 0, 0}; STATE.put(id, st); }     // phase ms, last frame, last position, last time it moved, speed, swirl
-        double dtf = Math.max(1, Math.min(100, now - (long) st[1]));
-        double moved = Math.abs(ex - st[2]) + Math.abs(ey - st[3]) + Math.abs(ez - st[4]);
-        if (moved > 0.004) st[5] = now;
-        double sp = Math.sqrt((ex - st[2]) * (ex - st[2]) + (ez - st[4]) * (ez - st[4])) / (dtf / 1000.0);      // blocks per second
-        if (sp > 60) sp = 0;                                                                                     // a teleport, not a run
-        st[7] += (Math.min(sp, 12.0) - st[7]) * Math.min(1.0, dtf / 160.0);
-        st[2] = ex; st[3] = ey; st[4] = ez;
-        ArrayDeque<double[]> hist = HIST.computeIfAbsent(id, kk -> new ArrayDeque<>());
-        if (hist.isEmpty() || now - (long) hist.peekLast()[0] >= 25) hist.addLast(new double[]{now, ex, ey, ez});
-        while (hist.size() > 2 && now - (long) hist.peekFirst()[0] > 800) hist.removeFirst();
-        float moveK = (float) Math.max(0.0, Math.min(1.0, (st[7] - 0.35) / 3.6)); moveK = moveK * moveK * (3f - 2f * moveK);
-        boolean idle = now - (long) st[5] > 5000, going = now - (long) st[5] < 250;
-        double want = going ? 1.6 : idle ? 0.55 : 1.0;
-        if (cf.cosCalm) want *= 0.35;
-        double dtm = Math.min(100, now - st[1]); st[1] = now;
-        st[6] += (want - st[6]) * Math.min(1.0, dtm / 250.0);
-        st[0] += dtm * st[6] * Math.max(0.2, cf.cosSpeed / 100.0);
-        float idleK = idle ? (float) Math.min(1.0, (now - st[5] - 5000) / 1200.0) : 0f;
-        st[8] += dtm * (0.25 + st[7] * 0.35) / 1000.0;
-        List<P> ps = fade(particles(aura, (long) st[0]), 1f - 0.6f * moveK);                                     // the aura stays on you while you run, a little fainter
-        long idleT = cf.cosCalm ? now * 2 / 5 : now;                                      // calm mode slows the resting swirl too
-        if (idleK > 0f) ps.addAll(idleParticles(aura, idleT, idleK * (1f - moveK)));
-        if (moveK > 0.01f) ps.addAll(trail(aura, hist, now, ex, ey, ez, st[8], moveK));
-        int keep = Math.min(100, cf.cosAmount);
-        if (keep < 100) { List<P> o = new ArrayList<>(); for (int i = 0; i < ps.size(); i++) if ((i + 1) * keep / 100 != i * keep / 100) o.add(ps.get(i)); ps = o; }
-        if (STATE.size() > 64) { STATE.clear(); HIST.clear(); }
-        return ps;
-    }
-
-    /** One particle as glowing quads facing the camera: a soft halo, then the shape (a square, a four-point star, or a ring round the body). */
-    private static void quad3d(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float size, P q, org.joml.Vector3f r, org.joml.Vector3f u) {
-        int a = q.argb() >>> 24, rgb = q.argb() & 0xFFFFFF; if (a < 6 || size <= 0.001f) return;
-        int cr = (rgb >> 16) & 255, cg = (rgb >> 8) & 255, cb = rgb & 255;
-        if (q.shape() == 2) {                                                                    // a thin ring of light round the body at this height
-            float rad = 0.6f; int seg = 28;
-            for (int i = 0; i < seg; i++) {
-                double a0 = i * Math.PI * 2 / seg, a1 = (i + 1) * Math.PI * 2 / seg;
-                float x0 = x + (float) Math.cos(a0) * rad - q.x(), z0 = z + (float) Math.sin(a0) * rad - q.z(), x1 = x + (float) Math.cos(a1) * rad - q.x(), z1 = z + (float) Math.sin(a1) * rad - q.z();
-                float h = 0.025f, mx0 = (x0 + x1) / 2f, mz0 = (z0 + z1) / 2f;
-                if (mx0 * mx0 + y * y + mz0 * mz0 < 0.8f) continue;                              // never right at the eye
-                buf.addVertex(pose, x0, y - h, z0).setColor(cr, cg, cb, a); buf.addVertex(pose, x1, y - h, z1).setColor(cr, cg, cb, a);
-                buf.addVertex(pose, x1, y + h, z1).setColor(cr, cg, cb, a); buf.addVertex(pose, x0, y + h, z0).setColor(cr, cg, cb, a);
-                buf.addVertex(pose, x0, y + h, z0).setColor(cr, cg, cb, a); buf.addVertex(pose, x1, y + h, z1).setColor(cr, cg, cb, a);       // the back face too, so it shows from any side
-                buf.addVertex(pose, x1, y - h, z1).setColor(cr, cg, cb, a); buf.addVertex(pose, x0, y - h, z0).setColor(cr, cg, cb, a);
-            }
-            return;
-        }
-        // the screen flash: a particle passing right in front of the eye (first person, or the camera pushed into the body) is a quad covering the
-        // whole view, added on top of everything in the aura's colour. Fade particles out as they get close to the camera, gone inside ~0.9 blocks.
-        float d = (float) Math.sqrt(x * x + y * y + z * z), near = (d - size * 2f - 0.5f) / 0.6f;
-        if (!(near > 0f)) return;
-        if (near < 1f) a = Math.round(a * near * near);
-        if (a < 6) return;
-        if (q.shape() != 1) disc(pose, buf, x, y, z, size * 1.3f, r, u, cr, cg, cb, Math.round(a * 0.18f));     // dots get a faint soft halo; stars have none (it showed as a round disc)
-        if (q.shape() == 1) {                                                                    // a four-point star: two soft pointed arms and a bright core
-            arm(pose, buf, x, y, z, size * 1.6f, size * 0.22f, r, u, cr, cg, cb, a);
-            arm(pose, buf, x, y, z, size * 1.6f, size * 0.22f, u, new org.joml.Vector3f(r).negate(), cr, cg, cb, a);      // turned a quarter, same winding (so it is not culled)
-            disc(pose, buf, x, y, z, size * 0.4f, r, u, 255, 255, 255, Math.min(255, a + 40));
-        } else disc(pose, buf, x, y, z, size * 0.7f, r, u, cr, cg, cb, a);
-    }
-    /** A round, soft dot facing the camera: full colour in the middle fading to nothing at the rim (a fan of thin triangles). */
-    private static void disc(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float rad, org.joml.Vector3f r, org.joml.Vector3f u, int cr, int cg, int cb, int a) {
-        if (a < 4 || rad <= 0.0005f) return;
-        int seg = 14;
-        float[] rr = {0f, 0.3f, 0.62f, 1f}; int[] aa = {a, Math.round(a * 0.55f), Math.round(a * 0.16f), 0};      // a smooth fall-off (no visible rim)
-        for (int i = 0; i < seg; i++) {
-            double a0 = i * Math.PI * 2 / seg, a1 = (i + 1) * Math.PI * 2 / seg;
-            float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
-            for (int k = 0; k < 3; k++) {
-                float i0 = rr[k] * rad, o0 = rr[k + 1] * rad;
-                buf.addVertex(pose, x + (r.x * c0 + u.x * s0) * i0, y + (r.y * c0 + u.y * s0) * i0, z + (r.z * c0 + u.z * s0) * i0).setColor(cr, cg, cb, aa[k]);
-                buf.addVertex(pose, x + (r.x * c0 + u.x * s0) * o0, y + (r.y * c0 + u.y * s0) * o0, z + (r.z * c0 + u.z * s0) * o0).setColor(cr, cg, cb, aa[k + 1]);
-                buf.addVertex(pose, x + (r.x * c1 + u.x * s1) * o0, y + (r.y * c1 + u.y * s1) * o0, z + (r.z * c1 + u.z * s1) * o0).setColor(cr, cg, cb, aa[k + 1]);
-                buf.addVertex(pose, x + (r.x * c1 + u.x * s1) * i0, y + (r.y * c1 + u.y * s1) * i0, z + (r.z * c1 + u.z * s1) * i0).setColor(cr, cg, cb, aa[k]);
-            }
-        }
-    }
-    /** One arm of a star along `along`: bright at the centre, thin and fading to a point at both tips. */
-    private static void arm(com.mojang.blaze3d.vertex.PoseStack.Pose pose, com.mojang.blaze3d.vertex.VertexConsumer buf, float x, float y, float z, float len, float w, org.joml.Vector3f along, org.joml.Vector3f side, int cr, int cg, int cb, int a) {
-        if (a < 4) return;
-        float[][] pts = {{len, 0}, {0, w}, {-len, 0}, {0, -w}};
-        for (int i = 0; i < 4; i++) {
-            float[] p0 = pts[i], p1 = pts[(i + 1) % 4];
-            buf.addVertex(pose, x, y, z).setColor(cr, cg, cb, a);
-            buf.addVertex(pose, x + along.x * p0[0] + side.x * p0[1], y + along.y * p0[0] + side.y * p0[1], z + along.z * p0[0] + side.z * p0[1]).setColor(cr, cg, cb, p0[0] != 0 ? 0 : a / 2);
-            buf.addVertex(pose, x + along.x * p1[0] + side.x * p1[1], y + along.y * p1[0] + side.y * p1[1], z + along.z * p1[0] + side.z * p1[1]).setColor(cr, cg, cb, p1[0] != 0 ? 0 : a / 2);
-            buf.addVertex(pose, x, y, z).setColor(cr, cg, cb, a);
         }
     }
 
@@ -463,38 +143,14 @@ final class AuraFx {
         } catch (Throwable ignored) { }
     }
 
-    /** One particle at a screen position, sx/sy its centre and px its size in GUI pixels. Small and soft: a core with a faint halo. */
-    static void draw(GuiGraphicsExtractor g, float sx, float sy, float px, P q) {
-        int a = q.argb(), al = a >>> 24, rgb = a & 0xFFFFFF; if (al < 6) return;
-        px = Math.max(1f, Math.min(px, 7f));
-        int x = Math.round(sx), y = Math.round(sy);
-        switch (q.shape()) {
-            case 1: {                                                                  // a four-point star: thin arms that fade out, a bright centre
-                int arm = Math.max(2, Math.round(px * 1.3f));
-                for (int d = 1; d <= arm; d++) {
-                    int ad = Math.round(al * (1f - d / (arm + 1f)));
-                    int c = (ad << 24) | rgb;
-                    g.fill(x + d, y, x + d + 1, y + 1, c); g.fill(x - d, y, x - d + 1, y + 1, c); g.fill(x, y + d, x + 1, y + d + 1, c); g.fill(x, y - d, x + 1, y - d + 1, c);
-                }
-                g.fill(x, y, x + 1, y + 1, (Math.min(255, al + 60) << 24) | 0xFFFFFF);
-                break;
-            }
-            case 2: {                                                                  // a flat slice of light
-                int w = Math.max(4, Math.min(18, Math.round(px * 3f)));
-                g.fill(x - w / 2, y, x + w / 2, y + 1, a);
-                break;
-            }
-            default: {                                                                 // a small round dot: bright middle, softer rim (never a square)
-                int s = Math.max(1, Math.round(px));
-                if (s <= 1) { g.fill(x, y, x + 1, y + 1, a); break; }
-                float rr = s / 2f + 0.5f;
-                for (int dy = -s; dy <= s; dy++) {
-                    float hw = (float) Math.sqrt(Math.max(0f, rr * rr - dy * dy)); int w = Math.round(hw); if (w <= 0) continue;
-                    int edge = Math.round(al * 0.45f) << 24 | rgb;
-                    g.fill(x - w, y + dy, x + w + 1, y + dy + 1, edge);
-                    if (w > 1 && Math.abs(dy) < rr - 1) g.fill(x - w + 1, y + dy, x + w, y + dy + 1, a);
-                }
-            }
-        }
+    /** One aura particle in the menu preview: its own sprite, tinted, centred on sx/sy, px pixels across. */
+    static void drawPart(GuiGraphicsExtractor g, float sx, float sy, float px, AuraSim.Part q) {
+        float a = q.a; if (a < 0.03f || px < 0.4f) return;
+        px = Math.min(px, 22f);
+        int argb = (Math.round(Math.min(1f, a) * 255) << 24) | (q.col & 0xFFFFFF);
+        Identifier id = Identifier.fromNamespaceAndPath("fancydrops", "textures/particle/" + AuraWorld.spriteName(q) + ".png");
+        Gfx.push(g); Gfx.translate(g, sx - px / 2f, sy - px / 2f); g.pose().scale(px / 32f, px / 32f);
+        g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, id, 0, 0, 0f, 0f, 32, 32, 32, 32, 32, 32, argb);
+        Gfx.pop(g);
     }
 }

@@ -57,6 +57,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             if (openMenu) { openMenu = false; mc.setScreenAndShow(new FancyScreen()); }   // 26.2: setScreenAndShow
             if (reopenMenu && !AnimationManager.isPlaying()) { reopenMenu = false; mc.setScreenAndShow(new FancyScreen()); }
             DropListener.tick(mc);
+            AuraWorld.tick(mc);
             tabTick++;                                                                        // who wears what changes rarely: look every quarter second, every tick only while a name is moving
             if (Cosmetics.tabMoving || tabTick % 5 == 0) Cosmetics.tickTab(mc);
             if (tabTick % 5 == 0) { Cosmetics.tickAura(mc); Achievements.tick(mc); }
@@ -78,7 +79,6 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
         try {                                                                                  // auras are real particles in the world: hidden by blocks and bodies, always on the player
             net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents.END_EXTRACTION.register(AuraFx::extract);
-            net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents.COLLECT_SUBMITS.register(AuraFx::submit);
         } catch (Throwable t) { System.err.println("[FancyDrops] world auras unavailable: " + t); }
 
         HudElementRegistry.attachElementAfter(VanillaHudElements.CHAT,

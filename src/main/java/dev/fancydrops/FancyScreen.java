@@ -583,7 +583,7 @@ public class FancyScreen extends Screen {
         List<String[]> d = new ArrayList<>();
         d.add(new String[]{"Animation", gr.name()});
         d.add(new String[]{"Type", ty.name()});
-        d.add(new String[]{"Length", String.format(Locale.ROOT, "%.1f s", a.secs)});
+        d.add(new String[]{"Length", lenText(gr.key(ty))});
         d.add(new String[]{"Size", Math.round(50 + 50 * c.animScale) + "%"});
         if (ty.id().equals("rng")) { d.add(new String[]{"Bars", a.bars ? "On  ·  " + c.barPx + " px" : "Off"}); d.add(new String[]{"Blur", a.blur ? "On" : "Off"}); }
         d.add(new String[]{"Item size", Math.round(c.itemScale * 100) + "%"});
@@ -613,8 +613,8 @@ public class FancyScreen extends Screen {
         chipScene = Math.max(0, java.util.Arrays.asList(SoundFx.SCENES).indexOf(key));
         pill(g, x, y, w, h, Ui.PANEL2);
         FancyConfig c = FancyConfig.get();
-        float secs = Math.max(3.6f, c.anim(key).secs);
-        float[][] tm = AnimationManager.cueTimes(key, c.anim(key).secs);
+        float secs = AnimationManager.sceneLen(AnimationManager.typeOfKey(key));
+        float[][] tm = AnimationManager.cueTimes(key);
         float pt = AnimationManager.playingT(key);
         int rulerH = 13, lw = 68, lh = (h - rulerH - 6) / 5, tx0 = x + 4 + lw, tx1 = x + w - 8, tw = Math.max(10, tx1 - tx0);
         g.fill(tx0, y + rulerH - 2, tx1, y + rulerH - 1, Ui.BORDER);
@@ -1239,16 +1239,15 @@ public class FancyScreen extends Screen {
         }
         g.fill(fx - 22, feet0 + 3, fx + 22, feet0 + 5, Gfx.argb(110, 0x000000)); g.fill(fx - 28, feet0 + 1, fx + 28, feet0 + 3, Gfx.argb(90, pcol & 0xFFFFFF));
         g.fill(fx - 24, feet0, fx + 24, feet0 + 1, Gfx.argb(200, pcol & 0xFFFFFF)); g.fill(fx - 20, feet0 + 1, fx + 20, feet0 + 2, Gfx.argb(150, Canvas.mix(pcol, 0xFFFFFFFF, 0.5f) & 0xFFFFFF));
-        List<AuraFx.P> parts = ad == null ? List.of() : AuraFx.particles(aura, now);
+        List<AuraSim.Part> parts = ad == null ? List.of() : AuraSim.preview(aura, now);
         float figYaw = 0.55f + 0.28f * (float) Math.sin(fxNow / 1900.0);                              // a gentle sway: the figure can't be turned
         float cyw = (float) Math.cos(figYaw), syw = (float) Math.sin(figYaw);
         for (int pass = 0; pass < 2; pass++) {
             if (pass == 1) SkinMock.draw(g, fx, feet, figYaw);
-            int stride = parts.size() / 44 + 1;                                                   // a lighter preview: every few particles only, so the page stays quick
-            for (int pi = 0; pi < parts.size(); pi += stride) {
-                AuraFx.P q = parts.get(pi);                                                           // the aura turns with the figure, so from behind it surrounds the back too
-                float rx = q.x() * cyw + q.z() * syw, rz = -q.x() * syw + q.z() * cyw;
-                if ((rz < 0) == (pass == 0)) AuraFx.draw(g, fx + rx * ppb, feet - q.y() * ppb, Math.max(1f, q.size() * ppb * 1.3f), q);
+            for (AuraSim.Part q : parts) {                                                        // the same particles as in the world, with the same sprites
+                if (!q.follow) continue;
+                float rx = (float) (q.x * cyw + q.z * syw), rz = (float) (-q.x * syw + q.z * cyw);
+                if ((rz < 0) == (pass == 0)) AuraFx.drawPart(g, fx + rx * ppb, feet - (float) q.y * ppb, q.s * ppb, q);
             }
         }
         g.disableScissor();
@@ -2637,10 +2636,6 @@ public class FancyScreen extends Screen {
         Row pl = row(0, ":play:", "Preview", "Plays it over the game, like a real drop", ty.color());
         pl.ctls.add(new Btn("▶ Play", GREEN, () -> play(() -> DropListener.playSample(gr.id(), AnimationManager.typeIndex(ty.id()), false))));
         if (!ty.id().equals("nodrops")) pl.ctls.add(new Btn("▶ 3 items", GREEN, () -> play(() -> DropListener.playSampleMany(gr.id(), AnimationManager.typeIndex(ty.id()), 3)))); rows.add(pl);
-        Row len = row(0, ":clock:", "Length", "Between 3 and 7 seconds. The first half is the same for every type", Ui.ACCENT);
-        len.ctls.add(new Slider(3, 7, 0.1, () -> a.secs, v -> { a.secs = (float) (Math.round(v * 10) / 10.0); }, () -> String.format(Locale.ROOT, "%.1f s", a.secs)));
-        float defSecs = 6f;
-        len.ctls.add(new Btn("(Default)", Ui.ACCENT, () -> { a.secs = defSecs; FancyConfig.save(); })); rows.add(len);
         if (ty.id().equals("rng")) {                                         // only the big finish has cinematic bars and a blurred background
             rows.add(section("Cinematic"));
             rows.add(toggle(":bars:", "Cinematic bars", "Black bars close in from the top and bottom", () -> a.bars, v -> a.bars = v));
@@ -2651,10 +2646,16 @@ public class FancyScreen extends Screen {
         rows.add(sn);
     }
 
+    /** How long an animation lasts: "4 s", or "4 s + 2.5 s text". */
+    private static String lenText(String key) {
+        int ty = AnimationManager.typeOfKey(key); float a = AnimationManager.animLen(ty);
+        return ty == AnimationManager.NO_DROPS ? String.format(Locale.ROOT, "%.0f s", a) : String.format(Locale.ROOT, "%.0f s + %.1f s text", a, AnimationManager.TEXT_HOLD);
+    }
+
     /** The three types of a group (No Drops, Normal, RNG) as tiles. */
     private Row typePicker(Categories.Group gr, FancyConfig c) {
         int n = gr.types().size(); String[] lb = new String[n], sb = new String[n], ic = new String[n]; int[] co = new int[n];
-        for (int i = 0; i < n; i++) { Categories.Type t = gr.types().get(i); lb[i] = t.name(); ic[i] = t.icon(); co[i] = t.color(); sb[i] = String.format(Locale.ROOT, "%.1f s", c.anim(gr.key(t)).secs); }
+        for (int i = 0; i < n; i++) { Categories.Type t = gr.types().get(i); lb[i] = t.name(); ic[i] = t.icon(); co[i] = t.color(); sb[i] = lenText(gr.key(t)); }
         Row p = picker("", "", lb, sb, ic, co, null, n, () -> Math.max(0, Math.min(n - 1, edType)), i -> { edType = i; waveKey = null; });
         p.pTop = 6; return fit(p);
     }

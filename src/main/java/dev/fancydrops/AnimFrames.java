@@ -47,7 +47,7 @@ final class AnimFrames {
             while (budget-- > 0 && jobIdx < jobs.size()) {
                 Job j = jobs.get(jobIdx);
                 AnimationManager.Anim a = new AnimationManager.Anim(j.group, j.type, AnimationManager.sampleItem()); a.kind = j.kind;
-                if (frameIdx == 0) { j.frames = (int) Math.ceil(Math.max(3.6f, a.cfg().secs) * FPS) + 1; manifest = new HashMap<>(); Files.createDirectories(root.resolve(j.name)); }
+                if (frameIdx == 0) { j.frames = (int) Math.ceil(a.secs() * FPS) + 1; manifest = new HashMap<>(); Files.createDirectories(root.resolve(j.name)); }
                 int[] px = Ritual.snapshot(a, frameIdx / (float) FPS);
                 final Path dir = root.resolve(j.name); final int fi = frameIdx; final Map<String, Long> man = manifest;
                 IO.execute(() -> write(dir, fi, px, man));

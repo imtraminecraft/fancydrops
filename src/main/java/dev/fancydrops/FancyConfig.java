@@ -18,7 +18,6 @@ public class FancyConfig {
     public static class SourceCfg { public boolean enabled = true; public Map<String, DropCfg> drops = new LinkedHashMap<>(); }
     /** The settings of one animation (key like "myth.rng"): how long, where, how big, and for RNG the bars and the blur. */
     public static class AnimCfg {
-        public float secs = 6f;          // 3..7 (6 by default)
         public int pos = 1;              // (unused now: the position is one setting for every animation, FancyConfig.animPos)
         public boolean bars = true, blur = true;   // RNG only
     }
@@ -158,10 +157,7 @@ public class FancyConfig {
         if (c.sounds == null) c.sounds = new LinkedHashMap<>();
         if (c.mcSounds == null) c.mcSounds = new LinkedHashMap<>();
         if (c.ver < 3) { c.ver = 3; c.sounds.clear(); c.mcSounds.clear(); save(); }          // the rewrite: old sound picks refer to sounds that no longer exist
-        if (c.ver < 4) { c.ver = 4; for (AnimCfg a : c.anims.values()) a.secs = 5f; save(); }          // 0.4.38: every animation is 5 seconds by default
-        if (c.ver < 5) { c.ver = 5; for (Map.Entry<String, AnimCfg> e : c.anims.entrySet()) if (e.getKey().startsWith("slayer.")) e.getValue().secs = 3f; save(); }          // 0.7.5: the slayer scenes were 3 seconds (0.7.8 takes that back)
-        if (c.ver < 6) { c.ver = 6; for (AnimCfg a : c.anims.values()) if (a.secs == 3f) a.secs = 5f; if ("minos".equals(c.suffix) || "rod".equals(c.suffix)) c.suffix = ""; save(); }          // 0.7.8: every animation is 5 seconds by default again; the King Minos and Fishing Rod icons are gone
-        if (c.ver < 7) { c.ver = 7; for (AnimCfg a : c.anims.values()) if (a.secs == 5f) a.secs = 6f; save(); }          // 0.9.0: every animation is 6 seconds by default (lengths someone picked stay)
+        if (c.ver < 6) { c.ver = 6; if ("minos".equals(c.suffix) || "rod".equals(c.suffix)) c.suffix = ""; save(); }          // 0.7.8: the King Minos and Fishing Rod icons are gone
         c.textScale = clamp(c.textScale, 0f, 1.1f); c.itemScale = clamp(c.itemScale, 0.5f, 1.1f);
         c.titleScale = clamp(c.titleScale, 0.5f, 1.5f); c.subScale = clamp(c.subScale, 0.5f, 1.5f); c.subDelay = clamp(c.subDelay, 0f, 3f);
         c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.normalSize = Math.max(50, Math.min(100, c.normalSize)); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);
@@ -169,7 +165,7 @@ public class FancyConfig {
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
         c.animPos = Math.max(0, Math.min(2, c.animPos)); c.textPos = Math.max(0, Math.min(1, c.textPos));
-        for (AnimCfg a : c.anims.values()) { a.secs = clamp(a.secs, 3f, 7f); a.pos = Math.max(0, Math.min(2, a.pos)); }
+        for (AnimCfg a : c.anims.values()) { a.pos = Math.max(0, Math.min(2, a.pos)); }
     }
     private static float clamp(float v, float lo, float hi) { return Math.max(lo, Math.min(hi, v)); }
 
