@@ -268,7 +268,7 @@ public class FancyScreen extends Screen {
     private static final Identifier ICON = Identifier.fromNamespaceAndPath("fancydrops", "textures/gui/icon.png");
     private final List<Row> rows = new ArrayList<>();
     private String lastFormatOk = "";
-    private EditBox formatField, addField, numField, hexField, adminField, thrField, tokenField;
+    private EditBox formatField, addField, numField, hexField, adminField, thrField, tokenField, spotifyField;
     private static int sliderSeq; private int typingId = -1;
     private Slider typing; private boolean numShow; private double lastMx;
     private String formatError;                                  // why the typed message was refused, or null
@@ -338,6 +338,10 @@ public class FancyScreen extends Screen {
         adminField = new EditBox(font, 0, 0, 100, 16, Component.literal("player"));
         adminField.setMaxLength(80); adminField.setHint(Component.literal("Cosmetic ID, UUID or online name"));
         addRenderableWidget(adminField); adminField.setVisible(false);
+        spotifyField = new EditBox(font, 0, 0, 100, 16, Component.literal("client id"));
+        spotifyField.setMaxLength(64); spotifyField.setValue(FancyConfig.get().spotifyClient); spotifyField.setHint(Component.literal("Paste your Spotify app's Client ID"));
+        spotifyField.setResponder(v -> { FancyConfig.get().spotifyClient = v.trim(); FancyConfig.save(); });
+        addRenderableWidget(spotifyField); spotifyField.setVisible(false);
         tokenField = new EditBox(font, 0, 0, 100, 16, Component.literal("token"));
         tokenField.setMaxLength(120); tokenField.setHint(Component.literal(FancyConfig.get().adminToken.isBlank() ? "GitHub token (contents: write)" : "Token saved. Paste a new one to replace it"));
         tokenField.setResponder(v -> { String t2 = v.trim(); if (!t2.isEmpty()) FancyConfig.get().adminToken = t2; });
@@ -370,7 +374,7 @@ public class FancyScreen extends Screen {
         hexField.setResponder(this::hexTyped);
         addRenderableWidget(hexField);
         hexField.setVisible(false);
-        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false);
+        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false); spotifyField.setVisible(false);
         if (pendingCos) { pendingCos = false; openCos(); }                       // /fd cosmetics
     }
 
@@ -2237,6 +2241,7 @@ public class FancyScreen extends Screen {
             case GENERAL -> {
                 l.add(new SubPage("Menu", ":menu:", 0xFFB0B6C2, false)); l.add(new SubPage("Cosmetics", ":cosmetics:", 0xFFC77DFF, false));
                 l.add(new SubPage("Prices", ":coin:", 0xFFFFC857, false)); l.add(new SubPage("Drop Data", ":refresh:", 0xFF56D8FF, false));
+                l.add(new SubPage("Music", ":sounds:", 0xFF1ED760, false));
             }
             default -> { }
         }
@@ -2813,8 +2818,8 @@ public class FancyScreen extends Screen {
 
     private void settingsLanding() {
         rows.add(hero(":settings:", "Settings", "Change how the menu looks, your cosmetics, where prices come from and how the drop data loads.", Ui.ACCENT));
-        String[] lb = {"Menu", "Cosmetics", "Prices", "Drop Data"}, sb = {"How the menu looks", "Shown to you and others", "Where prices come from", "Reload the drop data"}, ic = {":menu:", ":cosmetics:", ":coin:", ":refresh:"};
-        int[] co = {0xFFB0B6C2, 0xFFC77DFF, 0xFFFFC857, 0xFF56D8FF};
+        String[] lb = {"Menu", "Cosmetics", "Prices", "Drop Data", "Music"}, sb = {"How the menu looks", "Shown to you and others", "Where prices come from", "Reload the drop data", "Spotify lyrics in your world"}, ic = {":menu:", ":cosmetics:", ":coin:", ":refresh:", ":sounds:"};
+        int[] co = {0xFFB0B6C2, 0xFFC77DFF, 0xFFFFC857, 0xFF56D8FF, 0xFF1ED760};
         rows.add(picker("", "", lb, sb, ic, co, null, 2, () -> -1, i -> openPage(i, null, null)));
     }
 
@@ -2876,6 +2881,20 @@ public class FancyScreen extends Screen {
                 Row rl = row(0, ":refresh:", "Reload drop data", "Reloads the drop data.  " + DataFiles.status, Ui.ACCENT);
                 rl.ctls.add(new Btn("Reload", Ui.ROW_HOVER, () -> { DataFiles.reloadAll(); toast("Reloading the drop data.", 0xFF62E6A8); }));
                 rows.add(rl);
+                rows.add(section("Music"));
+                rows.add(note("Link Spotify and the words of the song you're playing float in your world, one line at a time. Lyrics come from LRCLIB.", 0xFF1ED760));
+                rows.add(toggle(":sounds:", "Lyrics in the world", "Shows the words while a song plays on Spotify", () -> c.lyricsOn, v -> c.lyricsOn = v));
+                Row cid = row(0, ":settings:", "Spotify Client ID", "developer.spotify.com > Create app > Redirect URI " + Spotify.REDIRECT + " > copy the Client ID", 0xFF1ED760);
+                cid.h = 44; cid.field = spotifyField; rows.add(cid);
+                Row lk = row(0, ":sounds:", Spotify.linked() ? "Linked to Spotify" : "Log in with Spotify", Spotify.status.isEmpty() ? (Spotify.linked() ? "Ready" : "Opens your browser once") : Spotify.status, 0xFF1ED760);
+                if (Spotify.linked()) lk.ctls.add(new Btn("Unlink", Ui.ROW_HOVER, () -> { Spotify.logout(); toast("Spotify unlinked.", 0xFF8A93B0); }));
+                else lk.ctls.add(new Btn("Log in", 0xFF1DB954, () -> Spotify.login(m -> toast(m, 0xFF1ED760))));
+                rows.add(lk);
+                if (!Lyrics.status.isEmpty()) rows.add(note(Lyrics.status, 0xFF8A93B0));
+                Row ls = row(0, ":format:", "Lyrics size", "How big the words are", Ui.ACCENT);
+                ls.ctls.add(new Slider(60, 160, 5, () -> c.lyricsSize, v -> c.lyricsSize = (int) v, () -> c.lyricsSize + "%").typed(1)); rows.add(ls);
+                Row ld = row(0, ":format:", "Lyrics distance", "How far in front of you each line appears", Ui.ACCENT);
+                ld.ctls.add(new Slider(4, 16, 1, () -> c.lyricsDistance, v -> c.lyricsDistance = (int) v, () -> c.lyricsDistance + " blocks").typed(1)); rows.add(ld);
                 }
 
     private void mythSettings(List<Row> rows, FancyConfig c) {
@@ -3011,7 +3030,7 @@ public class FancyScreen extends Screen {
         if (codexPend != -2 && width > 0) { Codex.open(achBtn(), codexPend); codexPend = -2; }
         final boolean bookUp = Codex.open;
         final int mx = editor != 0 || bookUp ? -9999 : mx0, my = editor != 0 || bookUp ? -9999 : my0;       // an open editor (or the Collection) sits on top: nothing behind it lights up
-        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false);
+        formatField.setVisible(false); addField.setVisible(false); adminField.setVisible(false); thrField.setVisible(false); tokenField.setVisible(false); spotifyField.setVisible(false);
         searchField.setVisible(false); numShow = false; lastMx = mx; mouseX = mx0; mouseY = my0;
         if (dragCtl instanceof Slider ls && ls.live) {   // dragging a size slider: show the scene resizing live
             g.fill(0, 0, width, height, 0x55000000);
@@ -3693,7 +3712,7 @@ public class FancyScreen extends Screen {
             return true;
         }
         FancyConfig fc = FancyConfig.get();
-        boolean anyField = searchField.isFocused() || formatField.isFocused() || addField.isFocused() || numField.isFocused() || adminField.isFocused() || thrField.isFocused() || tokenField.isFocused();
+        boolean anyField = searchField.isFocused() || formatField.isFocused() || addField.isFocused() || numField.isFocused() || adminField.isFocused() || thrField.isFocused() || tokenField.isFocused() || spotifyField.isFocused();
         if (!anyField && !cosWin()) {                                                       // shortcuts: Backspace goes back a page, Ctrl+F or / jumps to the search box
             if (key == 259 && hdrBack != null) { hdrBack.run(); return true; }
             if ((key == 70 && event.hasControlDownWithQuirk()) || key == 47) { searchField.setFocused(true); setFocused(searchField); return true; }

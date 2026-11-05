@@ -128,6 +128,12 @@ public class FancyConfig {
     public int cosRange = 32, cosMax = 8, cosSpeed = 100, cosAmount = 100, cosSize = 100;
     public boolean cosHideFirst = false, cosCalm = false;
     public java.util.List<String> seenAch = new java.util.ArrayList<>();     // achievements whose star you have already seen light up (new ones ignite when the sky opens)
+    // Music: Spotify lyrics in the world
+    public String spotifyClient = "";                          // your Spotify app's Client ID (developer.spotify.com)
+    public String spotifyRefresh = "";                         // the login, kept so you stay linked (no password, no secret)
+    public boolean lyricsOn = true;
+    public int lyricsSize = 100, lyricsDistance = 9;
+    public int lyricsColor = 0xFFC8A0;
     public String adminToken = "";                             // Admin Panel: a GitHub token that lets Save write cosmetics.json
 
     public int ver;                                            // 3 = the rewrite: animation and drop settings start fresh
