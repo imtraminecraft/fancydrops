@@ -79,245 +79,206 @@ def pad_to(x, d): b = mix(max(d, len(x) / SR)); at(b, x, 0); return b
 OUT = {}
 def S(name, x, rv=.25): OUT[name] = reverb(x, mixv=rv) if rv else x
 
-# ------------------------------------------------------------------ a reveal: a run of notes on an instrument over a bed; big adds a sub hit, a shimmer and more notes
-def reveal(notes, big_notes, inst, bed, bed_shape='sin', sub=36, shimmer=1.0, step=.085, bigstep=.075, dur=1.3, bigdur=2.6, **kw):
-    small = mix(dur + .2)
-    for i, m in enumerate(notes): at(small, {'pluck': pluck, 'bell': bell, 'mallet': mallet}[inst](N(m), .9 if inst != 'bell' else 1.4, **kw) * (.5 + .05 * i), i * step)
-    at(small, pad(bed, dur, bed_shape, a=.2) * .5, 0)
-    big = mix(bigdur + .3)
-    for i, m in enumerate(big_notes): at(big, {'pluck': pluck, 'bell': bell, 'mallet': mallet}[inst](N(m), 1.2 if inst != 'bell' else 1.8, **kw) * (.45 + .04 * i), .12 + i * bigstep)
-    at(big, pad(bed, bigdur, bed_shape, a=.15) * .65, 0)
-    at(big, thump(N(sub) * 2, N(sub), .9, k=4) * .9, 0)
-    t = T(bigdur)
-    sh = sum(np.sin(2 * np.pi * N(m + 24) * t + i) for i, m in enumerate(big_notes[-3:])) * (1 + .6 * np.sin(2 * np.pi * 7 * t))
-    at(big, sh * env(t, .5, bigdur * .7) * .035 * shimmer, .3)
-    at(big, hp(noise(bigdur), 6000) * env(t, .4, bigdur * .6) * .03 * shimmer, .2)
-    return small, big
-def glow(notes, d=2.4, shape='sin', lfo=.3, big=False, extra=None):
-    t = T(d); s = pad(notes if not big else notes + [notes[0] + 12, notes[-1] + 7], d, shape, a=.5, r=d * .7)
-    s *= 1 + lfo * np.sin(2 * np.pi * (.8 if not big else 1.6) * t)
-    if extra is not None: at(s, extra, 0)
-    return s * (.7 if not big else .9)
-def ending(notes, inst='bell', step=.14, d=1.1):
-    b = mix(d + step * len(notes))
-    for i, m in enumerate(notes): at(b, ({'pluck': pluck, 'bell': bell, 'mallet': mallet}[inst])(N(m), d) * (.5 - .06 * i), i * step)
-    return b
 
-def bank(p, beat, burst, rv_notes, rv_big, inst, bed, bed_shape='sin', *, gl, end_notes, end_inst='bell', sub=36, gl_shape='sin', gl_extra=None, **kw):
-    S(p + '_beat', beat, .2); S(p + '_burst', burst, .3)
-    a, b = reveal(rv_notes, rv_big, inst, bed, bed_shape, sub, **kw); S(p + '_reveal', a, .3); S(p + '_reveal_big', b, .35)
-    S(p + '_glow', glow(gl, shape=gl_shape, extra=gl_extra), .2); S(p + '_glow_big', glow(gl, shape=gl_shape, big=True, extra=gl_extra), .25)
-    S(p + '_end', ending(end_notes, end_inst), .35)
-
-# ------------------------------------------------------------------ Mythological: crackling arcane lightning, a thunder clap, a harp in D Lydian
-def zap(d=.45, f0=2400, f1=180):
-    t = T(d); s = osc(f0, d, 'saw', glide=f1) * .3 + bp(noise(d), 1500, 7000) * .7
-    return s * dec(t, 7) * (0.6 + 0.4 * (rng.random(len(t)) > .3))
-def clap(d=1.6):
-    t = T(d); s = lp(noise(d), 900) * dec(t, 3.5) * 2.2 + hp(noise(d), 2500) * dec(t, 20) * .8 + thump(90, 35, d, 3) * 1.2
-    return s
-bank('rit', zap(), clap(), [62, 69, 74, 78, 81], [50, 57, 62, 66, 69, 74, 78, 81, 86], 'pluck', [50, 57, 64, 66], 'tri', sub=38,
-     gl=[62, 69, 76], end_notes=[86, 81, 74], gl_shape='tri')
-
-# ------------------------------------------------------------------ Treasure: a spade biting dirt, a chest lid and coins, a music box in F
-def dig():
-    b = mix(.5); at(b, thump(140, 60, .25, 14) * .9, 0); at(b, lp(noise(.3), 2500) * env(T(.3), .002, .25) * .5, .01)
-    for i in range(6): at(b, hp(noise(.01), 1500) * dec(T(.01), 300) * .4, .04 + i * .03 + rng.uniform(0, .01))
-    return b
-def coins(n=12, d=1.0):
-    b = mix(d)
-    for i in range(n): at(b, bell(rng.uniform(2600, 4200), .3, ratios=(1, 1.5, 2.3), amps=(1, .4, .2), k=12) * rng.uniform(.2, .45), rng.uniform(0, d * .6) * (i / n) ** .5)
-    return b
-def chest():
-    b = mix(1.4); t = T(.4); at(b, osc(180, .4, 'saw', glide=240, vib=.04, vibf=23) * env(t, .05, .2) * .12, 0)
-    at(b, thump(110, 55, .3, 10) * .8, .38); at(b, coins(16, 1.0), .42); return b
-bank('tre', dig(), chest(), [65, 69, 72, 77, 81], [53, 60, 65, 69, 72, 77, 81, 84, 89], 'bell', [53, 60, 65, 69], sub=29,
-     gl=[65, 72, 77], end_notes=[89, 84, 77], gl_extra=coins(8, 2.0) * .4, k=3.5)
-
-# ------------------------------------------------------------------ Slayer: a ringing blade, a heavy cleave, a dark brass chord in C minor
-def blade():
-    b = mix(.6); at(b, sweep_noise(.28, 600, 5000, .3) * .8, 0)
-    at(b, bell(1850, .5, ratios=(1, 1.47, 2.09, 2.83), amps=(1, .6, .4, .2), k=6) * .35, .2); return b
-def cleave():
-    b = mix(1.3); at(b, sweep_noise(.18, 3000, 400, .35) * .7, 0); at(b, thump(120, 40, 1.0, 4) * 1.2, .16)
-    at(b, bell(220, 1.0, ratios=(1, 2.4, 3.9, 5.2), amps=(1, .7, .5, .3), k=4) * .4, .16); at(b, lp(noise(.5), 600) * dec(T(.5), 8) * .8, .16); return b
-def brass(notes, d):
-    b = mix(d); t = T(d)
-    for m in notes: at(b, lp(osc(N(m), d, 'saw', vib=.004), 1800) * env(t, .06, d * .5) * .3, 0)
-    return b
-_sa, _sb = brass([48, 55, 60, 63], 1.3), brass([36, 43, 48, 55, 60, 63, 67], 2.6)
-S('sly_beat', blade(), .2); S('sly_burst', cleave(), .3)
-s1 = mix(1.5); at(s1, _sa, 0); at(s1, chord([72, 75, 79], .9, 'pluck', .07, .35), .05); S('sly_reveal', s1, .35)
-s2 = mix(2.9); at(s2, _sb, 0); at(s2, thump(N(36) * 2, N(24), 1.2, 3) * 1.0, 0); at(s2, chord([72, 75, 79, 84, 87], 1.2, 'pluck', .08, .35), .1); S('sly_reveal_big', s2, .4)
-S('sly_glow', glow([36, 43, 48], shape='saw') * .5, .2); S('sly_glow_big', glow([36, 43, 48], shape='saw', big=True) * .5, .25)
-S('sly_end', bell(N(36) * 2, 2.2, ratios=(1, 2.1, 3.3, 4.6), amps=(1, .5, .35, .2), k=1.5) * .7, .35)
-
-# ------------------------------------------------------------------ Rare Crops: a rustling scythe, an earthy pop, a marimba in G
-def scythe():
-    b = mix(.5); at(b, swish(.32, 1200, 6000) * .7, 0)
-    for i in range(10): at(b, bp(noise(.02), 2000, 6000) * dec(T(.02), 150) * .25, .05 + i * .025)
-    return b
-def earth_pop():
-    b = mix(.8); at(b, lp(noise(.5), 900) * env(T(.5), .15, .3) * .5, 0); at(b, thump(90, 200, .2, 12) * .9, .45); at(b, mallet(N(79), .4) * .5, .5); return b
-bank('crp', scythe(), earth_pop(), [67, 71, 74, 79, 83], [55, 62, 67, 71, 74, 79, 83, 86, 91], 'mallet', [55, 62, 67, 71], sub=31,
-     gl=[67, 74, 79], end_notes=[91, 86, 79], end_inst='mallet')
-
-# ------------------------------------------------------------------ Harvest Feast: a hollow pumpkin knock, a festival drum, a warm accordion-ish chord in A minor
-def knock():
-    b = mix(.5); at(b, thump(260, 180, .18, 18) * .8, 0); at(b, thump(200, 140, .2, 16) * .6, .11); return b
-def festival():
-    b = mix(1.0); at(b, thump(150, 60, .5, 8) * 1.0, 0); at(b, hp(noise(.25), 3000) * dec(T(.25), 14) * .5, 0)
-    for i, m in enumerate([69, 72, 76]): at(b, bell(N(m + 12), .6, k=5) * .25, .1 + i * .06)
-    return b
-bank('fst', knock(), festival(), [69, 72, 76, 81, 84], [57, 64, 69, 72, 76, 81, 84, 88, 93], 'pluck', [57, 64, 69, 72], 'saw', sub=33,
-     gl=[57, 64, 69], end_notes=[88, 84, 76], gl_shape='tri', bright=1.4)
-
-# ------------------------------------------------------------------ Harvest Bounty: greenhouse glass chimes, a soft whoosh, a music box in E
-def glass_chime():
-    b = mix(.6)
-    for i, f in enumerate([3520, 4186, 4699]): at(b, bell(f, .5, ratios=(1, 2.2, 3.6), amps=(1, .3, .1), k=8) * .3, i * .05)
-    return b
-def green_whoosh():
-    b = mix(1.0); at(b, sweep_noise(.7, 400, 3000, .3) * .6, 0); at(b, chord([76, 83, 88], .6, 'bell', .05, .3, k=6), .6); return b
-bank('bty', glass_chime(), green_whoosh(), [76, 80, 83, 88, 92], [64, 71, 76, 80, 83, 88, 92, 95, 100], 'bell', [64, 71, 76, 80], sub=40,
-     gl=[76, 83, 88], end_notes=[100, 95, 88], k=4)
-
-# ------------------------------------------------------------------ Pests: a bug chirp, a vacuum slurp, bouncy pizzicato in D
-def chirp():
-    b = mix(.4)
-    for i in range(3): at(b, osc(3200, .05, 'sin', glide=4800) * env(T(.05), .002, .04) * .5, i * .07)
-    return b
-def slurp():
-    d = .7; t = T(d); b = mix(.9); ph_f = 300 + 900 * (t / d) ** 2
-    at(b, (np.sin(2 * np.pi * np.cumsum(ph_f) / SR) * .3 + bp(noise(d), 500, 2500) * .7) * np.sin(np.pi * t / d) ** 1.3, 0)
-    at(b, thump(400, 900, .08, 30) * .6, .7); return b
-bank('pst', chirp(), slurp(), [74, 78, 81, 86, 90], [62, 69, 74, 78, 81, 86, 90, 93, 98], 'pluck', [62, 69, 74], sub=38,
-     gl=[62, 69, 74], end_notes=[86, 81, 74], end_inst='pluck', k=9)
-
-# ------------------------------------------------------------------ Experimentation Table: a page riffle, a book slam with runes, a celesta in B
-def riffle():
-    b = mix(.6)
-    for i in range(10): at(b, bp(noise(.03), 1500, 8000) * env(T(.03), .001, .025, 1.5) * (.7 - i * .04), i * .04 + rng.uniform(0, .01))
-    return b
-def rune_slam():
-    b = mix(1.2); at(b, thump(80, 45, .4, 9) * 1.0, 0); at(b, lp(noise(.12), 3000) * dec(T(.12), 30) * .6, 0)
-    t = T(1.0); at(b, (np.sin(2 * np.pi * N(71) * t) + .7 * np.sin(2 * np.pi * N(78) * t)) * env(t, .2, .6) * .3 * (1 + .4 * np.sin(2 * np.pi * 9 * t)), .1); return b
-bank('tab', riffle(), rune_slam(), [71, 75, 78, 83, 87], [59, 66, 71, 75, 78, 83, 87, 90, 95], 'bell', [59, 66, 71, 75], sub=35,
-     gl=[71, 78, 83], end_notes=[95, 90, 83], k=3)
-
-# ------------------------------------------------------------------ Water: a bobber plop, a splash, liquid bells in C with chorus
-def plop():
-    b = mix(.5); at(b, osc(500, .12, glide=1400) * env(T(.12), .002, .1) * .6, 0); at(b, lp(noise(.15), 2500) * dec(T(.15), 25) * .25, 0)
-    for i in range(3): at(b, osc(rng.uniform(900, 1600), .06, glide=rng.uniform(1800, 2600)) * env(T(.06), .002, .05) * .25, .1 + i * .05)
-    return b
-def splash():
-    b = mix(1.3); at(b, lp(noise(1.0), 4000) * env(T(1.0), .01, .8) * .7, 0); at(b, thump(110, 50, .4, 8) * .7, 0)
-    for i in range(14): at(b, osc(rng.uniform(700, 2400), .05, glide=rng.uniform(1500, 4000)) * env(T(.05), .002, .04) * .25, rng.uniform(.1, .9))
-    return b
-bank('wat', plop(), splash(), [72, 76, 79, 84, 88], [60, 67, 72, 76, 79, 84, 88, 91, 96], 'bell', [60, 67, 72, 76], sub=36,
-     gl=[60, 67, 76], end_notes=[96, 91, 84], gl_extra=plop() * .15, k=2.2)
-
-# ------------------------------------------------------------------ Lava: a magma blorp, an eruption, low brassy fifths in E minor
-def blorp():
-    b = mix(.6); at(b, osc(90, .25, glide=180) * env(T(.25), .02, .2) * .8, 0); at(b, thump(300, 120, .08, 40) * .6, .22); at(b, crackle(.4, 50, .4), .2); return b
-def eruption():
-    b = mix(1.8); t = T(1.6); at(b, lp(noise(1.6), 400) * env(t, .05, 1.3) * 2.0, 0); at(b, thump(70, 30, 1.2, 3) * 1.2, 0); at(b, crackle(1.4, 90, .5), .1); return b
-S('lav_beat', blorp(), .2); S('lav_burst', eruption(), .3)
-l1 = mix(1.5); at(l1, brass([40, 47, 52], 1.3) * 1.2, 0); at(l1, chord([64, 71, 76], .9, 'pluck', .08, .35), .05); S('lav_reveal', l1, .35)
-l2 = mix(2.9); at(l2, brass([28, 35, 40, 47, 52, 59], 2.6) * 1.2, 0); at(l2, thump(N(28) * 2, N(16), 1.2, 3), 0); at(l2, chord([64, 71, 76, 79, 83, 88], 1.2, 'pluck', .08, .32), .1); at(l2, crackle(2.0, 40, .3), .2); S('lav_reveal_big', l2, .4)
-S('lav_glow', glow([40, 47, 52], shape='tri', extra=crackle(2.4, 30, .25)), .2); S('lav_glow_big', glow([40, 47, 52], shape='tri', big=True, extra=crackle(2.4, 60, .3)), .25)
-S('lav_end', ending([76, 71, 64], 'pluck'), .3)
-
-# ------------------------------------------------------------------ Spooky: a tolling bell, an organ stab, a wavering theremin line in D minor
-def toll(): return bell(N(50), 1.3, ratios=(1, 2.0, 2.4, 3.0, 4.2), amps=(1, .6, .5, .3, .2), k=2) * .8
-def organ(notes, d):
-    b = mix(d); t = T(d)
+# ================================================================== 1.0 sound package: new instruments
+def fm(f, d, ratio=3.5, index=2.0, k=3.0, a=0.002):
+    """An FM tone: a carrier modulated by ratio*f, the brightness dying away faster than the body."""
+    t = T(d); mi = index * np.exp(-t * k * 1.6)
+    return np.sin(2 * np.pi * f * t + mi * np.sin(2 * np.pi * f * ratio * t)) * env(t, a, d, 1) * np.exp(-t * k * .5)
+def supersaw(notes, d, det=.012, cut=2200, a=.08, r=None):
+    t = T(d); s = np.zeros(len(t))
     for m in notes:
-        for h, a in ((1, 1), (2, .5), (4, .25), (8, .12)): at(b, np.sin(2 * np.pi * N(m) * h * t) * a * env(t, .02, d * .5) * .12, 0)
-    return b
-def theremin(notes, d):
-    b = mix(d + .4); seg = d / len(notes)
-    for i, m in enumerate(notes): at(b, osc(N(m), seg * 1.4, vib=.012, vibf=5.5) * env(T(seg * 1.4), .05, seg * .8) * .35, i * seg)
-    return b
-S('spk_beat', toll(), .4); S('spk_burst', organ([50, 57, 62, 65], 1.2), .45)
-k1 = mix(1.6); at(k1, theremin([74, 77, 81, 86], 1.1), 0); at(k1, organ([50, 57, 62], 1.4) * .6, 0); S('spk_reveal', k1, .4)
-k2 = mix(3.0); at(k2, theremin([62, 69, 74, 77, 81, 86, 89], 2.2), .1); at(k2, organ([38, 50, 57, 62, 65], 2.6) * .8, 0); at(k2, toll() * .5, 0); S('spk_reveal_big', k2, .45)
-S('spk_glow', glow([50, 53, 57], shape='tri', lfo=.5), .3); S('spk_glow_big', glow([50, 53, 57], shape='tri', lfo=.6, big=True), .35)
-S('spk_end', ending([86, 81, 77, 74], 'bell'), .45)
-
-# ------------------------------------------------------------------ Winter: an ice crack, a shatter of crystals, a glockenspiel in A
-def ice_crack():
-    b = mix(.5); at(b, hp(noise(.02), 2500) * dec(T(.02), 200) * 1.0, 0)
-    for i in range(5): at(b, hp(noise(.01), 3000) * dec(T(.01), 300) * .5, .02 + i * .018 + rng.uniform(0, .01))
-    at(b, bell(2900, .4, ratios=(1, 2.3, 3.7), amps=(1, .4, .2), k=9) * .3, .01); return b
-def shatter():
-    b = mix(1.4); at(b, hp(noise(.08), 2000) * dec(T(.08), 40) * 1.0, 0)
-    for i in range(30): at(b, bell(rng.uniform(2500, 6000), .25, ratios=(1, 2.1, 3.3), amps=(1, .3, .1), k=14) * rng.uniform(.1, .3), rng.uniform(0, .9) ** 1.5)
-    return b
-def wind(d): t = T(d); return bp(noise(d), 500, 1800) * (0.5 + .5 * np.sin(2 * np.pi * .7 * t)) * env(t, .5, d * .5) * .25
-bank('ice', ice_crack(), shatter(), [81, 85, 88, 93, 97], [69, 76, 81, 85, 88, 93, 97, 100, 105], 'bell', [57, 64, 69, 73], sub=33,
-     gl=[69, 76, 81], end_notes=[105, 100, 93], gl_extra=wind(2.4), k=3, ratios=(1, 3.0, 5.8), amps=(1, .3, .1))
-
-# ------------------------------------------------------------------ Crimson Isle: a meteor whoosh and impact, a war horn in F minor, fire
-def meteor():
-    b = mix(.8); at(b, sweep_noise(.3, 4000, 500, .35) * .7, 0); at(b, thump(100, 40, .45, 7) * 1.0, .3); at(b, crackle(.4, 70, .4), .32); return b
-def boom():
-    b = mix(1.8); at(b, lp(noise(1.5), 700) * env(T(1.5), .01, 1.2) * 1.5, 0); at(b, thump(80, 28, 1.3, 2.5) * 1.3, 0); at(b, crackle(1.2, 70, .4), .05); return b
-def horn(notes, d):
+        for v in (-1, -.4, .3, 1): s += osc(N(m) * (1 + det * v), d, 'saw') * .25
+    s = lp(s, cut) * env(t, a, r if r else d * .6)
+    return s / max(1, len(notes))
+def impact(f0=110, f1=38, d=1.2, bright=1.0, sub=1.0):
+    """A layered hit: a click, a pitched body that drops, a noise tail and a sub."""
     b = mix(d); t = T(d)
-    for m in notes: at(b, lp(osc(N(m), d, 'saw', vib=.006, vibf=4.5), 1300) * env(t, .18, d * .45) * .3, 0)
+    at(b, hp(noise(.02), 3000) * dec(T(.02), 160) * .7 * bright, 0)
+    at(b, osc(f0, d, glide=f1) * dec(t, 6) * .9, 0)
+    at(b, lp(noise(d), 1200 * bright + 300) * dec(t, 5) * .6, 0)
+    at(b, osc(f1 * .5 + 20, d) * env(t, .005, d * .8) * .7 * sub, 0)
     return b
-S('crm_beat', meteor(), .25); S('crm_burst', boom(), .3)
-c1 = mix(1.6); at(c1, horn([53, 60, 65], 1.4), 0); at(c1, chord([77, 80, 84], 1.0, 'pluck', .08, .3), .15); S('crm_reveal', c1, .35)
-c2 = mix(3.0); at(c2, horn([41, 48, 53, 60, 65], 2.7), 0); at(c2, thump(N(29) * 2, N(17), 1.4, 2.5), 0); at(c2, chord([77, 80, 84, 89, 92], 1.3, 'pluck', .09, .3), .2); at(c2, crackle(2.2, 40, .3), .2); S('crm_reveal_big', c2, .4)
-S('crm_glow', glow([41, 48, 53], shape='saw', extra=crackle(2.4, 35, .25)) * .6, .2); S('crm_glow_big', glow([41, 48, 53], shape='saw', big=True, extra=crackle(2.4, 60, .3)) * .6, .25)
-S('crm_end', ending([84, 80, 77], 'pluck'), .35)
-
-# ------------------------------------------------------------------ Rare mobs: a rattling cage, the bars snapping, a gritty arpeggio in G minor
-def rattle():
-    b = mix(.5)
-    for i in range(4): at(b, bell(rng.uniform(900, 1400), .2, ratios=(1, 1.7, 2.6, 3.9), amps=(1, .6, .4, .3), k=18) * .3, i * .045)
-    at(b, lp(noise(.15), 3000) * dec(T(.15), 20) * .3, 0); return b
-def snap():
-    b = mix(1.2); at(b, bell(700, 1.0, ratios=(1, 1.9, 2.8, 4.1), amps=(1, .7, .5, .3), k=5) * .5, 0); at(b, thump(130, 50, .5, 7) * .9, 0)
-    for i in range(6): at(b, bell(rng.uniform(1200, 2500), .3, ratios=(1, 2.2), amps=(1, .3), k=12) * .2, .1 + rng.uniform(0, .5))
+def riser(d=.6, f0=300, f1=4200): t = T(d); return sweep_noise(d, f0, f1, .3) * (t / d) ** 2 * .6
+def sparkle(d=1.2, n=14, lo=2800, hi=6000, gain=.18):
+    b = mix(d)
+    for i in range(n): at(b, fm(rng.uniform(lo, hi), .25, ratio=2.0, index=1.2, k=14) * gain, rng.uniform(0, d * .75))
     return b
-S('mob_beat', rattle(), .2); S('mob_burst', snap(), .3)
-def grit(notes, d, step):
+def arp(notes, inst, step, d=1.0, gain=.5, **kw):
     b = mix(d + step * len(notes))
-    for i, m in enumerate(notes): at(b, lp(osc(N(m), .5, 'sq'), 2500) * dec(T(.5), 6) * .35, i * step)
+    for i, m in enumerate(notes): at(b, inst(N(m), d, **kw) * gain * (1 - .03 * i), i * step)
     return b
-m1 = mix(1.5); at(m1, grit([67, 70, 74, 79, 82], .9, .08), 0); at(m1, pad([43, 50, 55], 1.3, 'saw') * .25, 0); S('mob_reveal', m1, .3)
-m2 = mix(2.9); at(m2, grit([55, 62, 67, 70, 74, 79, 82, 86, 91], 1.8, .07), .1); at(m2, pad([31, 43, 50, 55], 2.6, 'saw') * .3, 0); at(m2, thump(N(31) * 2, N(19), 1.2, 3), 0); S('mob_reveal_big', m2, .35)
-S('mob_glow', glow([43, 50, 55], shape='saw') * .45, .2); S('mob_glow_big', glow([43, 50, 55], shape='saw', big=True) * .45, .25)
-S('mob_end', ending([79, 74, 67], 'pluck'), .3)
-
-# ------------------------------------------------------------------ Dyes: a rising drip, a paint splash, a sparkling arpeggio in Bb
-def drip():
-    b = mix(.4); at(b, osc(700, .09, glide=2200) * env(T(.09), .002, .08) * .6, 0); at(b, osc(1100, .06, glide=2600) * env(T(.06), .002, .05) * .3, .09); return b
-def paint_splash():
-    b = mix(1.1); at(b, lp(noise(.5), 2500) * env(T(.5), .005, .4) * .7, 0); at(b, thump(220, 90, .25, 10) * .6, 0)
-    for i in range(8): at(b, osc(rng.uniform(900, 2000), .07, glide=rng.uniform(2000, 3500)) * env(T(.07), .002, .06) * .25, rng.uniform(.05, .6))
+def add(*xs):
+    b = mix(max(len(x) for x in xs) / SR + .01)
+    for x in xs: at(b, x, 0)
     return b
-bank('dye', drip(), paint_splash(), [70, 74, 77, 82, 86], [58, 65, 70, 74, 77, 82, 86, 89, 94], 'bell', [58, 65, 70, 74], sub=34,
-     gl=[70, 77, 82], end_notes=[94, 89, 82], k=3.5, ratios=(1, 2.0, 3.01, 4.2), amps=(1, .45, .25, .1))
+def pump(x, rate=2.0):
+    t = np.arange(len(x)) / SR; return x * (0.55 + 0.45 * ((t * rate) % 1.0) ** .6)
+def kalimba(f, d, **kw): return fm(f, d, ratio=5.04, index=1.4, k=4.5)
+def celesta(f, d, **kw): return add(fm(f, d, ratio=4.0, index=1.0, k=3.0), fm(2 * f, d * .6, ratio=3.0, index=.6, k=6) * .3)
+def harp(f, d, **kw): return add(pluck(f, d, 1.2) * .8, fm(f, d, ratio=2.0, index=.8, k=4) * .4)
+def mbox(f, d, **kw): return fm(f, d, ratio=3.5, index=1.8, k=3.5)
+def glock(f, d, **kw): return fm(f, d, ratio=2.76, index=1.5, k=2.2)
+def pizz(f, d, **kw): return pluck(f, d * .5, .6) * 1.1
+def choir(notes, d, a=.4):
+    t = T(d); s = np.zeros(len(t))
+    for m in notes: s += osc(N(m), d, 'saw', vib=.006, vibf=5.2) * .3
+    s = bp(s, 400, 1600) * 1.4 + bp(s, 2200, 3200) * .5
+    return s * env(t, a, d * .6)
 
-# ------------------------------------------------------------------ the achievements sky
+def bank2(p, beat, burst, inst, notes, big, bed, *, key_end, glow_bed=None, sub=36, step=.075, sp=1.0):
+    """One animation's sounds. beat = the three beats, burst = the drop appearing, reveal / reveal_big = the drop shown (Normal / RNG),
+    glow / glow_big = the bed under the finish, end = the close."""
+    S(p + '_beat', beat, .22); S(p + '_burst', burst, .3)
+    r = mix(1.6); at(r, arp(notes, inst, step, .9), 0); at(r, (glow_bed[0](bed, 1.4) if glow_bed else pad(bed, 1.4, 'tri', a=.15)) * .35, 0); at(r, sparkle(1.0, 6) * sp, .15); S(p + '_reveal', r, .3)
+    R = mix(3.0); at(R, impact(N(sub) * 2, N(sub), 1.4, .8, 1.2) * .8, 0); at(R, arp(big, inst, step * .9, 1.3), .1)
+    at(R, supersaw(bed, 2.6, cut=1800) * .45, 0); at(R, sparkle(2.2, 22) * sp, .3); at(R, riser(.5, 2000, 9000) * .2, 0); S(p + '_reveal_big', R, .38)
+    gb = glow_bed[0](bed + [bed[0] + 12], 2.6) if glow_bed else pad(bed + [bed[0] + 12], 2.6, 'sin', a=.6, r=1.8)
+    S(p + '_glow', pump(gb, 1.6) * .6, .25); S(p + '_glow_big', pump(add(gb, sparkle(2.6, 16, gain=.12)), 2.2) * .7, .3)
+    S(p + '_end', add(arp(key_end, inst, .12, 1.2, .45), pad([key_end[-1] - 12], 1.4, 'sin', a=.02, r=1.2) * .25), .38)
+
+# ---- Mythological: arcane arcs, thunder, a harp over a choir in D lydian
+def arc():
+    b = mix(.7); t = T(.5); z = osc(1800, .5, 'saw', glide=150) * .3 + bp(noise(.5), 1500, 8000) * .6
+    at(b, z * dec(t, 8) * (0.5 + .5 * (rng.random(len(t)) > .35)), 0); at(b, fm(N(74), .5, 1.414, 3, 6) * .35, .02); return b
+def thunder():
+    b = mix(2.2); at(b, impact(95, 30, 2.0, 1.2, 1.4), 0); at(b, lp(noise(1.8), 500) * env(T(1.8), .05, 1.6) * .9, .05); at(b, choir([62, 69, 74], 1.6, .02) * .3, 0); return b
+bank2('rit', arc(), thunder(), harp, [62, 69, 74, 78, 81], [50, 57, 62, 66, 69, 74, 78, 81, 86], [50, 57, 64, 66], key_end=[86, 81, 74, 69], glow_bed=(choir,), sub=38)
+
+# ---- Treasure: a spade in gravel, a chest bursting with coins, a music box in F
+def gravel():
+    b = mix(.6); at(b, impact(150, 70, .3, .6, .2) * .7, 0)
+    for i in range(10): at(b, bp(noise(.02), 1500, 6000) * dec(T(.02), 200) * rng.uniform(.2, .5), .02 + i * .025 + rng.uniform(0, .01))
+    return b
+def coinrain(n=18, d=1.2):
+    b = mix(d)
+    for i in range(n): at(b, fm(rng.uniform(2400, 4200), .35, 1.5, 1.4, 10) * rng.uniform(.15, .35), rng.uniform(0, d * .7) * (i / n) ** .5)
+    return b
+def chestburst():
+    b = mix(1.8); at(b, osc(160, .35, 'saw', glide=260, vib=.05, vibf=25) * env(T(.35), .04, .2) * .12, 0); at(b, impact(120, 50, .8, .9, .8), .32); at(b, coinrain(22, 1.3), .36); return b
+bank2('tre', gravel(), chestburst(), mbox, [65, 69, 72, 77, 81], [53, 60, 65, 69, 72, 77, 81, 84, 89], [53, 60, 65, 69], key_end=[89, 84, 77, 72], sub=29)
+
+# ---- Slayer: a whooshing strike with a ringing edge, a colossal hit, dark brass and taiko in C minor
+def strike():
+    b = mix(.8); at(b, sweep_noise(.22, 500, 6000, .3) * .7, 0); at(b, impact(140, 60, .5, 1.1, .5) * .8, .18); at(b, fm(1760, .5, 1.47, 2.5, 6) * .25, .18); return b
+def colossal():
+    b = mix(2.4); at(b, riser(.35, 800, 6000) * .4, 0); at(b, impact(100, 26, 2.2, 1.3, 1.6) * 1.1, .3)
+    at(b, np.tanh(lp(noise(1.2), 900) * 3) * env(T(1.2), .01, 1.0) * .35, .3); at(b, fm(110, 1.8, 2.4, 3, 2.5) * .35, .3); return b
+def brass2(notes, d): return supersaw(notes, d, det=.006, cut=1400, a=.05)
+bank2('sly', strike(), colossal(), lambda f, d, **kw: fm(f, d, 1.0, 2.2, 3.5) * .8, [60, 63, 67, 72, 75], [48, 55, 60, 63, 67, 72, 75, 79, 84], [36, 43, 48, 51], key_end=[72, 67, 63, 60], glow_bed=(brass2,), sub=24, sp=.6)
+
+# ---- Rare Crops: rustle and a wood knock, an earthy bloom, a kalimba in G
+def rustle():
+    b = mix(.5); at(b, bp(noise(.3), 2000, 7000) * env(T(.3), .03, .25) * .45, 0); at(b, mallet(N(55), .4) * .6, .05); return b
+def bloom():
+    b = mix(1.4); at(b, impact(200, 80, .6, .5, .5) * .6, 0); at(b, sweep_noise(.8, 300, 3000, .3) * .4, 0)
+    for i, m in enumerate([79, 83, 86, 91]): at(b, kalimba(N(m), .6) * .3, .1 + i * .05)
+    return b
+bank2('crp', rustle(), bloom(), kalimba, [67, 71, 74, 79, 83], [55, 62, 67, 71, 74, 79, 83, 86, 91], [55, 62, 67, 71], key_end=[91, 86, 79, 74], sub=31)
+
+# ---- Harvest Feast: a pumpkin knock and bells, a festival drum hit, a squeezebox tune in A minor
+def pknock():
+    b = mix(.5); at(b, osc(180, .3, glide=120) * dec(T(.3), 14) * .8, 0); at(b, fm(N(81), .3, 2.0, 1, 10) * .2, .02); at(b, fm(N(88), .3, 2.0, 1, 10) * .15, .06); return b
+def drumhit():
+    b = mix(1.4); at(b, impact(130, 55, 1.0, 1.0, .8), 0)
+    for i in range(5): at(b, hp(noise(.15), 5000) * dec(T(.15), 18) * .25, .06 + i * .07)
+    return b
+def squeeze(f, d, **kw): t = T(d); return lp(osc(f, d, 'sq', vib=.008, vibf=6)[:len(t)] * .6 + osc(f * 1.005, d, 'sq')[:len(t)] * .4, 2600) * env(t, .03, d * .5) * .5
+bank2('fst', pknock(), drumhit(), squeeze, [69, 72, 76, 81, 84], [57, 64, 69, 72, 76, 81, 84, 88, 93], [57, 64, 69, 72], key_end=[84, 81, 76, 69], sub=33)
+
+# ---- Harvest Bounty: greenhouse glass chimes, a bright bloom, a celesta in E
+def glasschime():
+    b = mix(.8)
+    for i in range(4): at(b, fm(rng.uniform(1800, 3200), .6, 2.76, 2, 5) * .25, i * .05)
+    return b
+def brightbloom(): b = mix(1.5); at(b, sweep_noise(1.0, 600, 9000, .35) * .45, 0); at(b, sparkle(1.2, 18, 3000, 8000, .2), .1); at(b, impact(260, 120, .5, .4, .3) * .4, 0); return b
+bank2('bty', glasschime(), brightbloom(), celesta, [76, 80, 83, 88, 92], [64, 71, 76, 80, 83, 88, 92, 95, 100], [64, 71, 76, 80], key_end=[100, 95, 88, 83], sub=40)
+
+# ---- Pests: a buzzing chirp, a vacuum suck and pop, pizzicato in D
+def buzz():
+    b = mix(.4); t = T(.25); at(b, fm(N(86), .25, 0.5, 6, 6) * (0.6 + .4 * np.sin(2 * np.pi * 60 * t)) * .5, 0); at(b, fm(N(93), .12, 0.5, 4, 12) * .3, .12); return b
+def suck():
+    b = mix(1.0); at(b, sweep_noise(.5, 4000, 300, .3) * .6, 0); at(b, osc(300, .5, glide=1200) * env(T(.5), .3, .1) * .3, 0); at(b, impact(400, 150, .3, .6, .2) * .6, .5); return b
+bank2('pst', buzz(), suck(), pizz, [74, 78, 81, 86, 90], [62, 69, 74, 78, 81, 86, 90, 93, 98], [62, 69, 74], key_end=[98, 93, 86, 81], sub=38)
+
+# ---- Experimentation Table: a page riffle and a glyph chime, a book slam with a rune hum, celesta and choir in B
+def riffle2():
+    b = mix(.6)
+    for i in range(8): at(b, bp(noise(.03), 2000, 8000) * dec(T(.03), 90) * .35, i * .03)
+    at(b, fm(N(83), .4, 3.0, 1.5, 6) * .25, .2); return b
+def slam():
+    b = mix(1.6); at(b, impact(150, 60, .9, 1.0, .8), 0); t = T(1.4); at(b, fm(N(47), 1.4, 1.0, .8, 1.5) * (1 + .3 * np.sin(2 * np.pi * 7 * t)) * .3, .05); return b
+bank2('tab', riffle2(), slam(), celesta, [71, 75, 78, 83, 87], [59, 66, 71, 75, 78, 83, 87, 90, 95], [59, 66, 71, 75], key_end=[95, 90, 83, 78], glow_bed=(choir,), sub=35)
+
+# ---- Water: a bobber plop, a splash column, liquid FM bells in C
+def plop2():
+    b = mix(.5); at(b, osc(900, .12, glide=250) * env(T(.12), .002, .1) * .7, 0); at(b, bp(noise(.2), 800, 4000) * dec(T(.2), 20) * .3, .04); return b
+def splash2():
+    b = mix(1.5); at(b, lp(noise(1.0), 3500) * env(T(1.0), .01, .8) * .8, 0); at(b, impact(180, 70, .5, .6, .6) * .6, 0)
+    for i in range(10): at(b, osc(rng.uniform(800, 1800), .08, glide=rng.uniform(1800, 3200)) * env(T(.08), .002, .07) * .2, rng.uniform(.1, .8))
+    return b
+def liquid(f, d, **kw): t = T(d); return fm(f, d, 1.0, 1.4, 3) * (1 + .15 * np.sin(2 * np.pi * 5 * t))
+bank2('wat', plop2(), splash2(), liquid, [72, 76, 79, 84, 88], [60, 67, 72, 76, 79, 84, 88, 91, 96], [60, 67, 72, 76], key_end=[96, 91, 84, 79], sub=36)
+
+# ---- Lava: a magma blorp, an eruption, low brass fifths in E minor
+def blorp2(): b = mix(.6); at(b, osc(140, .4, glide=60) * env(T(.4), .01, .3) * .8, 0); at(b, lp(noise(.3), 600) * dec(T(.3), 10) * .4, .05); at(b, crackle(.4, 50, .3), .1); return b
+def erupt(): b = mix(2.2); at(b, impact(90, 28, 2.0, .9, 1.5), 0); at(b, lp(noise(1.8), 1000) * env(T(1.8), .02, 1.5) * .7, 0); at(b, crackle(1.6, 90, .45), .05); return b
+bank2('lav', blorp2(), erupt(), lambda f, d, **kw: fm(f, d, 1.0, 2.6, 3) * .8, [64, 67, 71, 76, 79], [52, 59, 64, 67, 71, 76, 79, 83, 88], [40, 47, 52, 55], key_end=[76, 71, 67, 64], glow_bed=(brass2,), sub=28, sp=.5)
+
+# ---- Spooky: a tolling bell, an organ blast, a wavering theremin in D minor
+def toll2(): return fm(N(50), 1.4, 1.4, 3.0, 1.8) * .8
+def organ2(notes, d):
+    t = T(d); s = sum(osc(N(m), d, 'sin') + osc(N(m) * 2, d, 'sin') * .5 + osc(N(m) * 4, d, 'sin') * .25 for m in notes)
+    return s * env(t, .03, d * .6) * .25
+def ghostblast(): b = mix(1.8); at(b, organ2([50, 53, 57, 62], 1.6), 0); at(b, impact(110, 40, 1.0, .7, 1.0) * .6, 0); return b
+def theremin2(f, d, **kw): t = T(d); return osc(f, d, 'sin', vib=.02, vibf=6) * env(t, .08, d * .6) * .7
+bank2('spk', toll2(), ghostblast(), theremin2, [62, 65, 69, 74, 77], [50, 57, 62, 65, 69, 74, 77, 81, 86], [50, 53, 57, 62], key_end=[86, 81, 77, 74], glow_bed=(organ2,), sub=26, sp=.5)
+
+# ---- Winter: an ice crack, crystals shattering, a glockenspiel in A
+def crack2(): b = mix(.5); at(b, hp(noise(.05), 2000) * dec(T(.05), 80) * .9, 0); at(b, fm(2400, .4, 1.73, 3, 8) * .3, .01); at(b, osc(800, .2, glide=300) * dec(T(.2), 20) * .3, .02); return b
+def shatter2():
+    b = mix(1.6); at(b, impact(300, 120, .6, 1.4, .3) * .6, 0)
+    for i in range(24): at(b, fm(rng.uniform(2500, 7000), .3, 1.3, 2, 10) * .14, rng.uniform(0, .9))
+    return b
+bank2('ice', crack2(), shatter2(), glock, [81, 85, 88, 93, 97], [69, 76, 81, 85, 88, 93, 97, 100, 105], [57, 64, 69, 73], key_end=[105, 100, 93, 88], sub=33)
+
+# ---- Crimson Isle: a meteor strike, a fortress boom, a war horn in F minor
+def meteor2(): b = mix(.9); at(b, sweep_noise(.35, 5000, 500, .35) * .7, 0); at(b, impact(110, 40, .55, 1.0, .7), .32); at(b, crackle(.4, 70, .35), .34); return b
+def fortress(): b = mix(2.2); at(b, impact(80, 24, 2.0, 1.0, 1.6) * 1.1, 0); at(b, crackle(1.5, 80, .4), .05); at(b, supersaw([41, 48, 53], 1.6, cut=900) * .4, .05); return b
+def horn2(f, d, **kw): t = T(d); return lp(osc(f, d, 'saw', vib=.006, vibf=4.5), 1500) * env(t, .06, d * .55) * .55
+bank2('crm', meteor2(), fortress(), horn2, [65, 68, 72, 77, 80], [53, 60, 65, 68, 72, 77, 80, 84, 89], [41, 48, 53, 56], key_end=[77, 72, 68, 65], glow_bed=(brass2,), sub=29, sp=.5)
+
+# ---- Rare mobs: a rattling cage, iron bars snapping, a gritty arpeggio in G minor
+def rattle2():
+    b = mix(.6)
+    for i in range(5): at(b, fm(rng.uniform(900, 1500), .25, 1.7, 3, 14) * .3, i * .04)
+    return b
+def bars():
+    b = mix(1.5); at(b, impact(140, 50, .8, 1.0, .9) * .8, 0); at(b, fm(700, 1.0, 1.9, 3, 4) * .45, 0)
+    for i in range(7): at(b, fm(rng.uniform(1200, 2600), .35, 2.2, 2, 10) * .18, .08 + rng.uniform(0, .6))
+    return b
+def gritty(f, d, **kw): return lp(osc(f, d * .6, 'sq'), 2600) * dec(T(d * .6), 6) * .5
+bank2('mob', rattle2(), bars(), gritty, [67, 70, 74, 79, 82], [55, 62, 67, 70, 74, 79, 82, 86, 91], [43, 50, 55, 58], key_end=[82, 79, 74, 67], glow_bed=(brass2,), sub=31, sp=.6)
+
+# ---- Dyes: a rising drip, a paint splash, a sparkling celesta in Bb
+def drip2(): b = mix(.4); at(b, osc(700, .09, glide=2400) * env(T(.09), .002, .08) * .6, 0); at(b, osc(1200, .06, glide=2800) * env(T(.06), .002, .05) * .3, .09); return b
+def paint2():
+    b = mix(1.3); at(b, lp(noise(.6), 2800) * env(T(.6), .005, .45) * .7, 0); at(b, impact(240, 100, .3, .6, .3) * .5, 0)
+    for i in range(10): at(b, osc(rng.uniform(900, 2200), .07, glide=rng.uniform(2200, 3800)) * env(T(.07), .002, .06) * .22, rng.uniform(.05, .7))
+    return b
+bank2('dye', drip2(), paint2(), celesta, [70, 74, 77, 82, 86], [58, 65, 70, 74, 77, 82, 86, 89, 94], [58, 65, 70, 74], key_end=[94, 89, 82, 77], sub=34)
+
+# ---- the achievements star map
 def sky_open():
-    b = mix(1.8); t = T(1.6)
-    at(b, sweep_noise(0.9, 400, 4000, .3) * .35, 0)
-    for i, m in enumerate([72, 79, 84, 88, 91, 96]): at(b, bell(N(m), 1.2, k=3) * (.3 - .03 * i), .15 + i * .09)
-    at(b, pad([60, 67, 72], 1.6, 'sin', a=.4) * .4, 0)
-    return b
+    b = mix(2.0); at(b, riser(.8, 400, 5000) * .5, 0)
+    for i, m in enumerate([72, 79, 84, 88, 91, 96]): at(b, glock(N(m), 1.2) * (.32 - .03 * i), .2 + i * .08)
+    at(b, choir([60, 67, 72], 1.8, .3) * .35, 0); return b
 def sky_close():
-    b = mix(.9)
-    for i, m in enumerate([91, 84, 79]): at(b, bell(N(m), .6, k=6) * .25, i * .07)
+    b = mix(1.0)
+    for i, m in enumerate([91, 84, 79]): at(b, glock(N(m), .6) * .25, i * .06)
     at(b, sweep_noise(.4, 3000, 500, .3) * .3, 0); return b
-def sky_zoom():
-    b = mix(1.0); at(b, sweep_noise(.6, 500, 3500, .35) * .5, 0)
-    for i in range(8): at(b, bell(rng.uniform(2500, 5000), .3, ratios=(1, 2.1), amps=(1, .3), k=12) * .12, .1 + rng.uniform(0, .5))
-    return b
-def sky_star(): return bell(N(88), .8, ratios=(1, 2.0, 3.0), amps=(1, .3, .12), k=5) * .5
+def sky_zoom(): b = mix(1.1); at(b, sweep_noise(.6, 500, 4000, .35) * .5, 0); at(b, sparkle(.9, 10, gain=.12), .1); return b
+def sky_star(): return glock(N(88), .9) * .5
 S('sky_open', sky_open(), .35); S('sky_close', sky_close(), .3); S('sky_zoom', sky_zoom(), .3); S('sky_star', sky_star(), .35)
 
 # ------------------------------------------------------------------ write
