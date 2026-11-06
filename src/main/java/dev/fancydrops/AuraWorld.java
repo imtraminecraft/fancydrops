@@ -47,12 +47,19 @@ final class AuraWorld {
                 Sim s = SIMS.get(p.getUUID());
                 if (s == null || !s.aura().equals(l.aura())) { if (s != null) kill(s.sim()); s = new Sim(new AuraSim(l.aura(), p.getUUID().hashCode()), l.aura()); SIMS.put(p.getUUID(), s); }
                 s.sim().step(p.getX(), p.getY(), p.getZ(), Math.min(100, cf.cosAmount) / 100f, cf.cosSpeed / 100f, cf.cosCalm, cf.cosSize / 100f);
-                for (AuraSim.Part part : s.sim().born) mc.particleEngine.add(new Glow(mc.level, p, part));
+                for (AuraSim.Part part : s.sim().born) { mc.particleEngine.add(new Glow(mc.level, p, part)); spawned++; }
+            }
+            long now = System.currentTimeMillis();
+            if (now - lastReport > 30_000L) {                                                      // a line in the log now and then, to see what the auras are doing
+                lastReport = now; int withAura = 0; for (Cosmetics.Look l : looks.values()) if (l.aura() != null) withAura++;
+                Cosmetics.Look mine = looks.get(mc.player.getUUID());
+                System.err.println("[FancyDrops] auras: " + looks.size() + " looks, " + withAura + " with an aura, mine=" + (mine == null ? "none" : mine.aura()) + ", sims=" + SIMS.size() + ", particles made=" + spawned + ", ticked=" + ticked + ", sprite=" + sprite("aura_star").contents().name());
             }
             for (Iterator<Map.Entry<UUID, Sim>> it = SIMS.entrySet().iterator(); it.hasNext(); ) { var e = it.next(); if (!seen.contains(e.getKey())) { kill(e.getValue().sim()); it.remove(); } }
         } catch (Throwable t) { if (!warned) { warned = true; System.err.println("[FancyDrops] aura tick failed: " + t); } }
     }
     private static boolean warned;
+    private static long lastReport, spawned, ticked;
     private static void kill(AuraSim s) { for (AuraSim.Part p : s.parts) p.dead = true; }
 
     /** Looked up each time (cheap), so a resource reload never leaves a particle with an old sprite. */
@@ -85,9 +92,10 @@ final class AuraWorld {
             int c = part.col;
             this.rCol = ((c >> 16) & 255) / 255f; this.gCol = ((c >> 8) & 255) / 255f; this.bCol = (c & 255) / 255f;
             this.alpha = Math.max(0f, Math.min(1f, a));
-            this.quadSize = Math.max(0.001f, part.s * 0.65f);                                      // a quad reaches quadSize each way from its middle
+            this.quadSize = Math.max(0.001f, part.s * 1.0f);                                      // a quad reaches quadSize each way from its middle
         }
         @Override public void tick() {
+            ticked++;
             this.xo = this.x; this.yo = this.y; this.zo = this.z;
             if (part.dead || owner.isRemoved()) { remove(); return; }
             place(); look();

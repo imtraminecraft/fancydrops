@@ -28,7 +28,27 @@ final class Achievements {
     private static volatile long fetchedAt, failedAt; private static volatile boolean fetching, posting;
     static volatile String status = "Connecting to the ledger...";
     private static final List<JsonObject> PENDING = new ArrayList<>();
-    private static long firstPending;
+    private static long firstPending, retryAt;
+    /** How sending drops is going, for the star map: "" while fine. */
+    static volatile String syncNote = ""; static volatile int unsent;
+    private static boolean pendingLoaded;
+    /** Drops that could not be sent yet wait in config/fancydrops/unsent_drops.json, and go out with the next send (even after a restart). */
+    private static java.nio.file.Path pendingFile() { return DataFiles.dir().resolve("unsent_drops.json"); }
+    private static void savePending(List<JsonObject> l) {
+        try { com.google.gson.JsonArray a = new com.google.gson.JsonArray(); for (JsonObject e : l) a.add(e); java.nio.file.Files.writeString(pendingFile(), a.toString()); unsent = l.size(); } catch (Throwable ignored) { }
+    }
+    private static void loadPending() {
+        if (pendingLoaded) return; pendingLoaded = true;
+        try {
+            java.nio.file.Path f = pendingFile(); if (!java.nio.file.Files.exists(f)) return;
+            List<JsonObject> l = new ArrayList<>(); for (var e : JsonParser.parseString(java.nio.file.Files.readString(f)).getAsJsonArray()) l.add(e.getAsJsonObject());
+            synchronized (PENDING) { if (!l.isEmpty()) { PENDING.addAll(0, l); firstPending = 0; unsent = l.size(); } }
+        } catch (Throwable ignored) { }
+    }
+    private static void requeue(List<JsonObject> batch, String why) {
+        synchronized (PENDING) { PENDING.addAll(0, batch); if (PENDING.size() > 500) PENDING.subList(0, PENDING.size() - 500).clear(); savePending(new ArrayList<>(PENDING)); }
+        retryAt = System.currentTimeMillis() + 60_000L; syncNote = why;
+    }
 
     static Profile profile() { refresh(false); return profile; }
     static boolean ready() { return profile != null; }
@@ -88,12 +108,13 @@ final class Achievements {
 
     /** Every tick: sends what has waited 6 seconds (prices have arrived by then), signed with your Minecraft login. */
     static void tick(Minecraft mc) {
-        refresh(false);
+        refresh(false); loadPending();
         List<JsonObject> batch;
         synchronized (PENDING) {
-            if (PENDING.isEmpty() || posting || System.currentTimeMillis() - firstPending < 6000L) return;
+            if (PENDING.isEmpty() || posting || System.currentTimeMillis() - firstPending < 6000L || System.currentTimeMillis() < retryAt) return;
             batch = new ArrayList<>(PENDING); PENDING.clear();
-            for (JsonObject e : batch) { AnimationManager.Item it = PRICED.remove(e); double v = it == null || it.price < 0 ? 0 : it.price * Math.max(1, it.amount); e.addProperty("v", Math.round(v)); }
+            for (JsonObject e : batch) { AnimationManager.Item it = PRICED.remove(e); if (it == null && e.has("v")) continue; double v = it == null || it.price < 0 ? 0 : it.price * Math.max(1, it.amount); e.addProperty("v", Math.round(v)); }
+            savePending(batch);
         }
         String b = base(); UUID me = Cosmetics.me(); if (b == null || me == null) return;
         String name = mc.getUser().getName(), token = mc.getUser().getAccessToken();
@@ -104,11 +125,12 @@ final class Achievements {
                 com.google.gson.JsonArray arr = new com.google.gson.JsonArray(); for (JsonObject e : batch) arr.add(e); o.add("events", arr);
                 var res = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(b + "/event")).header("User-Agent", "FancyDrops").header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(o.toString())).build(), HttpResponse.BodyHandlers.ofString());
-                if (res.statusCode() != 200) { System.err.println("[FancyDrops] ledger: " + res.statusCode() + " " + res.body()); return; }
+                if (res.statusCode() != 200) { System.err.println("[FancyDrops] ledger: " + res.statusCode() + " " + res.body()); requeue(batch, res.statusCode() == 403 ? "Drops are waiting: the server couldn't confirm it's you (" + res.body() + ")" : "Drops are waiting: the server said " + res.statusCode()); return; }
+                savePending(List.of()); syncNote = "";
                 JsonObject r = JsonParser.parseString(res.body()).getAsJsonObject();
                 Profile before = profile; profile = parse(r); fetchedAt = System.currentTimeMillis(); CosmeticData.changed();
                 if (r.has("unlocked")) for (var u : r.getAsJsonArray("unlocked")) announce(u.getAsString());
-            } catch (Throwable t) { System.err.println("[FancyDrops] ledger: could not send drops: " + t); }
+            } catch (Throwable t) { System.err.println("[FancyDrops] ledger: could not send drops: " + t); requeue(batch, "Drops are waiting: couldn't reach the server"); }
             finally { posting = false; }
         });
     }

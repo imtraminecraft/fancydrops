@@ -21,6 +21,13 @@ final class Icons {
         return key;
     }
 
+    /** A drawn icon (IconArt) at a given strength, alpha 0..1 (the star map's faint emblems). */
+    static void drawFaint(GuiGraphicsExtractor g, String name, int x, int y, long now, float alpha) {
+        int frame = !animated || STILL_ICONS ? 0 : (int) ((now / FRAME_MS) % IconArt.FRAMES);
+        int[] px = frameOf(name, 0, frame); if (px == null) return;
+        PixTex.draw(g, px, x, y, 16, 16, (Math.round(Math.max(0f, Math.min(1f, alpha)) * 255) << 24) | 0xFFFFFF);
+    }
+
     /** Draws a 16 x 16 icon at x, y. */
     static void draw(GuiGraphicsExtractor g, String key, int x, int y, long now) {
         if (!animated || STILL_ICONS) now = 2400L;

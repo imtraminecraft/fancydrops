@@ -24,13 +24,19 @@ final class Codex {
         void tip(String lines, int col);
     }
 
-    // ---- the constellations, in the menu's order
-    private static final String[] ACH = {"ledger", "fortune", "myth", "rare", "farm", "fish", "dye"};
-    private static final String[] ACH_NAME = {"The Ledger", "Fortune", "Mythological", "Rare Drops", "Farming", "Fishing", "Dyes"};
-    private static final String[] FIGURE = {"The Quill", "The Coin", "The Horn", "The Sword", "The Sheaf", "The Fish", "The Drop"};
-    private static final int[] ACH_COL = {0xFFFFD27A, 0xFFC9A0FF, 0xFF7AD8FF, 0xFFFF8A7A, 0xFF9CEB78, 0xFF62E6F0, 0xFFFF9AD2};
-    private static final String[] QUOTE = {"Every find, written down.", "Fortune favours the patient.", "Dig, and the earth answers.", "They drop what they guard.", "The harvest remembers.", "Patience, then a splash.", "Every colour has a story."};
-    private static final float[][] HOME = {{0.14f, 0.30f}, {0.36f, 0.22f}, {0.58f, 0.20f}, {0.67f, 0.54f}, {0.45f, 0.57f}, {0.84f, 0.75f}, {0.27f, 0.58f}};      // fractions of the width, of the height
+    // ---- the star groups: the heart of the map (every drop: the Ledger and Fortune chapters together), then one group for each main page of the
+    //      Drop Library, round it like the points of a star. Lanes of light run from the heart to each group and fill as you complete it.
+    private static final String[] ACH = {"core", "myth", "rare", "farm", "fish", "dye"};
+    private static final String[] ACH_NAME = {"Every Drop", "Mythological", "Rare Drops", "Farming", "Fishing", "Dyes"};
+    private static final String[] FIGURE = {"The Pole Star", "The Griffin", "The Sword", "The Sheaf", "The Fish", "The Drop"};
+    private static final String[] ICON = {"fancydrops", "mytho", "raredrops", "farm", "fishing", "dye"};
+    private static final int[] ACH_COL = {0xFFFFD27A, 0xFF55D8FF, 0xFFFF6A6A, 0xFF8CE86A, 0xFF4FC3FF, 0xFFFF72C6};
+    private static final String[] QUOTE = {"Every find, written down.", "Dig, and the earth answers.", "They drop what they guard.", "The harvest remembers.", "Patience, then a splash.", "Every colour has a story."};
+    private static final float[][] HOME = {{0.42f, 0.50f}, {0.42f, 0.19f}, {0.62f, 0.42f}, {0.57f, 0.80f}, {0.27f, 0.80f}, {0.18f, 0.40f}};      // fractions of the width, of the height
+    /** The way a group's tree grows: straight away from the heart of the map. */
+    private static double growDir(int c) { return c == 0 ? -Math.PI / 2 : Math.atan2(HOME[c][1] - HOME[0][1], (HOME[c][0] - HOME[0][0]) * 1.7); }
+    /** Which group a server chapter belongs to. */
+    private static int groupOf(String ch) { return switch (ch) { case "myth" -> 1; case "rare" -> 2; case "farm" -> 3; case "fish" -> 4; case "dye" -> 5; default -> 0; }; }
 
     static boolean open;
     private static long openAt, closeAt, zoomAt, hoverAt, blinkAt;
@@ -55,7 +61,7 @@ final class Codex {
     /** Opens straight on one achievement: flies to its constellation and makes its star blink. */
     static void openAt(int[] btn, String achId) {
         Achievements.Profile p = Achievements.profile(); int c = -1;
-        if (p != null) for (Achievements.Ach a : p.list()) if (a.id().equals(achId)) for (int i = 0; i < ACH.length; i++) if (ACH[i].equals(a.ch())) c = i;
+        if (p != null) for (Achievements.Ach a : p.list()) if (a.id().equals(achId)) c = groupOf(a.ch());
         open(btn, -1);
         if (c >= 0) { prevFocus = -1; focus = c; zoomAt = openAt + OPEN - 200; }
         blinkId = achId; blinkAt = openAt + OPEN + 200;
@@ -93,7 +99,7 @@ final class Codex {
 
     private static List<Achievements.Ach> achOf(String id) {
         Achievements.Profile p = Achievements.profile(); List<Achievements.Ach> l = new ArrayList<>();
-        if (p != null) for (Achievements.Ach a : p.list()) if (a.ch().equals(id)) l.add(a);
+        if (p != null) for (Achievements.Ach a : p.list()) if (ACH[groupOf(a.ch())].equals(id)) l.add(a);
         return l;
     }
     static void draw(GuiGraphicsExtractor g, Host h, int width, int height, int mx0, int my0) {
@@ -128,6 +134,7 @@ final class Codex {
         chart(g);
         streaks(g);
         hoverCon = -1;
+        lanes(g, zoomed, showFocus);
         for (int c = 0; c < ACH.length; c++) constellation(g, c, zoomed, showFocus);
         if (hoverCon != lastHoverCon) { lastHoverCon = hoverCon; hoverAt = now; if (hoverCon >= 0) sound("sky_star", 0.75f, 0.35f); }
         shootingStars(g);
@@ -270,8 +277,8 @@ final class Codex {
             for (List<Achievements.Ach> b : br.values()) b.sort(Comparator.comparingDouble(Achievements.Ach::goal));
             List<Node> out = new ArrayList<>(); int nb = br.size(), bi = 0;
             for (List<Achievements.Ach> b : br.values()) {
-                double base = -Math.PI / 2 + (nb == 1 ? 0 : (bi - (nb - 1) / 2.0) * Math.min(1.25, 5.6 / nb)) + (nb > 4 ? 0 : 0);
-                if (nb >= 5) base = -Math.PI / 2 + bi * Math.PI * 2 / nb;                      // many branches: all the way round
+                double away = growDir(c), spread = Math.min(2.6, 0.75 * nb);                    // a group's branches fan out away from the heart; the heart's go all the way round
+                double base = c == 0 ? -Math.PI / 2 + bi * Math.PI * 2 / nb : away + (nb == 1 ? 0 : (bi - (nb - 1) / 2.0) * spread / (nb - 1));
                 int prev = -1;
                 for (int d = 0; d < b.size(); d++) {
                     double an = base + d * 0.2 * (bi % 2 == 0 ? 1 : -1), r = 0.065 + 0.055 * d;
@@ -282,6 +289,20 @@ final class Codex {
             }
             return out;
         });
+    }
+
+    /** Lanes of light from the heart of the map to each group: dim dotted paths that fill (and run with sparks) as you complete the group. */
+    private static void lanes(GuiGraphicsExtractor g, float zoomed, int fc) {
+        float[] h = centre(0); float hx = X(h[0]), hy = Y(h[1]);
+        float a0 = 1f - 0.8f * zoomed;
+        for (int c = 1; c < ACH.length; c++) {
+            List<Achievements.Ach> l = achOf(ACH[c]); int d = 0; for (Achievements.Ach q : l) if (q.done()) d++;
+            float f = l.isEmpty() ? 0f : d / (float) l.size(), fa = fc >= 0 && fc != c && fc != 0 ? a0 * 0.4f : a0;
+            float[] o = centre(c); float ox = X(o[0]), oy = Y(o[1]);
+            float sx = hx + (ox - hx) * 0.18f, sy = hy + (oy - hy) * 0.18f, ex = hx + (ox - hx) * 0.8f, ey = hy + (oy - hy) * 0.8f;
+            dashed(sx, sy, ex, ey, 0x8A96C0, 0.22f * fa);
+            if (f > 0f) { float mx2 = sx + (ex - sx) * f, my2 = sy + (ey - sy) * f; line(sx, sy, mx2, my2, ACH_COL[c], 0.35f * fa, 2); line(sx, sy, mx2, my2, mix(ACH_COL[c], 0xFFFFFFFF, 0.5f), 0.8f * fa, 0); spark(sx, sy, mx2, my2, ACH_COL[c], fa, c * 31); glow(mx2, my2, 4, ACH_COL[c], 0.8f * fa); }
+        }
     }
 
     private static void constellation(GuiGraphicsExtractor g, int c, float zoomed, int fc) {
@@ -297,6 +318,10 @@ final class Codex {
         int col = ACH_COL[c]; float frac = l.isEmpty() ? 0f : done / (float) l.size();
         float breathe = 0.85f + 0.15f * (float) Math.sin(now / 1800.0 + c);
         NebulaTex.glow(g, ox, oy, rad * (1.2f + 0.25f * frac), rad * (1.0f + 0.2f * frac), argb((0.08f + 0.2f * frac + (full ? 0.15f : 0f) + 0.1f * hk) * fade * alpha * breathe, col));
+        if (zoomed < 0.7f) {                                                                 // the Drop Library page's own icon, big and faint, behind its group
+            float ia = (0.10f + 0.12f * frac + 0.15f * hk) * (1f - zoomed / 0.7f) * fade * alpha, sc = rad * 1.1f / 16f;
+            if (ia > 0.01f) { Gfx.push(g); Gfx.translate(g, ox - 8 * sc, oy - 8 * sc - rad * 0.15f); Gfx.scale(g, sc); Icons.drawFaint(g, ICON[c], 0, 0, now, ia); Gfx.pop(g); }
+        }
         if (full && zoomed < 0.6f) { float sp = (now / 6000f) % 1f, ra = (1f - zoomed / 0.6f) * fade; for (int i = 0; i < 6; i++) { double an = (sp + i / 6f) * Math.PI * 2; glow(ox + (float) Math.cos(an) * rad, oy + (float) Math.sin(an) * rad * 0.9f, 3, col, 0.6f * ra); } }
         // the branches: a path lights up from the heart outward as you earn its nodes; the next node to earn sits at the end of the lit path
         for (int i = 0; i < t.size(); i++) {
@@ -313,9 +338,11 @@ final class Codex {
         if (zoomed < 0.6f && inSky(ox, oy)) {
             float la = (1f - zoomed / 0.6f) * fade * alpha;
             String nm = spaced(ACH_NAME[c].toUpperCase(Locale.ROOT));
-            float bot = 0.04f; for (Node n : t) bot = Math.max(bot, n.dv());
-            int ty = Math.round(Y(o[1] + bot)) + 9, nw = host.width(nm);
-            text(g, nm, Math.round(ox - nw / 2f), ty, argb(la, hv || full ? mix(col, 0xFFFFFFFF, 0.4f) : 0xE6E8F4), true);
+            float bot = 0.04f, top = -0.04f; for (Node n : t) { bot = Math.max(bot, n.dv()); top = Math.min(top, n.dv()); }
+            boolean above = c != 0 && Math.sin(growDir(c)) > 0.3;                             // a tree growing down has its name above it
+            int ty = above ? Math.round(Y(o[1] + top)) - 24 : Math.round(Y(o[1] + bot)) + 9, nw = host.width(nm);
+            if (c == 0) small(g, nm, Math.round(ox - nw * 0.375f), ty + 2, argb(la, hv || full ? mix(col, 0xFFFFFFFF, 0.4f) : 0xFFE9B8));      // the heart's name, smaller
+            else text(g, nm, Math.round(ox - nw / 2f), ty, argb(la, hv || full ? mix(col, 0xFFFFFFFF, 0.4f) : 0xE6E8F4), true);
             String sub = done + " / " + l.size(); int subW = Math.round(host.width(sub) * 0.75f);
             small(g, sub, Math.round(ox - subW / 2f), ty + 11, argb(la * 0.8f, full ? col : 0xA8B2D0));
             if (full) small(g, "✦ COMPLETE ✦", Math.round(ox - host.width("✦ COMPLETE ✦") * 0.375f), ty - 9, argb(la, col));
@@ -440,7 +467,7 @@ final class Codex {
         small(g, title, x + 7, y + 4, argb(0.9f * a * alpha, 0xE8C76A));
         int yy = y + 14;
         for (Achievements.Ach q : l) {
-            int ci = Math.max(0, Arrays.asList(ACH).indexOf(q.ch())), col = ACH_COL[ci];
+            int ci = groupOf(q.ch()), col = ACH_COL[ci];
             boolean hv = mx >= x && mx < x + w && my >= yy - 1 && my < yy + (bars ? 17 : 11);
             if (hv) g.fill(x + 2, yy - 1, x + w, yy + (bars ? 17 : 11), argb(0.12f * a * alpha, 0xFFFFFF));
             glow(x + 10, yy + 3, 2.4f, col, a);
@@ -486,7 +513,7 @@ final class Codex {
         int by = sy + 13, seg = Math.max(1, l.size()), gap = 2, sgw = (w - gap * (seg - 1)) / seg;
         for (int i = 0; i < seg; i++) { boolean on = i < l.size() && l.get(i).done(); int sx = x + i * (sgw + gap); g.fill(sx, by, sx + sgw, by + 4, argb((on ? 1f : 0.22f) * a * alpha, on ? ACH_COL[c] : 0x9AA6D0)); }
         Achievements.Profile p = Achievements.profile(); sy = by + 14;
-        if (p != null) for (String[] row : Ledger.statRows(ACH[c], p)) {
+        if (p != null) for (String[] row : Ledger.statRows(c == 0 ? "ledger" : ACH[c], p)) {
             if (sy > py0 + ph - 30) break;
             text(g, row[0], x, sy, argb(0.8f * a * alpha, 0xB8C0DA), false); int vw = host.width(row[1]); text(g, row[1], x + w - vw, sy, argb(a * alpha, 0xFFFFFF), false);
             for (int dx = x + host.width(row[0]) + 3; dx < x + w - vw - 3; dx += 3) g.fill(dx, sy + 6, dx + 1, sy + 7, argb(0.25f * a * alpha, 0x8A94B8));
@@ -505,6 +532,7 @@ final class Codex {
         String ttl = spaced("ACHIEVEMENTS");
         text(g, ttl, x, y, argb(ia, 0xFFE9B8), true);
         String cnt = p == null ? (Achievements.status.isEmpty() ? "Reading the stars..." : Achievements.status) : lit + " of " + all + " stars lit";
+        if (p != null && Achievements.unsent > 0) cnt += "  \u00B7  " + Achievements.unsent + " drop" + (Achievements.unsent == 1 ? "" : "s") + " waiting to be counted";
         small(g, cnt, x + host.width(ttl) + 10, y + 1, argb(0.8f * ia, 0xB8C0DA));
         if (p != null && all > 0) { int bw = host.width(ttl); g.fill(x, y + 11, x + bw, y + 12, argb(0.2f * ia, 0xFFE9B8)); g.fill(x, y + 11, x + Math.round(bw * lit / (float) all), y + 12, argb(ia, 0xFFE9B8)); }
         if (zoomed < 0.3f && p != null) { String hint = "Point at a constellation, click to fly in"; small(g, hint, sx0 + sw - 34 - Math.round(host.width(hint) * 0.75f), sy0 + 12, argb(0.55f * ia * (1f - zoomed / 0.3f), 0xB8C0DA)); }

@@ -23,6 +23,7 @@ public class FancyScreen extends Screen {
         ANIMATIONS("Animations", "firework_rocket", "Change how every drop looks and plays"),
         SOUNDS("Sounds", "note_block", "Volume and the sound of every moment"),
         CHAT("Chat", "writable_book", "Announce rare drops to your party or co-op"),
+        VISUALS("Visuals", "spyglass", "Now Playing, lyrics and your HUD"),
         GENERAL("Settings", "comparator", "Menu, prices and data"),
         COSMETICS("Cosmetics", "nether_star", "Name icons, name effects and auras");
         final String label, icon, sub;
@@ -30,7 +31,7 @@ public class FancyScreen extends Screen {
     }
 
     /** One colour for each main page; its sub pages use a lighter shade of it. */
-    private static final int[] TAB_COL = {0xFFFFA45C, 0xFFFFC857, 0xFFFF72C6, 0xFF56D8FF, 0xFF7BE05A, 0xFFB0B6C2, 0xFF6C86FF};
+    private static final int[] TAB_COL = {0xFFFFA45C, 0xFFFFC857, 0xFFFF72C6, 0xFF56D8FF, 0xFF7BE05A, 0xFF1ED760, 0xFFB0B6C2, 0xFF6C86FF};
     private int tabAcc;
     private Tab prevTab = Tab.HOME; private long cosAt;
     /** The Cosmetics page is its own window (no sidebar), opened from the button at the bottom left of the menu. */
@@ -42,7 +43,7 @@ public class FancyScreen extends Screen {
     private int[] adminBtn() { int[] c = cosBtn(); return new int[]{c[0], c[1] - 28, c[2], c[3] - 28}; }          // admin only: just above the Cosmetics button
     private void openCos() { if (!hiddenTab(tab)) prevTab = tab; tab = Tab.COSMETICS; query = ""; clearSearch(); scroll = 0; sideScroll = 0; cosAt = System.currentTimeMillis(); tabChanged = cosAt; selY = Float.NaN; }
     private void closeCos() { tab = hiddenTab(prevTab) ? Tab.HOME : prevTab; scroll = 0; selY = Float.NaN; tabChanged = System.currentTimeMillis(); }
-    private static int vi(int ord) { return switch (Tab.values()[ord]) { case HOME -> 0; case DROPS -> 1; case ANIMATIONS -> 2; case SOUNDS -> 3; case CHAT -> 4; default -> 0; }; }          // the sidebar list: Settings sits pinned at the bottom, Cosmetics and Resources have their own doors
+    private static int vi(int ord) { return switch (Tab.values()[ord]) { case HOME -> 0; case DROPS -> 1; case ANIMATIONS -> 2; case SOUNDS -> 3; case CHAT -> 4; case VISUALS -> 5; default -> 0; }; }          // the sidebar list: Settings sits pinned at the bottom, Cosmetics and Resources have their own doors
     private static int tabCol(Tab t) { return TAB_COL[t.ordinal()]; }
     private static int subCol(Tab t) { return Canvas.mix(tabCol(t), 0xFFFFFFFF, 0.5f); }
     private static final String[] CHANNELS = {"PARTY", "COOP", "ALL", "OFF"};
@@ -1540,6 +1541,7 @@ public class FancyScreen extends Screen {
             case ANIMATIONS -> Icons.draw(g, "animations", x, y, now);
             case SOUNDS -> Icons.draw(g, "sounds", x, y, now);
             case CHAT -> Icons.draw(g, "chat", x, y, now);
+            case VISUALS -> Icons.draw(g, "note", x, y, now);
             case GENERAL -> Icons.draw(g, "settings", x, y, now);
             case COSMETICS -> Icons.draw(g, "sparkle", x, y, now);
             default -> Gfx.item(g, t.icon, x, y);
@@ -2238,10 +2240,10 @@ public class FancyScreen extends Screen {
             case HOME -> l.add(new SubPage("Resources", ":res_heart:", 0xFFFF6B8A, false));
             case DROPS, ANIMATIONS, SOUNDS -> { for (Categories.Cat c : Categories.ALL) l.add(new SubPage(c.name(), c.icon(), c.color(), c.wip())); }
             case CHAT -> { l.add(new SubPage("Message & Channel", ":format:", 0xFFFFC857, false)); l.add(new SubPage("Chat Enabled", ":bell:", 0xFF7BE05A, false)); }
+            case VISUALS -> { l.add(new SubPage("Now Playing", ":disc:", 0xFF1ED760, false)); l.add(new SubPage("Lyrics", ":note:", 0xFFFFC8A0, false)); l.add(new SubPage("Spotify", ":sounds:", 0xFF1DB954, false)); }
             case GENERAL -> {
                 l.add(new SubPage("Menu", ":menu:", 0xFFB0B6C2, false)); l.add(new SubPage("Cosmetics", ":cosmetics:", 0xFFC77DFF, false));
                 l.add(new SubPage("Prices", ":coin:", 0xFFFFC857, false)); l.add(new SubPage("Drop Data", ":refresh:", 0xFF56D8FF, false));
-                l.add(new SubPage("Music", ":sounds:", 0xFF1ED760, false));
             }
             default -> { }
         }
@@ -2471,6 +2473,7 @@ public class FancyScreen extends Screen {
             case ANIMATIONS -> animationsPage(c);
             case SOUNDS -> soundsPage(c);
             case CHAT -> chatPage(c);
+            case VISUALS -> visualsPage(c);
             case GENERAL -> generalPage(c);
             case COSMETICS -> cosmeticsPage();
         }
@@ -2733,6 +2736,57 @@ public class FancyScreen extends Screen {
 
     // ---- Chat
 
+    // ---- Visuals: Now Playing, Lyrics, Spotify
+    private void visualsPage(FancyConfig c) {
+        if (searching || landing()) {
+            rows.add(hero(":note:", "Visuals", "Your music in the game: the Now Playing island at the top of the screen and the lyrics, written into the world around you.", 0xFF1ED760));
+            String[] lb = {"Now Playing", "Lyrics", "Spotify"}, sb = {c.npOn ? (c.npStyle == 1 ? "Card" : "Island") + " \u00B7 drag it anywhere" : "Off", c.lyricsOn ? (c.lyricsStyle == 0 ? "In your surroundings" : "On screen") : "Off", Spotify.linked() ? "Linked" : "Not linked yet"};
+            rows.add(picker("", "", lb, sb, new String[]{":disc:", ":note:", ":sounds:"}, new int[]{0xFF1ED760, 0xFFFFC8A0, 0xFF1DB954}, null, 3, () -> -1, i -> openPage(i, null, null)));
+            if (!Spotify.linked()) rows.add(note("Start with Spotify: link it once and the other two come alive.", 0xFF1ED760));
+            return;
+        }
+        if (curSub() == 0) {
+            rows.add(section("Now Playing"));
+            rows.add(toggle(":disc:", "Now Playing", "The song you're playing, at the top of your screen", () -> c.npOn, v -> c.npOn = v));
+            rows.add(picker("Look", "How it looks", new String[]{"Island", "Card"}, new String[]{"A capsule that springs open", "A glass card with an equalizer"},
+                new String[]{":disc:", ":menu:"}, new int[]{0xFF1ED760, 0xFF6C86FF}, null, 2, () -> c.npStyle, i -> c.npStyle = i));
+            Row mv = row(0, ":switch:", "Move it", "Drag it anywhere on the screen, scroll to resize", 0xFF1ED760);
+            mv.ctls.add(new Btn("Move HUD", 0xFF1DB954, () -> minecraft.setScreenAndShow(new HudEditScreen(this)))); rows.add(mv);
+            Row nps = row(0, ":size:", "Size", "How big it is", Ui.ACCENT);
+            nps.ctls.add(new Slider(60, 160, 5, () -> c.npScale, v -> c.npScale = (int) v, () -> c.npScale + "%").typed(1)); rows.add(nps);
+            rows.add(toggle(":disc:", "Peek now and then", "The island opens by itself every 45 seconds", () -> c.npPeek, v -> c.npPeek = v));
+            rows.add(toggle(":note:", "Lyric in the island", "The line being sung, when the island is open", () -> c.npLyric, v -> c.npLyric = v));
+            return;
+        }
+        if (curSub() == 1) {
+            rows.add(section("Lyrics"));
+            rows.add(toggle(":note:", "Lyrics", "The words of the song you're playing", () -> c.lyricsOn, v -> c.lyricsOn = v));
+            rows.add(picker("Where", "Where the words go", new String[]{"Your surroundings", "On screen"}, new String[]{"Sky outside, walls in caves, the air between", "Karaoke at the bottom of the screen"},
+                new String[]{":grp_water:", ":menu:"}, new int[]{0xFF6C86FF, 0xFF1ED760}, null, 2, () -> c.lyricsStyle, i -> c.lyricsStyle = i));
+            Row ls = row(0, ":size:", "Size", "How big the words are", Ui.ACCENT);
+            ls.ctls.add(new Slider(60, 160, 5, () -> c.lyricsSize, v -> c.lyricsSize = (int) v, () -> c.lyricsSize + "%").typed(1)); rows.add(ls);
+            if (c.lyricsStyle == 0) {
+                Row ld = row(0, ":speed:", "Distance in the air", "How far ahead a line hangs when it's not on the sky or a wall", Ui.ACCENT);
+                ld.ctls.add(new Slider(4, 16, 1, () -> c.lyricsDistance, v -> c.lyricsDistance = (int) v, () -> c.lyricsDistance + " blocks").typed(1)); rows.add(ld);
+            } else {
+                rows.add(picker("Height", "Where on the screen", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
+                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
+                rows.add(toggle(":format:", "Next line", "Shows the coming line faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
+            }
+            rows.add(note("The words take their colour from the album cover.", 0xFF8A93B0));
+            if (!Lyrics.status.isEmpty()) rows.add(note(Lyrics.status, 0xFF8A93B0));
+            return;
+        }
+        rows.add(section("Spotify"));
+        rows.add(note("Link Spotify once. The mod asks it what you're playing; the lyrics come from LRCLIB.", 0xFF1ED760));
+        Row cid = row(0, ":settings:", "Spotify Client ID", "developer.spotify.com > Create app > Redirect URI " + Spotify.REDIRECT + " > copy the Client ID", 0xFF1ED760);
+        cid.h = 44; cid.field = spotifyField; rows.add(cid);
+        Row lk = row(0, ":sounds:", Spotify.linked() ? "Linked to Spotify" : "Log in with Spotify", Spotify.status.isEmpty() ? (Spotify.linked() ? "Ready" : "Opens your browser once") : Spotify.status, 0xFF1ED760);
+        if (Spotify.linked()) lk.ctls.add(new Btn("Unlink", Ui.ROW_HOVER, () -> { Spotify.logout(); toast("Spotify unlinked.", 0xFF8A93B0); }));
+        else lk.ctls.add(new Btn("Log in", 0xFF1DB954, () -> Spotify.login(m -> toast(m, 0xFF1ED760))));
+        rows.add(lk);
+    }
+
     private void chatPage(FancyConfig c) {
         if (searching || landing()) { chatLanding(c); return; }
         if (curSub() == 1) { chatEnabledPage(c); return; }
@@ -2818,8 +2872,8 @@ public class FancyScreen extends Screen {
 
     private void settingsLanding() {
         rows.add(hero(":settings:", "Settings", "Change how the menu looks, your cosmetics, where prices come from and how the drop data loads.", Ui.ACCENT));
-        String[] lb = {"Menu", "Cosmetics", "Prices", "Drop Data", "Music"}, sb = {"How the menu looks", "Shown to you and others", "Where prices come from", "Reload the drop data", "Spotify lyrics in your world"}, ic = {":menu:", ":cosmetics:", ":coin:", ":refresh:", ":sounds:"};
-        int[] co = {0xFFB0B6C2, 0xFFC77DFF, 0xFFFFC857, 0xFF56D8FF, 0xFF1ED760};
+        String[] lb = {"Menu", "Cosmetics", "Prices", "Drop Data"}, sb = {"How the menu looks", "Shown to you and others", "Where prices come from", "Reload the drop data"}, ic = {":menu:", ":cosmetics:", ":coin:", ":refresh:"};
+        int[] co = {0xFFB0B6C2, 0xFFC77DFF, 0xFFFFC857, 0xFF56D8FF};
         rows.add(picker("", "", lb, sb, ic, co, null, 2, () -> -1, i -> openPage(i, null, null)));
     }
 
@@ -2881,37 +2935,6 @@ public class FancyScreen extends Screen {
                 Row rl = row(0, ":refresh:", "Reload drop data", "Reloads the drop data.  " + DataFiles.status, Ui.ACCENT);
                 rl.ctls.add(new Btn("Reload", Ui.ROW_HOVER, () -> { DataFiles.reloadAll(); toast("Reloading the drop data.", 0xFF62E6A8); }));
                 rows.add(rl);
-                rows.add(section("Music"));
-                rows.add(note("Link Spotify and the words of the song you're playing float in your world, one line at a time. Lyrics come from LRCLIB.", 0xFF1ED760));
-                rows.add(toggle(":sounds:", "Lyrics in the world", "Shows the words while a song plays on Spotify", () -> c.lyricsOn, v -> c.lyricsOn = v));
-                Row cid = row(0, ":settings:", "Spotify Client ID", "developer.spotify.com > Create app > Redirect URI " + Spotify.REDIRECT + " > copy the Client ID", 0xFF1ED760);
-                cid.h = 44; cid.field = spotifyField; rows.add(cid);
-                Row lk = row(0, ":sounds:", Spotify.linked() ? "Linked to Spotify" : "Log in with Spotify", Spotify.status.isEmpty() ? (Spotify.linked() ? "Ready" : "Opens your browser once") : Spotify.status, 0xFF1ED760);
-                if (Spotify.linked()) lk.ctls.add(new Btn("Unlink", Ui.ROW_HOVER, () -> { Spotify.logout(); toast("Spotify unlinked.", 0xFF8A93B0); }));
-                else lk.ctls.add(new Btn("Log in", 0xFF1DB954, () -> Spotify.login(m -> toast(m, 0xFF1ED760))));
-                rows.add(lk);
-                if (!Lyrics.status.isEmpty()) rows.add(note(Lyrics.status, 0xFF8A93B0));
-                rows.add(section("Now Playing"));
-                rows.add(toggle(":sounds:", "Now Playing card", "The song, its cover and the time, at the top middle of your screen", () -> c.npOn, v -> c.npOn = v));
-                Row nps = row(0, ":format:", "Card size", "How big the Now Playing card is", Ui.ACCENT);
-                nps.ctls.add(new Slider(60, 160, 5, () -> c.npScale, v -> c.npScale = (int) v, () -> c.npScale + "%").typed(1)); rows.add(nps);
-                rows.add(section("Lyrics look"));
-                rows.add(picker("Style", "Where the words show", new String[]{"Cinematic", "In the world"}, new String[]{"Always on screen, karaoke", "Pinned in the scene"},
-                    new String[]{":note:", ":grp_water:"}, new int[]{0xFF1ED760, 0xFF6C86FF}, null, 2, () -> c.lyricsStyle, i -> c.lyricsStyle = i));
-                rows.add(picker("Font", "The letters of the lyrics", LyricsHud.FONTS, new String[]{"", "", "", ""}, new String[]{":format:", ":format:", ":format:", ":format:"},
-                    new int[]{0xFFB0B6C2, 0xFF8FD0FF, 0xFFFFC857, 0xFFC9A0FF}, null, 4, () -> c.lyricsFont, i -> c.lyricsFont = i));
-                { String[] sb2 = new String[LyricsHud.COLOURS.length], ic2 = new String[LyricsHud.COLOURS.length]; int[] co2 = new int[LyricsHud.COLOURS.length];
-                  for (int i = 0; i < co2.length; i++) { int cc = LyricsHud.COLOURS[i] < 0 ? 0x1ED760 : LyricsHud.COLOURS[i]; co2[i] = 0xFF000000 | cc; sb2[i] = LyricsHud.COLOURS[i] < 0 ? "From the album cover" : ""; ic2[i] = String.format(":dye:#%06X", cc); }
-                  rows.add(picker("Colour", "The colour of the words", LyricsHud.COLOUR_NAMES, sb2, ic2, co2, null, 4, () -> c.lyricsColorIdx, i -> c.lyricsColorIdx = i)); }
-                rows.add(picker("Height", "Where on the screen (Cinematic)", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
-                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
-                rows.add(toggle(":glass:", "Glow", "A soft light behind the words being sung", () -> c.lyricsGlow, v -> c.lyricsGlow = v));
-                rows.add(toggle(":format:", "Next line", "Shows the coming line faintly below (Cinematic)", () -> c.lyricsNext, v -> c.lyricsNext = v));
-                rows.add(toggle(":format:", "Text shadow", "A dark shadow under the letters", () -> c.lyricsShadow, v -> c.lyricsShadow = v));
-                Row ls = row(0, ":format:", "Lyrics size", "How big the words are", Ui.ACCENT);
-                ls.ctls.add(new Slider(60, 160, 5, () -> c.lyricsSize, v -> c.lyricsSize = (int) v, () -> c.lyricsSize + "%").typed(1)); rows.add(ls);
-                Row ld = row(0, ":format:", "Lyrics distance", "How far in front of you each line appears (In the world)", Ui.ACCENT);
-                ld.ctls.add(new Slider(4, 16, 1, () -> c.lyricsDistance, v -> c.lyricsDistance = (int) v, () -> c.lyricsDistance + " blocks").typed(1)); rows.add(ld);
                 }
 
     private void mythSettings(List<Row> rows, FancyConfig c) {
@@ -3006,7 +3029,7 @@ public class FancyScreen extends Screen {
     /** The pinned Settings block at the bottom of the sidebar: a line, then the Settings tab (its pages open upwards). */
     private int pinTop() { return py + ph - 29 - (tab == Tab.GENERAL ? Math.round(subExp * SUBH * subs().length) + 2 : 0); }
     private int sideBottom() { return query.isBlank() ? pinTop() - 2 : py + ph - 4; }
-    private int sideMax() { if (!query.isBlank()) return Math.max(0, searchSideH - (ph - 70 - 8)); return Math.max(0, 6 * tp() + 4 + srcExtra() + (tab == Tab.GENERAL ? 0 : Math.round(subExp * subH() * subs().length)) - (sideBottom() - (py + 70) - 4)); }
+    private int sideMax() { if (!query.isBlank()) return Math.max(0, searchSideH - (ph - 70 - 8)); return Math.max(0, 7 * tp() + 4 + srcExtra() + (tab == Tab.GENERAL ? 0 : Math.round(subExp * subH() * subs().length)) - (sideBottom() - (py + 70) - 4)); }
     private boolean inSide(double mx, double my) { return !cosWin() && mx >= px && mx < px + sw && my >= py + 42 && my < py + ph - 4; }
     private int[] tabBox(int i) {
         Tab ti = Tab.values()[i];
