@@ -513,3 +513,4 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Spotify.position never steps back by < 1.5 s (poll jitter made lines flick back and forth, each flick writing a new sign).
 - World signs use the caption look (all words grey, filling with the album colour, nod, glow under the sung word), fade in over 350 ms, gentler angles.
 - Music notes: curling paths, grow/shrink, colour to white, faint trail, small burst at the end.
+- Signs 10-14 blocks away (never nearer than 4.5 even at a wall); star bursts back on world lyrics (Lyrics > Star bursts, on by default; was the Ambience "Word sparkles").

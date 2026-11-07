@@ -83,16 +83,16 @@ final class LyricsHud {
         side = -side;
         double yaw = Math.toRadians(cam.yRot() + side * (8 + RND.nextDouble() * 16)), pitch = Math.toRadians(Math.max(-25, Math.min(35, cam.xRot())) * 0.6 + 4 + RND.nextDouble() * 8);
         Vec3 dir = new Vec3(-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
-        double d = 5 + RND.nextDouble() * 3;
+        double d = 10 + RND.nextDouble() * 4;
         var hit = mc.level.clip(new ClipContext(eye, eye.add(dir.scale(d + 1)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
-        if (hit.getType() == HitResult.Type.BLOCK) d = Math.max(2.2, hit.getLocation().distanceTo(eye) - 0.9);
+        if (hit.getType() == HitResult.Type.BLOCK) d = Math.max(4.5, hit.getLocation().distanceTo(eye) - 0.9);           // a wall in the way: in front of it, but never right in your face
         Vec3 at = eye.add(dir.scale(d));
         double face = Math.atan2(eye.x - at.x, eye.z - at.z) + Math.toRadians(-side * (6 + RND.nextDouble() * 14));    // turned a little away from you, so it stands in the world
         Vec3 n = new Vec3(Math.sin(face), 0, Math.cos(face)), up0 = new Vec3(0, 1, 0);
         Vec3 right = up0.cross(n).normalize();
         double roll = Math.toRadians((RND.nextDouble() - 0.5) * 6);                                // a slight tilt
         Vec3 r2 = right.scale(Math.cos(roll)).add(up0.scale(Math.sin(roll))), u2 = up0.scale(Math.cos(roll)).subtract(right.scale(Math.sin(roll)));
-        float px = (float) (0.045 * c.lyricsSize / 100.0 * (0.75 + d / 14));
+        float px = (float) (0.042 * c.lyricsSize / 100.0 * (0.55 + d / 12));
         SIGNS.add(new Sign(li, RND.nextInt(1000), now, at, r2, u2, px)); while (SIGNS.size() > 3) SIGNS.remove(0);
     }
     private static void signs(GuiGraphicsExtractor g, Minecraft mc, List<Lyrics.Line> L, long pos, long now, float vis) {
@@ -126,19 +126,21 @@ final class LyricsHud {
                 acc0 += w.length() + 1;
                 float lit = sg.gone > 0 ? 1f : Math.max(0f, Math.min(1f, (pos - wAt) / 140f));
                 float glow = pos >= wAt && pos < wEnd + 200 && sg.gone == 0 ? Math.min(1f, (pos - wAt) / 120f) * Math.min(1f, (wEnd + 200 - pos) / 200f) : 0f;
-                word(g, f, vp, cp, W, H, sg, at, w, x, y, ww, lit, glow, fade, col);
+                float burst = sg.gone == 0 && FancyConfig.get().lyricsStars && pos >= wAt && pos < wAt + 500 ? (pos - wAt) / 500f : -1f;
+                word(g, f, vp, cp, W, H, sg, at, w, x, y, ww, lit, glow, fade, col, burst, sg.seed * 31 + acc0);
                 x += ww + f.width(" ");
             }
         }
     }
     /** One word, flat on its sign: projected point by point so it sits in the world with real perspective. */
-    private static void word(GuiGraphicsExtractor g, Font font, Matrix4f vp, Vec3 cp, int W, int H, Sign sg, Vec3 at, String w, float x, float y, int ww, float lit, float glow, float fade, int col) {
+    private static void word(GuiGraphicsExtractor g, Font font, Matrix4f vp, Vec3 cp, int W, int H, Sign sg, Vec3 at, String w, float x, float y, int ww, float lit, float glow, float fade, int col, float burst, int seed) {
         Vec3 o = at.add(sg.right.scale((x + ww / 2f) * sg.px)).subtract(sg.up.scale((y + 4) * sg.px));   // the word's middle
         float[] po = project(vp, cp, o, W, H), pr = project(vp, cp, o.add(sg.right.scale(sg.px * 8)), W, H), pd = project(vp, cp, o.subtract(sg.up.scale(sg.px * 8)), W, H);
         if (po == null || pr == null || pd == null) return;
         if (po[0] < -60 || po[0] > W + 60 || po[1] < -60 || po[1] > H + 60) return;
         float ax = (pr[0] - po[0]) / 8f, ay = (pr[1] - po[1]) / 8f, bx = (pd[0] - po[0]) / 8f, by = (pd[1] - po[1]) / 8f;
         if (glow > 0.02f) { float sz = (float) Math.hypot(ax, ay); NebulaTex.glow(g, po[0], po[1], ww * 0.6f * sz + 5 * sz, 7 * sz, Gfx.argb(Math.round(110 * glow * fade), col)); }
+        if (burst >= 0f) { float sz = (float) Math.hypot(ax, ay); AmbienceHud.sparkle(g, po[0], po[1] - 3 * sz, ww * sz, burst, fade, seed, Math.max(1f, sz * 1.5f)); }   // stars burst from the word as it's sung
         float lift = lit > 0f && lit < 1f ? (float) Math.sin(Math.PI * lit) * 1.5f : 0f;
         Gfx.push(g);
         g.pose().mul(new Matrix3x2f(ax, ay, bx, by, po[0], po[1])); g.pose().translate(-ww / 2f, -4 - lift);
@@ -177,14 +179,14 @@ final class LyricsHud {
     /** The rows of a line, centred on cx: each word light grey until it is sung, then it fills with the album's colour (with a small nod). */
     static void caption(GuiGraphicsExtractor g, Font f, List<String> rows, float cx, float y, float k, long start, long end, long pos, float a) {
         int total = 0; for (String r : rows) total += r.length() + 1;
-        float span = Math.max(400f, (end - start) * 0.85f); int acc = 0, col = colour(); boolean sparkles = FancyConfig.get().ambSparkle;
+        float span = Math.max(400f, (end - start) * 0.85f); int acc = 0, col = colour(); boolean sparkles = FancyConfig.get().lyricsStars;
         for (int ri = 0; ri < rows.size(); ri++) {
             String row = rows.get(ri); float x = cx - f.width(row) * k / 2f, yy = y + ri * 11 * k;
             for (String w : row.split(" ")) {
                 float at = start + span * acc / (float) total, lit = Math.max(0f, Math.min(1f, (pos - at) / 140f));
                 float lift = lit > 0f && lit < 1f ? (float) Math.sin(Math.PI * lit) * 1.5f * k : 0f;
                 float wEnd = start + span * (acc + w.length() + 1) / (float) total, ww = f.width(w) * k;
-                if (sparkles && pos >= at && pos < at + 450) AmbienceHud.sparkle(g, x + ww / 2f, yy + 3 * k, ww, (pos - at) / 450f, a, acc * 31 + ri);
+                if (sparkles && pos >= at && pos < at + 450) AmbienceHud.sparkle(g, x + ww / 2f, yy + 3 * k, ww, (pos - at) / 450f, a, acc * 31 + ri, k);
                 if (pos >= at && pos < wEnd + 200) {                                              // the word being sung glows softly in the album's colour
                     float gl = Math.min(1f, (pos - at) / 120f) * Math.min(1f, (wEnd + 200 - pos) / 200f);
                     NebulaTex.glow(g, x + ww / 2f, yy + 4 * k, ww * 0.6f + 6 * k, 7 * k, Gfx.argb(Math.round(110 * gl * a), col));

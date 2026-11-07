@@ -136,7 +136,7 @@ public class FancyConfig {
     public int lyricsStyle = 0, lyricsPos = 0;                           // style: 0 floating, 1 on screen; pos: 0 low, 1 middle, 2 high
     public boolean lyricsNext = true, lyricsIntro = true;               // the coming line under the current one; the song's name when it starts
     public int lyricsOffset = 0;                                        // ms the words come early (+) or late (-)
-    public boolean ambGlow = false, ambNotes = false, ambBars = false, ambSparkle = false, ambWave = false; public int ambGlowStrength = 60;   // Ambience (Visuals > Ambience)
+    public boolean ambGlow = false, ambNotes = false, ambBars = false, ambWave = false, lyricsStars = true; public int ambGlowStrength = 60;   // Ambience (Visuals > Ambience)
     public boolean npOn = true; public int npScale = 100, npStyle = 0, npHidePaused = 1;   // Now Playing: 0 glass, 1 vinyl, 2 mini; when paused: 0 stays, 1 hides after 8 s, 2 hides at once
     public float npX = 0.5f; public int npY = 4;                         // where it sits: the middle of it at npX of the width, npY pixels from the top
     public boolean npLyric = true;                                      // the line being sung, shown in the Now Playing bar

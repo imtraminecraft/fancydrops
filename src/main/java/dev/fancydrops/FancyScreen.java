@@ -2739,11 +2739,11 @@ public class FancyScreen extends Screen {
     // ---- Visuals: Now Playing, Lyrics, Spotify
     private void visualsPage(FancyConfig c) {
         String[] looks = {"Glass", "Vinyl", "Mini"}, wheres = {"Floating", "On screen"};
-        int ambOn = (c.ambGlow ? 1 : 0) + (c.ambBars ? 1 : 0) + (c.ambNotes ? 1 : 0) + (c.ambWave ? 1 : 0) + (c.ambSparkle ? 1 : 0);
+        int ambOn = (c.ambGlow ? 1 : 0) + (c.ambBars ? 1 : 0) + (c.ambNotes ? 1 : 0) + (c.ambWave ? 1 : 0);
         if (searching || landing()) {
             rows.add(hero(":note:", "Visuals", "Your music in the game: what's playing, the words floating in front of you, and a little atmosphere in the album's colours.", 0xFF1ED760));
             String[] lb = {"Now Playing", "Lyrics", "Ambience", "Spotify"};
-            String[] sb = {c.npOn ? looks[c.npStyle] + " \u00B7 " + c.npScale + "%" : "Off", c.lyricsOn ? wheres[c.lyricsStyle] : "Off", ambOn == 0 ? "Off" : ambOn + " of 5 on", Spotify.linked() ? "Linked" : "Not linked yet"};
+            String[] sb = {c.npOn ? looks[c.npStyle] + " \u00B7 " + c.npScale + "%" : "Off", c.lyricsOn ? wheres[c.lyricsStyle] : "Off", ambOn == 0 ? "Off" : ambOn + " of 4 on", Spotify.linked() ? "Linked" : "Not linked yet"};
             rows.add(picker("", "", lb, sb, new String[]{":disc:", ":note:", ":glass:", ":sounds:"}, new int[]{0xFF1ED760, 0xFFFFC8A0, 0xFFB48CFF, 0xFF1DB954}, null, 2, () -> -1, i -> openPage(i, null, null)));
             if (!Spotify.linked()) rows.add(note("Start with Spotify: link it once and everything here comes alive.", 0xFF1ED760));
             else if (!Spotify.status.isEmpty()) rows.add(note(Spotify.status, 0xFF8A93B0));
@@ -2780,6 +2780,7 @@ public class FancyScreen extends Screen {
                 new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
             if (c.lyricsStyle == 1) rows.add(toggle(":format:", "Next line", "The coming line, faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
             rows.add(section("Extras"));
+            rows.add(toggle(":glass:", "Star bursts", "Little stars burst from each word as it's sung", () -> c.lyricsStars, v -> c.lyricsStars = v));
             rows.add(toggle(":disc:", "Song intro", "The song's name in big letters when it starts", () -> c.lyricsIntro, v -> c.lyricsIntro = v));
             Row off = row(0, ":clock:", "Timing", "Words early or late? Nudge them", Ui.ACCENT);
             off.ctls.add(new Slider(-1500, 1500, 50, () -> c.lyricsOffset, v -> c.lyricsOffset = (int) v, () -> (c.lyricsOffset > 0 ? "+" : "") + String.format(java.util.Locale.ROOT, "%.2f s", c.lyricsOffset / 1000.0))); rows.add(off);
@@ -2795,7 +2796,6 @@ public class FancyScreen extends Screen {
             rows.add(toggle(":note:", "Music notes", "Notes drift up beside your hotbar", () -> c.ambNotes, v -> c.ambNotes = v));
             rows.add(section("Moments"));
             rows.add(toggle(":speed:", "Song wave", "A wave of colour sweeps across when a new song starts", () -> c.ambWave, v -> c.ambWave = v));
-            rows.add(toggle(":format:", "Word sparkles", "Tiny stars burst from each word of the lyrics as it's sung", () -> c.ambSparkle, v -> c.ambSparkle = v));
             return;
         }
         Row lk = row(0, ":sounds:", Spotify.linked() ? "Linked to Spotify" : "Log in with Spotify", Spotify.status.isEmpty() ? (Spotify.linked() ? "Ready" : "Opens your browser once") : Spotify.status, 0xFF1ED760);

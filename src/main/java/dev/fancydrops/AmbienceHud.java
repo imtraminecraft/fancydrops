@@ -75,14 +75,16 @@ final class AmbienceHud {
             NebulaTex.glow(g, x, H / 2f, W * 0.05f, H * 0.7f, Gfx.argb(Math.round(140 * a), lite));
         }
     }
-    /** Tiny stars that burst from a word as it lands (Word sparkles). u: 0..1 since it landed. */
-    static void sparkle(GuiGraphicsExtractor g, float cx, float cy, float w, float u, float a, int seed) {
+    /** Stars that burst from a word as it lands (Word sparkles): little four-pointed twinkles flying up and out. u: 0..1 since it landed; k: size. */
+    static void sparkle(GuiGraphicsExtractor g, float cx, float cy, float w, float u, float a, int seed, float k) {
         if (u >= 1f || a < 0.02f) return;
-        int acc = LyricsHud.colour();
-        for (int i = 0; i < 5; i++) {
-            double an = -Math.PI / 2 + (Ritual.rnd(seed * 7 + i) - 0.5) * 2.6; float d = (6 + 10 * Ritual.rnd(seed * 3 + i)) * ease(u);
-            float x = cx + (Ritual.rnd(seed + i * 11) - 0.5f) * w + (float) Math.cos(an) * d, y = cy + (float) Math.sin(an) * d, al = (1f - u) * a;
-            NebulaTex.glow(g, x, y, 2.5f, 2.5f, Gfx.argb(Math.round(230 * al), i % 2 == 0 ? 0xFFFFFF : acc));
+        int acc = LyricsHud.colour(), lite = Ritual.mixc(acc, 0xFFFFFF, 0.5f);
+        for (int i = 0; i < 6; i++) {
+            double an = -Math.PI / 2 + (Ritual.rnd(seed * 7 + i) - 0.5) * 2.8; float d = (8 + 14 * Ritual.rnd(seed * 3 + i)) * k * ease(u);
+            float x = cx + (Ritual.rnd(seed + i * 11) - 0.5f) * w + (float) Math.cos(an) * d, y = cy + (float) Math.sin(an) * d + u * u * 6 * k, al = (1f - u) * a;
+            float r = (1.2f + 1.6f * Ritual.rnd(seed * 5 + i)) * k * (1f - 0.5f * u); int col = i % 3 == 0 ? 0xFFFFFF : i % 3 == 1 ? acc : lite;
+            NebulaTex.glow(g, x, y, r * 2.2f, r * 2.2f, Gfx.argb(Math.round(120 * al), col));
+            NebulaTex.glow(g, x, y, r * 2.6f, r * 0.45f, Gfx.argb(Math.round(230 * al), 0xFFFFFF)); NebulaTex.glow(g, x, y, r * 0.45f, r * 2.6f, Gfx.argb(Math.round(230 * al), 0xFFFFFF));   // the star's points
         }
     }
     private static float ease(float v) { v = Math.max(0f, Math.min(1f, v)); return 1f - (1f - v) * (1f - v) * (1f - v); }
