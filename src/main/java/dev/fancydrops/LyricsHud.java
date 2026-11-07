@@ -3,33 +3,25 @@ package dev.fancydrops;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix3x2f;
-import org.joml.Matrix4f;
-import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The lyrics (Visuals > Lyrics). Every style draws the same clean caption: the words fill with the album's colour as they are sung, and a
- * thin line under them runs with the line's time. Long lines wrap onto two rows (and shrink a little if they still don't fit).
+ * The lyrics (Visuals > Lyrics). Both styles draw the same clean caption: the words fill with the album's colour as they are sung (the word
+ * being sung glows softly). Long lines wrap onto two rows (and shrink a little if they still don't fit), never cut off by the screen's edge.
  *
- *   FLOATING (default): each line hangs in the air a few blocks ahead of you, a little to one side, then the next to the other side. It
- *     follows you smoothly at any speed, glides back in front of you when you turn away, comes closer instead of sinking into a wall,
- *     and is never cut off by the screen's edge. Old lines float up and fade as new ones arrive.
- *   WALLS: written flat on a wall in front of you (looked for once, when the line starts); with no wall in view, it's on the screen.
- *   SCREEN: a caption on the screen (low, middle or high).
+ *   FLOATING (default): each line hangs in front of you, a little to one side, then the next to the other side. It sways on a spring when
+ *     you turn or look up and down and settles straight back, bobs gently, and drifts up and away when the next line comes. It is held
+ *     to the screen (not the world), so it never lags behind, never leaves your view and costs next to nothing.
+ *   SCREEN: a steady caption with a thin line under it showing the line's time, and the coming line faintly below.
  *
  * The lyrics step aside (fade out) while a drop animation plays.
  */
 final class LyricsHud {
     private LyricsHud() {}
 
-    static final int FLOATING = 0, WALLS = 1, SCREEN = 2;
+    static final int FLOATING = 0, SCREEN = 1;
 
     /** The colour of the sung words: from the album cover, made light enough to read. */
     static int colour() {
@@ -38,91 +30,61 @@ final class LyricsHud {
         return java.awt.Color.HSBtoRGB(h[0], Math.min(0.6f, h[1]), 1f) & 0xFFFFFF;
     }
 
-    /** A line in the air: where it hangs relative to the point that follows you. */
-    private static final class Float3 { final int line; final long born; long gone; double x, y, z, dist; long offSince, checkAt; Float3(int l, long b) { line = l; born = b; } }
-    private record Wall(Vec3 at, Vec3 right) {}
-    private static final List<Float3> AIR = new ArrayList<>();
-    private static int lastLine = -2, prevLine = -2, side = 1; private static String lastTrack = "";
+    private static int lastLine = -2, prevLine = -2, side = 1, prevSide = -1; private static String lastTrack = "";
     private static long lineAt, titleAt, lastFrame;
-    private static Wall wall, prevWall;
-    private static Vec3 follow; private static float away;          // away: 0..1, how far the lyrics have stepped aside for a drop animation
+    private static float away;                                       // 0..1, how far the lyrics have stepped aside for a drop animation
+    private static float swayX, swayY, velX, velY, lastYaw = Float.NaN, lastPitch;
+    private static float jitter, prevJitter;                          // each line's own small height difference
 
     static void render(GuiGraphicsExtractor g) {
         FancyConfig c = FancyConfig.get(); Minecraft mc = Minecraft.getInstance();
-        if (!c.lyricsOn || mc.level == null || mc.player == null) { AIR.clear(); return; }
+        if (!c.lyricsOn || mc.level == null || mc.player == null) return;
         Spotify.Track t = Spotify.track; long now = System.currentTimeMillis();
         float dt = Math.min(0.1f, (now - (lastFrame == 0 ? now : lastFrame)) / 1000f); lastFrame = now;
         away += ((AnimationManager.isPlaying() ? 1f : 0f) - away) * Math.min(1f, dt * 8f);
         float vis = 1f - away; if (vis < 0.02f) return;
         boolean on = t != null && Spotify.playing;
-        if (on && !t.id().equals(lastTrack)) { lastTrack = t.id(); lastLine = -2; prevLine = -2; titleAt = now; wall = null; AIR.clear(); }
+        if (on && !t.id().equals(lastTrack)) { lastTrack = t.id(); lastLine = -2; prevLine = -2; titleAt = now; }
         long pos = Spotify.position() + 150 + c.lyricsOffset;
         List<Lyrics.Line> L = Lyrics.lines;
         int li = on ? Lyrics.at(pos) : -1;
-        if (li != lastLine) {
-            prevLine = lastLine; lastLine = li; lineAt = now; prevWall = wall;
-            boolean real = li >= 0 && li < L.size() && !L.get(li).text().isBlank();
-            wall = c.lyricsStyle == WALLS && real ? findWall(mc) : null;
-            for (Float3 f : AIR) if (f.gone == 0) f.gone = now;
-            if (c.lyricsStyle == FLOATING && real) hang(mc, c, li, now);
-        }
-        if (!on) for (Float3 f : AIR) if (f.gone == 0) f.gone = now;
+        if (li != lastLine) { prevLine = lastLine; lastLine = li; lineAt = now; prevSide = side; side = -side; prevJitter = jitter; jitter = (float) (Math.random() - 0.5); }
+        sway(mc, dt);
         if (c.lyricsIntro) titleCard(g, mc, c, now, vis);
         if (on && L.isEmpty() && Lyrics.status.startsWith("No synced")) { noLyrics(g, mc, c, now, vis); return; }
-        if (L.isEmpty()) return;
-        if (c.lyricsStyle == FLOATING) { floating(g, mc, c, L, pos, now, dt, vis); return; }
-        if (!on) return;
-        float since = (now - lineAt) / 1000f, in = ease(Math.min(1f, since / 0.4f)), out = Math.min(1f, since / 0.35f);
-        if (prevLine >= 0 && prevLine < L.size() && out < 1f) onScreenOrWall(g, mc, c, L, prevLine, pos, (1f - out) * vis, -out, prevWall);
-        if (li >= 0 && li < L.size()) onScreenOrWall(g, mc, c, L, li, pos, in * vis, 1f - in, wall);
+        if (L.isEmpty() || !on) return;
+        float since = (now - lineAt) / 1000f, in = ease(Math.min(1f, since / 0.45f)), out = Math.min(1f, since / 0.6f);
+        if (c.lyricsStyle == SCREEN) {
+            if (prevLine >= 0 && prevLine < L.size() && out < 1f) onScreen(g, mc, c, L, prevLine, pos, (1f - out) * vis, -out);
+            if (li >= 0 && li < L.size()) onScreen(g, mc, c, L, li, pos, in * vis, 1f - in);
+        } else {
+            if (prevLine >= 0 && prevLine < L.size() && out < 1f) floating(g, mc, c, L, prevLine, pos, now, (1f - out) * vis, -ease(out), prevSide, prevJitter);
+            if (li >= 0 && li < L.size()) floating(g, mc, c, L, li, pos, now, in * vis, 1f - in, side, jitter);
+        }
     }
 
     // ------------------------------------------------------------------ floating
-    /** A new line: it hangs a few blocks ahead, a little to the side (alternating), and closer if a wall is nearer than that. */
-    private static void hang(Minecraft mc, FancyConfig c, int li, long now) {
-        var cam = mc.gameRenderer.mainCamera(); Vec3 eye = cam.position();
-        if (follow == null || follow.distanceTo(eye) > 30) follow = eye;
-        side = -side; double a = Math.toRadians(cam.yRot() + side * 9);
-        Float3 f = new Float3(li, now); f.dist = c.lyricsDistance;
-        f.x = -Math.sin(a); f.z = Math.cos(a); f.y = 0.25;
-        f.dist = room(mc, eye, f, c.lyricsDistance);
-        AIR.add(f); while (AIR.size() > 3) AIR.remove(0);
+    /** The spring the floating lines hang on: turning pushes them the other way, then they settle back. */
+    private static void sway(Minecraft mc, float dt) {
+        var cam = mc.gameRenderer.mainCamera(); float yaw = cam.yRot(), pitch = cam.xRot();
+        if (Float.isNaN(lastYaw)) { lastYaw = yaw; lastPitch = pitch; }
+        float dy = yaw - lastYaw; while (dy > 180) dy -= 360; while (dy < -180) dy += 360;
+        float dp = pitch - lastPitch; lastYaw = yaw; lastPitch = pitch;
+        velX += -Math.max(-12f, Math.min(12f, dy)) * 18f; velY += -Math.max(-12f, Math.min(12f, dp)) * 12f;
+        int steps = Math.max(1, Math.round(dt / 0.008f)); float h = dt / steps;                 // small steps: steady at any frame rate
+        for (int i = 0; i < steps; i++) { velX += (-170f * swayX - 16f * velX) * h; velY += (-170f * swayY - 16f * velY) * h; swayX += velX * h; swayY += velY * h; }
+        swayX = Math.max(-40f, Math.min(40f, swayX)); swayY = Math.max(-22f, Math.min(22f, swayY));
     }
-    /** How far the line can hang that way before a block is in the way. */
-    private static double room(Minecraft mc, Vec3 eye, Float3 f, double want) {
-        Vec3 to = eye.add(f.x * want, f.y, f.z * want);
-        BlockHitResult h = mc.level.clip(new ClipContext(eye, to, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, mc.player));
-        return h.getType() == HitResult.Type.BLOCK ? Math.max(1.6, h.getLocation().distanceTo(eye) - 0.7) : want;
-    }
-    private static void floating(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, List<Lyrics.Line> L, long pos, long now, float dt, float vis) {
-        AIR.removeIf(f -> f.gone > 0 && now - f.gone > 700);
-        if (AIR.isEmpty()) return;
-        var cam = mc.gameRenderer.mainCamera(); Vec3 cp = cam.position();
-        Matrix4f vp = cam.getViewRotationProjectionMatrix(new Matrix4f()); int W = g.guiWidth(), H = g.guiHeight();
-        if (follow == null || follow.distanceTo(cp) > 30) follow = cp;
-        follow = follow.add(cp.subtract(follow).scale(1 - Math.exp(-dt * 6)));                  // eases after you: smooth at walking pace, keeps up when you sprint or fly
-        Font font = mc.font;
-        for (Float3 f : new ArrayList<>(AIR)) {
-            if (f.line < 0 || f.line >= L.size()) continue;
-            if (now >= f.checkAt) { f.checkAt = now + 250; double want = room(mc, follow, f, c.lyricsDistance); f.dist += (want - f.dist) * 0.5; }   // a wall came between: it comes nearer
-            float age = (now - f.born) / 1000f, out = f.gone > 0 ? (now - f.gone) / 700f : 0f;
-            double rise = 0.5 * out * out + Math.sin(now / 1400.0 + f.line) * 0.04 - (1 - ease(Math.min(1f, age / 0.45f))) * 0.15;
-            Vec3 at = follow.add(f.x * f.dist, f.y + rise, f.z * f.dist);
-            Vector4f v = new Vector4f((float) (at.x - cp.x), (float) (at.y - cp.y), (float) (at.z - cp.z), 1f); vp.transform(v);
-            boolean seen = v.w > 0.3f; float sx = seen ? (v.x / v.w * 0.5f + 0.5f) * W : -1, sy = seen ? (1f - (v.y / v.w * 0.5f + 0.5f)) * H : -1;
-            boolean off = !seen || sx < 0 || sx > W || sy < 0 || sy > H;
-            if (off && f.offSince == 0) f.offSince = now;
-            if (!off && sx > W * 0.15f && sx < W * 0.85f) f.offSince = 0;
-            if (f.offSince != 0 && f.gone == 0 && now - f.offSince > 300) {                       // you turned away: it swings round in front of you again
-                double want = Math.toRadians(cam.yRot() + side * 9), have = Math.atan2(-f.x, f.z), d = Math.atan2(Math.sin(want - have), Math.cos(want - have));
-                double na = have + d * (1 - Math.exp(-dt * 5)); f.x = -Math.sin(na); f.z = Math.cos(na);
-            }
-            if (!seen) continue;
-            float a = Math.min(1f, age / 0.35f) * (1f - Math.min(1f, out)) * vis;
-            float k = c.lyricsSize / 100f * 1.3f * (float) Math.max(0.75, Math.min(1.5, c.lyricsDistance / Math.max(0.5, v.w)));
-            Lyrics.Line ln = L.get(f.line); long start = ln.atMs(), end = f.line + 1 < L.size() ? L.get(f.line + 1).atMs() : start + 4000;
-            block(g, font, ln.text(), W, H, sx, sy, k, W * 0.5f, start, end, pos, a, false, "");
-        }
+    /** slide: 1..0 coming in (from a little below), 0..-1 leaving (drifting up). */
+    private static void floating(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, List<Lyrics.Line> L, int i, long pos, long now, float a, float slide, int sd, float jit) {
+        if (a < 0.02f) return;
+        int W = g.guiWidth(), H = g.guiHeight();
+        float base = c.lyricsPos == 2 ? 0.27f : c.lyricsPos == 1 ? 0.4f : 0.56f;
+        float k = c.lyricsSize / 100f * 1.45f * (1f - 0.06f * Math.abs(slide));
+        float bob = (float) Math.sin(now / 1300.0 + i * 1.7) * 2f;
+        float cx = W * (0.5f + sd * 0.09f) + swayX * (0.8f + 0.2f * sd), cy = H * (base + jit * 0.05f) + swayY + bob + (slide > 0 ? slide * 14 : slide * 22);
+        Lyrics.Line ln = L.get(i); long start = ln.atMs(), end = i + 1 < L.size() ? L.get(i + 1).atMs() : start + 4000;
+        block(g, mc.font, ln.text(), W, H, cx, cy, k, W * 0.5f, start, end, pos, a, false, "");
     }
 
     // ------------------------------------------------------------------ the caption
@@ -150,13 +112,14 @@ final class LyricsHud {
     /** The rows of a line, centred on cx: each word light grey until it is sung, then it fills with the album's colour (with a small nod). */
     static void caption(GuiGraphicsExtractor g, Font f, List<String> rows, float cx, float y, float k, long start, long end, long pos, float a) {
         int total = 0; for (String r : rows) total += r.length() + 1;
-        float span = Math.max(400f, (end - start) * 0.85f); int acc = 0, col = colour();
+        float span = Math.max(400f, (end - start) * 0.85f); int acc = 0, col = colour(); boolean sparkles = FancyConfig.get().ambSparkle;
         for (int ri = 0; ri < rows.size(); ri++) {
             String row = rows.get(ri); float x = cx - f.width(row) * k / 2f, yy = y + ri * 11 * k;
             for (String w : row.split(" ")) {
                 float at = start + span * acc / (float) total, lit = Math.max(0f, Math.min(1f, (pos - at) / 140f));
                 float lift = lit > 0f && lit < 1f ? (float) Math.sin(Math.PI * lit) * 1.5f * k : 0f;
                 float wEnd = start + span * (acc + w.length() + 1) / (float) total, ww = f.width(w) * k;
+                if (sparkles && pos >= at && pos < at + 450) AmbienceHud.sparkle(g, x + ww / 2f, yy + 3 * k, ww, (pos - at) / 450f, a, acc * 31 + ri);
                 if (pos >= at && pos < wEnd + 200) {                                              // the word being sung glows softly in the album's colour
                     float gl = Math.min(1f, (pos - at) / 120f) * Math.min(1f, (wEnd + 200 - pos) / 200f);
                     NebulaTex.glow(g, x + ww / 2f, yy + 4 * k, ww * 0.6f + 6 * k, 7 * k, Gfx.argb(Math.round(110 * gl * a), col));
@@ -185,57 +148,14 @@ final class LyricsHud {
         return out;
     }
 
-    // ------------------------------------------------------------------ screen and walls
-    private static void onScreenOrWall(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, List<Lyrics.Line> L, int i, long pos, float a, float slide, Wall w) {
+    // ------------------------------------------------------------------ on screen
+    private static void onScreen(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, List<Lyrics.Line> L, int i, long pos, float a, float slide) {
         String text = L.get(i).text(); if (text.isBlank() || a < 0.02f) return;
         long start = L.get(i).atMs(), end = i + 1 < L.size() ? L.get(i + 1).atMs() : start + 4000;
-        if (w != null && onWall(g, mc, mc.font, w, text, start, end, pos, a)) return;
         int W = g.guiWidth(), H = g.guiHeight(); float k = c.lyricsSize / 100f * 1.35f;
         float cy = H * (c.lyricsPos == 1 ? 0.5f : c.lyricsPos == 2 ? 0.24f : 0.72f) + slide * 9 * k;
         String next = c.lyricsNext && slide >= 0 && i + 1 < L.size() ? L.get(i + 1).text() : "";
         block(g, mc.font, text, W, H, W / 2f, cy, k, W * 0.62f, start, end, pos, a, true, next);
-    }
-    /** Looks once for a wall in front of you to write on: nine fixed rays, the closest good flat face wins. */
-    private static Wall findWall(Minecraft mc) {
-        var cam = mc.gameRenderer.mainCamera(); Vec3 eye = cam.position(); float yaw = cam.yRot();
-        BlockHitResult best = null; double bestD = 1e9;
-        for (int i = 0; i < 9; i++) {
-            double a = Math.toRadians(yaw + (i % 3 - 1) * 22), p = Math.toRadians((i / 3 - 1) * 12);
-            Vec3 dir = new Vec3(-Math.sin(a) * Math.cos(p), -Math.sin(p), Math.cos(a) * Math.cos(p));
-            BlockHitResult h = mc.level.clip(new ClipContext(eye, eye.add(dir.scale(14)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
-            if (h.getType() != HitResult.Type.BLOCK || h.getDirection().getAxis() == net.minecraft.core.Direction.Axis.Y) continue;
-            double d = h.getLocation().distanceTo(eye); Vec3 n = h.getDirection().getUnitVec3();
-            if (d < 2 || -(n.x * dir.x + n.z * dir.z) < 0.45) continue;
-            if (d < bestD) { bestD = d; best = h; }
-        }
-        if (best == null) return null;
-        Vec3 n = best.getDirection().getUnitVec3(), at = best.getLocation().add(n.scale(0.05));
-        return new Wall(new Vec3(at.x, eye.y - 0.2, at.z), new Vec3(-n.z, 0, n.x));
-    }
-    private static boolean onWall(GuiGraphicsExtractor g, Minecraft mc, Font f, Wall w, String text, long start, long end, long pos, float a) {
-        var cam = mc.gameRenderer.mainCamera(); Vec3 cp = cam.position();
-        Matrix4f vp = cam.getViewRotationProjectionMatrix(new Matrix4f()); int W = g.guiWidth(), H = g.guiHeight();
-        Vec3 n = new Vec3(w.right().z, 0, -w.right().x), to = cp.subtract(w.at());
-        double dist = to.length(); if (dist > 24 || (to.x * n.x + to.z * n.z) / dist < 0.3) return false;
-        float[] o = project(vp, cp, w.at(), W, H), rx = project(vp, cp, w.at().add(w.right()), W, H), uy = project(vp, cp, w.at().add(0, 1, 0), W, H);
-        if (o == null || rx == null || uy == null || o[0] < W * 0.05f || o[0] > W * 0.95f || o[1] < H * 0.05f || o[1] > H * 0.95f) return false;
-        List<String> rows = wrap(f, text, 170);
-        float size = (float) Math.max(0.035, 0.016 * Math.sqrt(dist) + 0.01) * FancyConfig.get().lyricsSize / 100f;
-        Gfx.push(g);
-        g.pose().mul(new Matrix3x2f((rx[0] - o[0]) * size, (rx[1] - o[1]) * size, (o[0] - uy[0]) * size, (o[1] - uy[1]) * size, o[0], o[1]));
-        int widest = 0; for (String r : rows) widest = Math.max(widest, f.width(r));
-        float top = -rows.size() * 11 / 2f;
-        NebulaTex.glow(g, 0, 0, widest * 0.62f + 12, rows.size() * 9 + 8, Gfx.argb(Math.round(120 * a), 0x000000));
-        caption(g, f, rows, 0, top, 1f, start, end, pos, a);
-        float prog = Math.max(0f, Math.min(1f, (pos - start) / (float) Math.max(1, end - start)));
-        g.fill(-widest / 2, Math.round(-top) + 1, -widest / 2 + Math.round(widest * prog), Math.round(-top) + 2, Gfx.argb(Math.round(200 * a), colour()));
-        Gfx.pop(g);
-        return true;
-    }
-    private static float[] project(Matrix4f vp, Vec3 cp, Vec3 p, int W, int H) {
-        Vector4f v = new Vector4f((float) (p.x - cp.x), (float) (p.y - cp.y), (float) (p.z - cp.z), 1f); vp.transform(v);
-        if (v.w < 0.3f) return null;
-        return new float[]{(v.x / v.w * 0.5f + 0.5f) * W, (1f - (v.y / v.w * 0.5f + 0.5f)) * H};
     }
 
     // ------------------------------------------------------------------ the song's name, and songs without lyrics

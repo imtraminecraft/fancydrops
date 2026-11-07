@@ -2738,72 +2738,75 @@ public class FancyScreen extends Screen {
 
     // ---- Visuals: Now Playing, Lyrics, Spotify
     private void visualsPage(FancyConfig c) {
-        String[] looks = {"Glass", "Vinyl", "Mini"}, wheres = {"Floating", "On walls", "On screen"};
+        String[] looks = {"Glass", "Vinyl", "Mini"}, wheres = {"Floating", "On screen"};
+        int ambOn = (c.ambGlow ? 1 : 0) + (c.ambBars ? 1 : 0) + (c.ambNotes ? 1 : 0) + (c.ambWave ? 1 : 0) + (c.ambSparkle ? 1 : 0);
         if (searching || landing()) {
-            rows.add(hero(":note:", "Visuals", "Your music in the game: what's playing at the top of the screen, the lyrics floating in front of you, and a little ambience to go with it.", 0xFF1ED760));
+            rows.add(hero(":note:", "Visuals", "Your music in the game: what's playing, the words floating in front of you, and a little atmosphere in the album's colours.", 0xFF1ED760));
             String[] lb = {"Now Playing", "Lyrics", "Ambience", "Spotify"};
-            String[] sb = {c.npOn ? looks[Math.max(0, Math.min(2, c.npStyle))] + " · drag it anywhere" : "Off", c.lyricsOn ? wheres[Math.max(0, Math.min(2, c.lyricsStyle))] : "Off",
-                c.ambGlow || c.ambNotes ? (c.ambGlow && c.ambNotes ? "Glow and notes" : c.ambGlow ? "Album glow" : "Music notes") : "Off", Spotify.linked() ? "Linked" : "Not linked yet"};
+            String[] sb = {c.npOn ? looks[c.npStyle] + " \u00B7 " + c.npScale + "%" : "Off", c.lyricsOn ? wheres[c.lyricsStyle] : "Off", ambOn == 0 ? "Off" : ambOn + " of 5 on", Spotify.linked() ? "Linked" : "Not linked yet"};
             rows.add(picker("", "", lb, sb, new String[]{":disc:", ":note:", ":glass:", ":sounds:"}, new int[]{0xFF1ED760, 0xFFFFC8A0, 0xFFB48CFF, 0xFF1DB954}, null, 2, () -> -1, i -> openPage(i, null, null)));
-            if (!Spotify.linked()) rows.add(note("Start with Spotify: link it once and everything else comes alive.", 0xFF1ED760));
+            if (!Spotify.linked()) rows.add(note("Start with Spotify: link it once and everything here comes alive.", 0xFF1ED760));
             else if (!Spotify.status.isEmpty()) rows.add(note(Spotify.status, 0xFF8A93B0));
             return;
         }
         if (curSub() == 0) {
-            rows.add(section("Now Playing"));
             rows.add(toggle(":disc:", "Now Playing", "The song you're playing, on your screen", () -> c.npOn, v -> c.npOn = v));
-            rows.add(picker("Look", "How it looks", looks, new String[]{"Glass panel in the album's colour", "A record spinning out of a bar", "A slim pill: cover and title"},
+            if (!c.npOn) return;
+            rows.add(section("Look"));
+            rows.add(picker("", "", looks, new String[]{"Glass in the album's colour", "A spinning record", "A slim pill"},
                 new String[]{":glass:", ":disc:", ":menu:"}, new int[]{0xFF1ED760, 0xFFFFC8A0, 0xFF6C86FF}, null, 3, () -> c.npStyle, i -> c.npStyle = i));
-            Row mv = row(0, ":switch:", "Move it", "Drag it anywhere on the screen, scroll to resize", 0xFF1ED760);
+            rows.add(section("Place"));
+            Row mv = row(0, ":switch:", "Position", "Drag it anywhere on the screen, scroll to resize", 0xFF1ED760);
             mv.ctls.add(new Btn("Move HUD", 0xFF1DB954, () -> minecraft.setScreenAndShow(new HudEditScreen(this)))); rows.add(mv);
             Row nps = row(0, ":size:", "Size", "How big it is", Ui.ACCENT);
             nps.ctls.add(new Slider(60, 160, 5, () -> c.npScale, v -> c.npScale = (int) v, () -> c.npScale + "%").typed(1)); rows.add(nps);
-            if (c.npStyle != 2) rows.add(toggle(":note:", "Line being sung", "Shows the current lyric inside it", () -> c.npLyric, v -> c.npLyric = v));
-            rows.add(picker("When paused", "What it does when you pause", new String[]{"Stays", "Hides after 8 s", "Hides at once"}, new String[]{"", "", ""},
+            rows.add(section("Behaviour"));
+            if (c.npStyle != 2) rows.add(toggle(":note:", "Line being sung", "The current lyric, inside it", () -> c.npLyric, v -> c.npLyric = v));
+            rows.add(picker("When paused", "", new String[]{"Stays", "Hides after 8 s", "Hides at once"}, new String[]{"", "", ""},
                 new String[]{":play:", ":clock:", ":switch:"}, new int[]{0xFF1ED760, 0xFFFFC857, 0xFF8A93B0}, null, 3, () -> c.npHidePaused, i -> c.npHidePaused = i));
             rows.add(note("It waits below boss bars and steps aside during drop animations.", 0xFF8A93B0));
             return;
         }
         if (curSub() == 1) {
-            rows.add(section("Lyrics"));
-            rows.add(toggle(":note:", "Lyrics", "The words of the song you're playing", () -> c.lyricsOn, v -> c.lyricsOn = v));
-            rows.add(picker("Where", "Where the words go", wheres, new String[]{"In the air in front of you", "On a wall ahead, else on screen", "A caption on the screen"},
-                new String[]{":glass:", ":grp_water:", ":menu:"}, new int[]{0xFFFFC8A0, 0xFF6C86FF, 0xFF1ED760}, null, 3, () -> c.lyricsStyle, i -> c.lyricsStyle = i));
+            rows.add(toggle(":note:", "Lyrics", "The words of the song you're playing, from LRCLIB", () -> c.lyricsOn, v -> c.lyricsOn = v));
+            if (!c.lyricsOn) { if (!Lyrics.status.isEmpty()) rows.add(note(Lyrics.status, 0xFF8A93B0)); return; }
+            rows.add(section("Style"));
+            rows.add(picker("", "", wheres, new String[]{"In front of you, swaying as you turn", "A steady caption with a time line"},
+                new String[]{":glass:", ":menu:"}, new int[]{0xFFFFC8A0, 0xFF1ED760}, null, 2, () -> c.lyricsStyle, i -> c.lyricsStyle = i));
+            rows.add(section("Text"));
             Row ls = row(0, ":size:", "Size", "How big the words are", Ui.ACCENT);
             ls.ctls.add(new Slider(60, 160, 5, () -> c.lyricsSize, v -> c.lyricsSize = (int) v, () -> c.lyricsSize + "%").typed(1)); rows.add(ls);
-            if (c.lyricsStyle == 0) {
-                Row ld = row(0, ":speed:", "Distance", "How far ahead the words float (closer when a wall is in the way)", Ui.ACCENT);
-                ld.ctls.add(new Slider(3, 12, 1, () -> c.lyricsDistance, v -> c.lyricsDistance = (int) v, () -> c.lyricsDistance + " blocks").typed(1)); rows.add(ld);
-            } else {
-                rows.add(picker("Height", "Where on the screen", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
-                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
-                rows.add(toggle(":format:", "Next line", "Shows the coming line faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
-            }
+            rows.add(picker("Height", "", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
+                new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
+            if (c.lyricsStyle == 1) rows.add(toggle(":format:", "Next line", "The coming line, faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
+            rows.add(section("Extras"));
             rows.add(toggle(":disc:", "Song intro", "The song's name in big letters when it starts", () -> c.lyricsIntro, v -> c.lyricsIntro = v));
-            Row off = row(0, ":clock:", "Timing", "Lyrics early or late? Nudge them here", Ui.ACCENT);
+            Row off = row(0, ":clock:", "Timing", "Words early or late? Nudge them", Ui.ACCENT);
             off.ctls.add(new Slider(-1500, 1500, 50, () -> c.lyricsOffset, v -> c.lyricsOffset = (int) v, () -> (c.lyricsOffset > 0 ? "+" : "") + String.format(java.util.Locale.ROOT, "%.2f s", c.lyricsOffset / 1000.0))); rows.add(off);
-            rows.add(note("The words take their colour from the album cover, and step aside during drop animations.", 0xFF8A93B0));
-            if (!Lyrics.status.isEmpty()) rows.add(note(Lyrics.status, 0xFF8A93B0));
+            rows.add(note(Lyrics.status.isEmpty() ? "The words take the album cover's colour and step aside during drop animations." : Lyrics.status, 0xFF8A93B0));
             return;
         }
         if (curSub() == 2) {
-            rows.add(section("Ambience"));
-            rows.add(toggle(":glass:", "Album glow", "The edges of your screen softly take the album's colour", () -> c.ambGlow, v -> c.ambGlow = v));
-            if (c.ambGlow) { Row gs = row(0, ":size:", "Glow strength", "How strong the colour is", Ui.ACCENT); gs.ctls.add(new Slider(10, 100, 5, () -> c.ambGlowStrength, v -> c.ambGlowStrength = (int) v, () -> c.ambGlowStrength + "%").typed(1)); rows.add(gs); }
-            rows.add(toggle(":note:", "Music notes", "A few notes drift up beside your hotbar while a song plays", () -> c.ambNotes, v -> c.ambNotes = v));
-            rows.add(note("Only while music plays; both fade away during drop animations.", 0xFF8A93B0));
+            rows.add(note("Atmosphere in the album's colours, only while a song plays. Everything fades away during drop animations.", 0xFFB48CFF));
+            rows.add(section("Screen"));
+            rows.add(toggle(":glass:", "Album glow", "The edges of your screen glow softly, breathing", () -> c.ambGlow, v -> c.ambGlow = v));
+            if (c.ambGlow) { Row gs = row(0, ":size:", "Glow strength", "How strong the light is", Ui.ACCENT); gs.ctls.add(new Slider(10, 100, 5, () -> c.ambGlowStrength, v -> c.ambGlowStrength = (int) v, () -> c.ambGlowStrength + "%").typed(1)); rows.add(gs); }
+            rows.add(toggle(":bars:", "Visualizer", "Dancing bars along the bottom, either side of the hotbar", () -> c.ambBars, v -> c.ambBars = v));
+            rows.add(toggle(":note:", "Music notes", "Notes drift up beside your hotbar", () -> c.ambNotes, v -> c.ambNotes = v));
+            rows.add(section("Moments"));
+            rows.add(toggle(":speed:", "Song wave", "A wave of colour sweeps across when a new song starts", () -> c.ambWave, v -> c.ambWave = v));
+            rows.add(toggle(":format:", "Word sparkles", "Tiny stars burst from each word of the lyrics as it's sung", () -> c.ambSparkle, v -> c.ambSparkle = v));
             return;
         }
-        rows.add(section("Spotify"));
-        rows.add(note("Link Spotify once. The mod asks it what you're playing; the lyrics come from LRCLIB.", 0xFF1ED760));
-        Row cid = row(0, ":settings:", "Spotify Client ID", "developer.spotify.com > Create app > Redirect URI " + Spotify.REDIRECT + " > copy the Client ID", 0xFF1ED760);
-        cid.h = 44; cid.field = spotifyField; rows.add(cid);
         Row lk = row(0, ":sounds:", Spotify.linked() ? "Linked to Spotify" : "Log in with Spotify", Spotify.status.isEmpty() ? (Spotify.linked() ? "Ready" : "Opens your browser once") : Spotify.status, 0xFF1ED760);
         if (Spotify.linked()) lk.ctls.add(new Btn("Unlink", Ui.ROW_HOVER, () -> { Spotify.logout(); toast("Spotify unlinked.", 0xFF8A93B0); }));
         else lk.ctls.add(new Btn("Log in", 0xFF1DB954, () -> Spotify.login(m -> toast(m, 0xFF1ED760))));
         rows.add(lk);
+        rows.add(section("Setup"));
+        Row cid = row(0, ":settings:", "Spotify Client ID", "developer.spotify.com > Create app > Redirect URI " + Spotify.REDIRECT + " > copy the Client ID", 0xFF1ED760);
+        cid.h = 44; cid.field = spotifyField; rows.add(cid);
         rows.add(section("Music keys"));
-        rows.add(note("Play/pause, next and previous song from inside the game: set the keys in Options > Controls > FancyDrops: Music. Needs Spotify Premium. If you linked before this update, unlink and log in again once so the mod is allowed to control playback.", 0xFF8A93B0));
+        rows.add(note("Play/pause, next and previous song from in game: set the keys in Options > Controls > FancyDrops: Music. Needs Spotify Premium; if you linked before, unlink and log in again once.", 0xFF8A93B0));
     }
 
     private void chatPage(FancyConfig c) {

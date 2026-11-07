@@ -135,9 +135,10 @@ final class NowPlayingHud {
         g.fill(20, 2, w - 2, 3, Gfx.argb(Math.round(36 * e), 0xFFFFFF));
         NebulaTex.glow(g, 40, h / 2f, 50, h * 0.5f, Gfx.argb(Math.round(55 * e), acc));
         disc(g, dcx, dcy, rr, Gfx.argb(a, 0x060508));
-        for (int i = 0; i < 4; i++) ringRound(g, dcx, dcy, rr - 2.5f - i * 2.2f, Gfx.argb(Math.round(a * 0.22f), 0x9A96A8));
-        Gfx.push(g); Gfx.translate(g, dcx, dcy); Gfx.rotate(g, spin); cover(g, font, -7, -7, 14, a, art, acc);
-        g.fill(Math.round(-rr + 3), 0, -9, 1, Gfx.argb(Math.round(a * 0.18f), 0xFFFFFF)); Gfx.pop(g);
+        for (int i = 0; i < 5; i++) ringSpin(g, dcx, dcy, rr - 2f - i * 2f, spin + i * 0.35f, a);       // the grooves catch the light as the record turns
+        float mx = dcx + (float) Math.cos(spin) * (rr - 2.5f), my = dcy + (float) Math.sin(spin) * (rr - 2.5f);            // a mark near the rim, going round
+        g.fill(Math.round(mx) - 1, Math.round(my) - 1, Math.round(mx) + 1, Math.round(my) + 1, Gfx.argb(a, acc));
+        cover(g, font, Math.round(dcx) - 7, Math.round(dcy) - 7, 14, a, art, acc);                     // the label (the cover) stays upright
         disc(g, dcx, dcy, 1.2f, Gfx.argb(a, 0x000000));
         NebulaTex.glow(g, dcx - rr * 0.45f, dcy - rr * 0.45f, rr * 0.5f, rr * 0.25f, Gfx.argb(Math.round(60 * e), 0xFFFFFF));
         float in = ease(Math.min(1f, since / 420f)), sl = (1f - in) * 8; int tx = 46, tw = w - tx - 34;
@@ -163,9 +164,14 @@ final class NowPlayingHud {
     private static void disc(GuiGraphicsExtractor g, float cx, float cy, float r, int c) {
         for (int i = -Math.round(r); i <= Math.round(r); i++) { float hw = (float) Math.sqrt(Math.max(0, r * r - i * i)); g.fill(Math.round(cx - hw), Math.round(cy + i), Math.round(cx + hw), Math.round(cy + i) + 1, c); }
     }
-    private static void ringRound(GuiGraphicsExtractor g, float cx, float cy, float r, int c) {
+    /** A groove: dots round the circle, two bright arcs where the light catches it, turning with the record. */
+    private static void ringSpin(GuiGraphicsExtractor g, float cx, float cy, float r, float spin, int a) {
         int n = Math.max(24, Math.round(r * 4));
-        for (int i = 0; i < n; i++) { double an = i * Math.PI * 2 / n; int x = Math.round(cx + (float) Math.cos(an) * r), y = Math.round(cy + (float) Math.sin(an) * r); g.fill(x, y, x + 1, y + 1, c); }
+        for (int i = 0; i < n; i++) {
+            double an = i * Math.PI * 2 / n; float lit = (float) Math.pow(Math.max(0, Math.cos(2 * (an - spin))), 6);
+            int x = Math.round(cx + (float) Math.cos(an) * r), y = Math.round(cy + (float) Math.sin(an) * r);
+            g.fill(x, y, x + 1, y + 1, Gfx.argb(Math.round(a * (0.14f + 0.6f * lit)), lit > 0.3f ? 0xE8E4F4 : 0x9A96A8));
+        }
     }
     private static String currentLyric() {
         if (preview && Spotify.track == null) return "the line being sung";

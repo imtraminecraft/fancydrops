@@ -490,3 +490,10 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Ambience page: album glow on the screen edges, music notes by the hotbar (both off by default).
 - Music keys: play/pause, next, previous (Options > Controls > FancyDrops: Music; Premium; needs re-link for the new scope).
 - Drop animations draw on a new stratum (above lyrics); lyrics/ambience fade out during them. Perf: blur/flash/item glow are glows, not disc fills; outlines 4-way; scene upload is one memory copy.
+
+## Round: screen-held floating lyrics, spinning vinyl, Ambience+
+- Floating lyrics are held to the screen on a spring (sway on turn, settle back), alternating sides, bob, drift up on exit. No world anchoring (it lagged).
+- Lyrics styles: Floating, On screen (On walls removed; old value maps to On screen).
+- Vinyl: the record turns (groove highlights, rim mark), the cover label stays upright.
+- Ambience: album glow (edge frame, strength), visualizer bars, music notes, song wave, word sparkles. All off by default.
+- Visuals pages grouped into sections; each page hides its options when switched off.
