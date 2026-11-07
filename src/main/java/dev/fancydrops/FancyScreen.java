@@ -2738,12 +2738,12 @@ public class FancyScreen extends Screen {
 
     // ---- Visuals: Now Playing, Lyrics, Spotify
     private void visualsPage(FancyConfig c) {
-        String[] looks = {"Glass", "Vinyl", "Mini"}, wheres = {"Floating", "On screen"};
+        String[] wheres = {"Floating", "On screen"};
         int ambOn = (c.ambGlow ? 1 : 0) + (c.ambBars ? 1 : 0) + (c.ambNotes ? 1 : 0) + (c.ambWave ? 1 : 0);
         if (searching || landing()) {
             rows.add(hero(":note:", "Visuals", "Your music in the game: what's playing, the words floating in front of you, and a little atmosphere in the album's colours.", 0xFF1ED760));
             String[] lb = {"Now Playing", "Lyrics", "Ambience", "Spotify"};
-            String[] sb = {c.npOn ? looks[c.npStyle] + " \u00B7 " + c.npScale + "%" : "Off", c.lyricsOn ? wheres[c.lyricsStyle] : "Off", ambOn == 0 ? "Off" : ambOn + " of 4 on", Spotify.linked() ? "Linked" : "Not linked yet"};
+            String[] sb = {c.npOn ? "On \u00B7 " + c.npScale + "%" : "Off", c.lyricsOn ? wheres[c.lyricsStyle] : "Off", ambOn == 0 ? "Off" : ambOn + " of 4 on", Spotify.linked() ? "Linked" : "Not linked yet"};
             rows.add(picker("", "", lb, sb, new String[]{":disc:", ":note:", ":glass:", ":sounds:"}, new int[]{0xFF1ED760, 0xFFFFC8A0, 0xFFB48CFF, 0xFF1DB954}, null, 2, () -> -1, i -> openPage(i, null, null)));
             if (!Spotify.linked()) rows.add(note("Start with Spotify: link it once and everything here comes alive.", 0xFF1ED760));
             else if (!Spotify.status.isEmpty()) rows.add(note(Spotify.status, 0xFF8A93B0));
@@ -2752,16 +2752,13 @@ public class FancyScreen extends Screen {
         if (curSub() == 0) {
             rows.add(toggle(":disc:", "Now Playing", "The song you're playing, on your screen", () -> c.npOn, v -> c.npOn = v));
             if (!c.npOn) return;
-            rows.add(section("Look"));
-            rows.add(picker("", "", looks, new String[]{"Glass in the album's colour", "A spinning record", "A slim pill"},
-                new String[]{":glass:", ":disc:", ":menu:"}, new int[]{0xFF1ED760, 0xFFFFC8A0, 0xFF6C86FF}, null, 3, () -> c.npStyle, i -> c.npStyle = i));
             rows.add(section("Place"));
             Row mv = row(0, ":switch:", "Position", "Drag it anywhere on the screen, scroll to resize", 0xFF1ED760);
             mv.ctls.add(new Btn("Move HUD", 0xFF1DB954, () -> minecraft.setScreenAndShow(new HudEditScreen(this)))); rows.add(mv);
             Row nps = row(0, ":size:", "Size", "How big it is", Ui.ACCENT);
             nps.ctls.add(new Slider(60, 160, 5, () -> c.npScale, v -> c.npScale = (int) v, () -> c.npScale + "%").typed(1)); rows.add(nps);
             rows.add(section("Behaviour"));
-            if (c.npStyle != 2) rows.add(toggle(":note:", "Line being sung", "The current lyric, inside it", () -> c.npLyric, v -> c.npLyric = v));
+            rows.add(toggle(":note:", "Line being sung", "The current lyric, inside it", () -> c.npLyric, v -> c.npLyric = v));
             rows.add(picker("When paused", "", new String[]{"Stays", "Hides after 8 s", "Hides at once"}, new String[]{"", "", ""},
                 new String[]{":play:", ":clock:", ":switch:"}, new int[]{0xFF1ED760, 0xFFFFC857, 0xFF8A93B0}, null, 3, () -> c.npHidePaused, i -> c.npHidePaused = i));
             rows.add(note("It waits below boss bars and steps aside during drop animations.", 0xFF8A93B0));

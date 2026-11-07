@@ -518,3 +518,6 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 ## Round: cool, softer colours
 - AlbumArt.accent(): the cover colour moved into the cool range (teal..violet, 170-278 deg), saturation <= 0.42, brightness 0.86. Used by Now Playing, lyrics (lightened 25%), ambience, stars. Glows and star points toned down.
 - Builds are no longer copied into the mods folder while the game may be running (replacing the jar mid-game crashed it); they go to Downloads.
+
+## Round: one Now Playing
+- Vinyl and Mini removed; npStyle gone. The Glass card is simpler: dark panel, faint lighter top half, cover (flip-in, pause sign), title, artists, optional lyric line, 4-bar equalizer, thin time bar with elapsed and length. No drifting lights, sheen or colour wash.

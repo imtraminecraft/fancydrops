@@ -137,7 +137,7 @@ public class FancyConfig {
     public boolean lyricsNext = true, lyricsIntro = true;               // the coming line under the current one; the song's name when it starts
     public int lyricsOffset = 0;                                        // ms the words come early (+) or late (-)
     public boolean ambGlow = false, ambNotes = false, ambBars = false, ambWave = false, lyricsStars = true; public int ambGlowStrength = 60;   // Ambience (Visuals > Ambience)
-    public boolean npOn = true; public int npScale = 100, npStyle = 0, npHidePaused = 1;   // Now Playing: 0 glass, 1 vinyl, 2 mini; when paused: 0 stays, 1 hides after 8 s, 2 hides at once
+    public boolean npOn = true; public int npScale = 100, npHidePaused = 1;   // Now Playing; when paused: 0 stays, 1 hides after 8 s, 2 hides at once
     public float npX = 0.5f; public int npY = 4;                         // where it sits: the middle of it at npX of the width, npY pixels from the top
     public boolean npLyric = true;                                      // the line being sung, shown in the Now Playing bar
     public String adminToken = "";                             // Admin Panel: a GitHub token that lets Save write cosmetics.json
@@ -174,7 +174,7 @@ public class FancyConfig {
         c.titleScale = clamp(c.titleScale, 0.5f, 1.5f); c.subScale = clamp(c.subScale, 0.5f, 1.5f); c.subDelay = clamp(c.subDelay, 0f, 3f);
         c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.normalSize = Math.max(50, Math.min(100, c.normalSize)); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);
         c.barPx = Math.max(5, Math.min(15, c.barPx));
-        c.lyricsStyle = c.lyricsStyle <= 0 ? 0 : 1; c.npStyle = Math.max(0, Math.min(2, c.npStyle)); c.lyricsPos = Math.max(0, Math.min(2, c.lyricsPos));   // lyrics: 0 floating, 1 on screen (the old "on walls" is now on screen)
+        c.lyricsStyle = c.lyricsStyle <= 0 ? 0 : 1; c.lyricsPos = Math.max(0, Math.min(2, c.lyricsPos));   // lyrics: 0 floating, 1 on screen (the old "on walls" is now on screen)
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
         c.animPos = Math.max(0, Math.min(2, c.animPos)); c.textPos = Math.max(0, Math.min(1, c.textPos));
