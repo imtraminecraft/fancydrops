@@ -74,29 +74,26 @@ final class LyricsHud {
     private static void place(Minecraft mc, int li) {
         var cam = mc.gameRenderer.mainCamera(); Vec3 eye = cam.position();
         float yaw = cam.yRot();
-        int around = 0;
-        for (int i = 0; i < 8; i++) { double a = Math.toRadians(i * 45); if (hit(mc, eye, eye.add(-Math.sin(a) * 9, 0.2, Math.cos(a) * 9)) != null) around++; }
-        boolean roof = hit(mc, eye, eye.add(0, 24, 0)) != null;
-        int kind = !roof && around <= 3 ? SKY : roof && around >= 3 ? WALL : AIR;
-        if (kind == WALL) {                                                                 // find a wall in view to write on
-            BlockHitResult best = null; double bestScore = -1;
-            for (int i = 0; i < 18; i++) {
-                double a = Math.toRadians(yaw + (RND.nextDouble() - 0.5) * 90), p = Math.toRadians((RND.nextDouble() - 0.4) * 40);
-                Vec3 dir = new Vec3(-Math.sin(a) * Math.cos(p), -Math.sin(p) + 0.05, Math.cos(a) * Math.cos(p));
-                BlockHitResult h = hit(mc, eye, eye.add(dir.scale(12)));
-                if (h == null || h.getDirection().getAxis() == net.minecraft.core.Direction.Axis.Y) continue;
-                double d = h.getLocation().distanceTo(eye); if (d < 2.2) continue;
-                Vec3 n = h.getDirection().getUnitVec3(); double facing = -(n.x * dir.x + n.z * dir.z);           // how squarely you look at it
-                double score = facing * 2 - Math.abs(d - 6) * 0.15 + RND.nextDouble() * 0.4;
-                if (facing > 0.35 && score > bestScore) { bestScore = score; best = h; }
-            }
-            if (best != null) {
-                Vec3 n = best.getDirection().getUnitVec3(), at = best.getLocation().add(n.scale(0.03));
-                LIVE.add(new Placed(WALL, li, at.x, at.y, at.z, new Vec3(-n.z, 0, n.x), new Vec3(0, 1, 0)));
-                trim(); return;
-            }
-            kind = AIR;
+        BlockHitResult best = null; double bestScore = -1;                                   // a wall you can see comes first, wherever you are
+        for (int i = 0; i < 28; i++) {
+            double a = Math.toRadians(yaw + (RND.nextDouble() - 0.5) * 100), p = Math.toRadians((RND.nextDouble() - 0.45) * 50);
+            Vec3 dir = new Vec3(-Math.sin(a) * Math.cos(p), -Math.sin(p) + 0.05, Math.cos(a) * Math.cos(p));
+            BlockHitResult h = hit(mc, eye, eye.add(dir.scale(18)));
+            if (h == null || h.getDirection().getAxis() == net.minecraft.core.Direction.Axis.Y) continue;
+            double d = h.getLocation().distanceTo(eye); if (d < 1.4) continue;
+            Vec3 n = h.getDirection().getUnitVec3(); double facing = -(n.x * dir.x + n.z * dir.z);
+            if (facing < 0.2) continue;
+            Vec3 at = h.getLocation(); if (!roomFor(mc, at, n)) continue;                        // a real wall: solid on both sides of the spot, room in front of it
+            double score = facing * 2 - Math.abs(d - 5) * 0.12 + RND.nextDouble() * 0.5;
+            if (score > bestScore) { bestScore = score; best = h; }
         }
+        if (best != null) {
+            Vec3 n = best.getDirection().getUnitVec3(), at = best.getLocation().add(n.scale(0.04));
+            LIVE.add(new Placed(WALL, li, at.x, at.y, at.z, new Vec3(-n.z, 0, n.x), new Vec3(0, 1, 0)));
+            trim(); return;
+        }
+        boolean roof = hit(mc, eye, eye.add(0, 24, 0)) != null;
+        int kind = roof ? AIR : SKY;
         double side = (RND.nextBoolean() ? 1 : -1) * (6 + RND.nextInt(16));
         double a = Math.toRadians(yaw + side);
         if (kind == SKY) {
@@ -108,6 +105,13 @@ final class LyricsHud {
         }
         trim();
     }
+    /** Is there a wall to write on here: the blocks beside the spot are solid too (not a lone corner), and nothing stands right in front. */
+    private static boolean roomFor(Minecraft mc, Vec3 at, Vec3 n) {
+        Vec3 r = new Vec3(-n.z, 0, n.x); int solid = 0;
+        for (int i = -1; i <= 1; i += 2) { var bp = net.minecraft.core.BlockPos.containing(at.subtract(n.scale(0.3)).add(r.scale(i * 0.9))); if (!mc.level.getBlockState(bp).isAir()) solid++; }
+        var front = net.minecraft.core.BlockPos.containing(at.add(n.scale(0.5)));
+        return solid >= 1 && mc.level.getBlockState(front).isAir();
+    }
     private static void trim() { while (LIVE.size() > 4) LIVE.remove(0); }
     private static BlockHitResult hit(Minecraft mc, Vec3 from, Vec3 to) {
         BlockHitResult h = mc.level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
@@ -117,9 +121,9 @@ final class LyricsHud {
     // ------------------------------------------------------------------ drawing the lines placed in the world
     private static Matrix4f vp; private static Vec3 camPos, follow; private static int W, H; private static long followAt;
     /** Where a line is now: walls stay put; sky and air lines are kept relative to you. */
-    private static double ax(Placed p) { return p.kind == WALL ? p.x : follow.x + p.x; }
-    private static double ay(Placed p) { return p.kind == WALL ? p.y : follow.y + p.y; }
-    private static double az(Placed p) { return p.kind == WALL ? p.z : follow.z + p.z; }
+    private static double ax(Placed p) { return p.kind == WALL ? p.x : (p.kind == SKY ? camPos.x : follow.x) + p.x; }
+    private static double ay(Placed p) { return p.kind == WALL ? p.y : (p.kind == SKY ? camPos.y : follow.y) + p.y; }
+    private static double az(Placed p) { return p.kind == WALL ? p.z : (p.kind == SKY ? camPos.z : follow.z) + p.z; }
     private static float[] project(double x, double y, double z) {
         Vector4f v = new Vector4f((float) (x - camPos.x), (float) (y - camPos.y), (float) (z - camPos.z), 1f); vp.transform(v);
         if (v.w < 0.2f) return null;
@@ -131,9 +135,8 @@ final class LyricsHud {
         if (LIVE.isEmpty()) return;
         var cam = mc.gameRenderer.mainCamera(); camPos = cam.position(); vp = cam.getViewRotationProjectionMatrix(new Matrix4f()); W = g.guiWidth(); H = g.guiHeight();
         float dt = Math.min(0.1f, (now - (followAt == 0 ? now : followAt)) / 1000f); followAt = now;   // sky and air lines ride along with you: they catch up whatever your speed
-        if (follow == null || follow.distanceTo(camPos) > 30) follow = camPos;
-        follow = follow.add(camPos.subtract(follow).scale(Math.min(1f, dt * 6f)));
-        Vec3 lag = follow.subtract(camPos); if (lag.length() > 1.0) follow = camPos.add(lag.normalize());
+        if (follow == null || follow.distanceTo(camPos) > 40) follow = camPos;
+        follow = follow.add(camPos.subtract(follow).scale(1f - (float) Math.exp(-dt * 9f)));   // eases after you, smoothly at any speed
         Font font = mc.font; int col = colour(), glow = glowOf(col); float k = c.lyricsSize / 100f;
         List<Lyrics.Line> L = Lyrics.lines;
         for (Placed p : new ArrayList<>(LIVE)) {
@@ -144,7 +147,10 @@ final class LyricsHud {
             if (p.kind == AIR) {                                                             // walked away from it: it glides back in front of you
                 float[] s = project(ax(p), ay(p), az(p));
                 boolean off = s == null || s[0] < -40 || s[0] > W + 40 || s[1] < -20 || s[1] > H + 20;
-                if (off && p.gone == 0) { if (p.offSince == 0) p.offSince = now; else if (now - p.offSince > 500) glideBack(mc, p); } else p.offSince = 0;
+                boolean centred = s != null && s[0] > W * 0.2f && s[0] < W * 0.8f;
+                if (off && p.offSince == 0) p.offSince = now;                                   // off screen: after a moment it starts swinging back,
+                if (p.offSince != 0 && p.gone == 0 && now - p.offSince > 250) glideBack(mc, p);  // and keeps easing in until it is well in view
+                if (centred) p.offSince = 0;
             }
             float[] s = project(ax(p), ay(p) + (p.kind == AIR && p.gone > 0 ? (now - p.gone) / 1100.0 * 0.6 : 0), az(p));
             if (s == null) continue;
@@ -157,11 +163,11 @@ final class LyricsHud {
             }
         }
     }
-    /** You turned away from a line in the air: it swings round to the front again. */
+    /** You turned away from a line in the air: it swings round to the front again, a little every frame. */
     private static void glideBack(Minecraft mc, Placed p) {
-        var cam = mc.gameRenderer.mainCamera(); double a = Math.toRadians(cam.yRot() + (RND.nextBoolean() ? 1 : -1) * 10), d = FancyConfig.get().lyricsDistance;
-        double tx = -Math.sin(a) * d, ty = 0.6, tz = Math.cos(a) * d;
-        p.x += (tx - p.x) * 0.25; p.y += (ty - p.y) * 0.25; p.z += (tz - p.z) * 0.25;
+        var cam = mc.gameRenderer.mainCamera(); double want = Math.toRadians(cam.yRot()), have = Math.atan2(-p.x, p.z), d = Math.hypot(p.x, p.z);
+        double diff = Math.atan2(Math.sin(want - have), Math.cos(want - have)), na = have + diff * 0.08;
+        p.x = -Math.sin(na) * d; p.z = Math.cos(na) * d;
     }
 
     /** The karaoke words of one line, centred on cx, cy: sung words bright with a pop, the rest dim. */
@@ -192,7 +198,7 @@ final class LyricsHud {
         for (int i = 0; i < n; i++) {
             String ch = String.valueOf(line.charAt(i)); float cw = font.width(ch) * k;
             float at = start + span * i / (float) n, lit = Math.max(0f, Math.min(1f, (pos - at) / 160f)), shown = Math.max(0f, Math.min(1f, (age - 0.7f * i / n) / 0.25f));
-            float drift = p.gone > 0 ? (now - p.gone) / 1100f : 0f, dx = (float) (Math.sin(i * 12.9898) * 30) * drift * drift, dy = (float) (Math.cos(i * 78.233) * 20 - 25) * drift * drift;
+            float drift = p.gone > 0 ? (now - p.gone) / 1100f : 0f, dx = 0f, dy = -14f * drift * drift;
             float a = shown * out, tw = 0.85f + 0.15f * (float) Math.sin(now / 300.0 + i * 1.3);
             if (a > 0.02f && !ch.isBlank()) {
                 float lx = x + cw / 2f + dx, ly = cy + dy;
@@ -204,13 +210,14 @@ final class LyricsHud {
     }
     /** Flat on a wall, like a neon sign: it flickers on, glows, and flickers off. Drawn through the wall face's own directions. */
     private static void wall(GuiGraphicsExtractor g, Font font, Placed p, String text, long start, long end, long pos, float age, float out, int col, int glow, float k, long now) {
-        float size = 0.045f * k;                                                            // blocks per text pixel: letters about a third of a block tall
+        double dist = Math.sqrt((p.x - camPos.x) * (p.x - camPos.x) + (p.y - camPos.y) * (p.y - camPos.y) + (p.z - camPos.z) * (p.z - camPos.z));
+        float size = (float) (0.03 + 0.007 * dist) * k;                                     // blocks per text pixel: bigger the further the wall
         float[] o = project(p.x, p.y, p.z), rx = project(p.x + p.right.x, p.y + p.right.y, p.z + p.right.z), uy = project(p.x, p.y + 1, p.z);
         if (o == null || rx == null || uy == null) return;
         Vec3 toCam = camPos.subtract(p.x, p.y, p.z); Vec3 n = new Vec3(p.right.z, 0, -p.right.x);
         if (toCam.x * n.x + toCam.z * n.z < 0.2) return;                                  // from behind or edge on: hidden
-        float flick = age < 0.45f ? (RND.nextFloat() < 0.55f ? 1f : 0.15f) : 1f;
-        if (p.gone > 0 && out < 0.6f) flick *= RND.nextFloat() < 0.5f ? 1f : 0.2f;
+        float flick = age < 0.5f ? (((int) (age * 22)) % 3 == 1 ? 0.25f : 1f) : 1f;              // flickers on in a few even beats
+        if (p.gone > 0 && out < 0.7f) flick *= ((int) (out * 20)) % 2 == 0 ? 1f : 0.3f;
         float a = Math.min(1f, age / 0.45f) * out * flick;
         int w = font.width(text);
         Gfx.push(g);

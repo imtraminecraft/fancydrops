@@ -1,28 +1,35 @@
 package dev.fancydrops;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.particle.SingleQuadParticle;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.data.AtlasIds;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.player.Player;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.util.*;
 
 /**
- * Auras in the world, drawn by Minecraft's own particle engine: every AuraSim particle gets a real particle with one of our glowing
- * sprites (textures/particle/aura_*.png), lit at full brightness so it glows at night. Nothing is drawn by hand any more, so nothing can
- * flash over the screen. Particles very close to the camera fade out (they would otherwise fill the view in first person).
+ * Auras in the world. The particles (AuraSim) step 20 times a second; every frame each one is placed between where it was and where it is
+ * now, projected to the screen and drawn there with its own glowing sprite. Nothing is handed to the game's world rendering at all.
+ *
+ * Seeing through walls is avoided by looking from the camera to the wearer: when a block is in the way the aura fades out. Particles
+ * behind the wearer (further from you than their body) are drawn fainter, as if the body hid part of them.
  */
 final class AuraWorld {
     private AuraWorld() {}
 
     private record Sim(AuraSim sim, String aura) {}
     private static final Map<UUID, Sim> SIMS = new HashMap<>();
+    private static final Map<UUID, Float> SEEN = new HashMap<>();        // 0..1: how visible each wearer is (fades when a wall is in the way)
     private static ClientLevel lastLevel;
+    private static boolean warned;
 
-    /** Every client tick: step the aura of every player near you who wears one, and give new particles to the engine. */
+    /** Every client tick: step the aura of every player near you who wears one. */
     static void tick(Minecraft mc) {
         try {
             if (mc.level == null || mc.player == null || mc.isPaused()) { if (mc.level == null) SIMS.clear(); return; }
@@ -41,69 +48,52 @@ final class AuraWorld {
                 Cosmetics.Look l = looks.get(p.getUUID());
                 if (l == null || l.aura() == null || p.isInvisible() || p.isSpectator()) continue;
                 if (p != mc.player && (mc.player.distanceTo(p) > cf.cosRange || (allowed != null && !allowed.contains(p.getUUID())))) continue;
-                boolean firstPerson = p == mc.player && !mc.gameRenderer.mainCamera().isDetached();
-                if (firstPerson && cf.cosHideFirst) continue;
                 seen.add(p.getUUID());
                 Sim s = SIMS.get(p.getUUID());
-                if (s == null || !s.aura().equals(l.aura())) { if (s != null) kill(s.sim()); s = new Sim(new AuraSim(l.aura(), p.getUUID().hashCode()), l.aura()); SIMS.put(p.getUUID(), s); }
+                if (s == null || !s.aura().equals(l.aura())) { s = new Sim(new AuraSim(l.aura(), p.getUUID().hashCode()), l.aura()); SIMS.put(p.getUUID(), s); }
                 s.sim().step(p.getX(), p.getY(), p.getZ(), Math.min(100, cf.cosAmount) / 100f, cf.cosSpeed / 100f, cf.cosCalm, cf.cosSize / 100f);
-                for (AuraSim.Part part : s.sim().born) { mc.particleEngine.add(new Glow(mc.level, p, part)); spawned++; }
             }
-            long now = System.currentTimeMillis();
-            if (now - lastReport > 30_000L) {                                                      // a line in the log now and then, to see what the auras are doing
-                lastReport = now; int withAura = 0; for (Cosmetics.Look l : looks.values()) if (l.aura() != null) withAura++;
-                Cosmetics.Look mine = looks.get(mc.player.getUUID());
-                System.err.println("[FancyDrops] auras: " + looks.size() + " looks, " + withAura + " with an aura, mine=" + (mine == null ? "none" : mine.aura()) + ", sims=" + SIMS.size() + ", particles made=" + spawned + ", ticked=" + ticked + ", sprite=" + sprite("aura_star").contents().name());
-            }
-            for (Iterator<Map.Entry<UUID, Sim>> it = SIMS.entrySet().iterator(); it.hasNext(); ) { var e = it.next(); if (!seen.contains(e.getKey())) { kill(e.getValue().sim()); it.remove(); } }
+            SIMS.keySet().retainAll(seen);
         } catch (Throwable t) { if (!warned) { warned = true; System.err.println("[FancyDrops] aura tick failed: " + t); } }
     }
-    private static boolean warned;
-    private static long lastReport, spawned, ticked;
-    private static void kill(AuraSim s) { for (AuraSim.Part p : s.parts) p.dead = true; }
 
-    /** Looked up each time (cheap), so a resource reload never leaves a particle with an old sprite. */
-    static TextureAtlasSprite sprite(String name) {
-        return Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.PARTICLES).getSprite(Identifier.fromNamespaceAndPath("fancydrops", name));
-    }
     static String spriteName(AuraSim.Part p) { return p.sprite == AuraSim.RUNE ? "aura_rune" + (p.rune & 3) : AuraSim.SPRITE[p.sprite]; }
 
-    /** One aura particle: it reads its simulated particle every tick and follows the body when it should. */
-    static final class Glow extends SingleQuadParticle {
-        private final Player owner; private final AuraSim.Part part; private String sp;
-
-        Glow(ClientLevel level, Player owner, AuraSim.Part part) {
-            super(level, 0, 0, 0, sprite(spriteName(part)));
-            this.owner = owner; this.part = part; this.sp = spriteName(part);
-            this.hasPhysics = false; this.gravity = 0f; this.lifetime = Integer.MAX_VALUE;
-            place(); this.xo = this.x; this.yo = this.y; this.zo = this.z;
-            look();
-        }
-        private void place() {
-            if (part.follow) setPos(owner.getX() + part.x, owner.getY() + part.y, owner.getZ() + part.z);
-            else setPos(part.x, part.y, part.z);
-        }
-        private void look() {
-            float a = part.a;
-            var cam = Minecraft.getInstance().gameRenderer.mainCamera().position();
-            double d = Math.sqrt(cam.distanceToSqr(this.x, this.y, this.z));
-            float near = (float) ((d - 0.6 - part.s) / 0.8);                                      // gone right at the eye, full a block or so away
-            a *= near <= 0 ? 0f : near >= 1 ? 1f : near * near;
-            int c = part.col;
-            this.rCol = ((c >> 16) & 255) / 255f; this.gCol = ((c >> 8) & 255) / 255f; this.bCol = (c & 255) / 255f;
-            this.alpha = Math.max(0f, Math.min(1f, a));
-            this.quadSize = Math.max(0.001f, part.s * 1.0f);                                      // a quad reaches quadSize each way from its middle
-        }
-        @Override public void tick() {
-            ticked++;
-            this.xo = this.x; this.yo = this.y; this.zo = this.z;
-            if (part.dead || owner.isRemoved()) { remove(); return; }
-            place(); look();
-            String n = spriteName(part);
-            if (!n.equals(sp)) { sp = n; setSprite(sprite(n)); }
-        }
-        @Override public void move(double dx, double dy, double dz) { }
-        @Override protected int getLightCoords(float partial) { return 0xF000F0; }
-        @Override protected Layer getLayer() { return Layer.TRANSLUCENT; }
+    /** Every frame (HUD): draw every aura particle at its place on the screen. */
+    static void render(GuiGraphicsExtractor g, float partial) {
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null || mc.player == null || SIMS.isEmpty()) return;
+            FancyConfig cf = FancyConfig.get();
+            var cam = mc.gameRenderer.mainCamera(); Vec3 cp = cam.position();
+            Matrix4f vp = cam.getViewRotationProjectionMatrix(new Matrix4f());
+            int W = g.guiWidth(), H = g.guiHeight();
+            double ppb = H / (2 * Math.tan(Math.toRadians(mc.options.fov().get()) / 2));          // screen pixels per block at one block away
+            List<float[]> draw = new ArrayList<>(); List<AuraSim.Part> who = new ArrayList<>();
+            for (Player p : mc.level.players()) {
+                Sim s = SIMS.get(p.getUUID()); if (s == null) continue;
+                if (p == mc.player && !cam.isDetached()) continue;                                 // your own aura is for others (and for you in F5)
+                Vec3 feet = p.getPosition(partial), chest = feet.add(0, 1.1, 0);
+                boolean blocked = p != mc.player && mc.level.clip(new ClipContext(cp, chest, ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, mc.player)).getType() == HitResult.Type.BLOCK;
+                float vis = SEEN.getOrDefault(p.getUUID(), 0f); vis += ((blocked ? 0f : 1f) - vis) * 0.15f; SEEN.put(p.getUUID(), vis);
+                if (vis < 0.02f) continue;
+                Vector4f bc = new Vector4f((float) (chest.x - cp.x), (float) (chest.y - cp.y), (float) (chest.z - cp.z), 1f); vp.transform(bc);
+                float bodyDepth = bc.w;
+                for (AuraSim.Part q : s.sim().parts) {
+                    if (q.a < 0.03f) continue;
+                    double lx = q.ox + (q.x - q.ox) * partial, ly = q.oy + (q.y - q.oy) * partial, lz = q.oz + (q.z - q.oz) * partial;
+                    double wx = q.follow ? feet.x + lx : lx, wy = q.follow ? feet.y + ly : ly, wz = q.follow ? feet.z + lz : lz;
+                    Vector4f v = new Vector4f((float) (wx - cp.x), (float) (wy - cp.y), (float) (wz - cp.z), 1f); vp.transform(v);
+                    if (v.w < 0.6f) continue;                                                      // at or behind the eye: never drawn
+                    float sx = (v.x / v.w * 0.5f + 0.5f) * W, sy = (1f - (v.y / v.w * 0.5f + 0.5f)) * H, px = (float) (q.s * ppb / v.w) * 1.3f;
+                    if (sx < -40 || sx > W + 40 || sy < -40 || sy > H + 40) continue;
+                    float a = q.a * vis * (v.w > bodyDepth + 0.15f ? 0.4f : 1f);                    // behind the body: fainter
+                    draw.add(new float[]{sx, sy, px, a, v.w}); who.add(q);
+                }
+            }
+            Integer[] order = new Integer[draw.size()]; for (int i = 0; i < order.length; i++) order[i] = i;
+            Arrays.sort(order, (a, b) -> Float.compare(draw.get(b)[4], draw.get(a)[4]));           // far ones first
+            for (int i : order) { float[] d = draw.get(i); AuraFx.drawPart(g, d[0], d[1], Math.min(48f, d[2]), who.get(i), d[3]); }
+        } catch (Throwable t) { if (!warned) { warned = true; System.err.println("[FancyDrops] aura draw failed: " + t); } }
     }
 }

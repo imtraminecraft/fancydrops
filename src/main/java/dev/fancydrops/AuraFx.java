@@ -144,9 +144,9 @@ final class AuraFx {
     }
 
     /** One aura particle in the menu preview: its own sprite, tinted, centred on sx/sy, px pixels across. */
-    static void drawPart(GuiGraphicsExtractor g, float sx, float sy, float px, AuraSim.Part q) {
-        float a = q.a; if (a < 0.03f || px < 0.4f) return;
-        px = Math.min(px, 22f);
+    static void drawPart(GuiGraphicsExtractor g, float sx, float sy, float px, AuraSim.Part q) { drawPart(g, sx, sy, px, q, 1f); }
+    static void drawPart(GuiGraphicsExtractor g, float sx, float sy, float px, AuraSim.Part q, float k) {
+        float a = q.a * k; if (a < 0.03f || px < 0.4f) return;
         int argb = (Math.round(Math.min(1f, a) * 255) << 24) | (q.col & 0xFFFFFF);
         Identifier id = Identifier.fromNamespaceAndPath("fancydrops", "textures/particle/" + AuraWorld.spriteName(q) + ".png");
         Gfx.push(g); Gfx.translate(g, sx - px / 2f, sy - px / 2f); g.pose().scale(px / 32f, px / 32f);

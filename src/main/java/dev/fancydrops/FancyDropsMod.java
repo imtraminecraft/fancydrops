@@ -84,7 +84,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("fancydrops", "lyrics"),
-                (graphics, deltaTracker) -> { LyricsHud.render(graphics); NowPlayingHud.hud(graphics); });
+                (graphics, deltaTracker) -> { AuraWorld.render(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)); LyricsHud.render(graphics); NowPlayingHud.hud(graphics); });
 
         HudElementRegistry.attachElementAfter(VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("fancydrops", "auras"),

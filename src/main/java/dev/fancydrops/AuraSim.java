@@ -19,6 +19,7 @@ final class AuraSim {
     static final class Part {
         boolean follow, orbit, dead;
         double x, y, z;                                 // offset from the feet (follow) or the world position
+        double ox, oy, oz; boolean fresh = true;         // where it was last tick (drawing slides between the two)
         double vx, vy, vz;
         float ang, angV, rad, radV;                     // orbits: angle (radians), turn per tick, radius, its change per tick
         float size, sizeEnd, gravity, drag = 1f, twinkle, phase;
@@ -79,6 +80,7 @@ final class AuraSim {
             p.sizeEnd = 0.02f; p.drag = 0.9f;
         }
         for (Part p : parts) {
+            p.ox = p.x; p.oy = p.y; p.oz = p.z; if (p.fresh) { p.fresh = false; }
             p.age++;
             if (p.age >= p.life) { p.dead = true; continue; }
             if (p.orbit) { p.ang += p.angV * sp; p.rad += p.radV * sp; p.y += p.vy * sp; p.x = Math.cos(p.ang) * p.rad; p.z = Math.sin(p.ang) * p.rad; }

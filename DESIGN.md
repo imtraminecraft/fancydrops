@@ -472,3 +472,9 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Achievements: a galaxy of six groups. The heart, "Every Drop" (the Ledger and Fortune chapters), sits in the middle; round it, one group per Drop Library page (Mythological, Rare Drops, Farming, Fishing, Dyes), each tree growing away from the heart with the page's icon faint behind it. Lanes of light run from the heart to each group and fill with its completion.
 - Drops that can't be sent (no verification, no network) are kept in config/fancydrops/unsent_drops.json and retried every minute; the star map says how many are waiting.
 - Auras log a status line every 30 s ("[FancyDrops] auras: ...") to find why an aura may not show; particles are larger.
+
+## Round: walls, vinyl, HUD auras
+- Auras are drawn on the HUD by projecting each AuraSim particle (no particle engine); your own shows in F5.
+- Lyrics: a wall first (rays ±50°, room checked), else sky/air; the follow is smoothed; neon flicker is fixed-rate, not random.
+- Now Playing: default look is "Vinyl" (spinning record with the cover as its label); the Card look stays. It slides below boss bars when they're drawn at the top.
+- Achievements: bigger trees, ring round the heart, "Your Ledger" card top left, labels kept apart.

@@ -32,7 +32,7 @@ final class Codex {
     private static final String[] ICON = {"fancydrops", "mytho", "raredrops", "farm", "fishing", "dye"};
     private static final int[] ACH_COL = {0xFFFFD27A, 0xFF55D8FF, 0xFFFF6A6A, 0xFF8CE86A, 0xFF4FC3FF, 0xFFFF72C6};
     private static final String[] QUOTE = {"Every find, written down.", "Dig, and the earth answers.", "They drop what they guard.", "The harvest remembers.", "Patience, then a splash.", "Every colour has a story."};
-    private static final float[][] HOME = {{0.42f, 0.50f}, {0.42f, 0.19f}, {0.62f, 0.42f}, {0.57f, 0.80f}, {0.27f, 0.80f}, {0.18f, 0.40f}};      // fractions of the width, of the height
+    private static final float[][] HOME = {{0.42f, 0.50f}, {0.42f, 0.18f}, {0.64f, 0.44f}, {0.58f, 0.81f}, {0.26f, 0.81f}, {0.19f, 0.47f}};      // fractions of the width, of the height
     /** The way a group's tree grows: straight away from the heart of the map. */
     private static double growDir(int c) { return c == 0 ? -Math.PI / 2 : Math.atan2(HOME[c][1] - HOME[0][1], (HOME[c][0] - HOME[0][0]) * 1.7); }
     /** Which group a server chapter belongs to. */
@@ -281,7 +281,7 @@ final class Codex {
                 double base = c == 0 ? -Math.PI / 2 + bi * Math.PI * 2 / nb : away + (nb == 1 ? 0 : (bi - (nb - 1) / 2.0) * spread / (nb - 1));
                 int prev = -1;
                 for (int d = 0; d < b.size(); d++) {
-                    double an = base + d * 0.2 * (bi % 2 == 0 ? 1 : -1), r = 0.065 + 0.055 * d;
+                    double an = base + d * 0.2 * (bi % 2 == 0 ? 1 : -1), r = (c == 0 ? 0.075 : 0.085) + 0.07 * d;
                     out.add(new Node(b.get(d), (float) (Math.cos(an) * r * 1.15), (float) (Math.sin(an) * r), prev, d));
                     prev = out.size() - 1;
                 }
@@ -295,6 +295,10 @@ final class Codex {
     private static void lanes(GuiGraphicsExtractor g, float zoomed, int fc) {
         float[] h = centre(0); float hx = X(h[0]), hy = Y(h[1]);
         float a0 = 1f - 0.8f * zoomed;
+        float rr = 0.2f * sh * camS, turn = now / 60000f * (float) Math.PI * 2;                     // a slow ring of marks round the heart, the groups' colours on it
+        ringDash(hx, hy, rr, 0xE8C76A, 0.2f * a0 * alpha);
+        for (int i = 0; i < 60; i++) { double an = turn + i * Math.PI / 30; float l = i % 5 == 0 ? 5 : 2; line(hx + (float) Math.cos(an) * rr, hy + (float) Math.sin(an) * rr, hx + (float) Math.cos(an) * (rr + l), hy + (float) Math.sin(an) * (rr + l), 0xE8C76A, 0.35f * a0, 0); }
+        for (int c = 1; c < ACH.length; c++) { float[] o = centre(c); double an = Math.atan2(Y(o[1]) - hy, X(o[0]) - hx); glow(hx + (float) Math.cos(an) * rr, hy + (float) Math.sin(an) * rr, 4, ACH_COL[c], 0.8f * a0); }
         for (int c = 1; c < ACH.length; c++) {
             List<Achievements.Ach> l = achOf(ACH[c]); int d = 0; for (Achievements.Ach q : l) if (q.done()) d++;
             float f = l.isEmpty() ? 0f : d / (float) l.size(), fa = fc >= 0 && fc != c && fc != 0 ? a0 * 0.4f : a0;
@@ -319,7 +323,7 @@ final class Codex {
         float breathe = 0.85f + 0.15f * (float) Math.sin(now / 1800.0 + c);
         NebulaTex.glow(g, ox, oy, rad * (1.2f + 0.25f * frac), rad * (1.0f + 0.2f * frac), argb((0.08f + 0.2f * frac + (full ? 0.15f : 0f) + 0.1f * hk) * fade * alpha * breathe, col));
         if (zoomed < 0.7f) {                                                                 // the Drop Library page's own icon, big and faint, behind its group
-            float ia = (0.10f + 0.12f * frac + 0.15f * hk) * (1f - zoomed / 0.7f) * fade * alpha, sc = rad * 1.1f / 16f;
+            float ia = (0.12f + 0.14f * frac + 0.15f * hk) * (1f - zoomed / 0.7f) * fade * alpha, sc = rad * 1.6f / 16f;
             if (ia > 0.01f) { Gfx.push(g); Gfx.translate(g, ox - 8 * sc, oy - 8 * sc - rad * 0.15f); Gfx.scale(g, sc); Icons.drawFaint(g, ICON[c], 0, 0, now, ia); Gfx.pop(g); }
         }
         if (full && zoomed < 0.6f) { float sp = (now / 6000f) % 1f, ra = (1f - zoomed / 0.6f) * fade; for (int i = 0; i < 6; i++) { double an = (sp + i / 6f) * Math.PI * 2; glow(ox + (float) Math.cos(an) * rad, oy + (float) Math.sin(an) * rad * 0.9f, 3, col, 0.6f * ra); } }
@@ -340,7 +344,7 @@ final class Codex {
             String nm = spaced(ACH_NAME[c].toUpperCase(Locale.ROOT));
             float bot = 0.04f, top = -0.04f; for (Node n : t) { bot = Math.max(bot, n.dv()); top = Math.min(top, n.dv()); }
             boolean above = c != 0 && Math.sin(growDir(c)) > 0.3;                             // a tree growing down has its name above it
-            int ty = above ? Math.round(Y(o[1] + top)) - 24 : Math.round(Y(o[1] + bot)) + 9, nw = host.width(nm);
+            int ty = above ? Math.round(Y(o[1] + top)) - 24 : Math.round(Y(o[1] + bot)) + (c == 0 ? 2 : 9), nw = host.width(nm);
             if (c == 0) small(g, nm, Math.round(ox - nw * 0.375f), ty + 2, argb(la, hv || full ? mix(col, 0xFFFFFFFF, 0.4f) : 0xFFE9B8));      // the heart's name, smaller
             else text(g, nm, Math.round(ox - nw / 2f), ty, argb(la, hv || full ? mix(col, 0xFFFFFFFF, 0.4f) : 0xE6E8F4), true);
             String sub = done + " / " + l.size(); int subW = Math.round(host.width(sub) * 0.75f);
@@ -453,12 +457,21 @@ final class Codex {
         int w = Math.max(110, Math.round(sw * 0.2f)), x = sx0 + sw - w - 10, y = sy0 + 26;
         y = card(g, "NEARLY THERE", next.subList(0, Math.min(3, next.size())), x, y, w, a, true) + 6;
         card(g, "RECENTLY LIT", recent.subList(0, Math.min(3, recent.size())), x, y, w, a, false);
+        ledgerCard(g, p, a);
         int lx = sx0 + Math.round(sw * 0.38f), ly = sy0 + sh - 18;                              // the legend
         g.fill(lx - 4, ly - 4, lx + 196, ly + 10, argb(0.45f * a * alpha, 0x060818));
         glow(lx + 3, ly + 3, 3, 0xFFE9B8, a); small(g, "earned", lx + 9, ly + 1, argb(0.8f * a * alpha, 0xD8DCEC));
         ring(lx + 52, ly + 3, 3, argb(0.9f * a * alpha, 0x7AD8FF), 0.6f); small(g, "next up", lx + 58, ly + 1, argb(0.8f * a * alpha, 0xD8DCEC));
         glow(lx + 104, ly + 3, 1.6f, 0x9AB4FF, 0.5f * a); small(g, "locked", lx + 110, ly + 1, argb(0.8f * a * alpha, 0xD8DCEC));
         line(lx + 148, ly + 3, lx + 154, ly + 3, 0xFFE9B8, a, 0); line(lx + 151, ly, lx + 151, ly + 6, 0xFFE9B8, a, 0); small(g, "reward", lx + 158, ly + 1, argb(0.8f * a * alpha, 0xD8DCEC));
+    }
+    /** Your numbers, top left: what the ledger has counted so far. */
+    private static void ledgerCard(GuiGraphicsExtractor g, Achievements.Profile p, float a) {
+        List<String[]> rows = Ledger.statRows("ledger", p); if (rows.isEmpty()) return;
+        int x = sx0 + 12, y = sy0 + 30, w = Math.max(120, Math.round(sw * 0.17f)), n = Math.min(5, rows.size()), h = 16 + n * 10;
+        g.fill(x, y, x + w, y + h, argb(0.5f * a * alpha, 0x060818)); g.fill(x, y, x + 2, y + h, argb(0.8f * a * alpha, 0xFFD27A));
+        small(g, "YOUR LEDGER", x + 7, y + 4, argb(0.9f * a * alpha, 0xFFD27A));
+        for (int i = 0; i < n; i++) { String[] r = rows.get(i); int yy = y + 15 + i * 10; small(g, r[0], x + 7, yy, argb(0.75f * a * alpha, 0xB8C0DA)); small(g, r[1], x + w - 6 - Math.round(host.width(r[1]) * 0.75f), yy, argb(a * alpha, 0xFFFFFF)); }
     }
     private static int card(GuiGraphicsExtractor g, String title, List<Achievements.Ach> l, int x, int y, int w, float a, boolean bars) {
         if (l.isEmpty()) return y;

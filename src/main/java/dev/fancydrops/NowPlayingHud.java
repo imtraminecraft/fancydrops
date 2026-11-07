@@ -8,9 +8,8 @@ import net.minecraft.client.renderer.RenderPipelines;
 /**
  * Now Playing. Two looks (Visuals > Now Playing), placed wherever you drag it (Visuals > Move HUD):
  *
- *   ISLAND (default): a black capsule at the top of the screen, like a phone's live activity, but ours. Small most of the time: a round
- *     cover wearing a ring that fills as the song plays, the title, and a waveform in the cover's colours. When a song starts, when you pause
- *     or play, and now and then on its own, it springs open: a bigger cover, title, artists, the current lyric line, the time bar.
+ *   VINYL (default): a record spinning half out of a dark glass bar, the album cover as its label; the bar holds the song, the artists,
+ *     the line being sung, a small equalizer and the time. The record slows to a stop when you pause and whirls when a song changes.
  *   CARD: a dark glass card with the cover, title, artists, a dancing equalizer and the time bar.
  *
  * It slides away when nothing is playing and while an RNG animation has its bars down.
@@ -18,7 +17,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 final class NowPlayingHud {
     private NowPlayingHud() {}
 
-    private static float show, open, wNow = 120, hNow = 20; private static long last = System.currentTimeMillis();
+    private static float show; private static long last = System.currentTimeMillis();
     private static String lastId = ""; private static long changedAt, wakeAt; private static boolean lastPlaying;
     /** The demo shown while you move the HUD with nothing playing. */
     static boolean preview;
@@ -39,74 +38,79 @@ final class NowPlayingHud {
         show += ((want ? 1f : 0f) - show) * Math.min(1f, dt * 8f);
         if (show < 0.01f || t == null) return;
         if (!t.id().equals(lastId)) { lastId = t.id(); changedAt = now; wakeAt = now; }
-        boolean expanded = preview || now - wakeAt < 5500 || (c.npPeek && (now / 1000) % 45 < 4);
-        open += ((expanded ? 1f : 0f) - open) * Math.min(1f, dt * 7f);
-        if (c.npStyle == 1) card(g, mc, c, t, now, playing); else island(g, mc, c, t, now, playing, dt);
+        if (c.npStyle == 1) card(g, mc, c, t, now, playing); else vinyl(g, mc, c, t, now, playing, dt);
     }
     private static boolean lastPlayingSeen; private static long pausedSince;
 
-    // ------------------------------------------------------------------ the island
-    private static void island(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, Spotify.Track t, long now, boolean playing, float dt) {
+    private static java.lang.reflect.Field bossEvents; private static boolean bossTried; private static float bossPush;
+    /** Boss bars come first: when the card sits where they are drawn (top, middle) it slides down below the last one. */
+    private static float below(Minecraft mc, int W, float cx, float w, float y) {
+        int n = 0;
+        try {
+            Object ov = mc.gui.hud.getBossOverlay();
+            if (!bossTried) { bossTried = true; for (var f : ov.getClass().getDeclaredFields()) if (java.util.Map.class.isAssignableFrom(f.getType())) { f.setAccessible(true); bossEvents = f; } }
+            if (bossEvents != null) n = ((java.util.Map<?, ?>) bossEvents.get(ov)).size();
+        } catch (Throwable ignored) { }
+        float want = 0;
+        if (n > 0 && Math.abs(cx - W / 2f) < 91 + w / 2f) want = Math.max(0, Math.min(19 * n + 3, mc.getWindow().getGuiScaledHeight() / 3f + 8) - y);
+        bossPush += (want - bossPush) * 0.15f;
+        return y + bossPush;
+    }
+
+    // ------------------------------------------------------------------ the vinyl
+    private static float spin, spinV;
+    /** A record spinning half out of a dark glass bar: the cover is its label. The bar holds the song, the artists, the line being sung and
+     *  the time. A soft light in the cover's colour sits behind the record; now and then a gleam runs along the bar. */
+    private static void vinyl(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, Spotify.Track t, long now, boolean playing, float dt) {
         Font font = mc.font; int W = g.guiWidth();
-        float k = c.npScale / 100f, e = show * show * (3 - 2 * show), o = open;
-        float tw = 128 + 92 * o, th = 18 + 30 * o;                                             // the size it springs to
-        wNow += (tw - wNow) * Math.min(1f, dt * 10f); hNow += (th - hNow) * Math.min(1f, dt * 10f);
-        float w = wNow, h = hNow;
-        int acc = AlbumArt.ready ? AlbumArt.colour : 0x1ED760, a = Math.round(255 * e);
-        float cx = W * c.npX, top = c.npY - (1f - e) * (h + 12);
-        Gfx.push(g); Gfx.translate(g, cx, top); Gfx.scale(g, k);
-        bx0 = Math.round(cx - w / 2 * k); by0 = Math.round(top); bx1 = Math.round(cx + w / 2 * k); by1 = Math.round(top + h * k);
-        // a halo in the cover's colour that breathes with the music, then the capsule itself
-        float beat = playing ? 0.5f + 0.5f * (float) Math.sin(now / 240.0) * (float) Math.sin(now / 610.0) : 0f;
-        NebulaTex.glow(g, 0, h / 2, w * 0.62f, h * (0.9f + 0.2f * beat), Gfx.argb(Math.round((50 + 40 * beat) * e), acc));
-        capsule(g, -w / 2, 0, w, h, Gfx.argb(Math.round(245 * e), 0x050507));
-        capsule(g, -w / 2, 0, w, 1, Gfx.argb(Math.round(40 * e), 0xFFFFFF));                // a sheen along the top edge
-        float r = h / 2;
-        // the cover: round when small, a rounded square when open; a ring round it fills with the song
-        float as = 12 + 22 * o, ax = -w / 2 + 4 + 2 * o, ay = (h - as) / 2;
-        long pos = preview ? (now / 10) % 200_000 : Spotify.position(), dur = Math.max(1, t.durationMs()); float f = Math.min(1f, pos / (float) dur);
-        if (AlbumArt.ready && !preview) g.blit(RenderPipelines.GUI_TEXTURED, AlbumArt.ID, Math.round(ax), Math.round(ay), 0f, 0f, Math.round(as), Math.round(as), 64, 64, 64, 64, Gfx.argb(a, 0xFFFFFF));
-        else { g.fill(Math.round(ax), Math.round(ay), Math.round(ax + as), Math.round(ay + as), Gfx.argb(a, 0x1E1C26)); g.text(font, "♫", Math.round(ax + as / 2 - 3), Math.round(ay + as / 2 - 4), Gfx.argb(a, acc), false); }
-        if (o < 0.5f) ringRound(g, ax + as / 2, ay + as / 2, as / 2 + 1.5f, f, Gfx.argb(Math.round(a * (1 - o * 2)), acc));
+        float k = c.npScale / 100f, e = show * show * (3 - 2 * show);
+        int w = 214, h = 36, acc = AlbumArt.ready ? AlbumArt.colour : 0x1ED760, a = Math.round(255 * e);
+        float cx = W * c.npX, top = below(mc, W, cx, w * k, c.npY) - (1f - e) * (h + 14);
+        spinV += ((playing ? 1.6f : 0f) + (now - changedAt < 600 ? 6f : 0f) - spinV) * Math.min(1f, dt * 3f); spin += spinV * dt;
+        Gfx.push(g); Gfx.translate(g, cx - w / 2f * k, top); Gfx.scale(g, k);
+        bx0 = Math.round(cx - w / 2f * k); by0 = Math.round(top); bx1 = Math.round(cx + w / 2f * k); by1 = Math.round(top + h * k);
+        float rr = 20, dcx = 21, dcy = h / 2f;
+        NebulaTex.glow(g, dcx, dcy, 46, 30, Gfx.argb(Math.round(110 * e), acc));                    // the cover's light behind the record
+        round(g, 18, 2, w - 18, h - 4, Gfx.argb(Math.round(225 * e), 0x09080D));                // the bar
+        g.fill(20, 2, w - 2, 3, Gfx.argb(Math.round(40 * e), 0xFFFFFF));
+        NebulaTex.glow(g, 40, h / 2f, 50, h * 0.5f, Gfx.argb(Math.round(55 * e), acc));
+        float gleam = ((now - changedAt) / 1000f) % 9f;                                           // a gleam runs along the bar now and then
+        if (gleam < 1.2f) NebulaTex.glow(g, 30 + (w - 30) * (gleam / 1.2f), h / 2f, 14, h * 0.45f, Gfx.argb(Math.round(40 * e * (float) Math.sin(Math.PI * gleam / 1.2f)), 0xFFFFFF));
+        // the record: grooves, the cover as its label (turning), the hole, a fixed shine
+        disc(g, dcx, dcy, rr, Gfx.argb(a, 0x060508));
+        for (int i = 0; i < 4; i++) ringRound(g, dcx, dcy, rr - 2.5f - i * 2.2f, 1f, Gfx.argb(Math.round(a * 0.22f), 0x9A96A8));
+        Gfx.push(g); Gfx.translate(g, dcx, dcy); Gfx.rotate(g, spin); int ls = 14;
+        if (AlbumArt.ready && !preview) g.blit(RenderPipelines.GUI_TEXTURED, AlbumArt.ID, -ls / 2, -ls / 2, 0f, 0f, ls, ls, 64, 64, 64, 64, Gfx.argb(a, 0xFFFFFF));
+        else g.fill(-ls / 2, -ls / 2, ls / 2, ls / 2, Gfx.argb(a, acc));
+        g.fill(Math.round(-rr + 3), 0, -ls / 2 - 2, 1, Gfx.argb(Math.round(a * 0.18f), 0xFFFFFF));          // a line on the record that shows it turning
+        Gfx.pop(g);
+        disc(g, dcx, dcy, 1.2f, Gfx.argb(a, 0x000000));
+        NebulaTex.glow(g, dcx - rr * 0.45f, dcy - rr * 0.45f, rr * 0.5f, rr * 0.25f, Gfx.argb(Math.round(60 * e), 0xFFFFFF));
         // the words
-        float tx = ax + as + 5, maxW = w - (tx + w / 2) - 30;
-        String title = marquee(font, t.name(), Math.round(maxW / (o > 0.5f ? 1f : 0.85f)), now);
-        if (o > 0.5f) {
-            float oa = (o - 0.5f) * 2;
-            g.text(font, title, Math.round(tx), Math.round(ay + 1), Gfx.argb(Math.round(a * oa), 0xFFFFFF), false);
-            small(g, font, font.plainSubstrByWidth(t.artists(), Math.round(maxW / 0.75f)), tx, ay + 11, 0.75f, Gfx.argb(Math.round(a * oa * 0.65f), 0xD0CCE0));
-            String lyr = currentLyric();
-            if (c.npLyric && !lyr.isEmpty()) small(g, font, font.plainSubstrByWidth("“" + lyr + "”", Math.round(maxW / 0.65f)), tx, ay + 19, 0.65f, Gfx.argb(Math.round(a * oa * 0.9f), acc));
-            float bx = tx, bw = w / 2 - 8 - tx, by = h - 6;                                       // the time bar
-            g.fill(Math.round(bx), Math.round(by), Math.round(bx + bw), Math.round(by) + 1, Gfx.argb(Math.round(a * oa * 0.22f), 0xFFFFFF));
-            g.fill(Math.round(bx), Math.round(by), Math.round(bx + bw * f), Math.round(by) + 1, Gfx.argb(Math.round(a * oa), acc));
-            NebulaTex.glow(g, bx + bw * f, by + 0.5f, 3, 3, Gfx.argb(Math.round(a * oa), 0xFFFFFF));
-            String tm = mmss(pos) + "  " + mmss(dur); small(g, font, tm, w / 2 - 8 - font.width(tm) * 0.55f, by - 7, 0.55f, Gfx.argb(Math.round(a * oa * 0.55f), 0xFFFFFF));
-        } else {
-            float oa = 1 - o * 2;
-            small(g, font, title, tx, h / 2 - 3.4f, 0.85f, Gfx.argb(Math.round(a * oa), 0xFFFFFF));
+        float since = Math.min(1f, (now - changedAt) / 500f), sl = (1f - since) * 8;
+        int tx = 46, tw = w - tx - 8;
+        String title = marquee(font, t.name(), tw - 30, now);
+        g.text(font, title, Math.round(tx + sl), 6, Gfx.argb(Math.round(a * since), 0xFFFFFF), false);
+        small(g, font, font.plainSubstrByWidth(t.artists(), Math.round((tw - 30) / 0.7f)), tx + sl, 16, 0.7f, Gfx.argb(Math.round(a * 0.6f * since), 0xC8C4D8));
+        String lyr = c.npLyric ? currentLyric() : "";
+        if (!lyr.isEmpty()) small(g, font, font.plainSubstrByWidth(lyr, Math.round(tw / 0.65f)), tx, 23.5f, 0.65f, Gfx.argb(Math.round(a * 0.9f), Ritual.mixc(acc, 0xFFFFFF, 0.35f)));
+        for (int i = 0; i < 5; i++) {                                                             // a little equalizer by the title
+            float amp = playing ? 0.3f + 0.7f * Math.abs((float) Math.sin(now / (140.0 + i * 37) + i * 1.9) * (float) Math.sin(now / (330.0 + i * 51) + i)) : 0.12f;
+            int bx = w - 26 + i * 4; float bh = 2 + 7 * amp; g.fill(bx, Math.round(14 - bh), bx + 2, 14, Gfx.argb(a, i % 2 == 0 ? acc : 0xFFFFFF));
         }
-        // the waveform on the right: bars in the cover's colour that follow a made-up beat (still when paused)
-        int n = 6; float wx = w / 2 - r - 14, wy = (o > 0.5f ? ay + 6 : h / 2);
-        for (int i = 0; i < n; i++) {
-            float amp = playing ? 0.35f + 0.65f * Math.abs((float) Math.sin(now / (150.0 + i * 41) + i * 1.7) * (float) Math.sin(now / (380.0 + i * 29) + i)) : 0.15f;
-            float bh = 2 + 8 * amp; int col = i % 2 == 0 ? acc : Ritual.mixc(acc, 0xFFFFFF, 0.5f);
-            g.fill(Math.round(wx + i * 2.6f), Math.round(wy - bh / 2), Math.round(wx + i * 2.6f) + 1, Math.round(wy + bh / 2), Gfx.argb(a, col));
-        }
-        if (!playing) small(g, font, "II", w / 2 - r - 4, h / 2 - 3, 0.7f, Gfx.argb(a, 0xFFFFFF));
+        long pos = preview ? (now / 10) % 200_000 : Spotify.position(), dur = Math.max(1, t.durationMs()); float f = Math.min(1f, pos / (float) dur);
+        int b0 = tx, b1 = w - 6, by = h - 6;
+        g.fill(b0, by, b1, by + 1, Gfx.argb(Math.round(a * 0.2f), 0xFFFFFF)); g.fill(b0, by, b0 + Math.round((b1 - b0) * f), by + 1, Gfx.argb(a, acc));
+        NebulaTex.glow(g, b0 + (b1 - b0) * f, by + 0.5f, 3.5f, 3.5f, Gfx.argb(a, 0xFFFFFF));
+        String tm = mmss(pos); small(g, font, tm, w - 6 - font.width(tm) * 0.55f, 17, 0.55f, Gfx.argb(Math.round(a * 0.55f), 0xFFFFFF));
+        if (!playing) small(g, font, "PAUSED", w - 32, 4, 0.55f, Gfx.argb(Math.round(a * 0.85f), acc));
         Gfx.pop(g);
     }
-    /** A capsule: a box whose ends are half circles. */
-    private static void capsule(GuiGraphicsExtractor g, float x, float y, float w, float h, int c) {
-        int r = Math.max(1, Math.round(h / 2));
-        if (h <= 2) { g.fill(Math.round(x + r), Math.round(y), Math.round(x + w - r), Math.round(y + h), c); return; }
-        for (int i = 0; i < Math.round(h); i++) {
-            float dy = i + 0.5f - h / 2f, inset = r - (float) Math.sqrt(Math.max(0, r * r - dy * dy));
-            g.fill(Math.round(x + inset), Math.round(y + i), Math.round(x + w - inset), Math.round(y + i + 1), c);
-        }
+    private static void disc(GuiGraphicsExtractor g, float cx, float cy, float r, int c) {
+        for (int i = -Math.round(r); i <= Math.round(r); i++) { float hw = (float) Math.sqrt(Math.max(0, r * r - i * i)); g.fill(Math.round(cx - hw), Math.round(cy + i), Math.round(cx + hw), Math.round(cy + i) + 1, c); }
     }
     private static void ringRound(GuiGraphicsExtractor g, float cx, float cy, float r, float f, int c) {
-        int n = 40;
+        int n = Math.max(24, Math.round(r * 4));
         for (int i = 0; i < n * f; i++) { double an = -Math.PI / 2 + i * Math.PI * 2 / n; g.fill(Math.round(cx + (float) Math.cos(an) * r), Math.round(cy + (float) Math.sin(an) * r), Math.round(cx + (float) Math.cos(an) * r) + 1, Math.round(cy + (float) Math.sin(an) * r) + 1, c); }
     }
     private static String currentLyric() {
@@ -120,7 +124,7 @@ final class NowPlayingHud {
         Font font = mc.font; int W = g.guiWidth();
         float k = c.npScale / 100f, e = show * show * (3 - 2 * show);
         int w = 176, h = 40; int a = Math.round(255 * e), acc = AlbumArt.ready ? AlbumArt.colour : 0x1ED760;
-        float cx = W * c.npX, top = c.npY - (1f - e) * (h + 12);
+        float cx = W * c.npX, top = below(mc, W, cx, w * k, c.npY) - (1f - e) * (h + 12);
         Gfx.push(g); Gfx.translate(g, cx, top); Gfx.scale(g, k);
         bx0 = Math.round(cx - w / 2f * k); by0 = Math.round(top); bx1 = Math.round(cx + w / 2f * k); by1 = Math.round(top + h * k);
         int x0 = -w / 2;

@@ -2740,7 +2740,7 @@ public class FancyScreen extends Screen {
     private void visualsPage(FancyConfig c) {
         if (searching || landing()) {
             rows.add(hero(":note:", "Visuals", "Your music in the game: the Now Playing island at the top of the screen and the lyrics, written into the world around you.", 0xFF1ED760));
-            String[] lb = {"Now Playing", "Lyrics", "Spotify"}, sb = {c.npOn ? (c.npStyle == 1 ? "Card" : "Island") + " \u00B7 drag it anywhere" : "Off", c.lyricsOn ? (c.lyricsStyle == 0 ? "In your surroundings" : "On screen") : "Off", Spotify.linked() ? "Linked" : "Not linked yet"};
+            String[] lb = {"Now Playing", "Lyrics", "Spotify"}, sb = {c.npOn ? (c.npStyle == 1 ? "Card" : "Vinyl") + " \u00B7 drag it anywhere" : "Off", c.lyricsOn ? (c.lyricsStyle == 0 ? "In your surroundings" : "On screen") : "Off", Spotify.linked() ? "Linked" : "Not linked yet"};
             rows.add(picker("", "", lb, sb, new String[]{":disc:", ":note:", ":sounds:"}, new int[]{0xFF1ED760, 0xFFFFC8A0, 0xFF1DB954}, null, 3, () -> -1, i -> openPage(i, null, null)));
             if (!Spotify.linked()) rows.add(note("Start with Spotify: link it once and the other two come alive.", 0xFF1ED760));
             return;
@@ -2748,14 +2748,13 @@ public class FancyScreen extends Screen {
         if (curSub() == 0) {
             rows.add(section("Now Playing"));
             rows.add(toggle(":disc:", "Now Playing", "The song you're playing, at the top of your screen", () -> c.npOn, v -> c.npOn = v));
-            rows.add(picker("Look", "How it looks", new String[]{"Island", "Card"}, new String[]{"A capsule that springs open", "A glass card with an equalizer"},
+            rows.add(picker("Look", "How it looks", new String[]{"Vinyl", "Card"}, new String[]{"A record spinning out of a glass bar", "A glass card with an equalizer"},
                 new String[]{":disc:", ":menu:"}, new int[]{0xFF1ED760, 0xFF6C86FF}, null, 2, () -> c.npStyle, i -> c.npStyle = i));
             Row mv = row(0, ":switch:", "Move it", "Drag it anywhere on the screen, scroll to resize", 0xFF1ED760);
             mv.ctls.add(new Btn("Move HUD", 0xFF1DB954, () -> minecraft.setScreenAndShow(new HudEditScreen(this)))); rows.add(mv);
             Row nps = row(0, ":size:", "Size", "How big it is", Ui.ACCENT);
             nps.ctls.add(new Slider(60, 160, 5, () -> c.npScale, v -> c.npScale = (int) v, () -> c.npScale + "%").typed(1)); rows.add(nps);
-            rows.add(toggle(":disc:", "Peek now and then", "The island opens by itself every 45 seconds", () -> c.npPeek, v -> c.npPeek = v));
-            rows.add(toggle(":note:", "Lyric in the island", "The line being sung, when the island is open", () -> c.npLyric, v -> c.npLyric = v));
+            rows.add(toggle(":note:", "Lyric in the island", "The line being sung, under the title", () -> c.npLyric, v -> c.npLyric = v));
             return;
         }
         if (curSub() == 1) {
