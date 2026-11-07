@@ -511,7 +511,7 @@ final class Codex {
         g.fill(px0, py0, px0 + pw, py0 + 1, argb(0.5f * a * alpha, ACH_COL[c])); g.fill(px0, py0, px0 + 2, py0 + ph, argb(0.8f * a * alpha, ACH_COL[c]));
         int x = px0 + 12, y = py0 + 12, w = pw - 24;
         small(g, spaced(FIGURE[c].toUpperCase(Locale.ROOT)), x, y, argb(0.9f * a * alpha, ACH_COL[c]));
-        Gfx.push(g); Gfx.translate(g, x, y + 9); Gfx.scale(g, 1.6f); g.text(font, ACH_NAME[c], 0, 0, argb(a * alpha, 0xFFFFFF), true); Gfx.pop(g);
+        Gfx.push(g); Gfx.translate(g, x, y + 9); Gfx.scale(g, 1.6f); Gfx.txt(g, font, ACH_NAME[c], 0, 0, argb(a * alpha, 0xFFFFFF), true); Gfx.pop(g);
         List<Achievements.Ach> l = achOf(ACH[c]); int d = 0; for (Achievements.Ach q : l) if (q.done()) d++;
         int sy = y + 30;
         text(g, d + " of " + l.size() + " stars lit", x, sy, argb(a * alpha, 0xD8DCEC), false);
@@ -566,8 +566,8 @@ final class Codex {
     }
 
     // ------------------------------------------------------------------ drawing helpers: a soft light, rotated bars
-    private static void text(GuiGraphicsExtractor g, String s, int x, int y, int c, boolean sh) { g.text(font, s, x, y, c, sh); }
-    private static void small(GuiGraphicsExtractor g, String s, int x, int y, int c) { Gfx.push(g); Gfx.translate(g, x, y); Gfx.scale(g, 0.75f); g.text(font, s, 0, 0, c, false); Gfx.pop(g); }
+    private static void text(GuiGraphicsExtractor g, String s, int x, int y, int c, boolean sh) { Gfx.txt(g, font, s, x, y, c, sh); }
+    private static void small(GuiGraphicsExtractor g, String s, int x, int y, int c) { Gfx.push(g); Gfx.translate(g, x, y); Gfx.scale(g, 0.75f); Gfx.txt(g, font, s, 0, 0, c, false); Gfx.pop(g); }
     private static void disc(GuiGraphicsExtractor g, float cx, float cy, float r, int c) {
         if (r < 0.6f) { g.fill(Math.round(cx), Math.round(cy), Math.round(cx) + 1, Math.round(cy) + 1, c); return; }
         int ir = (int) Math.ceil(r);

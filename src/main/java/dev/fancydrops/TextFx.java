@@ -87,8 +87,8 @@ final class TextFx {
 
     static void outlined(GuiGraphicsExtractor g, Font font, Component text, int x, int y, int color) {
         int o = Gfx.argb(color >>> 24, 0x000000);
-        g.text(font, text, x - 1, y, o, false); g.text(font, text, x + 1, y, o, false); g.text(font, text, x, y - 1, o, false); g.text(font, text, x, y + 1, o, false);   // four sides: looks the same, half the draws
-        g.text(font, text, x, y, color, false);
+        Gfx.txt(g, font, text, x - 1, y, o, false); Gfx.txt(g, font, text, x + 1, y, o, false); Gfx.txt(g, font, text, x, y - 1, o, false); Gfx.txt(g, font, text, x, y + 1, o, false);   // four sides: looks the same, half the draws
+        Gfx.txt(g, font, text, x, y, color, false);
     }
 
     // Text: every letter slams in from large, one after another; a light sweeps across it now and then; it fades out the same way.
@@ -162,14 +162,14 @@ final class TextFx {
                     Gfx.push(g); Gfx.translate(g, x + cw / 2f + jx, 4f + bob + fall); Gfx.scale(g, s);
                     if (eFlip) g.pose().scale(Math.max(0.05f, (float) Math.sin(ain * Math.PI / 2)), 1f);
                     if (eSwing && wi >= 1f) g.pose().rotate((float) Math.sin(waveT * 2.6 + idx * 0.5) * 0.14f);
-                    if (eGlow) { int ga = Math.round(alpha * a * (0.18f + 0.14f * (float) Math.sin(waveT * 3.0 + idx * 0.3))); int gc = Gfx.argb(ga, col & 0xFFFFFF); g.text(font, c, -cw / 2 - 2, -4, gc, false); g.text(font, c, -cw / 2 + 2, -4, gc, false); g.text(font, c, -cw / 2, -6, gc, false); g.text(font, c, -cw / 2, -2, gc, false); }
+                    if (eGlow) { int ga = Math.round(alpha * a * (0.18f + 0.14f * (float) Math.sin(waveT * 3.0 + idx * 0.3))); int gc = Gfx.argb(ga, col & 0xFFFFFF); Gfx.txt(g, font, c, -cw / 2 - 2, -4, gc, false); Gfx.txt(g, font, c, -cw / 2 + 2, -4, gc, false); Gfx.txt(g, font, c, -cw / 2, -6, gc, false); Gfx.txt(g, font, c, -cw / 2, -2, gc, false); }
                     if (glitching) {
                         int h = (idx * 7 + (int) (waveT * 40)) % 5 - 2;
-                        g.text(font, c, -cw / 2 - 2 + h, -4, Gfx.argb((int) (alpha * a * 0.6f), 0x56D8FF), false);
-                        g.text(font, c, -cw / 2 + 2 - h, -4 + 1, Gfx.argb((int) (alpha * a * 0.6f), 0xFF72C6), false);
+                        Gfx.txt(g, font, c, -cw / 2 - 2 + h, -4, Gfx.argb((int) (alpha * a * 0.6f), 0x56D8FF), false);
+                        Gfx.txt(g, font, c, -cw / 2 + 2 - h, -4 + 1, Gfx.argb((int) (alpha * a * 0.6f), 0xFF72C6), false);
                     }
                     if (fx.textOutline) outlined(g, font, c, -cw / 2 + (glitching && idx % 3 == 0 ? 1 : 0), -4, Gfx.argb((int) (alpha * a), col));
-                    else g.text(font, c, -cw / 2 + (glitching && idx % 3 == 0 ? 1 : 0), -4, Gfx.argb((int) (alpha * a), col), true);
+                    else Gfx.txt(g, font, c, -cw / 2 + (glitching && idx % 3 == 0 ? 1 : 0), -4, Gfx.argb((int) (alpha * a), col), true);
                     Gfx.pop(g);
                 }
                 x += cw; idx++;

@@ -33,14 +33,14 @@ final class AmbienceHud {
         int lite = Ritual.mixc(acc, 0xFFFFFF, 0.45f), deep = Ritual.mixc(acc, 0x000000, 0.25f);
         if (c.ambGlow) {                                                                 // soft light all round the edge of the screen
             float br = (0.75f + 0.25f * (float) Math.sin(now / 2200.0)) * on * c.ambGlowStrength / 100f;
-            int a = Math.round(190 * br), n = 7;
+            int a = Math.round(200 * br), n = 3;
             for (int i = 0; i <= n; i++) {
                 float u = i / (float) n, wob = (float) Math.sin(now / 1700.0 + i * 1.3) * 0.15f + 1f;
                 int col = i % 2 == 0 ? acc : deep;
-                NebulaTex.glow(g, W * u, 0, W * 0.11f * wob, H * 0.07f * wob, Gfx.argb(Math.round(a * 0.7f), col));
-                NebulaTex.glow(g, W * u, H, W * 0.11f * wob, H * 0.09f * wob, Gfx.argb(a, col));
-                NebulaTex.glow(g, 0, H * u, W * 0.06f * wob, H * 0.12f * wob, Gfx.argb(a, col));
-                NebulaTex.glow(g, W, H * u, W * 0.06f * wob, H * 0.12f * wob, Gfx.argb(a, col));
+                NebulaTex.glow(g, W * u, 0, W * 0.19f * wob, H * 0.07f * wob, Gfx.argb(Math.round(a * 0.7f), col));
+                NebulaTex.glow(g, W * u, H, W * 0.19f * wob, H * 0.09f * wob, Gfx.argb(a, col));
+                NebulaTex.glow(g, 0, H * u, W * 0.06f * wob, H * 0.22f * wob, Gfx.argb(a, col));
+                NebulaTex.glow(g, W, H * u, W * 0.06f * wob, H * 0.22f * wob, Gfx.argb(a, col));
             }
         }
         if (c.ambBars) {                                                                 // a visualizer along the bottom, either side of the hotbar
@@ -61,7 +61,7 @@ final class AmbienceHud {
                 float x = bx + (float) Math.sin(u * 6 + i) * 7 + (left ? -1 : 1) * u * 22, y = by - u * 70, a = (float) Math.sin(Math.PI * u) * on;
                 NebulaTex.glow(g, x + 2.5f, y + 4, 7, 7, Gfx.argb(Math.round(90 * a), acc));
                 Gfx.push(g); Gfx.translate(g, x, y); Gfx.rotate(g, (float) Math.sin(u * 4 + i) * 0.35f); float sc = 0.9f + 0.3f * (i % 3) / 2f; Gfx.scale(g, sc);
-                g.text(font, i % 3 == 0 ? "♫" : "♪", 0, 0, Gfx.argb(Math.round(240 * a), i % 2 == 0 ? acc : lite), true);
+                Gfx.txt(g, font, i % 3 == 0 ? "♫" : "♪", 0, 0, Gfx.argb(Math.round(240 * a), i % 2 == 0 ? acc : lite), true);
                 Gfx.pop(g);
             }
         }

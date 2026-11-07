@@ -37,6 +37,10 @@ public final class Gfx {
     public static void text(GuiGraphicsExtractor g, Font f, String s, int x, int y, int color) { if (uiFont <= 0) g.text(f, s, x, y, color, true); else g.text(f, Fonts.text(s, uiFont), x, y, color, true); }
     public static void textCentered(GuiGraphicsExtractor g, Font f, String s, int cx, int y, int color) { text(g, f, s, cx - w(f, s) / 2, y, color); }
 
+    /** Text that is (nearly) see-through is skipped: the game draws text with an alpha under 4 fully opaque, which made fading words flash. */
+    public static void txt(GuiGraphicsExtractor g, Font f, String s, int x, int y, int c, boolean sh) { if ((c >>> 24) >= 6) g.text(f, s, x, y, c, sh); }
+    public static void txt(GuiGraphicsExtractor g, Font f, net.minecraft.network.chat.Component s, int x, int y, int c, boolean sh) { if ((c >>> 24) >= 6) g.text(f, s, x, y, c, sh); }
+    public static void txt(GuiGraphicsExtractor g, Font f, net.minecraft.util.FormattedCharSequence s, int x, int y, int c, boolean sh) { if ((c >>> 24) >= 6) g.text(f, s, x, y, c, sh); }
     public static int argb(int alpha, int rgb) { return (Math.max(0, Math.min(255, alpha)) << 24) | (rgb & 0xFFFFFF); }
     private Gfx() {}
 }

@@ -497,3 +497,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Vinyl: the record turns (groove highlights, rim mark), the cover label stays upright.
 - Ambience: album glow (edge frame, strength), visualizer bars, music notes, song wave, word sparkles. All off by default.
 - Visuals pages grouped into sections; each page hides its options when switched off.
+
+## Round: popping lyrics, opaque-text fix
+- Floating lyrics pop out at a new random spot each line (band set by Height, away from the crosshair and the last spot), overshoot in, pop away (grow, fade, rise). Wrap results cached.
+- Text with alpha < 6 is skipped (Gfx.txt): the game draws alpha < 4 text fully opaque, which froze the music notes and made fading words flash.
+- Album glow uses 16 larger glows instead of 32.

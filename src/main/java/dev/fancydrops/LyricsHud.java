@@ -11,9 +11,9 @@ import java.util.List;
  * The lyrics (Visuals > Lyrics). Both styles draw the same clean caption: the words fill with the album's colour as they are sung (the word
  * being sung glows softly). Long lines wrap onto two rows (and shrink a little if they still don't fit), never cut off by the screen's edge.
  *
- *   FLOATING (default): each line hangs in front of you, a little to one side, then the next to the other side. It sways on a spring when
- *     you turn or look up and down and settles straight back, bobs gently, and drifts up and away when the next line comes. It is held
- *     to the screen (not the world), so it never lags behind, never leaves your view and costs next to nothing.
+ *   FLOATING (default): each line pops out somewhere new in front of you (never on the crosshair, never where the last one was): it
+ *     springs in with a little overshoot, bobs, sways on a spring when you turn, and pops away (growing, fading, rising) when the next
+ *     line comes. It is held to the screen, not the world, so it never lags behind or leaves your view.
  *   SCREEN: a steady caption with a thin line under it showing the line's time, and the coming line faintly below.
  *
  * The lyrics step aside (fade out) while a drop animation plays.
@@ -30,11 +30,12 @@ final class LyricsHud {
         return java.awt.Color.HSBtoRGB(h[0], Math.min(0.6f, h[1]), 1f) & 0xFFFFFF;
     }
 
-    private static int lastLine = -2, prevLine = -2, side = 1, prevSide = -1; private static String lastTrack = "";
+    private static int lastLine = -2, prevLine = -2; private static String lastTrack = "";
     private static long lineAt, titleAt, lastFrame;
     private static float away;                                       // 0..1, how far the lyrics have stepped aside for a drop animation
     private static float swayX, swayY, velX, velY, lastYaw = Float.NaN, lastPitch;
-    private static float jitter, prevJitter;                          // each line's own small height difference
+    private static float px = 0.5f, py = 0.45f, ppx = 0.5f, ppy = 0.45f;   // where the current and the previous line popped out (fractions of the screen)
+    private static final java.util.Random RND = new java.util.Random();
 
     static void render(GuiGraphicsExtractor g) {
         FancyConfig c = FancyConfig.get(); Minecraft mc = Minecraft.getInstance();
@@ -48,7 +49,7 @@ final class LyricsHud {
         long pos = Spotify.position() + 150 + c.lyricsOffset;
         List<Lyrics.Line> L = Lyrics.lines;
         int li = on ? Lyrics.at(pos) : -1;
-        if (li != lastLine) { prevLine = lastLine; lastLine = li; lineAt = now; prevSide = side; side = -side; prevJitter = jitter; jitter = (float) (Math.random() - 0.5); }
+        if (li != lastLine) { prevLine = lastLine; lastLine = li; lineAt = now; ppx = px; ppy = py; pickSpot(c); }
         sway(mc, dt);
         if (c.lyricsIntro) titleCard(g, mc, c, now, vis);
         if (on && L.isEmpty() && Lyrics.status.startsWith("No synced")) { noLyrics(g, mc, c, now, vis); return; }
@@ -58,8 +59,8 @@ final class LyricsHud {
             if (prevLine >= 0 && prevLine < L.size() && out < 1f) onScreen(g, mc, c, L, prevLine, pos, (1f - out) * vis, -out);
             if (li >= 0 && li < L.size()) onScreen(g, mc, c, L, li, pos, in * vis, 1f - in);
         } else {
-            if (prevLine >= 0 && prevLine < L.size() && out < 1f) floating(g, mc, c, L, prevLine, pos, now, (1f - out) * vis, -ease(out), prevSide, prevJitter);
-            if (li >= 0 && li < L.size()) floating(g, mc, c, L, li, pos, now, in * vis, 1f - in, side, jitter);
+            if (prevLine >= 0 && prevLine < L.size() && out < 1f) floating(g, mc, c, L, prevLine, pos, now, (1f - out) * vis, -ease(out), ppx, ppy);
+            if (li >= 0 && li < L.size()) floating(g, mc, c, L, li, pos, now, Math.min(1f, since / 0.18f) * vis, since, px, py);
         }
     }
 
@@ -75,17 +76,29 @@ final class LyricsHud {
         for (int i = 0; i < steps; i++) { velX += (-170f * swayX - 16f * velX) * h; velY += (-170f * swayY - 16f * velY) * h; swayX += velX * h; swayY += velY * h; }
         swayX = Math.max(-40f, Math.min(40f, swayX)); swayY = Math.max(-22f, Math.min(22f, swayY));
     }
-    /** slide: 1..0 coming in (from a little below), 0..-1 leaving (drifting up). */
-    private static void floating(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, List<Lyrics.Line> L, int i, long pos, long now, float a, float slide, int sd, float jit) {
+    /** A new spot for the next line: somewhere in the band the Height setting picks, away from the crosshair and from the last line. */
+    private static void pickSpot(FancyConfig c) {
+        float y0 = c.lyricsPos == 2 ? 0.17f : c.lyricsPos == 1 ? 0.3f : 0.46f, y1 = y0 + 0.2f;
+        for (int t = 0; t < 12; t++) {
+            float x = 0.32f + RND.nextFloat() * 0.36f, y = y0 + RND.nextFloat() * (y1 - y0);
+            boolean cross = Math.abs(x - 0.5f) < 0.16f && Math.abs(y - 0.5f) < 0.08f, near = Math.hypot((x - ppx) * 1.6, y - ppy) < 0.2;
+            if (!cross && !near) { px = x; py = y; return; }
+        }
+        px = ppx < 0.5f ? 0.64f : 0.36f; py = y0 + 0.1f;
+    }
+    /** t: seconds since the line popped in (>= 0), or 0..-1 while it pops away. */
+    private static void floating(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, List<Lyrics.Line> L, int i, long pos, long now, float a, float t, float fx, float fy) {
         if (a < 0.02f) return;
         int W = g.guiWidth(), H = g.guiHeight();
-        float base = c.lyricsPos == 2 ? 0.27f : c.lyricsPos == 1 ? 0.4f : 0.56f;
-        float k = c.lyricsSize / 100f * 1.45f * (1f - 0.06f * Math.abs(slide));
+        float pop = t >= 0 ? popIn(Math.min(1f, t / 0.42f)) : 1f + 0.12f * -t;               // springs in past full size and settles; grows a little as it leaves
+        float k = c.lyricsSize / 100f * 1.45f * pop;
         float bob = (float) Math.sin(now / 1300.0 + i * 1.7) * 2f;
-        float cx = W * (0.5f + sd * 0.09f) + swayX * (0.8f + 0.2f * sd), cy = H * (base + jit * 0.05f) + swayY + bob + (slide > 0 ? slide * 14 : slide * 22);
+        float cx = W * fx + swayX, cy = H * fy + swayY + bob + (t < 0 ? t * 16 : 0);
         Lyrics.Line ln = L.get(i); long start = ln.atMs(), end = i + 1 < L.size() ? L.get(i + 1).atMs() : start + 4000;
-        block(g, mc.font, ln.text(), W, H, cx, cy, k, W * 0.5f, start, end, pos, a, false, "");
+        block(g, mc.font, ln.text(), W, H, cx, cy, k, W * 0.36f * pop, start, end, pos, a, false, "");          // the wrap width grows with the pop, so the rows never change mid-animation
     }
+    /** 0..1 -> a scale that overshoots (about 1.1) and settles at 1. */
+    private static float popIn(float u) { float s = 1.70158f * 1.6f; u -= 1f; return 0.55f + 0.45f * (1f + (s + 1f) * u * u * u + s * u * u); }
 
     // ------------------------------------------------------------------ the caption
     /** A whole caption centred on cx, cy: soft shade, the words, the time line; kept inside the screen. Returns nothing. */
@@ -125,14 +138,17 @@ final class LyricsHud {
                     NebulaTex.glow(g, x + ww / 2f, yy + 4 * k, ww * 0.6f + 6 * k, 7 * k, Gfx.argb(Math.round(110 * gl * a), col));
                 }
                 Gfx.push(g); Gfx.translate(g, x, yy - lift); Gfx.scale(g, k);
-                g.text(f, w, 0, 0, Gfx.argb(Math.round(150 * a), 0xE4E6EE), true);
-                if (lit > 0f) g.text(f, w, 0, 0, Gfx.argb(Math.round(255 * a * lit), col), true);
+                Gfx.txt(g, f, w, 0, 0, Gfx.argb(Math.round(150 * a), 0xE4E6EE), true);
+                if (lit > 0f) Gfx.txt(g, f, w, 0, 0, Gfx.argb(Math.round(255 * a * lit), col), true);
                 Gfx.pop(g);
                 x += f.width(w + " ") * k; acc += w.length() + 1;
             }
         }
     }
-    static List<String> wrap(Font f, String s, float maxW) {
+    private static final java.util.Map<String, List<String>> WRAPS = new java.util.LinkedHashMap<>(16, 0.75f, true) { @Override protected boolean removeEldestEntry(java.util.Map.Entry<String, List<String>> e) { return size() > 12; } };
+    /** Wrapping is worked out once per line and size, not every frame. */
+    static List<String> wrap(Font f, String s, float maxW) { return WRAPS.computeIfAbsent(Math.round(maxW) + "|" + s, k -> wrapNow(f, s, maxW)); }
+    private static List<String> wrapNow(Font f, String s, float maxW) {
         List<String> out = new ArrayList<>(); StringBuilder cur = new StringBuilder();
         for (String w : s.trim().split("\\s+")) {
             String t = cur.isEmpty() ? w : cur + " " + w;
@@ -185,7 +201,7 @@ final class LyricsHud {
     }
 
     static void text(GuiGraphicsExtractor g, Font f, String s, float cx, float y, float k, int argb) {
-        Gfx.push(g); Gfx.translate(g, cx, y); Gfx.scale(g, k); g.text(f, s, -f.width(s) / 2, 0, argb, true); Gfx.pop(g);
+        Gfx.push(g); Gfx.translate(g, cx, y); Gfx.scale(g, k); Gfx.txt(g, f, s, -f.width(s) / 2, 0, argb, true); Gfx.pop(g);
     }
     private static float ease(float v) { return 1f - (1f - v) * (1f - v) * (1f - v); }
 }

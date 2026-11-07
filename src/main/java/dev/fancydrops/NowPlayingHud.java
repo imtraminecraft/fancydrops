@@ -85,7 +85,7 @@ final class NowPlayingHud {
         Gfx.pop(g);
         // the words: they slide in with a new song
         float in = ease(Math.min(1f, since / 420f)), sl = (1f - in) * 10; int tx = 47, eqW = 30, tw = w - tx - eqW - 8;
-        g.text(font, marquee(font, t.name(), tw, since), Math.round(tx + sl), 7, Gfx.argb(Math.round(a * in), 0xFFFFFF), true);
+        Gfx.txt(g, font, marquee(font, t.name(), tw, since), Math.round(tx + sl), 7, Gfx.argb(Math.round(a * in), 0xFFFFFF), true);
         small(g, font, cut(font, t.artists(), tw / 0.75f), tx + sl * 0.6f, 18, 0.75f, Gfx.argb(Math.round(a * 0.7f * in), 0xC9C6D8));
         if (!lyric.isEmpty()) small(g, font, cut(font, lyric, (w - tx - 8) / 0.75f), tx, 27.5f, 0.75f, Gfx.argb(Math.round(a * 0.95f), Ritual.mixc(acc, 0xFFFFFF, 0.45f)));
         // a little mirrored equalizer, top right
@@ -142,7 +142,7 @@ final class NowPlayingHud {
         disc(g, dcx, dcy, 1.2f, Gfx.argb(a, 0x000000));
         NebulaTex.glow(g, dcx - rr * 0.45f, dcy - rr * 0.45f, rr * 0.5f, rr * 0.25f, Gfx.argb(Math.round(60 * e), 0xFFFFFF));
         float in = ease(Math.min(1f, since / 420f)), sl = (1f - in) * 8; int tx = 46, tw = w - tx - 34;
-        g.text(font, marquee(font, t.name(), tw, since), Math.round(tx + sl), 6, Gfx.argb(Math.round(a * in), 0xFFFFFF), true);
+        Gfx.txt(g, font, marquee(font, t.name(), tw, since), Math.round(tx + sl), 6, Gfx.argb(Math.round(a * in), 0xFFFFFF), true);
         small(g, font, cut(font, t.artists(), tw / 0.7f), tx + sl, 16, 0.7f, Gfx.argb(Math.round(a * 0.6f * in), 0xC8C4D8));
         if (!lyric.isEmpty()) small(g, font, cut(font, lyric, (w - tx - 8) / 0.65f), tx, 23.5f, 0.65f, Gfx.argb(Math.round(a * 0.9f), Ritual.mixc(acc, 0xFFFFFF, 0.35f)));
         for (int i = 0; i < 5; i++) {
@@ -192,7 +192,7 @@ final class NowPlayingHud {
         bossPush += (want - bossPush) * 0.15f;
         return y + bossPush;
     }
-    private static void small(GuiGraphicsExtractor g, Font f, String s, float x, float y, float k, int c) { Gfx.push(g); Gfx.translate(g, x, y); Gfx.scale(g, k); g.text(f, s, 0, 0, c, false); Gfx.pop(g); }
+    private static void small(GuiGraphicsExtractor g, Font f, String s, float x, float y, float k, int c) { Gfx.push(g); Gfx.translate(g, x, y); Gfx.scale(g, k); Gfx.txt(g, f, s, 0, 0, c, false); Gfx.pop(g); }
     private static String cut(Font f, String s, float maxW) { return f.width(s) <= maxW ? s : f.plainSubstrByWidth(s, Math.round(maxW) - f.width("…")) + "…"; }
     /** A long title scrolls a letter at a time, pausing at both ends. */
     private static String marquee(Font font, String title, int maxW, long since) {
