@@ -130,6 +130,7 @@ public final class AnimationManager {
         Minecraft mc = Minecraft.getInstance();
         float t = (now - cur.start) / 1000f * pace(cur);                  // a scene shorter than its 3.6 s minimum plays a little faster
         cues(cur, cur.lastT, t); cur.lastT = t;
+        try { g.nextStratum(); } catch (Throwable ignored) { }             // above all the HUD drawn before it (the lyrics' and Now Playing's text included)
         draw(g, mc.font, cur, t, g.guiWidth(), g.guiHeight());
     }
 

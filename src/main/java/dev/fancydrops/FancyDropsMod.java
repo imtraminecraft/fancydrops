@@ -53,7 +53,15 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> registerCommands(dispatcher));
 
+        net.minecraft.client.KeyMapping[] music = new net.minecraft.client.KeyMapping[3];          // music keys (unbound until you pick them in Options > Controls)
+        try {
+            var cat = net.minecraft.client.KeyMapping.Category.register(Identifier.fromNamespaceAndPath("fancydrops", "music"));
+            String[] ids = {"key.fancydrops.playpause", "key.fancydrops.next", "key.fancydrops.previous"};
+            for (int i = 0; i < 3; i++) music[i] = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(new net.minecraft.client.KeyMapping(ids[i], -1, cat));
+        } catch (Throwable t) { System.err.println("[FancyDrops] music keys unavailable: " + t); }
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+            String[] acts = {"toggle", "next", "previous"};
+            for (int i = 0; i < 3; i++) if (music[i] != null) while (music[i].consumeClick()) Spotify.control(acts[i]);
             if (openMenu) { openMenu = false; mc.setScreenAndShow(new FancyScreen()); }   // 26.2: setScreenAndShow
             if (reopenMenu && !AnimationManager.isPlaying()) { reopenMenu = false; mc.setScreenAndShow(new FancyScreen()); }
             DropListener.tick(mc);
@@ -84,7 +92,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("fancydrops", "lyrics"),
-                (graphics, deltaTracker) -> { AuraWorld.render(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)); LyricsHud.render(graphics); NowPlayingHud.hud(graphics); });
+                (graphics, deltaTracker) -> { AuraWorld.render(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)); AmbienceHud.render(graphics); LyricsHud.render(graphics); NowPlayingHud.hud(graphics); });
 
         HudElementRegistry.attachElementAfter(VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("fancydrops", "auras"),

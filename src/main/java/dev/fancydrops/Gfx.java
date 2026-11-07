@@ -18,6 +18,7 @@ public final class Gfx {
     public static void translate(GuiGraphicsExtractor g, float x, float y) { g.pose().translate(x, y); }
     public static void rotate(GuiGraphicsExtractor g, float radians) { g.pose().rotate(radians); }
     public static void scale(GuiGraphicsExtractor g, float s) { g.pose().scale(s, s); }
+    public static void scale(GuiGraphicsExtractor g, float sx, float sy) { g.pose().scale(sx, sy); }
 
     public static ItemStack stack(String name) {
         return STACKS.computeIfAbsent(name, n -> new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(n))));

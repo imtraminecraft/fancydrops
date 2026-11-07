@@ -25,7 +25,7 @@ final class Spotify {
 
     static final int PORT = 43821;
     static final String REDIRECT = "http://127.0.0.1:" + PORT + "/callback";
-    private static final String SCOPES = "user-read-currently-playing user-read-playback-state";
+    private static final String SCOPES = "user-read-currently-playing user-read-playback-state user-modify-playback-state";
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(8)).build();
 
     /** What is playing right now. */
@@ -97,7 +97,7 @@ final class Spotify {
     // ------------------------------------------------------------------ what is playing (asked every 3 s from a worker thread, only while lyrics are on)
     static void tick() {
         FancyConfig c = FancyConfig.get();
-        if (!c.lyricsOn || !linked() || busy) return;
+        if (!(c.lyricsOn || c.npOn) || !linked() || busy) return;
         long now = System.currentTimeMillis(); if (now - lastPoll < 3000) return; lastPoll = now;
         Thread t = new Thread(Spotify::poll, "FancyDrops Spotify"); t.setDaemon(true); t.start();
     }
@@ -126,6 +126,26 @@ final class Spotify {
             if (track == null || !track.id().equals(tr.id())) { track = tr; Lyrics.load(tr); AlbumArt.load(tr.art()); }
             status = (pl ? "Playing: " : "Paused: ") + tr.name() + " - " + tr.artists();
         } catch (Throwable e) { status = "Couldn't reach Spotify."; }
+    }
+
+    // ------------------------------------------------------------------ controls (keys in Options > Controls > FancyDrops: Music; Spotify Premium only)
+    /** "toggle", "next" or "previous": sent from a worker thread; the next poll comes right after so the HUD catches up. */
+    static void control(String what) {
+        if (!linked()) { status = "Link Spotify first (Visuals > Spotify)."; return; }
+        Thread t = new Thread(() -> {
+            try {
+                if (!fresh()) return;
+                String path = what.equals("next") ? "next" : what.equals("previous") ? "previous" : playing ? "pause" : "play";
+                HttpRequest.Builder b = HttpRequest.newBuilder(URI.create("https://api.spotify.com/v1/me/player/" + path)).header("Authorization", "Bearer " + access);
+                b = path.equals("pause") || path.equals("play") ? b.PUT(HttpRequest.BodyPublishers.noBody()) : b.POST(HttpRequest.BodyPublishers.noBody());
+                int code = HTTP.send(b.build(), HttpResponse.BodyHandlers.discarding()).statusCode();
+                if (code == 403 || code == 401) status = "Controls need Spotify Premium, and linking again once (Visuals > Spotify > Unlink, then Link).";
+                else if (code == 404) status = "No active Spotify player to control.";
+                else if (path.equals("pause") || path.equals("play")) { progressMs = position(); progressAt = System.currentTimeMillis(); playing = path.equals("play"); }
+                Thread.sleep(350); lastPoll = 0;
+            } catch (Throwable e) { status = "Couldn't reach Spotify."; }
+        }, "FancyDrops Spotify control");
+        t.setDaemon(true); t.start();
     }
 
     // ------------------------------------------------------------------ bits

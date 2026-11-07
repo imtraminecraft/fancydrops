@@ -483,3 +483,10 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Achievements: each group is a figure (Pole Star, Griffin, Sword, Sheaf, Fish, Drop): faint outline + stars on key points, joined by a minimum spanning tree. No chart rings, lanes, faint icons or ledger card. Labels avoid each other.
 - Lyrics: one caption (wraps to 2 rows, shrinks if needed), words fill with the album colour, thin time bar; "On walls" writes it flat on a wall in front (9 fixed rays, once per line), else on screen. Sky/air modes and all flicker effects removed.
 - Flicker the user saw: Sodium Extra had the sky turned off (not FancyDrops).
+
+## Round: floating lyrics, new Now Playing, Ambience
+- Now Playing looks: Glass (default), Vinyl, Mini. When paused: stays / hides after 8 s / hides at once.
+- Lyrics: Floating (default, follows you, glides back, comes closer than walls, never clipped, no line under it), On walls, On screen (2-row wrap, time line). Song intro toggle, timing offset.
+- Ambience page: album glow on the screen edges, music notes by the hotbar (both off by default).
+- Music keys: play/pause, next, previous (Options > Controls > FancyDrops: Music; Premium; needs re-link for the new scope).
+- Drop animations draw on a new stratum (above lyrics); lyrics/ambience fade out during them. Perf: blur/flash/item glow are glows, not disc fills; outlines 4-way; scene upload is one memory copy.

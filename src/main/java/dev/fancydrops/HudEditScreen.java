@@ -26,7 +26,7 @@ final class HudEditScreen extends Screen {
         int c = hv ? 0xFFFFD25A : 0x88FFFFFF;
         for (int x = NowPlayingHud.bx0 - 3; x < NowPlayingHud.bx1 + 3; x += 4) { g.fill(x, NowPlayingHud.by0 - 3, x + 2, NowPlayingHud.by0 - 2, c); g.fill(x, NowPlayingHud.by1 + 2, x + 2, NowPlayingHud.by1 + 3, c); }
         for (int y = NowPlayingHud.by0 - 3; y < NowPlayingHud.by1 + 3; y += 4) { g.fill(NowPlayingHud.bx0 - 3, y, NowPlayingHud.bx0 - 2, y + 2, c); g.fill(NowPlayingHud.bx1 + 2, y, NowPlayingHud.bx1 + 3, y + 2, c); }
-        String h1 = "Drag the Now Playing " + (FancyConfig.get().npStyle == 1 ? "card" : "record") + "  •  scroll to resize  •  R to reset  •  Esc when done";
+        String h1 = "Drag the Now Playing " + (FancyConfig.get().npStyle == 1 ? "record" : "card") + "  •  scroll to resize  •  R to reset  •  Esc when done";
         g.centeredText(font, h1, width / 2, height - 24, 0xFFFFFFFF);
         g.centeredText(font, "Size " + FancyConfig.get().npScale + "%", width / 2, height - 12, 0xFFB8C0DA);
     }

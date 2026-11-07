@@ -15,10 +15,12 @@ final class SceneTexture {
     private static final Identifier ID = Identifier.fromNamespaceAndPath("fancydrops", "scene");
     private static DynamicTexture tex;
     private static boolean failed;
+    static boolean testSkip;
+    private static int[] buf;                                  // the bench: no texture, count everything else
 
     /** Copies the canvas into the texture. Call only when the canvas changed. */
     static void upload(Canvas c) {
-        if (failed) return;
+        if (failed || testSkip) return;
         try {
             if (tex == null) {
                 tex = new DynamicTexture(() -> "fancydrops scene", c.w, c.h, true);
@@ -26,16 +28,17 @@ final class SceneTexture {
             }
             NativeImage img = tex.getPixels();
             if (img == null) { failed = true; return; }
-            for (int y = 0; y < c.h; y++) for (int x = 0; x < c.w; x++) {
-                int p = c.px[y * c.w + x];
-                img.setPixelABGR(x, y, (p & 0xFF00FF00) | ((p >> 16) & 0xFF) | ((p & 0xFF) << 16));   // ARGB -> ABGR
-            }
+            int n = c.w * c.h; if (buf == null || buf.length != n) buf = new int[n];
+            int[] px = c.px; for (int i = 0; i < n; i++) { int p = px[i]; buf[i] = (p & 0xFF00FF00) | ((p >> 16) & 0xFF) | ((p & 0xFF) << 16); }   // ARGB -> ABGR
+            try { org.lwjgl.system.MemoryUtil.memIntBuffer(img.getPointer(), n).put(buf, 0, n); }                // straight into the image's memory, in one go
+            catch (Throwable slow) { for (int y = 0; y < c.h; y++) for (int x = 0; x < c.w; x++) img.setPixelABGR(x, y, buf[y * c.w + x]); }
             tex.upload();
         } catch (Throwable e) { failed = true; e.printStackTrace(); }
     }
 
     /** Draws the texture; false if it isn't available (use Canvas.flush instead). */
     static boolean draw(GuiGraphicsExtractor g, Canvas c, int x, int y, int w, int h, float alpha) {
+        if (testSkip) return true;
         if (failed || tex == null) return false;
         try {
             int a = Math.max(0, Math.min(255, (int) (alpha * 255)));

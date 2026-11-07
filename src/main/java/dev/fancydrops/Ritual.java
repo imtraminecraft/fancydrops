@@ -995,14 +995,14 @@ final class Ritual {
             // ---- the blur: the world dims and softens at the edges (RNG, switchable)
             if (blurOn && barSlide > 0.01f) {                                             // a soft shade only behind the stage, so the item stands out (the rest of the screen stays as it is)
                 int rr = Math.round(78 * csz * K * u), ccy = Math.round(icy * u);
-                for (int i = 0; i < 6; i++) discFill(g, W / 2, ccy, Math.round(rr * (1f - i * 0.13f)), Gfx.argb(Math.round(16 * barSlide), 0x04050E));
+                NebulaTex.glow(g, W / 2f, ccy, rr * 1.15f, rr * 1.15f, Gfx.argb(Math.round(150 * barSlide), 0x04050E));          // one soft picture instead of hundreds of fills
             }
             int[] edited = AnimFrames.override(a, t);                                         // a frame you edited in config/fancydrops/art/animations replaces the drawn one
             if (edited != null && edited.length == cv.px.length) System.arraycopy(edited, 0, cv.px, 0, edited.length);
             else {
                 long nowMs = System.currentTimeMillis();
                 String id = a.group + a.type + "/" + a.kind + "/" + (it == null ? 0 : it.id.hashCode()) + "/" + a.count() + "/" + TextFx.itemOnly;
-                boolean reuse = id.equals(upKey) && nowMs >= upMs && nowMs - upMs < (AnimationManager.previewing ? 33 : 15);       // the pixel scene repaints at most ~60 fps in game (~30 in menu previews): at 144 fps the picture barely changes between frames
+                boolean reuse = id.equals(upKey) && nowMs >= upMs && nowMs - upMs < (AnimationManager.previewing ? 33 : 22);       // the pixel scene repaints at most ~60 fps in game (~30 in menu previews): at 144 fps the picture barely changes between frames
                 if (!reuse) {
                     begin(a, szc, isc);
                     try { paint(t, tre, type, S, ssz, isc, rc, icy, TreasureData.COLS[Math.max(0, Math.min(2, c.mythSpade))] & 0xFFFFFF, c.itemBob, c.itemBobAmp); stage(a, icy, ssz, szc, isc); } finally { end(); }
@@ -1011,7 +1011,7 @@ final class Ritual {
             }
             if (edited != null && edited.length == cv.px.length) SceneTexture.upload(cv);
             if (!SceneTexture.draw(g, cv, sx, sy, W, H, 1f)) { int cell = Math.max(1, Math.round((float) W / CW)); cv.flush((x0, y0, x1, y1, col) -> g.fill(x0 + sx, y0 + sy, x1 + sx, y1 + sy, col), 0, 0, cell, 1f); }
-            if (rng && p > 0 && p < 0.45f) { float fl = (1f - p / 0.45f) * (1f - p / 0.45f); int rr = Math.round(46 * csz * K * u * (1f + 0.4f * p)); for (int i = 0; i < 4; i++) discFill(g, W / 2 + sx, Math.round(icy * u) + sy, Math.round(rr * (1f - i * 0.22f)), Gfx.argb(Math.round(60 * fl), 0xFFFFFF)); }                  // the flash: a burst of light on the item, not the whole screen
+            if (rng && p > 0 && p < 0.45f) { float fl = (1f - p / 0.45f) * (1f - p / 0.45f); int rr = Math.round(46 * csz * K * u * (1f + 0.4f * p)); NebulaTex.glow(g, W / 2f + sx, icy * u + sy, rr * 1.1f, rr * 1.1f, Gfx.argb(Math.round(230 * fl), 0xFFFFFF)); }                  // the flash: a burst of light on the item, not the whole screen
 
         }
 
@@ -1049,7 +1049,8 @@ final class Ritual {
             float gcx = CW / 2f * W / CW + sx + offs[Math.min(ii, offs.length - 1)] * u, gcy = -liftOf(ii, n, szc) * u + itemY(tb, p, a.group.equals("exp") ? BookScene.baseY(icy, ssz) : icy + 22 * ssz, icy, ssz, c.itemBob, c.itemBobAmp) * u + sy;
             if (c.itemGlow > 0.02f) {                                                          // the glow behind the item (Item changes > Glow), in the drop's colour
                 int gr = Math.round(s * 11f), gcol = mixc(rc, WHITE, 0.25f); float ga = Math.max(0f, Math.min(1f, itemA)) * Math.min(1f, c.itemGlow);
-                for (int i = 0; i < 6; i++) { float k = i / 5f; int r = Math.round(gr * (1f - 0.55f * k)); int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) * (0.5f + 0.5f * k) / 1.6f); discFill(g, Math.round(gcx), Math.round(gcy), r, Gfx.argb(al, gcol)); }
+                int al = Math.round(Math.min(46f, 26f * ga * (0.6f + c.itemGlow)) / 1.6f);                   // two soft pictures (it used to be hundreds of fills)
+                NebulaTex.glow(g, gcx, gcy, gr * 1.1f, gr * 1.1f, Gfx.argb(al * 3, gcol)); NebulaTex.glow(g, gcx, gcy, gr * 0.55f, gr * 0.55f, Gfx.argb(al * 2, gcol));
             }
             ItemIcons.spinSpeed = c.itemSpin; ItemIcons.spinRev = c.itemSpinRev;
             ItemIcons.drawAlpha = Math.max(0f, Math.min(1f, itemA)); boolean still0 = Icons.STILL_ICONS; Icons.STILL_ICONS = false;                 // the dropped item always turns, whatever the menu says
