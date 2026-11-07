@@ -96,9 +96,9 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
         } catch (Throwable t) { System.err.println("[FancyDrops] smooth tab effects unavailable: " + t); }
 
         // While a scene plays, the bottom of the screen slides away: the hearts and bars with the hotbar. When it ends the hearts slide back first, then the hotbar.
-        for (String el : new String[]{"hotbar", "health_bar", "armor_bar", "food_bar", "air_bar", "mount_health", "info_bar", "experience_level", "selected_item_name", "overlay_message", "jump_meter"}) {
+        for (String el : new String[]{"hotbar", "health_bar", "armor_bar", "food_bar", "air_bar", "mount_health", "info_bar", "experience_level", "overlay_message"}) {
             final boolean hotbar = el.equals("hotbar");
-            final float mult = el.equals("overlay_message") || el.equals("selected_item_name") ? 1.7f : 1f;       // the words above the hearts have further to go
+            final float mult = el.equals("overlay_message") ? 1.7f : 1f;       // the words above the hearts have further to go
             try {
                 HudElementRegistry.replaceElement(Identifier.withDefaultNamespace(el), original -> (graphics, deltaTracker) -> {
                     float off = slideOffset(hotbar) * mult;

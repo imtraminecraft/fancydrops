@@ -18,7 +18,7 @@ final class NowPlayingHud {
     private NowPlayingHud() {}
 
     private static float show; private static long last = System.currentTimeMillis();
-    private static String lastId = ""; private static long changedAt, wakeAt; private static boolean lastPlaying;
+    private static String lastId = ""; private static long changedAt;
     /** The demo shown while you move the HUD with nothing playing. */
     static boolean preview;
     /** Where it was last drawn (screen pixels), for the HUD editor. */
@@ -32,12 +32,11 @@ final class NowPlayingHud {
         long now = System.currentTimeMillis(); float dt = Math.min(0.1f, (now - last) / 1000f); last = now;
         Spotify.Track t = preview && Spotify.track == null ? new Spotify.Track("demo", "Song title", "Artist", "", 200_000, "") : Spotify.track;
         boolean playing = preview || Spotify.playing;
-        if (playing != lastPlaying) { lastPlaying = playing; wakeAt = now; }
         boolean want = (preview || (c.npOn && Spotify.linked() && t != null && (Spotify.playing || now - pausedSince < 8000) && !AnimationManager.hidesHud() && mc.level != null));
         if (!Spotify.playing && lastPlayingSeen) pausedSince = now; lastPlayingSeen = Spotify.playing;
         show += ((want ? 1f : 0f) - show) * Math.min(1f, dt * 8f);
         if (show < 0.01f || t == null) return;
-        if (!t.id().equals(lastId)) { lastId = t.id(); changedAt = now; wakeAt = now; }
+        if (!t.id().equals(lastId)) { lastId = t.id(); changedAt = now; }
         if (c.npStyle == 1) card(g, mc, c, t, now, playing); else vinyl(g, mc, c, t, now, playing, dt);
     }
     private static boolean lastPlayingSeen; private static long pausedSince;

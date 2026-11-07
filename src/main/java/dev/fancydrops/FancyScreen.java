@@ -2739,8 +2739,8 @@ public class FancyScreen extends Screen {
     // ---- Visuals: Now Playing, Lyrics, Spotify
     private void visualsPage(FancyConfig c) {
         if (searching || landing()) {
-            rows.add(hero(":note:", "Visuals", "Your music in the game: the Now Playing island at the top of the screen and the lyrics, written into the world around you.", 0xFF1ED760));
-            String[] lb = {"Now Playing", "Lyrics", "Spotify"}, sb = {c.npOn ? (c.npStyle == 1 ? "Card" : "Vinyl") + " \u00B7 drag it anywhere" : "Off", c.lyricsOn ? (c.lyricsStyle == 0 ? "In your surroundings" : "On screen") : "Off", Spotify.linked() ? "Linked" : "Not linked yet"};
+            rows.add(hero(":note:", "Visuals", "Your music in the game: the Now Playing island at the top of the screen and the lyrics, on the walls around you or on screen.", 0xFF1ED760));
+            String[] lb = {"Now Playing", "Lyrics", "Spotify"}, sb = {c.npOn ? (c.npStyle == 1 ? "Card" : "Vinyl") + " \u00B7 drag it anywhere" : "Off", c.lyricsOn ? (c.lyricsStyle == 0 ? "On walls" : "On screen") : "Off", Spotify.linked() ? "Linked" : "Not linked yet"};
             rows.add(picker("", "", lb, sb, new String[]{":disc:", ":note:", ":sounds:"}, new int[]{0xFF1ED760, 0xFFFFC8A0, 0xFF1DB954}, null, 3, () -> -1, i -> openPage(i, null, null)));
             if (!Spotify.linked()) rows.add(note("Start with Spotify: link it once and the other two come alive.", 0xFF1ED760));
             return;
@@ -2760,18 +2760,13 @@ public class FancyScreen extends Screen {
         if (curSub() == 1) {
             rows.add(section("Lyrics"));
             rows.add(toggle(":note:", "Lyrics", "The words of the song you're playing", () -> c.lyricsOn, v -> c.lyricsOn = v));
-            rows.add(picker("Where", "Where the words go", new String[]{"Your surroundings", "On screen"}, new String[]{"Sky outside, walls in caves, the air between", "Karaoke at the bottom of the screen"},
+            rows.add(picker("Where", "Where the words go", new String[]{"On walls", "On screen"}, new String[]{"On a wall in front of you, else on screen", "A caption on the screen"},
                 new String[]{":grp_water:", ":menu:"}, new int[]{0xFF6C86FF, 0xFF1ED760}, null, 2, () -> c.lyricsStyle, i -> c.lyricsStyle = i));
             Row ls = row(0, ":size:", "Size", "How big the words are", Ui.ACCENT);
             ls.ctls.add(new Slider(60, 160, 5, () -> c.lyricsSize, v -> c.lyricsSize = (int) v, () -> c.lyricsSize + "%").typed(1)); rows.add(ls);
-            if (c.lyricsStyle == 0) {
-                Row ld = row(0, ":speed:", "Distance in the air", "How far ahead a line hangs when it's not on the sky or a wall", Ui.ACCENT);
-                ld.ctls.add(new Slider(4, 16, 1, () -> c.lyricsDistance, v -> c.lyricsDistance = (int) v, () -> c.lyricsDistance + " blocks").typed(1)); rows.add(ld);
-            } else {
-                rows.add(picker("Height", "Where on the screen", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
-                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
-                rows.add(toggle(":format:", "Next line", "Shows the coming line faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
-            }
+            rows.add(picker("Height", "Where on the screen", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
+                new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
+            rows.add(toggle(":format:", "Next line", "Shows the coming line faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
             rows.add(note("The words take their colour from the album cover.", 0xFF8A93B0));
             if (!Lyrics.status.isEmpty()) rows.add(note(Lyrics.status, 0xFF8A93B0));
             return;

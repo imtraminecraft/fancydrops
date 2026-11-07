@@ -229,9 +229,6 @@ final class Cosmetics {
                 if (!same) System.err.println("[FancyDrops] suffix " + s.id() + ": the chat sprite differs from its strip. Run tools/make_suffix_sprites.py");
             }
         } catch (Throwable ignored) { }
-        for (Suffix s : SUFFIXES) {
-            if (Cosmetics.class.getResource("/assets/fancydrops/textures/font/suffix_" + s.id() + ".png") == null) System.err.println("[FancyDrops] suffix " + s.id() + " has no picture (textures/font/suffix_" + s.id() + ".png)");
-        }
     }
     static Component glyph(String g) { return Component.literal(g).withStyle(Style.EMPTY.withFont(EMOJI).withColor(0xFFFFFF)); }
     private static final Map<String, int[][]> STRIPS = new HashMap<>();

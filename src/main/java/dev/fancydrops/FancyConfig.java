@@ -132,12 +132,12 @@ public class FancyConfig {
     public String spotifyClient = "";                          // your Spotify app's Client ID (developer.spotify.com)
     public String spotifyRefresh = "";                         // the login, kept so you stay linked (no password, no secret)
     public boolean lyricsOn = true;
-    public int lyricsSize = 100, lyricsDistance = 9;
-    public int lyricsStyle = 0, lyricsPos = 0;                           // style: 0 your surroundings (sky / walls / air), 1 on screen; pos (on screen): 0 low, 1 middle, 2 high
+    public int lyricsSize = 100;
+    public int lyricsStyle = 0, lyricsPos = 0;                           // style: 0 on walls (else on screen), 1 on screen; pos (on screen): 0 low, 1 middle, 2 high
     public boolean lyricsNext = true;
     public boolean npOn = true; public int npScale = 100, npStyle = 0;      // Now Playing: 0 island, 1 card
     public float npX = 0.5f; public int npY = 4;                         // where it sits: the middle of it at npX of the width, npY pixels from the top
-    public boolean npPeek = true, npLyric = true;                        // the island opens now and then; it shows the lyric line when open
+    public boolean npLyric = true;                                      // the line being sung, shown in the Now Playing bar
     public String adminToken = "";                             // Admin Panel: a GitHub token that lets Save write cosmetics.json
 
     public int ver;                                            // 3 = the rewrite: animation and drop settings start fresh

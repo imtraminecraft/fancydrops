@@ -478,3 +478,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Lyrics: a wall first (rays ±50°, room checked), else sky/air; the follow is smoothed; neon flicker is fixed-rate, not random.
 - Now Playing: default look is "Vinyl" (spinning record with the cover as its label); the Card look stays. It slides below boss bars when they're drawn at the top.
 - Achievements: bigger trees, ring round the heart, "Your Ledger" card top left, labels kept apart.
+
+## Round: figures, captions
+- Achievements: each group is a figure (Pole Star, Griffin, Sword, Sheaf, Fish, Drop): faint outline + stars on key points, joined by a minimum spanning tree. No chart rings, lanes, faint icons or ledger card. Labels avoid each other.
+- Lyrics: one caption (wraps to 2 rows, shrinks if needed), words fill with the album colour, thin time bar; "On walls" writes it flat on a wall in front (9 fixed rays, once per line), else on screen. Sky/air modes and all flicker effects removed.
+- Flicker the user saw: Sodium Extra had the sky turned off (not FancyDrops).
