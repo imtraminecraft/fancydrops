@@ -46,7 +46,7 @@ final class NowPlayingHud {
         float cx = W * c.npX, h = height(c.npStyle, c.npLyric) * k;
         float top = below(mc, W, cx, width(c.npStyle) * k, c.npY) - (1f - e) * (h + 14);
         long pos = preview && Spotify.track == null ? (now / 10) % 200_000 : Spotify.position();
-        draw(g, mc.font, c.npStyle, cx, top, k, e, t, now, now - changedAt, pos, playing, dt, c.npLyric ? currentLyric() : "", AlbumArt.ready && !(preview && Spotify.track == null), AlbumArt.ready ? AlbumArt.colour : 0x1ED760);
+        draw(g, mc.font, c.npStyle, cx, top, k, e, t, now, now - changedAt, pos, playing, dt, c.npLyric ? currentLyric() : "", AlbumArt.ready && !(preview && Spotify.track == null), AlbumArt.accent());
     }
     static int width(int style) { return style == MINI ? 150 : style == VINYL ? 214 : 224; }
     static int height(int style, boolean lyric) { return style == MINI ? 20 : style == VINYL ? 36 : lyric ? 54 : 46; }

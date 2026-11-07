@@ -45,6 +45,14 @@ final class AlbumArt {
         }, "FancyDrops album art");
         t.setDaemon(true); t.start();
     }
+    /** The accent everything musical uses: the cover's colour moved into the cool range (teal, blue, violet) and softened, so it is
+     *  never loud. Covers keep their own shade within that range, so songs still look different from each other. */
+    static int accent() {
+        int c = ready ? colour : 0x5AA9E6;
+        float[] h = java.awt.Color.RGBtoHSB((c >> 16) & 255, (c >> 8) & 255, c & 255, null);
+        float hue = 0.47f + h[0] * 0.3f;                                                   // 170 deg (teal) .. 278 deg (violet)
+        return java.awt.Color.HSBtoRGB(hue, Math.min(0.42f, 0.18f + h[1] * 0.3f), 0.86f) & 0xFFFFFF;
+    }
     /** A cover's average is usually muddy: lift it so it reads as an accent. */
     private static int brighten(int c) {
         float[] hsb = java.awt.Color.RGBtoHSB((c >> 16) & 255, (c >> 8) & 255, c & 255, null);

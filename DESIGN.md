@@ -514,3 +514,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - World signs use the caption look (all words grey, filling with the album colour, nod, glow under the sung word), fade in over 350 ms, gentler angles.
 - Music notes: curling paths, grow/shrink, colour to white, faint trail, small burst at the end.
 - Signs 10-14 blocks away (never nearer than 4.5 even at a wall); star bursts back on world lyrics (Lyrics > Star bursts, on by default; was the Ambience "Word sparkles").
+
+## Round: cool, softer colours
+- AlbumArt.accent(): the cover colour moved into the cool range (teal..violet, 170-278 deg), saturation <= 0.42, brightness 0.86. Used by Now Playing, lyrics (lightened 25%), ambience, stars. Glows and star points toned down.
+- Builds are no longer copied into the mods folder while the game may be running (replacing the jar mid-game crashed it); they go to Downloads.

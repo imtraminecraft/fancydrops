@@ -31,11 +31,7 @@ final class LyricsHud {
     static final int FLOATING = 0, SCREEN = 1;
 
     /** The colour of the sung words: from the album cover, made light enough to read. */
-    static int colour() {
-        int c = AlbumArt.ready ? AlbumArt.colour : 0x1ED760;
-        float[] h = java.awt.Color.RGBtoHSB((c >> 16) & 255, (c >> 8) & 255, c & 255, null);
-        return java.awt.Color.HSBtoRGB(h[0], Math.min(0.6f, h[1]), 1f) & 0xFFFFFF;
-    }
+    static int colour() { return Ritual.mixc(AlbumArt.accent(), 0xFFFFFF, 0.25f); }
 
     private static int lastLine = -2, prevLine = -2; private static String lastTrack = "";
     private static long lineAt, titleAt, lastFrame;
@@ -139,7 +135,7 @@ final class LyricsHud {
         if (po == null || pr == null || pd == null) return;
         if (po[0] < -60 || po[0] > W + 60 || po[1] < -60 || po[1] > H + 60) return;
         float ax = (pr[0] - po[0]) / 8f, ay = (pr[1] - po[1]) / 8f, bx = (pd[0] - po[0]) / 8f, by = (pd[1] - po[1]) / 8f;
-        if (glow > 0.02f) { float sz = (float) Math.hypot(ax, ay); NebulaTex.glow(g, po[0], po[1], ww * 0.6f * sz + 5 * sz, 7 * sz, Gfx.argb(Math.round(110 * glow * fade), col)); }
+        if (glow > 0.02f) { float sz = (float) Math.hypot(ax, ay); NebulaTex.glow(g, po[0], po[1], ww * 0.6f * sz + 5 * sz, 7 * sz, Gfx.argb(Math.round(70 * glow * fade), col)); }
         if (burst >= 0f) { float sz = (float) Math.hypot(ax, ay); AmbienceHud.sparkle(g, po[0], po[1] - 3 * sz, ww * sz, burst, fade, seed, Math.max(1f, sz * 1.5f)); }   // stars burst from the word as it's sung
         float lift = lit > 0f && lit < 1f ? (float) Math.sin(Math.PI * lit) * 1.5f : 0f;
         Gfx.push(g);
@@ -189,7 +185,7 @@ final class LyricsHud {
                 if (sparkles && pos >= at && pos < at + 450) AmbienceHud.sparkle(g, x + ww / 2f, yy + 3 * k, ww, (pos - at) / 450f, a, acc * 31 + ri, k);
                 if (pos >= at && pos < wEnd + 200) {                                              // the word being sung glows softly in the album's colour
                     float gl = Math.min(1f, (pos - at) / 120f) * Math.min(1f, (wEnd + 200 - pos) / 200f);
-                    NebulaTex.glow(g, x + ww / 2f, yy + 4 * k, ww * 0.6f + 6 * k, 7 * k, Gfx.argb(Math.round(110 * gl * a), col));
+                    NebulaTex.glow(g, x + ww / 2f, yy + 4 * k, ww * 0.6f + 6 * k, 7 * k, Gfx.argb(Math.round(70 * gl * a), col));
                 }
                 Gfx.push(g); Gfx.translate(g, x, yy - lift); Gfx.scale(g, k);
                 Gfx.txt(g, f, w, 0, 0, Gfx.argb(Math.round(150 * a), 0xE4E6EE), true);

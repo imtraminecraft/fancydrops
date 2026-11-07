@@ -26,7 +26,7 @@ final class AmbienceHud {
         boolean want = any && Spotify.playing && t != null && mc.level != null && !AnimationManager.isPlaying();
         on += ((want ? 1f : 0f) - on) * Math.min(1f, dt * 3f);
         if (on < 0.01f) return;
-        draw(g, mc.font, g.guiWidth(), g.guiHeight(), now, on, c, now - waveAt, AlbumArt.ready ? AlbumArt.colour : 0x1ED760);
+        draw(g, mc.font, g.guiWidth(), g.guiHeight(), now, on, c, now - waveAt, AlbumArt.accent());
     }
 
     static void draw(GuiGraphicsExtractor g, Font font, int W, int H, long now, float on, FancyConfig c, long sinceSong, int acc) {
@@ -34,7 +34,7 @@ final class AmbienceHud {
         float ts = (now % 3_600_000L) / 1000f;                                            // seconds, kept small (a float can't hold today's time in ms precisely)
         if (c.ambGlow) {                                                                 // soft light along each edge: four long glows, breathing
             float br = (0.75f + 0.25f * (float) Math.sin(ts * 0.45f)) * on * c.ambGlowStrength / 100f;
-            int a = Math.round(170 * br);
+            int a = Math.round(120 * br);
             NebulaTex.glow(g, W / 2f, 0, W * 0.62f, H * 0.09f, Gfx.argb(Math.round(a * 0.7f), acc));
             NebulaTex.glow(g, W / 2f, H, W * 0.62f, H * 0.11f, Gfx.argb(a, acc));
             NebulaTex.glow(g, 0, H / 2f, W * 0.07f, H * 0.62f, Gfx.argb(a, deep));
@@ -82,9 +82,9 @@ final class AmbienceHud {
         for (int i = 0; i < 6; i++) {
             double an = -Math.PI / 2 + (Ritual.rnd(seed * 7 + i) - 0.5) * 2.8; float d = (8 + 14 * Ritual.rnd(seed * 3 + i)) * k * ease(u);
             float x = cx + (Ritual.rnd(seed + i * 11) - 0.5f) * w + (float) Math.cos(an) * d, y = cy + (float) Math.sin(an) * d + u * u * 6 * k, al = (1f - u) * a;
-            float r = (1.2f + 1.6f * Ritual.rnd(seed * 5 + i)) * k * (1f - 0.5f * u); int col = i % 3 == 0 ? 0xFFFFFF : i % 3 == 1 ? acc : lite;
+            float r = (1.2f + 1.6f * Ritual.rnd(seed * 5 + i)) * k * (1f - 0.5f * u); int col = i % 3 == 0 ? 0xDDE8FF : i % 3 == 1 ? acc : lite;
             NebulaTex.glow(g, x, y, r * 2.2f, r * 2.2f, Gfx.argb(Math.round(120 * al), col));
-            NebulaTex.glow(g, x, y, r * 2.6f, r * 0.45f, Gfx.argb(Math.round(230 * al), 0xFFFFFF)); NebulaTex.glow(g, x, y, r * 0.45f, r * 2.6f, Gfx.argb(Math.round(230 * al), 0xFFFFFF));   // the star's points
+            NebulaTex.glow(g, x, y, r * 2.6f, r * 0.45f, Gfx.argb(Math.round(150 * al), 0xE8F2FF)); NebulaTex.glow(g, x, y, r * 0.45f, r * 2.6f, Gfx.argb(Math.round(150 * al), 0xE8F2FF));   // the star's points
         }
     }
     private static float ease(float v) { v = Math.max(0f, Math.min(1f, v)); return 1f - (1f - v) * (1f - v) * (1f - v); }
