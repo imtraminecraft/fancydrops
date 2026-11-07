@@ -66,6 +66,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             if (reopenMenu && !AnimationManager.isPlaying()) { reopenMenu = false; mc.setScreenAndShow(new FancyScreen()); }
             DropListener.tick(mc);
             AuraWorld.tick(mc);
+            Playtime.tick(mc);
             Spotify.tick();
             tabTick++;                                                                        // who wears what changes rarely: look every quarter second, every tick only while a name is moving
             if ((Cosmetics.tabMoving && Cosmetics.tabOpen(mc)) || tabTick % 20 == 0) Cosmetics.tickTab(mc);   // a second apart unless the tab list is open
@@ -92,7 +93,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
 
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("fancydrops", "lyrics"),
-                (graphics, deltaTracker) -> { AuraWorld.render(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)); AmbienceHud.render(graphics); LyricsHud.render(graphics); NowPlayingHud.hud(graphics); });
+                (graphics, deltaTracker) -> { AuraWorld.render(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)); AmbienceHud.render(graphics); LyricsHud.render(graphics); NowPlayingHud.hud(graphics); LyricLineHud.hud(graphics); });
 
         HudElementRegistry.attachElementAfter(VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("fancydrops", "auras"),

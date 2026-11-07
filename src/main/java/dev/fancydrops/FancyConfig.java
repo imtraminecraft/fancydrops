@@ -139,7 +139,8 @@ public class FancyConfig {
     public boolean ambGlow = false, ambNotes = false, ambBars = false, ambWave = false, lyricsStars = true; public int ambGlowStrength = 60;   // Ambience (Visuals > Ambience)
     public boolean npOn = true; public int npScale = 100, npHidePaused = 1;   // Now Playing; when paused: 0 stays, 1 hides after 8 s, 2 hides at once
     public float npX = 0.5f; public int npY = 4;                         // where it sits: the middle of it at npX of the width, npY pixels from the top
-    public boolean npLyric = true;                                      // the line being sung, shown in the Now Playing bar
+    public double playMinutes = 0; public java.util.Map<String, Long> playDone = new java.util.LinkedHashMap<>();   // Playtime: minutes played with the mod on; when each milestone was reached
+    public boolean lineHudOn = true; public float lineX = 0.5f; public int lineY = 52, lineScale = 100;   // the Lyric line HUD: the line being sung, in its own small card you can move
     public String adminToken = "";                             // Admin Panel: a GitHub token that lets Save write cosmetics.json
 
     public int ver;                                            // 3 = the rewrite: animation and drop settings start fresh
@@ -168,6 +169,7 @@ public class FancyConfig {
         if (c.chatOn == null) c.chatOn = new LinkedHashMap<>();
         if (c.sounds == null) c.sounds = new LinkedHashMap<>();
         if (c.mcSounds == null) c.mcSounds = new LinkedHashMap<>();
+        if (c.playDone == null) c.playDone = new LinkedHashMap<>();
         if (c.ver < 3) { c.ver = 3; c.sounds.clear(); c.mcSounds.clear(); save(); }          // the rewrite: old sound picks refer to sounds that no longer exist
         if (c.ver < 6) { c.ver = 6; if ("minos".equals(c.suffix) || "rod".equals(c.suffix)) c.suffix = ""; save(); }          // 0.7.8: the King Minos and Fishing Rod icons are gone
         c.textScale = clamp(c.textScale, 0f, 1.1f); c.itemScale = clamp(c.itemScale, 0.5f, 1.1f);

@@ -2758,7 +2758,6 @@ public class FancyScreen extends Screen {
             Row nps = row(0, ":size:", "Size", "How big it is", Ui.ACCENT);
             nps.ctls.add(new Slider(60, 160, 5, () -> c.npScale, v -> c.npScale = (int) v, () -> c.npScale + "%").typed(1)); rows.add(nps);
             rows.add(section("Behaviour"));
-            rows.add(toggle(":note:", "Line being sung", "The current lyric, inside it", () -> c.npLyric, v -> c.npLyric = v));
             rows.add(picker("When paused", "", new String[]{"Stays", "Hides after 8 s", "Hides at once"}, new String[]{"", "", ""},
                 new String[]{":play:", ":clock:", ":switch:"}, new int[]{0xFF1ED760, 0xFFFFC857, 0xFF8A93B0}, null, 3, () -> c.npHidePaused, i -> c.npHidePaused = i));
             rows.add(note("It waits below boss bars and steps aside during drop animations.", 0xFF8A93B0));
@@ -2773,9 +2772,19 @@ public class FancyScreen extends Screen {
             rows.add(section("Text"));
             Row ls = row(0, ":size:", "Size", "How big the words are", Ui.ACCENT);
             ls.ctls.add(new Slider(60, 160, 5, () -> c.lyricsSize, v -> c.lyricsSize = (int) v, () -> c.lyricsSize + "%").typed(1)); rows.add(ls);
-            rows.add(picker("Height", "", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
-                new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
-            if (c.lyricsStyle == 1) rows.add(toggle(":format:", "Next line", "The coming line, faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
+            if (c.lyricsStyle == 1) {
+                rows.add(picker("Height", "", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
+                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
+                rows.add(toggle(":format:", "Next line", "The coming line, faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
+            }
+            rows.add(section("Lyric line"));
+            rows.add(toggle(":menu:", "Lyric line", "The line being sung, in its own small card on your screen", () -> c.lineHudOn, v -> c.lineHudOn = v));
+            if (c.lineHudOn) {
+                Row lm = row(0, ":switch:", "Position", "Drag it anywhere, scroll to resize", 0xFFFFC8A0);
+                lm.ctls.add(new Btn("Move it", 0xFF1DB954, () -> minecraft.setScreenAndShow(new HudEditScreen(this, HudEditScreen.LINE)))); rows.add(lm);
+                Row lsz = row(0, ":size:", "Card size", "How big the card is", Ui.ACCENT);
+                lsz.ctls.add(new Slider(60, 160, 5, () -> c.lineScale, v -> c.lineScale = (int) v, () -> c.lineScale + "%").typed(1)); rows.add(lsz);
+            }
             rows.add(section("Extras"));
             rows.add(toggle(":glass:", "Star bursts", "Little stars burst from each word as it's sung", () -> c.lyricsStars, v -> c.lyricsStars = v));
             rows.add(toggle(":disc:", "Song intro", "The song's name in big letters when it starts", () -> c.lyricsIntro, v -> c.lyricsIntro = v));

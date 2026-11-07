@@ -50,7 +50,20 @@ final class Achievements {
         retryAt = System.currentTimeMillis() + 60_000L; syncNote = why;
     }
 
-    static Profile profile() { refresh(false); return profile; }
+    private static Profile merged, mergedFrom; private static int mergedDone = -1; private static long mergedAt;
+    /** The server's profile with the Playtime stars (counted on this computer) added; rebuilt when either changes. */
+    static Profile profile() {
+        refresh(false);
+        Profile p = profile; long now = System.currentTimeMillis();
+        int done = 0; for (Playtime.Goal g : Playtime.GOALS) if (FancyConfig.get().playMinutes >= g.minutes()) done++;
+        if (merged == null || mergedFrom != p || mergedDone != done || now - mergedAt > 30_000) {
+            List<Ach> l = new ArrayList<>(p == null ? List.of() : p.list()); l.addAll(Playtime.list());
+            Map<String, Double> st = new HashMap<>(p == null ? Map.of() : p.stats()); st.put("playMinutes", FancyConfig.get().playMinutes);
+            merged = new Profile(st, p == null ? new HashMap<>() : p.groups(), l, p == null ? new HashSet<>() : p.cosmetics(), p == null ? new LinkedHashMap<>() : p.chapters(), p == null ? 0 : p.since());
+            mergedFrom = p; mergedDone = done; mergedAt = now;
+        }
+        return merged;
+    }
     static boolean ready() { return profile != null; }
     /** True when the server says you have unlocked this cosmetic through an achievement. */
     static boolean hasCosmetic(String id) { Profile p = profile; return p != null && p.cosmetics().contains(id); }

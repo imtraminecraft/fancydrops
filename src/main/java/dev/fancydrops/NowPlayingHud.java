@@ -7,8 +7,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 
 /**
  * Now Playing (Visuals > Now Playing), placed wherever you drag it (Visuals > Move HUD): one clean glass card. The cover on the left (it
- * flips in when the song changes and dims under a pause sign when you pause), the title and artists, optionally the line being sung,
- * and a thin time bar along the bottom with the time on either side. A small equalizer sits top right. It takes its accent from the
+ * flips in when the song changes and dims under a pause sign when you pause), the title and artists, and a thin time bar along the bottom with the time on either side. A small equalizer sits top right. It takes its accent from the
  * album (in soft, cool colours), slides away when nothing is playing, waits under boss bars and hides during RNG animations.
  */
 final class NowPlayingHud {
@@ -37,10 +36,10 @@ final class NowPlayingHud {
         if (show < 0.01f || t == null) return;
         if (!t.id().equals(lastId)) { lastId = t.id(); changedAt = now; }
         int W = g.guiWidth(); float k = c.npScale / 100f, e = show * show * (3 - 2 * show);
-        float cx = W * c.npX, h = height(c.npLyric) * k;
+        float cx = W * c.npX, h = height(false) * k;
         float top = below(mc, W, cx, width() * k, c.npY) - (1f - e) * (h + 14);
         long pos = preview && Spotify.track == null ? (now / 10) % 200_000 : Spotify.position();
-        draw(g, mc.font, cx, top, k, e, t, now, now - changedAt, pos, playing, dt, c.npLyric ? currentLyric() : "", AlbumArt.ready && !(preview && Spotify.track == null), AlbumArt.accent());
+        draw(g, mc.font, cx, top, k, e, t, now, now - changedAt, pos, playing, dt, "", AlbumArt.ready && !(preview && Spotify.track == null), AlbumArt.accent());
     }
     static int width() { return 210; }
     static int height(boolean lyric) { return lyric ? 52 : 44; }
@@ -94,11 +93,6 @@ final class NowPlayingHud {
     private static void cover(GuiGraphicsExtractor g, Font font, int x, int y, int s, int a, boolean art, int acc) {
         if (art) g.blit(RenderPipelines.GUI_TEXTURED, AlbumArt.ID, x, y, 0f, 0f, s, s, 64, 64, 64, 64, Gfx.argb(a, 0xFFFFFF));
         else { g.fill(x, y, x + s, y + s, Gfx.argb(a, Ritual.mixc(acc, 0x101018, 0.55f))); small(g, font, "♫", x + s / 2f - 3 * s / 20f, y + s / 2f - 4 * s / 20f, s / 20f, Gfx.argb(a, 0xFFFFFF)); }
-    }
-    private static String currentLyric() {
-        if (preview && Spotify.track == null) return "the line being sung";
-        if (Lyrics.lines.isEmpty() && Lyrics.status.startsWith("No synced")) return "♪ no lyrics for this song";
-        int li = Lyrics.at(Spotify.position() + 200 + FancyConfig.get().lyricsOffset); return li >= 0 && li < Lyrics.lines.size() ? Lyrics.lines.get(li).text() : "";
     }
     private static java.lang.reflect.Field bossEvents; private static boolean bossTried; private static float bossPush;
     /** Boss bars come first: when the card sits where they are drawn (top, middle) it slides down below the last one. */

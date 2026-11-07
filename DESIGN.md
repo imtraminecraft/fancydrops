@@ -521,3 +521,7 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 
 ## Round: one Now Playing
 - Vinyl and Mini removed; npStyle gone. The Glass card is simpler: dark panel, faint lighter top half, cover (flip-in, pause sign), title, artists, optional lyric line, 4-bar equalizer, thin time bar with elapsed and length. No drifting lights, sheen or colour wash.
+
+## Round: Lyric line HUD, Playtime constellation
+- Lyric line: its own small glass card (LyricLineHud), movable/resizable (Visuals > Lyrics > Lyric line > Move it; HudEditScreen takes NOW_PLAYING or LINE). Removed from Now Playing. Height picker only for On screen lyrics.
+- Playtime: minutes played with the mod on (in a world, not paused), kept in config (playMinutes, playDone). 8 milestone stars 1h..500h as chapter "time", merged into Achievements.profile(); constellation "The Hourglass" (Playtime) at (0.6, 0.21). Rare Drops moved to (0.8, 0.77); Recently Lit card removed; key is earned / in progress / reward.
