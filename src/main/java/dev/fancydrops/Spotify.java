@@ -35,8 +35,9 @@ final class Spotify {
     private static volatile long progressMs, progressAt;                 // the position Spotify gave us, and when
     static volatile String status = "";
     private static volatile String access = ""; private static volatile long expires;
-    private static volatile boolean busy;
+    private static volatile boolean busy, polling;
     private static long lastPoll;
+    private static final java.util.concurrent.ExecutorService WORKER = java.util.concurrent.Executors.newSingleThreadExecutor(r -> { Thread t = new Thread(r, "FancyDrops Spotify"); t.setDaemon(true); t.setPriority(Thread.MIN_PRIORITY); return t; });
 
     static boolean linked() { return !FancyConfig.get().spotifyRefresh.isBlank(); }
     /** Where the song is now, in ms (moves on between polls while it plays). */
@@ -97,9 +98,9 @@ final class Spotify {
     // ------------------------------------------------------------------ what is playing (asked every 3 s from a worker thread, only while lyrics are on)
     static void tick() {
         FancyConfig c = FancyConfig.get();
-        if (!(c.lyricsOn || c.npOn) || !linked() || busy) return;
+        if (!(c.lyricsOn || c.npOn) || !linked() || busy || polling) return;
         long now = System.currentTimeMillis(); if (now - lastPoll < 3000) return; lastPoll = now;
-        Thread t = new Thread(Spotify::poll, "FancyDrops Spotify"); t.setDaemon(true); t.start();
+        polling = true; WORKER.execute(() -> { try { poll(); } finally { polling = false; } });
     }
     private static void poll() {
         try {

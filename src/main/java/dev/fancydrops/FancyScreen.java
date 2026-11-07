@@ -1230,13 +1230,13 @@ public class FancyScreen extends Screen {
         int fx = x + w / 2, feet0 = y + h - 22, bobY = STILL ? 0 : Math.round((float) Math.sin(System.currentTimeMillis() / 520.0) * 2f), feet = feet0 - bobY; float ppb = SkinMock.height() / 1.8f;   // the character bobs; the floor stays
         g.enableScissor(x + 1, y + 28, x + w - 1, y + h - 1);
         int pcol = ad == null ? 0xFF8A93B0 : ad.color();                                              // a little stage in the colour of the aura
-        { int pc2 = pcol & 0xFFFFFF; float tt = now / 1000f, br = 0.5f + 0.5f * (float) Math.sin(tt * 2f);
+        { int pc2 = pcol & 0xFFFFFF; float tt = (now % 3_600_000L) / 1000f, br = 0.5f + 0.5f * (float) Math.sin(tt * 2f);
           for (int i2 = 0; i2 < 14; i2++) { int ya = y + 28 + i2 * (h - 56) / 14; g.fill(x + 1, ya, x + w - 1, ya + (h - 56) / 14 + 1, Gfx.argb(Math.round(i2 * 1.8f), pc2)); }   // the backdrop warms toward the floor
           for (int b2 = 0; b2 < 5; b2++) { int bx = fx - 28 + b2 * 14, bh = Math.round((feet - y - 40) * (0.55f + 0.45f * (float) Math.sin(tt * 1.3f + b2 * 1.7f)) * 0.7f); g.fill(bx, feet - bh, bx + 2, feet, Gfx.argb(22 + Math.round(18 * br), pc2)); }   // light beams
           for (int rr = 0; rr < 3; rr++) { float ph2 = ((tt * 0.45f) + rr / 3f) % 1f; int rw = 18 + Math.round(ph2 * 26); g.fill(fx - rw, feet, fx + rw, feet + 1, Gfx.argb(Math.round((1f - ph2) * 150), pc2)); }   // rings spreading from the feet
           for (int sp = 0; sp < 10; sp++) { float a2 = tt * 0.6f + sp * 0.628f; int sx2 = fx + Math.round((float) Math.cos(a2) * 34), sy2 = feet + 2 + Math.round((float) Math.sin(a2) * 3); g.fill(sx2, sy2, sx2 + 2, sy2 + 1, Gfx.argb(200, Canvas.mix(pcol, 0xFFFFFFFF, 0.6f) & 0xFFFFFF)); }   // little lights orbiting the floor
         }
-        { int pc3 = pcol & 0xFFFFFF; float tt = now / 1000f, pulse = 0.5f + 0.5f * (float) Math.sin(tt * 2.4f); int fy = feet0;
+        { int pc3 = pcol & 0xFFFFFF; float tt = (now % 3_600_000L) / 1000f, pulse = 0.5f + 0.5f * (float) Math.sin(tt * 2.4f); int fy = feet0;
           for (int yy = y + 30; yy < fy; yy++) { float u = (yy - (y + 30)) / (float) Math.max(1, fy - y - 30); int half = 7 + Math.round(u * 30); g.fill(fx - half, yy, fx + half, yy + 1, Gfx.argb(Math.round((5 + 9 * u) * (0.7f + 0.3f * pulse)), 0xFFFFFF)); }     // a spotlight falling from above
           for (int dy = -6; dy <= 6; dy++) { int half = Math.round(40f * (float) Math.sqrt(1f - (dy / 6.5f) * (dy / 6.5f))); g.fill(fx - half, fy + 2 + dy, fx + half, fy + 3 + dy, Gfx.argb(Math.round(26 + 20 * pulse), pc3)); }          // the floor glows
           int rr0 = 24 + Math.round(pulse * 6); for (int a = 0; a < 40; a++) { double an = a * Math.PI / 20; int rx2 = fx + (int) Math.round(Math.cos(an) * rr0), ry2 = fy + 2 + (int) Math.round(Math.sin(an) * rr0 * 0.2); g.fill(rx2, ry2, rx2 + 1, ry2 + 1, Gfx.argb(Math.round(120 + 100 * pulse), pc3)); }   // a pulsing ring

@@ -444,12 +444,16 @@ final class Cosmetics {
 
     private static long lastLive;
     /** Every tick: (1) after you change what you wear, redo the chat lines already on screen; (2) animate the name effects in chat. */
+    private static Object lastHead; private static int lastSize = -1;
     static void tickChat(Minecraft mc) {
         try {
             if (mc.gui == null || mc.level == null) return;
             if (historyDirty) { historyDirty = false; if (findChat(mc)) rebuildHistory(false); }
             if (!chatFx || chatFail || !findChat(mc)) return;
             @SuppressWarnings("unchecked") List<Object> list = (List<Object>) linesF.get(chatObj);
+            Object head = list.isEmpty() ? null : list.get(0);                                  // nothing new in chat since last time: nothing to do
+            if (head == lastHead && list.size() == lastSize) return;
+            lastHead = head; lastSize = list.size();
             boolean wrapped = false;
             for (int i = 0; i < list.size(); i++) {
                 Object ln = list.get(i);
@@ -550,7 +554,9 @@ final class Cosmetics {
     static volatile boolean tabMoving;
     /** Called every frame just before the tab list is drawn: moving name effects need a new colour every frame, not every tick. */
     private static long tabFrameAt;
-    static void tickTabFrame(Minecraft mc) { long n = System.currentTimeMillis(); if (tabMoving && n - tabFrameAt >= 30) { tabFrameAt = n; tickTab(mc); } }
+    /** The tab list only needs its moving names redone while you are actually looking at it (Tab held). */
+    static boolean tabOpen(Minecraft mc) { try { return mc.options.keyPlayerList.isDown(); } catch (Throwable t) { return true; } }
+    static void tickTabFrame(Minecraft mc) { long n = System.currentTimeMillis(); if (tabMoving && n - tabFrameAt >= 40 && tabOpen(mc)) { tabFrameAt = n; tickTab(mc); } }
     static void tickTab(Minecraft mc) {
         try {
             var conn = mc.getConnection();

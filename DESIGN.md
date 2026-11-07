@@ -502,3 +502,9 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Floating lyrics pop out at a new random spot each line (band set by Height, away from the crosshair and the last spot), overshoot in, pop away (grow, fade, rise). Wrap results cached.
 - Text with alpha < 6 is skipped (Gfx.txt): the game draws alpha < 4 text fully opaque, which froze the music notes and made fading words flash.
 - Album glow uses 16 larger glows instead of 32.
+
+## Round: lyrics written into the world, lighter everything
+- Floating = signs in the world (like the reference video): each line is placed 5-8 blocks ahead to one side, turned at its own angle with a slight tilt, nearer if a wall is closer; it stays put; words appear one by one (pop) in white/album colours; it rises and fades when the next comes. Drawn per word with 3 projected points (real perspective), no glows or boxes.
+- Float precision bug: (now / 1000f) can't move with today's epoch ms; use (now % 3_600_000) — fixed music notes, Codex dashes/streaks/rings, menu pulses.
+- Ambience lighter: 4 edge glows, 32 bars, 8 notes without glows.
+- PC lag: tab-list name animation only while Tab is held (else once a second); chat effects only when chat changed; Spotify polls on one low-priority thread; auras capped (160 per player, 700 sprites, tiny ones skipped).

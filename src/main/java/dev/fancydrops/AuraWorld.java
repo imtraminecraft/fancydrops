@@ -87,10 +87,12 @@ final class AuraWorld {
                     if (v.w < 0.6f) continue;                                                      // at or behind the eye: never drawn
                     float sx = (v.x / v.w * 0.5f + 0.5f) * W, sy = (1f - (v.y / v.w * 0.5f + 0.5f)) * H, px = (float) (q.s * ppb / v.w) * 1.3f;
                     if (sx < -40 || sx > W + 40 || sy < -40 || sy > H + 40) continue;
+                    if (px < 0.7f) continue;                                                       // too small to see: skip
                     float a = q.a * vis * (v.w > bodyDepth + 0.15f ? 0.4f : 1f);                    // behind the body: fainter
                     draw.add(new float[]{sx, sy, px, a, v.w}); who.add(q);
                 }
             }
+            if (draw.size() > 700) { draw.subList(700, draw.size()).clear(); who.subList(700, who.size()).clear(); }   // a crowd of auras: a fixed budget of sprites
             Integer[] order = new Integer[draw.size()]; for (int i = 0; i < order.length; i++) order[i] = i;
             Arrays.sort(order, (a, b) -> Float.compare(draw.get(b)[4], draw.get(a)[4]));           // far ones first
             for (int i : order) { float[] d = draw.get(i); AuraFx.drawPart(g, d[0], d[1], Math.min(48f, d[2]), who.get(i), d[3]); }

@@ -31,37 +31,32 @@ final class AmbienceHud {
 
     static void draw(GuiGraphicsExtractor g, Font font, int W, int H, long now, float on, FancyConfig c, long sinceSong, int acc) {
         int lite = Ritual.mixc(acc, 0xFFFFFF, 0.45f), deep = Ritual.mixc(acc, 0x000000, 0.25f);
-        if (c.ambGlow) {                                                                 // soft light all round the edge of the screen
-            float br = (0.75f + 0.25f * (float) Math.sin(now / 2200.0)) * on * c.ambGlowStrength / 100f;
-            int a = Math.round(200 * br), n = 3;
-            for (int i = 0; i <= n; i++) {
-                float u = i / (float) n, wob = (float) Math.sin(now / 1700.0 + i * 1.3) * 0.15f + 1f;
-                int col = i % 2 == 0 ? acc : deep;
-                NebulaTex.glow(g, W * u, 0, W * 0.19f * wob, H * 0.07f * wob, Gfx.argb(Math.round(a * 0.7f), col));
-                NebulaTex.glow(g, W * u, H, W * 0.19f * wob, H * 0.09f * wob, Gfx.argb(a, col));
-                NebulaTex.glow(g, 0, H * u, W * 0.06f * wob, H * 0.22f * wob, Gfx.argb(a, col));
-                NebulaTex.glow(g, W, H * u, W * 0.06f * wob, H * 0.22f * wob, Gfx.argb(a, col));
-            }
+        float ts = (now % 3_600_000L) / 1000f;                                            // seconds, kept small (a float can't hold today's time in ms precisely)
+        if (c.ambGlow) {                                                                 // soft light along each edge: four long glows, breathing
+            float br = (0.75f + 0.25f * (float) Math.sin(ts * 0.45f)) * on * c.ambGlowStrength / 100f;
+            int a = Math.round(170 * br);
+            NebulaTex.glow(g, W / 2f, 0, W * 0.62f, H * 0.09f, Gfx.argb(Math.round(a * 0.7f), acc));
+            NebulaTex.glow(g, W / 2f, H, W * 0.62f, H * 0.11f, Gfx.argb(a, acc));
+            NebulaTex.glow(g, 0, H / 2f, W * 0.07f, H * 0.62f, Gfx.argb(a, deep));
+            NebulaTex.glow(g, W, H / 2f, W * 0.07f, H * 0.62f, Gfx.argb(a, deep));
         }
         if (c.ambBars) {                                                                 // a visualizer along the bottom, either side of the hotbar
-            int n = 26, bw = 4, gap = 2, hot = 100;
+            int n = 16, bw = 5, gap = 2, hot = 100;
             for (int side = -1; side <= 1; side += 2) for (int i = 0; i < n; i++) {
                 float x = W / 2f + side * (hot + i * (bw + gap)); if (x < 0 || x > W) continue;
-                float lvl = Math.abs((float) Math.sin(now / (170.0 + i * 13) + i * 0.7 + side) * (float) Math.sin(now / (430.0 + i * 29) + i * 1.9)) * (1f - i / (float) n * 0.6f);
-                int bh = Math.max(1, Math.round((3 + 22 * lvl) * on));
-                int x0 = Math.round(side < 0 ? x - bw : x);
+                float lvl = Math.abs((float) Math.sin(ts * (5.9f - i * 0.2f) + i * 0.7f + side) * (float) Math.sin(ts * (2.3f - i * 0.05f) + i * 1.9f)) * (1f - i / (float) n * 0.6f);
+                int bh = Math.max(1, Math.round((3 + 20 * lvl) * on)), x0 = Math.round(side < 0 ? x - bw : x);
                 g.fill(x0, H - bh, x0 + bw, H, Gfx.argb(Math.round(150 * on), Ritual.mixc(acc, lite, i / (float) n)));
-                g.fill(x0, H - bh, x0 + bw, H - bh + 1, Gfx.argb(Math.round(220 * on), 0xFFFFFF));
             }
         }
-        if (c.ambNotes) {                                                                // notes drifting up beside the hotbar
-            for (int i = 0; i < 10; i++) {
-                float per = 3.2f + (i % 4) * 0.6f, u = (((now / 1000f) + i * 0.83f) % per) / per;
-                boolean left = i % 2 == 0; float bx = W / 2f + (left ? -1 : 1) * (98 + 18 * (i / 2 % 3)), by = H - 22;
-                float x = bx + (float) Math.sin(u * 6 + i) * 7 + (left ? -1 : 1) * u * 22, y = by - u * 70, a = (float) Math.sin(Math.PI * u) * on;
-                NebulaTex.glow(g, x + 2.5f, y + 4, 7, 7, Gfx.argb(Math.round(90 * a), acc));
-                Gfx.push(g); Gfx.translate(g, x, y); Gfx.rotate(g, (float) Math.sin(u * 4 + i) * 0.35f); float sc = 0.9f + 0.3f * (i % 3) / 2f; Gfx.scale(g, sc);
-                Gfx.txt(g, font, i % 3 == 0 ? "♫" : "♪", 0, 0, Gfx.argb(Math.round(240 * a), i % 2 == 0 ? acc : lite), true);
+        if (c.ambNotes) {                                                                // notes drifting up beside the hotbar, swaying, fading in and out
+            for (int i = 0; i < 8; i++) {
+                float per = 3.4f + (i % 4) * 0.7f, u = ((ts + i * 1.13f) % per) / per;
+                float a = (float) Math.sin(Math.PI * u) * on; if (a < 0.06f) continue;
+                boolean left = i % 2 == 0; float bx = W / 2f + (left ? -1 : 1) * (104 + 16 * (i / 2 % 3)), by = H - 30;
+                float x = bx + (float) Math.sin(u * 5 + i) * 6 + (left ? -1 : 1) * u * 18, y = by - u * 64;
+                Gfx.push(g); Gfx.translate(g, x, y); Gfx.rotate(g, (float) Math.sin(u * 4 + i) * 0.3f); Gfx.scale(g, 1f + 0.25f * (i % 3) / 2f);
+                Gfx.txt(g, font, i % 3 == 0 ? "\u266B" : "\u266A", -3, -4, Gfx.argb(Math.round(235 * a), i % 2 == 0 ? acc : lite), true);
                 Gfx.pop(g);
             }
         }

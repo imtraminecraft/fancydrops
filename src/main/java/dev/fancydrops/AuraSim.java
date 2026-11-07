@@ -93,7 +93,7 @@ final class AuraSim {
             p.col = p.rgb == p.rgb2 ? p.rgb : mix(p.rgb, p.rgb2, u);
         }
         parts.removeIf(p -> p.dead);
-        if (parts.size() > 260) parts.subList(0, parts.size() - 260).forEach(p -> p.dead = true);
+        if (parts.size() > 160) parts.subList(0, parts.size() - 160).forEach(p -> p.dead = true);
         parts.removeIf(p -> p.dead);
     }
     private boolean chance(float perTick) { float whole = (float) Math.floor(perTick); return r() < perTick - whole || whole >= 1f; }

@@ -68,7 +68,7 @@ public class FancyDropsMod implements ClientModInitializer, ModInitializer {
             AuraWorld.tick(mc);
             Spotify.tick();
             tabTick++;                                                                        // who wears what changes rarely: look every quarter second, every tick only while a name is moving
-            if (Cosmetics.tabMoving || tabTick % 5 == 0) Cosmetics.tickTab(mc);
+            if ((Cosmetics.tabMoving && Cosmetics.tabOpen(mc)) || tabTick % 20 == 0) Cosmetics.tickTab(mc);   // a second apart unless the tab list is open
             if (tabTick % 5 == 0) { Cosmetics.tickAura(mc); Achievements.tick(mc); }
             Cosmetics.tickChat(mc);
         });

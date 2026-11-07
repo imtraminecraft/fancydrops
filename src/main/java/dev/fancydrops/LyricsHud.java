@@ -3,6 +3,12 @@ package dev.fancydrops;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3x2f;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +17,10 @@ import java.util.List;
  * The lyrics (Visuals > Lyrics). Both styles draw the same clean caption: the words fill with the album's colour as they are sung (the word
  * being sung glows softly). Long lines wrap onto two rows (and shrink a little if they still don't fit), never cut off by the screen's edge.
  *
- *   FLOATING (default): each line pops out somewhere new in front of you (never on the crosshair, never where the last one was): it
- *     springs in with a little overshoot, bobs, sways on a spring when you turn, and pops away (growing, fading, rising) when the next
- *     line comes. It is held to the screen, not the world, so it never lags behind or leaves your view.
+ *   FLOATING (default): each line is written into the world around you, a few blocks away, at its own angle (like a sign standing
+ *     in the air), a little to the left or right of where you look. Its words appear one by one as they're sung, each popping in, in
+ *     white and the album's colours. It stays where it was written (it doesn't chase you), and fades up and away when the next line
+ *     comes. No boxes or glows behind it: just the words and their shadow, so it costs almost nothing.
  *   SCREEN: a steady caption with a thin line under it showing the line's time, and the coming line faintly below.
  *
  * The lyrics step aside (fade out) while a drop animation plays.
@@ -33,8 +40,10 @@ final class LyricsHud {
     private static int lastLine = -2, prevLine = -2; private static String lastTrack = "";
     private static long lineAt, titleAt, lastFrame;
     private static float away;                                       // 0..1, how far the lyrics have stepped aside for a drop animation
-    private static float swayX, swayY, velX, velY, lastYaw = Float.NaN, lastPitch;
-    private static float px = 0.5f, py = 0.45f, ppx = 0.5f, ppy = 0.45f;   // where the current and the previous line popped out (fractions of the screen)
+    /** A line written into the world: its middle, the directions of its own right and up, how big a text pixel is (blocks). */
+    static final class Sign { final int line, seed; final long born; long gone; final Vec3 at, right, up; final float px; Sign(int l, int sd, long b, Vec3 a, Vec3 r, Vec3 u, float p) { line = l; seed = sd; born = b; at = a; right = r; up = u; px = p; } }
+    private static final List<Sign> SIGNS = new ArrayList<>();
+    private static int side = 1;
     private static final java.util.Random RND = new java.util.Random();
 
     static void render(GuiGraphicsExtractor g) {
@@ -49,8 +58,12 @@ final class LyricsHud {
         long pos = Spotify.position() + 150 + c.lyricsOffset;
         List<Lyrics.Line> L = Lyrics.lines;
         int li = on ? Lyrics.at(pos) : -1;
-        if (li != lastLine) { prevLine = lastLine; lastLine = li; lineAt = now; ppx = px; ppy = py; pickSpot(c); }
-        sway(mc, dt);
+        if (li != lastLine) {
+            prevLine = lastLine; lastLine = li; lineAt = now;
+            for (Sign sg : SIGNS) if (sg.gone == 0) sg.gone = now;
+            if (c.lyricsStyle == FLOATING && li >= 0 && li < L.size() && !L.get(li).text().isBlank()) write(mc, c, li, now);
+        }
+        if (!on) for (Sign sg : SIGNS) if (sg.gone == 0) sg.gone = now;
         if (c.lyricsIntro) titleCard(g, mc, c, now, vis);
         if (on && L.isEmpty() && Lyrics.status.startsWith("No synced")) { noLyrics(g, mc, c, now, vis); return; }
         if (L.isEmpty() || !on) return;
@@ -59,46 +72,81 @@ final class LyricsHud {
             if (prevLine >= 0 && prevLine < L.size() && out < 1f) onScreen(g, mc, c, L, prevLine, pos, (1f - out) * vis, -out);
             if (li >= 0 && li < L.size()) onScreen(g, mc, c, L, li, pos, in * vis, 1f - in);
         } else {
-            if (prevLine >= 0 && prevLine < L.size() && out < 1f) floating(g, mc, c, L, prevLine, pos, now, (1f - out) * vis, -ease(out), ppx, ppy);
-            if (li >= 0 && li < L.size()) floating(g, mc, c, L, li, pos, now, Math.min(1f, since / 0.18f) * vis, since, px, py);
+            signs(g, mc, L, pos, now, vis);
         }
     }
 
-    // ------------------------------------------------------------------ floating
-    /** The spring the floating lines hang on: turning pushes them the other way, then they settle back. */
-    private static void sway(Minecraft mc, float dt) {
-        var cam = mc.gameRenderer.mainCamera(); float yaw = cam.yRot(), pitch = cam.xRot();
-        if (Float.isNaN(lastYaw)) { lastYaw = yaw; lastPitch = pitch; }
-        float dy = yaw - lastYaw; while (dy > 180) dy -= 360; while (dy < -180) dy += 360;
-        float dp = pitch - lastPitch; lastYaw = yaw; lastPitch = pitch;
-        velX += -Math.max(-12f, Math.min(12f, dy)) * 18f; velY += -Math.max(-12f, Math.min(12f, dp)) * 12f;
-        int steps = Math.max(1, Math.round(dt / 0.008f)); float h = dt / steps;                 // small steps: steady at any frame rate
-        for (int i = 0; i < steps; i++) { velX += (-170f * swayX - 16f * velX) * h; velY += (-170f * swayY - 16f * velY) * h; swayX += velX * h; swayY += velY * h; }
-        swayX = Math.max(-40f, Math.min(40f, swayX)); swayY = Math.max(-22f, Math.min(22f, swayY));
+    // ------------------------------------------------------------------ floating: words written into the world
+    /** A new line: a few blocks ahead, a little to one side (the other side each time), turned at its own angle; nearer if a wall is closer. */
+    private static void write(Minecraft mc, FancyConfig c, int li, long now) {
+        var cam = mc.gameRenderer.mainCamera(); Vec3 eye = cam.position();
+        side = -side;
+        double yaw = Math.toRadians(cam.yRot() + side * (8 + RND.nextDouble() * 22)), pitch = Math.toRadians(Math.max(-25, Math.min(35, cam.xRot())) * 0.6 + 4 + RND.nextDouble() * 8);
+        Vec3 dir = new Vec3(-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+        double d = 5 + RND.nextDouble() * 3;
+        var hit = mc.level.clip(new ClipContext(eye, eye.add(dir.scale(d + 1)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
+        if (hit.getType() == HitResult.Type.BLOCK) d = Math.max(2.2, hit.getLocation().distanceTo(eye) - 0.9);
+        Vec3 at = eye.add(dir.scale(d));
+        double face = Math.atan2(eye.x - at.x, eye.z - at.z) + Math.toRadians(-side * (15 + RND.nextDouble() * 25));   // turned partly towards you, partly away
+        Vec3 n = new Vec3(Math.sin(face), 0, Math.cos(face)), up0 = new Vec3(0, 1, 0);
+        Vec3 right = up0.cross(n).normalize();
+        double roll = Math.toRadians((RND.nextDouble() - 0.5) * 10);                                // a slight tilt
+        Vec3 r2 = right.scale(Math.cos(roll)).add(up0.scale(Math.sin(roll))), u2 = up0.scale(Math.cos(roll)).subtract(right.scale(Math.sin(roll)));
+        float px = (float) (0.045 * c.lyricsSize / 100.0 * (0.75 + d / 14));
+        SIGNS.add(new Sign(li, RND.nextInt(1000), now, at, r2, u2, px)); while (SIGNS.size() > 3) SIGNS.remove(0);
     }
-    /** A new spot for the next line: somewhere in the band the Height setting picks, away from the crosshair and from the last line. */
-    private static void pickSpot(FancyConfig c) {
-        float y0 = c.lyricsPos == 2 ? 0.17f : c.lyricsPos == 1 ? 0.3f : 0.46f, y1 = y0 + 0.2f;
-        for (int t = 0; t < 12; t++) {
-            float x = 0.32f + RND.nextFloat() * 0.36f, y = y0 + RND.nextFloat() * (y1 - y0);
-            boolean cross = Math.abs(x - 0.5f) < 0.16f && Math.abs(y - 0.5f) < 0.08f, near = Math.hypot((x - ppx) * 1.6, y - ppy) < 0.2;
-            if (!cross && !near) { px = x; py = y; return; }
+    private static void signs(GuiGraphicsExtractor g, Minecraft mc, List<Lyrics.Line> L, long pos, long now, float vis) {
+        SIGNS.removeIf(sg -> sg.gone > 0 && now - sg.gone > 650);
+        if (SIGNS.isEmpty()) return;
+        var cam = mc.gameRenderer.mainCamera(); Vec3 cp = cam.position();
+        Matrix4f vp = cam.getViewRotationProjectionMatrix(new Matrix4f()); int W = g.guiWidth(), H = g.guiHeight();
+        Font f = mc.font; int acc = colour(), lite = Ritual.mixc(acc, 0xFFFFFF, 0.5f);
+        int[] pal = {0xFFFFFF, acc, lite, 0xFFFFFF, acc};
+        for (Sign sg : new ArrayList<>(SIGNS)) {
+            if (sg.line < 0 || sg.line >= L.size()) continue;
+            double dist = cp.distanceTo(sg.at); if (dist > 24) continue;
+            float out = sg.gone > 0 ? (now - sg.gone) / 650f : 0f, fade = (1f - out) * vis * (float) Math.min(1, (24 - dist) / 4);
+            if (fade < 0.03f) continue;
+            Vec3 at = sg.at.add(sg.up.scale(0.5 * out * out));                                          // leaving: it rises as it fades
+            Lyrics.Line ln = L.get(sg.line); long start = ln.atMs(), end = sg.line + 1 < L.size() ? L.get(sg.line + 1).atMs() : start + 4000;
+            drawSign(g, f, vp, cp, W, H, sg, at, ln.text(), start, end, pos, fade, pal);
         }
-        px = ppx < 0.5f ? 0.64f : 0.36f; py = y0 + 0.1f;
     }
-    /** t: seconds since the line popped in (>= 0), or 0..-1 while it pops away. */
-    private static void floating(GuiGraphicsExtractor g, Minecraft mc, FancyConfig c, List<Lyrics.Line> L, int i, long pos, long now, float a, float t, float fx, float fy) {
-        if (a < 0.02f) return;
-        int W = g.guiWidth(), H = g.guiHeight();
-        float pop = t >= 0 ? popIn(Math.min(1f, t / 0.42f)) : 1f + 0.12f * -t;               // springs in past full size and settles; grows a little as it leaves
-        float k = c.lyricsSize / 100f * 1.45f * pop;
-        float bob = (float) Math.sin(now / 1300.0 + i * 1.7) * 2f;
-        float cx = W * fx + swayX, cy = H * fy + swayY + bob + (t < 0 ? t * 16 : 0);
-        Lyrics.Line ln = L.get(i); long start = ln.atMs(), end = i + 1 < L.size() ? L.get(i + 1).atMs() : start + 4000;
-        block(g, mc.font, ln.text(), W, H, cx, cy, k, W * 0.36f * pop, start, end, pos, a, false, "");          // the wrap width grows with the pop, so the rows never change mid-animation
+    static void drawSign(GuiGraphicsExtractor g, Font f, Matrix4f vp, Vec3 cp, int W, int H, Sign sg, Vec3 at, String text, long start, long end, long pos, float fade, int[] pal) {
+            List<String> rows = wrap(f, text, 190);
+            int total = 0; for (String r : rows) total += r.length() + 1;
+            float span = Math.max(400f, (end - start) * 0.85f); int acc0 = 0, wi = 0;
+            for (int ri = 0; ri < rows.size(); ri++) {
+                String row = rows.get(ri); float x = -f.width(row) / 2f, y = (ri - (rows.size() - 1) / 2f) * 11 - 4;
+                for (String w : row.split(" ")) {
+                    float wAt = start + span * acc0 / (float) total; int ww = f.width(w);
+                    acc0 += w.length() + 1;
+                    float shown = sg.gone > 0 ? 1f : Math.max(0f, Math.min(1f, (pos - wAt) / 160f));      // each word appears as it's sung
+                    if (shown > 0f) word(g, f, vp, cp, W, H, sg, at, w, x, y, ww, shown, fade, pal[(sg.seed + wi) % pal.length]);
+                    x += ww + f.width(" "); wi++;
+                }
+            }
+    }
+    /** One word, flat on its sign: projected corner by corner so it sits in the world with real perspective. */
+    private static void word(GuiGraphicsExtractor g, Font font, Matrix4f vp, Vec3 cp, int W, int H, Sign sg, Vec3 at, String w, float x, float y, int ww, float shown, float fade, int col) {
+        Vec3 o = at.add(sg.right.scale((x + ww / 2f) * sg.px)).subtract(sg.up.scale((y + 4) * sg.px));   // the word's middle
+        float[] po = project(vp, cp, o, W, H), pr = project(vp, cp, o.add(sg.right.scale(sg.px * 8)), W, H), pd = project(vp, cp, o.subtract(sg.up.scale(sg.px * 8)), W, H);
+        if (po == null || pr == null || pd == null) return;
+        if (po[0] < -60 || po[0] > W + 60 || po[1] < -60 || po[1] > H + 60) return;
+        float pop = shown >= 1f ? 1f : 0.4f + 0.6f * popIn(shown);
+        Gfx.push(g);
+        g.pose().mul(new Matrix3x2f((pr[0] - po[0]) / 8f, (pr[1] - po[1]) / 8f, (pd[0] - po[0]) / 8f, (pd[1] - po[1]) / 8f, po[0], po[1]));
+        g.pose().scale(pop, pop);
+        Gfx.txt(g, font, w, -ww / 2, -4, Gfx.argb(Math.round(255 * fade * Math.min(1f, shown * 2f)), col), true);
+        Gfx.pop(g);
+    }
+    private static float[] project(Matrix4f vp, Vec3 cp, Vec3 p, int W, int H) {
+        Vector4f v = new Vector4f((float) (p.x - cp.x), (float) (p.y - cp.y), (float) (p.z - cp.z), 1f); vp.transform(v);
+        if (v.w < 0.4f) return null;
+        return new float[]{(v.x / v.w * 0.5f + 0.5f) * W, (1f - (v.y / v.w * 0.5f + 0.5f)) * H};
     }
     /** 0..1 -> a scale that overshoots (about 1.1) and settles at 1. */
-    private static float popIn(float u) { float s = 1.70158f * 1.6f; u -= 1f; return 0.55f + 0.45f * (1f + (s + 1f) * u * u * u + s * u * u); }
+    private static float popIn(float u) { float s = 2.7f; u -= 1f; return 1f + (s + 1f) * u * u * u + s * u * u; }
 
     // ------------------------------------------------------------------ the caption
     /** A whole caption centred on cx, cy: soft shade, the words, the time line; kept inside the screen. Returns nothing. */

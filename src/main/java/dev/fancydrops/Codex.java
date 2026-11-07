@@ -178,7 +178,7 @@ final class Codex {
         float cx = sx0 + sw / 2f, cy = sy0 + sh / 2f;
         for (int i = 0; i < 110; i++) {
             float an = rnd(i * 7 + 3) * 6.2832f, sp = 0.3f + rnd(i * 11) * 0.7f;
-            float ph = ((now / 700f) * sp + rnd(i * 5)) % 1f, r0 = ph * ph * Math.max(sw, sh) * 0.75f, len = (6f + 70f * sp) * warp * ph;
+            float ph = (((now % 3_600_000L) / 700f) * sp + rnd(i * 5)) % 1f, r0 = ph * ph * Math.max(sw, sh) * 0.75f, len = (6f + 70f * sp) * warp * ph;
             float x0 = cx + (float) Math.cos(an) * r0, y0 = cy + (float) Math.sin(an) * r0 * 0.7f;
             int col = i % 5 == 0 ? 0xC9A0FF : i % 3 == 0 ? 0x9AD8FF : 0xFFFFFF;
             streak(x0, y0, x0 - (float) Math.cos(an) * len, y0 - (float) Math.sin(an) * len * 0.7f, col, warp * ph * 0.9f);
@@ -372,13 +372,13 @@ final class Codex {
         NebulaTex.glow(g, x, y, 14 * k * tw, 1f, argb(0.7f * on * fade * alpha, mix(col, 0xFFFFFFFF, 0.6f)));
         NebulaTex.glow(g, x, y, 1f, 14 * k * tw, argb(0.7f * on * fade * alpha, mix(col, 0xFFFFFFFF, 0.6f)));
         ring(x, y, 7 * k, argb(0.55f * fade * alpha, col), 1f);
-        if (full) { float sp = now / 3000f; for (int i = 0; i < 8; i++) { double an = sp + i * Math.PI / 4; line(x + (float) Math.cos(an) * 9 * k, y + (float) Math.sin(an) * 9 * k, x + (float) Math.cos(an) * 12 * k, y + (float) Math.sin(an) * 12 * k, col, 0.8f * fade, 0); } }
+        if (full) { float sp = (now % 3_600_000L) / 3000f; for (int i = 0; i < 8; i++) { double an = sp + i * Math.PI / 4; line(x + (float) Math.cos(an) * 9 * k, y + (float) Math.sin(an) * 9 * k, x + (float) Math.cos(an) * 12 * k, y + (float) Math.sin(an) * 12 * k, col, 0.8f * fade, 0); } }
         glow(x, y, 2.2f * k, 0xFFFFFF, on * fade);
     }
     /** A dashed bar from one point to the next, its dashes slowly running outward. */
     private static void dashed(float x0, float y0, float x1, float y1, int rgb, float a) {
         float len = (float) Math.hypot(x1 - x0, y1 - y0); if (len < 2) return;
-        float off = (now / 400f) % 1f; int n = Math.max(2, Math.round(len / 5f));
+        float off = ((now % 3_600_000L) / 400f) % 1f; int n = Math.max(2, Math.round(len / 5f));
         for (int i = 0; i < n; i++) { float u0 = (i + off) / n, u1 = Math.min(1f, (i + off + 0.5f) / n); if (u0 >= 1f) continue; line(x0 + (x1 - x0) * u0, y0 + (y1 - y0) * u0, x0 + (x1 - x0) * u1, y0 + (y1 - y0) * u1, rgb, a, 0); }
     }
     private static void nodeOf(GuiGraphicsExtractor g, int c, Node n, boolean open, float fade, float zoomed, int fc) {
