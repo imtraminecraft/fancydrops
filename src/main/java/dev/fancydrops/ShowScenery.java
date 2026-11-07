@@ -10,6 +10,9 @@ package dev.fancydrops;
  *   WINTER    Jerry's Workshop at night: an aurora over snowy hills and pines, snow falling
  *   CRIMSON   the Crimson Isle: a burning sky, floating rocks and the towers of a fortress
  *   MOBS      a dungeon wall of old stone, two torches flickering, cobwebs in the corners
+ *   MINES     a mine shaft: wooden beams, mithril glinting in the rock, lanterns swaying
+ *   NUCLEUS   a crystal cave: gems of five colours shining in the walls
+ *   END       the End: a starry void, obsidian pillars with crystals on top, end stone
  *   DYE       a painter's studio: a warm wall spattered with paint, a wooden floor, an easel
  *   MYTH      the Hub at twilight: stars, a crescent moon, ruined pillars on the hills (Mythological)
  *   TREASURE  a forest clearing at dusk, fireflies over the grass (Treasure)
@@ -42,6 +45,9 @@ final class ShowScenery {
             case ShowScene.WINTER -> new int[]{0x040C1E, 0x0E2A40, 0x2A5A6A};
             case ShowScene.CRIMSON -> new int[]{0x1A0404, 0x6A140C, 0xE0602A};
             case ShowScene.MOBS -> new int[]{0x0C0C10, 0x16161E, 0x22222C};
+            case ShowScene.MINES -> new int[]{0x0A0C12, 0x161A24, 0x222836};
+            case ShowScene.NUCLEUS -> new int[]{0x0A0818, 0x1A1430, 0x2A2048};
+            case ShowScene.END -> new int[]{0x04020A, 0x120A22, 0x2A1A40};
             case ShowScene.DYE -> new int[]{0xE8D8C0, 0xF2E6D2, 0xF8F0E2};
             case MYTH -> new int[]{0x1A1A48, 0x6A5A9A, 0xE8A8A0};
             case 9, 10, 11, 12, 13, 14 -> SlayerShow.SKY[m - SlayerShow.BASE];
@@ -51,7 +57,7 @@ final class ShowScenery {
             float f = (y - y0) / (float) Math.max(1, hz - y0);
             rect(c, x0, y, x1, y + 1, f < 0.55f ? mix(sky[0], sky[1], f / 0.55f) : mix(sky[1], sky[2], (f - 0.55f) / 0.45f), a);
         }
-        int frame = m <= ShowScene.DYE ? ShowScene.ENERGY[m] : m == MYTH ? 0x55D8FF : m >= SlayerShow.BASE ? SlayerShow.ENERGY[m - SlayerShow.BASE] : 0xFFD25A;
+        int frame = m <= ShowScene.DYE || m >= ShowScene.MINES ? ShowScene.energy(m) : m == MYTH ? 0x55D8FF : m >= SlayerShow.BASE ? SlayerShow.ENERGY[m - SlayerShow.BASE] : 0xFFD25A;
         if (m == ShowScene.DYE) frame = tint;
         int r = Math.max(7, Math.round(7 * Ritual.K));
         SlayerScenery.corners(c, x0, y0, x1, y1, r, frame, a, false);
@@ -63,6 +69,9 @@ final class ShowScenery {
             case ShowScene.WINTER -> aurora(c, t, x0, y0, x1, y1, hz, k, a);
             case ShowScene.CRIMSON -> isle(c, t, x0, y0, x1, y1, hz, k, a);
             case ShowScene.MOBS -> dungeon(c, t, x0, y0, x1, y1, hz, k, a);
+            case ShowScene.MINES -> shaft(c, t, x0, y0, x1, y1, hz, k, a);
+            case ShowScene.NUCLEUS -> cave(c, t, x0, y0, x1, y1, hz, k, a);
+            case ShowScene.END -> theEnd(c, t, x0, y0, x1, y1, hz, k, a);
             case ShowScene.DYE -> studio(c, t, x0, y0, x1, y1, hz, k, a, tint);
             case MYTH -> hub(c, t, x0, y0, x1, y1, hz, k, a);
             case 9, 10, 11, 12, 13, 14 -> SlayerShow.place(c, m - SlayerShow.BASE, t, x0, y0, x1, y1, hz, k, a);
@@ -289,5 +298,49 @@ final class ShowScenery {
             float on = 0.5f + 0.5f * (float) Math.sin(t * 2.5f + i * 1.9f);
             Ritual.glowE(fx, fy, 4 * k, 4 * k, 0xE8FF8A, 0.6f * on * a); px(c, Math.round(fx), Math.round(fy), 0xF8FFC8, on * a);
         }
+    }
+
+    // ------------------------------------------------------------------ the mines, the crystal cave and the End
+    private static void shaft(Canvas c, float t, int x0, int y0, int x1, int y1, int hz, float k, float a) {
+        for (int i = 0; i < 40; i++) {                                                           // mithril and ore glinting in the rock
+            float sx = x0 + rnd(i * 5 + 2) * (x1 - x0), sy = y0 + rnd(i * 11 + 3) * (hz - y0);
+            int col = i % 4 == 0 ? 0x7FE8D8 : i % 4 == 1 ? 0x3A3E52 : 0x2A2E3E;
+            Ritual.fillE(sx, sy, (2 + 3 * rnd(i)) * k, (1.5f + 2 * rnd(i + 9)) * k, col, (i % 4 == 0 ? 0.35f + 0.3f * (float) Math.sin(t * 2 + i) : 0.6f) * a);
+        }
+        for (int b = 0; b < 2; b++) {                                                            // the wooden frame of the shaft
+            int bx = Math.round(b == 0 ? x0 + 30 * k : x1 - 36 * k), bw = Math.max(3, Math.round(6 * k));
+            rect(c, bx, y0 + Math.round(16 * k), bx + bw, hz, 0x5A3A1E, a); rect(c, bx, y0 + Math.round(16 * k), bx + 1, hz, 0x7A5230, a);
+        }
+        rect(c, Math.round(x0 + 24 * k), Math.round(y0 + 14 * k), Math.round(x1 - 24 * k), Math.round(y0 + 20 * k), 0x5A3A1E, a);
+        for (int l = 0; l < 2; l++) {                                                            // two lanterns, swaying
+            float lx = (l == 0 ? x0 + 60 * k : x1 - 60 * k) + (float) Math.sin(t * 1.4f + l * 2) * 3 * k, ly = y0 + 30 * k;
+            Ritual.stroke(l == 0 ? x0 + 60 * k : x1 - 60 * k, y0 + 20 * k, lx, ly, 0.5f, 0x3A3A42, a);
+            Ritual.glowE(lx, ly + 3 * k, 30 * k, 26 * k, 0xFFB050, 0.35f * a);
+            rect(c, Math.round(lx - 2 * k), Math.round(ly), Math.round(lx + 2 * k), Math.round(ly + 5 * k), 0xFFD080, a);
+        }
+        band(c, x0, x1, hz, y1, 0x34364A, 0x16182A, a);
+        for (int r = 0; r < 2; r++) rect(c, x0, hz + Math.round((4 + r * 3) * k), x1, hz + Math.round((4 + r * 3) * k) + 1, 0x5A4A3A, 0.6f * a);   // rails
+    }
+    private static void cave(Canvas c, float t, int x0, int y0, int x1, int y1, int hz, float k, float a) {
+        int[] gems = {0x5ADC8A, 0xFFB030, 0xB060FF, 0x3A8AFF, 0xFFE040, 0xFF5AA8};
+        SlayerScenery.ridge(c, x0, x1, y0 + Math.round(18 * k), 10 * k, 0.09f / k, 3f, 0x14102A, a);
+        for (int i = 0; i < 18; i++) {                                                           // crystals growing from the walls
+            float sx = x0 + rnd(i * 7 + 1) * (x1 - x0), sy = y0 + (0.3f + 0.6f * rnd(i * 3 + 5)) * (hz - y0), h = (5 + 9 * rnd(i)) * k; int col = gems[i % gems.length];
+            Ritual.glowE(sx, sy, h * 1.4f, h * 1.4f, col, (0.12f + 0.1f * (float) Math.sin(t * 1.5f + i)) * a);
+            for (int j = 0; j < h; j++) { float w = (1 - j / h) * 2.2f * k; rect(c, Math.round(sx - w), Math.round(sy - j), Math.round(sx + w) + 1, Math.round(sy - j) + 1, mix(col, 0xFFFFFF, j / h * 0.4f), 0.8f * a); }
+        }
+        band(c, x0, x1, hz, y1, 0x2A2240, 0x120E22, a);
+    }
+    private static void theEnd(Canvas c, float t, int x0, int y0, int x1, int y1, int hz, float k, float a) {
+        stars(c, t, x0, y0, x1, hz, a, 50);
+        for (int p = 0; p < 4; p++) {                                                            // obsidian pillars, an End Crystal on each
+            int px0 = Math.round(x0 + (0.12f + p * 0.25f) * (x1 - x0)), w = Math.max(4, Math.round(8 * k)), h = Math.round((30 + 14 * rnd(p * 3)) * k);
+            rect(c, px0, hz - h, px0 + w, hz, 0x140E1E, a); rect(c, px0, hz - h, px0 + 1, hz, 0x2A2238, a);
+            float cy = hz - h - 5 * k + (float) Math.sin(t * 2 + p) * 1.5f * k;
+            Ritual.glowE(px0 + w / 2f, cy, 10 * k, 10 * k, 0xFF7AD8, 0.4f * a);
+            Ritual.fillE(px0 + w / 2f, cy, 2.5f * k, 2.5f * k, 0xFFC8F0, a);
+        }
+        band(c, x0, x1, hz, y1, 0xD8D49A, 0x8A8660, a);                                            // end stone
+        for (int i = 0; i < 20; i++) px(c, Math.round(x0 + rnd(i * 13) * (x1 - x0)), Math.round(hz + 2 + rnd(i * 5) * (y1 - hz - 3)), 0xB8B47A, 0.7f * a);
     }
 }

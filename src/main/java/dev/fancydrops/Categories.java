@@ -64,6 +64,9 @@ final class Categories {
     private static final List<Type> SHOW_TYPES = List.of(
         new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A drop: the creature's world rises around the item, then its text."),
         new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare drop: cinematic bars, blur and a big finish in the creature's colours."));
+    private static final List<Type> MINE_TYPES = List.of(
+        new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A find: three strikes, then the item rises from the rock with its text."),
+        new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare find: cinematic bars, blur and the rock bursts in a shower of gems."));
     private static final List<Type> DYE_TYPES = List.of(
         new Type("normal", "Normal", ":normal:", 0xFF55D8FF, "A dye: a splash of its own colour fills the screen around the vial."),
         new Type("rng", "RNG", ":dice:", 0xFFFF72C6, "A rare dye: cinematic bars and a flood of its colour."));
@@ -77,19 +80,19 @@ final class Categories {
         new Cat("mythological", "Mythological", ":mytho:", 0xFF55D8FF, false, "Mythological Ritual is an event that occurs with the Mythological Ritual perk.", List.of(
             new Group("myth", "Mythological Mobs", ":mytho:", 0xFF55D8FF, "What plays when a ritual creature dies.", MYTH_TYPES),
             new Group("treasure", "Treasure", ":treasure:", 0xFFFFD25A, "What plays when a burrow holds treasure.", MYTH_TYPES))),
-        new Cat("bosses", "Rare Drops", ":raredrops:", 0xFFFF5A5A, false, "Bosses, rare mobs and the Experimentation Table: every rare drop that isn't farmed, fished or dug up.", List.of(
+        new Cat("bosses", "Rare Drops", ":raredrops:", 0xFFFF5A5A, false, "Slayers, the Crimson Isle, the End and the Experimentation Table: every rare drop that isn't farmed, fished or mined.", List.of(
             new Group("slayer", "Slayers", ":grp_slayers:", 0xFFFF5A5A, "What plays when a slayer boss drops something.", SLAYER_TYPES),
-            new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "The Crimson Isle's minibosses, the Magma Boss and its mobs.", SHOW_TYPES),
-            new Group("mobs", "Rare Mob Drops", ":grp_mobs:", 0xFFFF8A5A, "Rare drops of the End, the Dwarven Mines and the Crystal Hollows.", SHOW_TYPES),
-            new Group("exp", "Experimentation Table", ":grp_exp:", 0xFFB56BFF, "What plays when the Table gives out rewards.", EXP_TYPES),
-            new Group("rift", "The Rift", ":grp_rift:", 0xFFB56BFF, "A mirror dimension of the main server.", SLAYER_TYPES, true),
-            new Group("events", "Events", ":grp_events:", 0xFF55D8FF, "Rare drops of the server's events.", EXP_TYPES, true))),
+            new Group("crimson", "Crimson Isle", ":grp_crimson:", 0xFFFF6A3A, "The Crimson Isle's minibosses and the Magma Boss.", SHOW_TYPES),
+            new Group("dragon", "The End", ":grp_end:", 0xFFC77DFF, "Ender Dragons: the Ender Dragon pet, the Aspect of the Dragons and the dragons' rare loot.", SHOW_TYPES),
+            new Group("exp", "Experimentation Table", ":grp_exp:", 0xFFB56BFF, "What plays when the Table gives out rewards.", EXP_TYPES))),
         new Cat("farming", "Farming", ":farm:", 0xFF7BE05A, false, "Every rare drop you can find in the Garden.", List.of(
             new Group("crops", "Rare Crops", ":grp_crops:", 0xFF7CCB4F, "What plays when a crop turns out rare.", FARM_TYPES),
             new Group("feast", "Harvest Feast", ":grp_feast:", 0xFFFFA63A, "What plays when the Harvest Feast serves a rare crop.", FARM_TYPES),
             new Group("bounty", "Harvest Bounty", ":grp_bounty:", 0xFFB8E860, "What plays when a Harvest Bounty drops something.", FARM_TYPES),
             new Group("pests", "Pest Drops", ":grp_pests:", 0xFFD2603F, "What plays when a pest drops something.", PEST_TYPES))),
-        new Cat("mining", "Mining", ":mining:", 0xFF9AB8FF, true, "Rare finds underground.", List.of()),
+        new Cat("mining", "Mining", ":mining:", 0xFF9AB8FF, false, "Rare finds underground: the Dwarven Mines and the Crystal Hollows.", List.of(
+            new Group("mobs", "Dwarven Mines", ":grp_mines:", 0xFF7FE8D8, "What plays when a Dwarven Mines creature drops something rare: a pickaxe strikes a mithril block three times and it bursts.", MINE_TYPES),
+            new Group("nucleus", "Crystal Hollows", ":grp_nucleus:", 0xFF9AE6FF, "The Crystal Nucleus and the Hollows' rare drops: five gem crystals lock into the nucleus and it lights up.", MINE_TYPES))),
         new Cat("fishing", "Fishing", ":fishing:", 0xFF4FC3FF, false, "Sea creatures and the rare things they carry.", List.of(
             new Group("fish_water", "Water", ":grp_water:", 0xFF4FC3FF, "Open water, Backwater Bayou, Galatea's waters, the Fishing Festival, hotspots and special catches.", SHOW_TYPES),
             new Group("fish_lava", "Lava", ":grp_lava:", 0xFFFF7A2E, "The Crimson Isle, its hotspots, the Magma Fields and the Plhlegblast Pool.", SHOW_TYPES),

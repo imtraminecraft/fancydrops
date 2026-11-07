@@ -2738,7 +2738,7 @@ public class FancyScreen extends Screen {
 
     // ---- Visuals: Now Playing, Lyrics, Spotify
     private void visualsPage(FancyConfig c) {
-        String[] wheres = {"Floating", "On screen"};
+        String[] wheres = {"Pop", "Karaoke"};
         int ambOn = (c.ambGlow ? 1 : 0) + (c.ambBars ? 1 : 0) + (c.ambNotes ? 1 : 0) + (c.ambWave ? 1 : 0);
         if (searching || landing()) {
             rows.add(hero(":note:", "Visuals", "Your music in the game: what's playing, the words floating in front of you, and a little atmosphere in the album's colours.", 0xFF1ED760));
@@ -2767,24 +2767,14 @@ public class FancyScreen extends Screen {
             rows.add(toggle(":note:", "Lyrics", "The words of the song you're playing, from LRCLIB", () -> c.lyricsOn, v -> c.lyricsOn = v));
             if (!c.lyricsOn) { if (!Lyrics.status.isEmpty()) rows.add(note(Lyrics.status, 0xFF8A93B0)); return; }
             rows.add(section("Style"));
-            rows.add(picker("", "", wheres, new String[]{"In front of you, swaying as you turn", "A steady caption with a time line"},
+            rows.add(picker("", "", wheres, new String[]{"Words pop in as they're sung", "The line fills with colour"},
                 new String[]{":glass:", ":menu:"}, new int[]{0xFFFFC8A0, 0xFF1ED760}, null, 2, () -> c.lyricsStyle, i -> c.lyricsStyle = i));
-            rows.add(section("Text"));
+            rows.add(section("Place"));
+            Row lm = row(0, ":switch:", "Position", "Drag them anywhere, scroll to resize", 0xFFFFC8A0);
+            lm.ctls.add(new Btn("Move them", 0xFF1DB954, () -> minecraft.setScreenAndShow(new HudEditScreen(this, HudEditScreen.LINE)))); rows.add(lm);
             Row ls = row(0, ":size:", "Size", "How big the words are", Ui.ACCENT);
             ls.ctls.add(new Slider(60, 160, 5, () -> c.lyricsSize, v -> c.lyricsSize = (int) v, () -> c.lyricsSize + "%").typed(1)); rows.add(ls);
-            if (c.lyricsStyle == 1) {
-                rows.add(picker("Height", "", new String[]{"Low", "Middle", "High"}, new String[]{"", "", ""}, new String[]{":dock_bottom:", ":menu:", ":dock_top:"},
-                    new int[]{0xFF6C86FF, 0xFF62E6A8, 0xFFFF72C6}, null, 3, () -> c.lyricsPos, i -> c.lyricsPos = i));
-                rows.add(toggle(":format:", "Next line", "The coming line, faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
-            }
-            rows.add(section("Lyric line"));
-            rows.add(toggle(":menu:", "Lyric line", "The line being sung, in its own small card on your screen", () -> c.lineHudOn, v -> c.lineHudOn = v));
-            if (c.lineHudOn) {
-                Row lm = row(0, ":switch:", "Position", "Drag it anywhere, scroll to resize", 0xFFFFC8A0);
-                lm.ctls.add(new Btn("Move it", 0xFF1DB954, () -> minecraft.setScreenAndShow(new HudEditScreen(this, HudEditScreen.LINE)))); rows.add(lm);
-                Row lsz = row(0, ":size:", "Card size", "How big the card is", Ui.ACCENT);
-                lsz.ctls.add(new Slider(60, 160, 5, () -> c.lineScale, v -> c.lineScale = (int) v, () -> c.lineScale + "%").typed(1)); rows.add(lsz);
-            }
+            rows.add(toggle(":format:", "Next line", "The coming line, faintly below", () -> c.lyricsNext, v -> c.lyricsNext = v));
             rows.add(section("Extras"));
             rows.add(toggle(":glass:", "Star bursts", "Little stars burst from each word as it's sung", () -> c.lyricsStars, v -> c.lyricsStars = v));
             rows.add(toggle(":disc:", "Song intro", "The song's name in big letters when it starts", () -> c.lyricsIntro, v -> c.lyricsIntro = v));

@@ -2,57 +2,11 @@
  "v": 2,
  "sources": [
   {
-   "id": "the_end",
-   "name": "The End",
-   "boss": "The End",
-   "icon": "ender_eye",
-   "color": "#C77DFF",
-   "group": "mobs",
-   "drops": [
-    {
-     "name": "Summoning Eye",
-     "id": "SUMMONING_EYE",
-     "icon": "paper",
-     "skull": false,
-     "odds": "Pray RNGesus",
-     "chance": "1 in 2,500",
-     "rank": 3
-    },
-    {
-     "name": "Obsidian Chestplate",
-     "id": "OBSIDIAN_CHESTPLATE",
-     "icon": "leather_chestplate",
-     "skull": false,
-     "odds": "Pray RNGesus",
-     "chance": "1 in 1,000",
-     "rank": 3
-    },
-    {
-     "name": "Ender Belt",
-     "id": "ENDER_BELT",
-     "icon": "paper",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 100",
-     "rank": 1
-    },
-    {
-     "name": "Ender Necklace",
-     "id": "ENDER_NECKLACE",
-     "icon": "paper",
-     "skull": false,
-     "odds": "Rare",
-     "chance": "1 in 200",
-     "rank": 1
-    }
-   ]
-  },
-  {
    "id": "dwarven_mines",
    "name": "Dwarven Mines",
    "boss": "Dwarven Mines",
    "icon": "prismarine_crystals",
-   "color": "#7FD4FF",
+   "color": "#7FE8D8",
    "group": "mobs",
    "drops": [
     {
@@ -107,9 +61,27 @@
    "name": "Crystal Hollows",
    "boss": "Crystal Hollows",
    "icon": "amethyst_shard",
-   "color": "#FF8A5A",
-   "group": "mobs",
+   "color": "#9AE6FF",
+   "group": "nucleus",
    "drops": [
+    {
+     "name": "Divan's Alloy",
+     "id": "DIVAN_ALLOY",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "",
+     "rank": 3
+    },
+    {
+     "name": "Jaderald",
+     "id": "JADERALD",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Very Rare",
+     "chance": "",
+     "rank": 2
+    },
     {
      "name": "Legendary Bal Pet",
      "id": "BAL;4",
@@ -144,6 +116,70 @@
      "skull": false,
      "odds": "Pray RNGesus",
      "chance": "1 in 1,000",
+     "rank": 3
+    }
+   ]
+  },
+  {
+   "id": "ender_dragon",
+   "name": "Ender Dragon",
+   "boss": "Ender Dragon",
+   "icon": "dragon_head",
+   "color": "#C77DFF",
+   "group": "dragon",
+   "drops": [
+    {
+     "name": "Legendary Ender Dragon Pet",
+     "id": "ENDER_DRAGON;4",
+     "icon": "dragon_egg",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "",
+     "rank": 3
+    },
+    {
+     "name": "Epic Ender Dragon Pet",
+     "id": "ENDER_DRAGON;3",
+     "icon": "dragon_egg",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "",
+     "rank": 3
+    },
+    {
+     "name": "Aspect of the Dragons",
+     "id": "ASPECT_OF_THE_DRAGON",
+     "icon": "diamond_sword",
+     "skull": false,
+     "odds": "Very Rare",
+     "chance": "3% per eye (450 weight)",
+     "rank": 2
+    },
+    {
+     "name": "Dragon Horn",
+     "id": "DRAGON_HORN",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Very Rare",
+     "chance": "",
+     "rank": 2
+    },
+    {
+     "name": "Dragon Claw",
+     "id": "DRAGON_CLAW",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Very Rare",
+     "chance": "",
+     "rank": 2
+    },
+    {
+     "name": "Summoning Eye",
+     "id": "SUMMONING_EYE",
+     "icon": "paper",
+     "skull": false,
+     "odds": "Pray RNGesus",
+     "chance": "1 in 2,500",
      "rank": 3
     }
    ]

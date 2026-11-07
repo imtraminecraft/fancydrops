@@ -11,13 +11,17 @@ package dev.fancydrops;
  *   CRIMSON  a basalt platform on the Crimson Isle: three meteors strike it, the cracks glow, it bursts open.
  *   MOBS     a monster spawner cage with a flame inside: it pulses three times, then the bars break apart.
  *   DYE      a white basin: three drops of the dye's colour fall in, each blooms into the water; the drop rises from a swirl of colour.
+ *   MINES    a mithril ore block: a pickaxe strikes it three times, sparks fly and cracks spread, then it bursts into shards.
+ *   NUCLEUS  the Crystal Nucleus: five gem crystals circle a dark core and lock into place one beat at a time, then it lights up.
+ *   END      the Dragon's Nest: eight Summoning Eyes on the altar light up, a dragon's eye opens in the sky and a roar of violet light.
  */
 final class ShowScene {
     private ShowScene() {}
 
-    static final int WATER = 0, LAVA = 1, SPOOKY = 2, WINTER = 3, CRIMSON = 4, MOBS = 5, DYE = 6;
+    static final int WATER = 0, LAVA = 1, SPOOKY = 2, WINTER = 3, CRIMSON = 4, MOBS = 5, DYE = 6, MINES = 20, NUCLEUS = 21, END = 22;
     /** The colour of the light each scene gives the drop's effects. */
     static final int[] ENERGY = {0x4FC3FF, 0xFF7A2E, 0xFF9A2E, 0xBFF0FF, 0xFF5A2A, 0xB070FF, 0xFF72C6};
+    static int energy(int m) { return m == MINES ? 0x7FE8D8 : m == NUCLEUS ? 0x9AE6FF : m == END ? 0xC77DFF : m >= 0 && m < ENERGY.length ? ENERGY[m] : 0x55D8FF; }
     private static final float[] BEAT = {0.34f, 0.58f, 0.80f};
     private static final int WHITE = 0xFFFFFF;
 
@@ -25,7 +29,7 @@ final class ShowScene {
     static int motifOf(String group) {
         return switch (group) {
             case "fish_water" -> WATER; case "fish_lava" -> LAVA; case "fish_spooky" -> SPOOKY; case "fish_winter" -> WINTER;
-            case "crimson" -> CRIMSON; case "mobs" -> MOBS; case "dyes" -> DYE;
+            case "crimson" -> CRIMSON; case "mobs" -> MINES; case "nucleus" -> NUCLEUS; case "dragon" -> END; case "dyes" -> DYE;
             default -> -1;
         };
     }
@@ -51,6 +55,9 @@ final class ShowScene {
             case WINTER -> ice(t, O, op, p, icx, gy, sz, al, rumble, rng);
             case CRIMSON -> meteors(t, O, op, p, icx, gy, sz, al, rumble, rng);
             case MOBS -> spawner(t, O, op, p, icx, gy, sz, al, rumble, rng);
+            case MINES -> ore(t, O, op, p, icx, gy, sz, al, rumble, rng);
+            case NUCLEUS -> nucleus(t, O, op, p, icx, gy, sz, al, rumble, rng);
+            case END -> altar(t, O, op, p, icx, gy, sz, al, rumble, rng);
             default -> basin(t, O, op, p, icx, gy, sz, al, rumble, rng, tint);
         }
     }
@@ -302,5 +309,86 @@ final class ShowScene {
                 if (rng) for (int j = 0; j < 20; j++) { float life = 1.1f, tau = (t + rnd(j * 5) * life) % life, an = rnd(j * 3) * 6.2832f; dot(cx + (float) Math.cos(an) * R * 1.6f * tau / life, cy + (float) Math.sin(an) * R * 1.2f * tau / life, j % 2 == 0 ? tint : WHITE, (1f - tau / life) * a); }
             }
         }
+    }
+
+    // ------------------------------------------------------------------ mining: the ore, the nucleus and the dragon's altar
+    /** How hard beat k still rings (1 at the beat, fading over `len` seconds). */
+    private static float hit(float op, float O, int k, float len) { float tau = beat(op, O, k); return tau >= 0 && tau < len ? 1f - tau / len : 0f; }
+    private static void ore(float t, float O, float op, float p, float cx, float gy, float sz, float a, float rumble, boolean rng) {
+        float s = 20 * sz, top = gy - 2 * s, brk = p >= 0f ? eo(p / 0.6f) : 0f;
+        Ritual.fillE(cx, gy + 2, 58 * sz, 11 * sz, 0x0C0E14, 0.8f * a);
+        float pulse = Math.max(hit(op, O, 0, 0.4f), Math.max(hit(op, O, 1, 0.4f), hit(op, O, 2, 0.4f)));
+        int struck = 0; for (int k = 0; k < 3; k++) if (beat(op, O, k) >= 0) struck++;
+        cx += (float) Math.sin(t * 80f) * (pulse * 1.4f + rumble) * sz * 1.6f;
+        if (brk < 1f) {                                                                       // the block: stone with mithril veins, cracking a little more on every strike
+            float al = a * (1 - brk);
+            for (int yy = Math.round(top); yy < Math.round(gy); yy++) for (int xx = Math.round(cx - s); xx < Math.round(cx + s); xx++) {
+                int gx = (int) ((xx - cx + s) / (s / 4)), gyy = (int) ((yy - top) / (s / 4));
+                float n = rnd(gx * 31 + gyy * 7); int col = n > 0.72f ? mix(0x5ACFC0, 0xA8FFF0, rnd(gx + gyy * 3)) : mix(0x44465A, 0x5A5C72, n);
+                if (yy == Math.round(top) || xx == Math.round(cx - s)) col = mix(col, WHITE, 0.25f);
+                Ritual.cv.set(xx, yy, Ritual.A(al, col));
+            }
+            for (int k = 0; k < struck; k++) for (int c = 0; c < 3; c++) {                 // the cracks
+                float an = rnd(k * 9 + c) * 6.28f, len = (0.5f + 0.5f * rnd(k * 4 + c)) * s;
+                Ritual.stroke(cx, gy - s, cx + (float) Math.cos(an) * len, gy - s + (float) Math.sin(an) * len, 0.6f, 0x14141C, al);
+            }
+            Ritual.glowE(cx, gy - s, s * (1 + pulse), s * (1 + pulse), 0x7FE8D8, (0.15f + 0.08f * struck + 0.4f * pulse) * al);
+        }
+        if (p < 0f) {                                                                         // the pickaxe: lifts, then swings down on each beat
+            float sw = 0f; for (int k = 0; k < 3; k++) { float tau = beat(op, O, k); if (tau >= -0.3f && tau < 0f) sw = (tau + 0.3f) / 0.3f; else if (tau >= 0 && tau < 0.12f) sw = 1f; }
+            float ang = -2.2f + 1.5f * sw * sw, px0 = cx + s * 1.6f, py0 = top - s * 0.2f;
+            float hx = px0 + (float) Math.cos(ang) * s * 1.8f, hy = py0 + (float) Math.sin(ang) * s * 1.8f;
+            Ritual.stroke(px0, py0, hx, hy, 1.4f * sz, 0x7A4E22, a);
+            float nx = (float) Math.cos(ang + 1.57f) * s * 0.7f, ny = (float) Math.sin(ang + 1.57f) * s * 0.7f;
+            Ritual.stroke(hx - nx, hy - ny, hx + nx, hy + ny, 1.6f * sz, 0x9AE6FF, a); Ritual.stroke(hx - nx, hy - ny + 1, hx + nx, hy + ny + 1, 0.5f * sz, 0x3A7A8A, a);
+        }
+        for (int k = 0; k < 3; k++) { float tau = beat(op, O, k); if (tau < 0 || tau > 0.6f) continue;      // sparks off every strike
+            for (int i = 0; i < 12; i++) { float an = -1.6f + (rnd(k * 40 + i) - 0.5f) * 2.6f, d = eo(tau / 0.6f) * (20 + 26 * rnd(i * 3 + k)) * sz;
+                dot(cx + s * 0.6f + (float) Math.cos(an) * d, top + s * 0.4f + (float) Math.sin(an) * d + tau * tau * 40 * sz, i % 3 == 0 ? WHITE : 0xFFD070, (1 - tau / 0.6f) * a); } }
+        if (p >= 0f && p < 1.2f) for (int i = 0; i < 22; i++) {                              // the block bursts: shards and mithril chunks
+            float an = rnd(i * 7) * 6.28f, d = eo(p / 1.2f) * (30 + 50 * rnd(i)) * sz, x = cx + (float) Math.cos(an) * d, y = gy - s + (float) Math.sin(an) * d * 0.7f + p * p * 30 * sz, r = (1.5f + 2.5f * rnd(i * 5)) * sz;
+            Ritual.fillE(x, y, r, r, i % 3 == 0 ? 0x7FE8D8 : 0x50526A, (1 - p / 1.2f) * a);
+        }
+        Ritual.motes(t, cx, gy, 40 * sz, 10 * sz, 50 * sz, 0x7FE8D8, 0.4f * a, 10);
+    }
+    private static final int[] GEMS = {0x5ADC8A, 0xFFB030, 0xB060FF, 0x3A8AFF, 0xFFE040};       // jade, amber, amethyst, sapphire, topaz
+    private static void nucleus(float t, float O, float op, float p, float cx, float gy, float sz, float a, float rumble, boolean rng) {
+        float cy = gy - 26 * sz, R = 34 * sz, lit = p >= 0f ? eo(p / 0.5f) : 0f;
+        int locked = 0; for (int k = 0; k < 3; k++) if (beat(op, O, k) >= 0) locked = k == 0 ? 1 : k == 1 ? 3 : 5;
+        Ritual.fillE(cx, gy + 2, 60 * sz, 11 * sz, 0x0A0A14, 0.8f * a);
+        Ritual.glowE(cx, cy, 30 * sz * (1 + lit), 30 * sz * (1 + lit), lit > 0 ? 0xFFFFFF : 0x6A5AFF, (0.25f + 0.08f * locked + 0.5f * lit) * a);
+        Ritual.fillE(cx, cy, 9 * sz, 9 * sz, mix(0x1A1428, 0xE8F4FF, lit), a);                  // the core
+        Ritual.ringE(cx, cy, 12 * sz, 12 * sz, 0x8A7AD8, 0.6f * a, 0, 6.2832f, t * 0.6f, 6);
+        for (int i = 0; i < 5; i++) {
+            boolean in = i < locked; float spin = t * (in ? 0.25f : 0.9f) + i * 1.2566f;
+            float r = in ? R * 0.62f : R * (1.05f + 0.08f * (float) Math.sin(t * 2 + i));
+            float x = cx + (float) Math.cos(spin) * r, y = cy + (float) Math.sin(spin) * r * 0.55f; int col = GEMS[i];
+            if (in || lit > 0) Ritual.stroke(cx, cy, x, y, 0.7f * sz, col, (0.35f + 0.5f * lit) * a);   // a beam from the core
+            Ritual.glowE(x, y, 8 * sz, 8 * sz, col, (in ? 0.5f : 0.2f) * a);
+            Ritual.fillE(x, y - 2 * sz, 2.4f * sz, 5 * sz, col, a); Ritual.fillE(x - 0.8f * sz, y - 3 * sz, 0.8f * sz, 2 * sz, WHITE, 0.7f * a);
+        }
+        for (int k = 0; k < 3; k++) { float h = hit(op, O, k, 0.6f); if (h > 0) Ritual.ringE(cx, cy, R * (1.4f - h * 0.6f), R * (1.4f - h * 0.6f) * 0.6f, GEMS[Math.min(4, k * 2)], h * 0.7f * a, 0, 6.2832f, t, 4); }
+        if (p >= 0f && p < 1f) for (int i = 0; i < 5; i++) Ritual.ringE(cx, cy, (10 + 70 * eo(p)) * sz, (10 + 70 * eo(p)) * sz * 0.6f, GEMS[i], (1 - p) * 0.5f * a, i * 1.25f, i * 1.25f + 1.1f, 0, 1);
+        Ritual.motes(t, cx, gy, 44 * sz, 10 * sz, 60 * sz, GEMS[(int) (t * 0.7f) % 5], 0.45f * a, 12);
+    }
+    private static void altar(float t, float O, float op, float p, float cx, float gy, float sz, float a, float rumble, boolean rng) {
+        float rx = 50 * sz, ry = 12 * sz; int eyes = 0; for (int k = 0; k < 3; k++) if (beat(op, O, k) >= 0) eyes = k == 0 ? 3 : k == 1 ? 6 : 8;
+        Ritual.fillE(cx, gy + 2, rx + 8 * sz, ry + 3 * sz, 0x08060E, 0.9f * a);
+        Ritual.fillE(cx, gy, rx, ry, 0x2A2238, a); Ritual.fillE(cx, gy - 1, rx * 0.8f, ry * 0.75f, 0x1A1426, a);   // the obsidian altar
+        float open = p >= 0f ? eo(p / 0.5f) : rumble * 0.25f;
+        if (open > 0.01f) {                                                                    // the dragon's eye opens in the sky
+            float ey = gy - 70 * sz;
+            Ritual.glowE(cx, ey, 70 * sz, 30 * sz, 0xC77DFF, 0.5f * open * a);
+            Ritual.fillE(cx, ey, 30 * sz, 9 * sz * open, 0xE8B8FF, open * a);
+            Ritual.fillE(cx, ey, 4 * sz, 8 * sz * open, 0x1A0828, open * a);
+        }
+        for (int i = 0; i < 8; i++) {                                                          // the eight Summoning Eyes round the edge
+            float an = i / 8f * 6.2832f + 0.39f, x = cx + (float) Math.cos(an) * rx * 0.86f, y = gy + (float) Math.sin(an) * ry * 0.8f; boolean on = i < eyes;
+            Ritual.fillE(x, y - 1.5f * sz, 2.6f * sz, 2.2f * sz, on ? 0x3ADCA0 : 0x1E3A30, a);
+            if (on) { Ritual.glowE(x, y - 2 * sz, 7 * sz, 7 * sz, 0x8A5AFF, 0.45f * a); Ritual.stroke(x, y - 2 * sz, x, y - (24 + 8 * rnd(i)) * sz, 0.5f * sz, 0xC77DFF, (0.25f + 0.2f * (float) Math.sin(t * 6 + i)) * a); }
+        }
+        for (int k = 0; k < 3; k++) { float h = hit(op, O, k, 0.5f); if (h > 0) Ritual.ringE(cx, gy, rx * (1.2f - 0.3f * h), ry * (1.2f - 0.3f * h), 0xC77DFF, h * 0.7f * a, 0, 6.2832f, t, 3); }
+        if (p >= 0f && p < 1.2f) { float u = eo(p / 1.2f); Ritual.ringE(cx, gy - 30 * sz, (20 + 110 * u) * sz, (20 + 110 * u) * sz * 0.5f, 0xE8B8FF, (1 - p / 1.2f) * 0.8f * a, 0, 6.2832f, 0, 1); }   // the roar
+        Ritual.motes(t, cx, gy, 50 * sz, 12 * sz, 70 * sz, 0xC77DFF, 0.5f * a, 14);
     }
 }

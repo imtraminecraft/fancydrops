@@ -133,14 +133,14 @@ public class FancyConfig {
     public String spotifyRefresh = "";                         // the login, kept so you stay linked (no password, no secret)
     public boolean lyricsOn = true;
     public int lyricsSize = 100;
-    public int lyricsStyle = 0, lyricsPos = 0;                           // style: 0 floating, 1 on screen; pos: 0 low, 1 middle, 2 high
+    public int lyricsStyle = 0;                                         // 0 Pop (words pop in as sung), 1 Karaoke (the line fills with colour)
     public boolean lyricsNext = true, lyricsIntro = true;               // the coming line under the current one; the song's name when it starts
     public int lyricsOffset = 0;                                        // ms the words come early (+) or late (-)
     public boolean ambGlow = false, ambNotes = false, ambBars = false, ambWave = false, lyricsStars = true; public int ambGlowStrength = 60;   // Ambience (Visuals > Ambience)
     public boolean npOn = true; public int npScale = 100, npHidePaused = 1;   // Now Playing; when paused: 0 stays, 1 hides after 8 s, 2 hides at once
     public float npX = 0.5f; public int npY = 4;                         // where it sits: the middle of it at npX of the width, npY pixels from the top
     public double playMinutes = 0; public java.util.Map<String, Long> playDone = new java.util.LinkedHashMap<>();   // Playtime: minutes played with the mod on; when each milestone was reached
-    public boolean lineHudOn = true; public float lineX = 0.5f; public int lineY = 52, lineScale = 100;   // the Lyric line HUD: the line being sung, in its own small card you can move
+    public float lineX = 0.5f, lyY = 0.64f;                            // where the lyrics sit: the middle of the line, as fractions of the screen (Visuals > Lyrics > Move them)
     public String adminToken = "";                             // Admin Panel: a GitHub token that lets Save write cosmetics.json
 
     public int ver;                                            // 3 = the rewrite: animation and drop settings start fresh
@@ -176,7 +176,7 @@ public class FancyConfig {
         c.titleScale = clamp(c.titleScale, 0.5f, 1.5f); c.subScale = clamp(c.subScale, 0.5f, 1.5f); c.subDelay = clamp(c.subDelay, 0f, 3f);
         c.animScale = clamp(c.animScale, 0.5f, 1.5f); c.normalSize = Math.max(50, Math.min(100, c.normalSize)); c.itemSpin = clamp(c.itemSpin, 0f, 2f); c.itemGlow = clamp(c.itemGlow, 0f, 1.5f);
         c.barPx = Math.max(5, Math.min(15, c.barPx));
-        c.lyricsStyle = c.lyricsStyle <= 0 ? 0 : 1; c.lyricsPos = Math.max(0, Math.min(2, c.lyricsPos));   // lyrics: 0 floating, 1 on screen (the old "on walls" is now on screen)
+        c.lyricsStyle = c.lyricsStyle <= 0 ? 0 : 1; c.lyY = Math.max(0.05f, Math.min(0.95f, c.lyY == 0 ? 0.64f : c.lyY));   // lyrics: 0 Pop, 1 Karaoke
         c.mythPet = Math.max(0, Math.min(5, c.mythPet)); c.mythSpade = Math.max(0, Math.min(2, c.mythSpade));
         c.menuTranslucency = Math.max(0, Math.min(70, c.menuTranslucency)); c.previewAt = Math.max(0, Math.min(2, c.previewAt));
         c.animPos = Math.max(0, Math.min(2, c.animPos)); c.textPos = Math.max(0, Math.min(1, c.textPos));

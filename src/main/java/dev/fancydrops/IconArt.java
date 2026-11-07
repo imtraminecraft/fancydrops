@@ -236,18 +236,15 @@ final class IconArt {
                 outline();
                 glint(8, 8, 2, 0xFFFFFF, 0.2f + 0.8f * t);
             }
-            case "grp_rift" -> {                                                             // the Rift: a violet mirror standing in the dark, its reflection rippling, a tower mirrored upside down
-                glow(8, 8, 8, 0xB56BFF, 0.14f + 0.1f * t);
-                for (int y = 1; y < 15; y++) {
-                    float dy = (y - 7.5f) / 7f; int hw = Math.round((float) Math.sqrt(Math.max(0, 1 - dy * dy)) * 5.2f);
-                    for (int x = 8 - hw; x <= 7 + hw; x++) px(x, y, mix(0x2A1A52, 0x6A4AB8, 0.25f + 0.5f * (y / 14f) + 0.15f * sn(f + y * 0.15f)));
-                    px(8 - hw - 1, y, 0xB56BFF); px(7 + hw + 1, y, 0xB56BFF);
-                }
-                px(7, 0, 0xD8B0FF); px(8, 0, 0xD8B0FF); px(7, 15, 0x8A5AD8); px(8, 15, 0x8A5AD8);
-                rect(6, 8, 4, 1, 0x8A7AC8); rect(7, 4, 2, 4, 0xC8B8F0); rect(7, 5, 2, 1, 0x4A3A88);              // a tower and, below the water line, its mirror image
-                rect(7, 9, 2, 4, 0x6A58A8); rect(7, 11, 2, 1, 0x3A2A68);
-                int sy = 2 + Math.round(f * 11); for (int x = 4; x < 12; x++) pxa(x, sy, 0xFFFFFF, 0.35f);        // a glint sweeps down the glass
-                glint(11, 3, 1, 0xFFFFFF, 0.3f + 0.7f * t);
+            case "grp_end" -> {                                                              // The End: an Ender Dragon's head in profile, a violet eye glowing, its breath curling out
+                glow(8, 8, 8, 0xC77DFF, 0.14f + 0.1f * t);
+                rect(3, 5, 8, 6, 0x1E1A26); rect(10, 7, 4, 4, 0x1E1A26); rect(12, 10, 3, 1, 0x2A2434);         // skull and snout
+                rect(3, 5, 8, 1, 0x3A3448); rect(10, 7, 4, 1, 0x3A3448);
+                px(2, 3, 0x2A2434); px(3, 4, 0x2A2434); px(5, 3, 0x2A2434); px(6, 4, 0x2A2434);                 // horns
+                rect(4, 11, 7, 2, 0x16121C); rect(11, 11, 3, 1, 0x16121C);                                    // the jaw, opening a little
+                int eye = mix(0x9A4AE0, 0xF0C8FF, t); rect(8, 7, 2, 1, eye); px(9, 7, 0xFFFFFF);
+                for (int i = 0; i < 4; i++) { float u = (f + i * 0.25f) % 1f; pxa(14 + Math.round(u * 1.5f), 11 - Math.round(u * 6) + Math.round(sn(u + i * 0.3f)), mix(0xC77DFF, 0xFFFFFF, u), 1f - u); }
+                outline();
             }
             case "grp_crimson" -> {                                                          // the Crimson Isle: a floating chunk of netherrack, lava dripping, a crimson fungus, flames
                 rect(2, 9, 12, 3, 0x7A2A2A); rect(3, 12, 10, 2, 0x5A1A1E); rect(5, 14, 6, 1, 0x3A1014); rect(2, 9, 12, 1, 0xA84040);
@@ -402,24 +399,24 @@ final class IconArt {
                 glint(7, 2 + hov, 1, 0xFFFFFF, 0.5f + 0.5f * t);
                 glow(8, 4, 6, 0xB56BFF, 0.15f + 0.1f * t);
             }
-            case "grp_mobs" -> {                                                             // Rare Mob Drops: a glowing ender eye between two purple flames
-                glow(8, 8, 8, 0xB070FF, 0.16f + 0.12f * t);
-                ball(8, 8, 4.6f, 0x1E5A48); ball(8, 8, 3.6f, 0x2E8A6A); ball(8, 8, 2.2f, 0x5ACA9A);
-                float lk = sn(f) * 1.0f; rect(Math.round(7 + lk), 6, 2, 4, 0x0A1A14); px(Math.round(7 + lk), 6, 0x183A2C);
-                px(6, 6, 0xC8FFE8); px(10, 10, 0x184A38);
-                for (int sd = -1; sd <= 1; sd += 2) for (int k = 0; k < 5; k++) { int fx = 8 + sd * 6 + Math.round(sn(f * 2 + k * 0.5f) * 0.6f), fy = 13 - k; px(fx, fy, k < 2 ? 0xE8D0FF : k < 4 ? 0xA060FF : 0x6A30C0); }
+            case "grp_mines" -> {                                                            // the Dwarven Mines: a mithril ore block, its teal veins pulsing, a lantern above
+                bev(3, 6, 10, 9, 0x4A4C60);
+                int v = mix(0x3ABFAE, 0xA8FFF0, t);
+                rect(5, 8, 2, 2, v); rect(9, 10, 2, 1, v); rect(6, 12, 3, 1, v); rect(10, 7, 1, 2, v); px(5, 8, 0xE8FFFA);
+                rect(7, 1, 2, 1, 0x3A3A42); rect(6, 2, 4, 3, 0x2A2A30); rect(7, 3, 2, 1, mix(0xFFB050, 0xFFE0A0, t));
                 outline();
-                glint(6, 6, 1, 0xFFFFFF, t);
+                glow(8, 3, 5, 0xFFB050, 0.12f + 0.1f * t);
             }
-            case "grp_events" -> {                                                           // Events: a calendar page with a gold star, confetti falling past it
-                rect(2, 3, 12, 11, 0xF4F0E4); rect(2, 3, 12, 3, 0x4FA8E0); rect(2, 3, 12, 1, 0x7CC8FF); rect(2, 13, 12, 1, 0xC8C2B0);
-                rect(4, 1, 1, 3, 0x6A6A78); rect(11, 1, 1, 3, 0x6A6A78);
-                int sc = mix(0xFFB830, 0xFFE27A, t);
-                px(8, 6, 0xFFF0A0); rect(7, 7, 3, 1, sc); rect(5, 8, 7, 1, sc); rect(6, 9, 5, 1, sc); rect(7, 10, 3, 1, sc); px(6, 11, sc); px(10, 11, sc); px(8, 8, 0xFFFFFF);
-                for (int i = 0; i < 4; i++) rect(3 + (i % 2) * 8, 11 + (i / 2), 1, 1, 0xD8D2C0);
+            case "grp_nucleus" -> {                                                          // the Crystal Nucleus: five gem crystals circling a glowing core
+                int[] gems = {0x5ADC8A, 0xFFB030, 0xB060FF, 0x3A8AFF, 0xFFE040};
+                glow(8, 8, 7, 0x9AE6FF, 0.16f + 0.12f * t);
+                ball(8, 8, 2.6f, mix(0x6A5AFF, 0xE8F4FF, t));
+                for (int i = 0; i < 5; i++) {
+                    float an = (f + i / 5f) * TAU; int x = Math.round(8 + (float) Math.cos(an) * 5.6f), y = Math.round(8 + (float) Math.sin(an) * 5.6f);
+                    px(x, y - 1, lite(gems[i], 0.4f)); px(x, y, gems[i]); px(x, y + 1, dark(gems[i], 0.3f));
+                }
                 outline();
-                int[] cc = {0xFF5A8A, 0x7CCB4F, 0x55D8FF, 0xFFD25A, 0xB56BFF};
-                for (int i = 0; i < 5; i++) { float u = (f + i * 0.2f) % 1f; pxa(1 + i * 3 + Math.round((float) Math.sin(u * 6 + i)), Math.round(u * 15), cc[i], (float) Math.sin(u * 3.1416f)); }
+                glint(7, 7, 1, 0xFFFFFF, t);
             }
             case "mining" -> {                                                               // Mining: a pickaxe comes down on an ore block, sparks fly and the gems glint
                 bev(6, 9, 9, 6, 0x6E6A78);

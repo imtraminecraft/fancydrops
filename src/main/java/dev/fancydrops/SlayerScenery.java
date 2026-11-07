@@ -12,10 +12,24 @@ final class SlayerScenery {
     private static void rect(Canvas c, int x0, int y0, int x1, int y1, int rgb, float a) { c.rect(x0, y0, x1, y1, Ritual.A(a, rgb)); }
 
     /** The rounded frame (erase = false), or the clearing of everything outside its four round corners (erase = true). */
+    /** Set by Ritual for each frame: true while an RNG scene paints, so only RNG gets the living border (Normal keeps a faint plain edge). t: its seconds. */
+    static boolean rngBorder; static float borderT;
     static void corners(Canvas c, int x0, int y0, int x1, int y1, int r, int rgb, float a, boolean erase) {
+        if (!erase && !rngBorder) a *= 0.4f;                                                   // Normal: a quiet, thin edge
         if (!erase) {
             for (int x = x0 + r; x < x1 - r; x++) { px(c, x, y0, rgb, a * 0.85f); px(c, x, y1 - 1, rgb, a * 0.85f); }
             for (int y = y0 + r; y < y1 - r; y++) { px(c, x0, y, rgb, a * 0.85f); px(c, x1 - 1, y, rgb, a * 0.85f); }
+            if (rngBorder) {                                                                   // RNG: a second inner line, two sparks racing round it, and its colour breathing to white
+                int w = x1 - x0 - 2 * r, h = y1 - y0 - 2 * r, per = 2 * (w + h); float br = 0.5f + 0.5f * (float) Math.sin(borderT * 4f);
+                int lit = Ritual.mixc(rgb, 0xFFFFFF, 0.35f * br);
+                for (int x = x0 + r; x < x1 - r; x++) { px(c, x, y0 + 2, lit, a * 0.45f); px(c, x, y1 - 3, lit, a * 0.45f); }
+                for (int y = y0 + r; y < y1 - r; y++) { px(c, x0 + 2, y, lit, a * 0.45f); px(c, x1 - 3, y, lit, a * 0.45f); }
+                for (int s = 0; s < 2; s++) for (int tail = 0; tail < 26; tail++) {
+                    int d = Math.floorMod(Math.round(borderT * per * 0.35f) + s * per / 2 - tail, per); int x, y;
+                    if (d < w) { x = x0 + r + d; y = y0; } else if (d < w + h) { x = x1 - 1; y = y0 + r + d - w; } else if (d < 2 * w + h) { x = x1 - r - (d - w - h); y = y1 - 1; } else { x = x0; y = y1 - r - (d - 2 * w - h); }
+                    px(c, x, y, 0xFFFFFF, a * (1f - tail / 26f));
+                }
+            }
         }
         for (int q = 0; q < 4; q++) {
             int cx = q % 2 == 0 ? x0 + r : x1 - r, cy = q < 2 ? y0 + r : y1 - r;

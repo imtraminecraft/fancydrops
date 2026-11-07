@@ -43,6 +43,7 @@ public final class DropListener {
                 else dlog("left in chat (not a listed dye): " + dye[1]);
                 continue;
             }
+            if (lootLine(line, now)) { drop = true; continue; }           // the Crystal Nucleus bundle and the Ender Dragon's loot have no DROP! line
             ChatParser.Drop d = ChatParser.parseDrop(line);
             if (d == null) { if (line.toUpperCase(java.util.Locale.ROOT).contains("DROP!")) dlog("not a drop line I can read: " + line.trim()); continue; }
             { FancyConfig fc = FancyConfig.get(); if (fc.dropsSeen < 100000) { fc.dropsSeen++; FancyConfig.save(); } }          // counts toward the cosmetics that unlock by drops
@@ -55,6 +56,32 @@ public final class DropListener {
             else dlog("left in chat (not a listed drop): " + d.name());
         }
         return drop;
+    }
+
+    /** After "CRYSTAL NUCLEUS LOOT BUNDLE" (or a dragon going down) the next lines list the rewards: the rare ones listed in the
+     *  Crystal Hollows / The End pages play. A dragon's loot also shows as "<you> has obtained <item>!". */
+    private static long nucleusUntil, dragonUntil;
+    private static final java.util.regex.Pattern OBTAINED = java.util.regex.Pattern.compile("^\\s*(?:\\[[^\\]]+\\]\\s*)?([A-Za-z0-9_]{1,16}) has obtained (.+?)!?\\s*$");
+    private static boolean lootLine(String line, long now) {
+        String up = line.toUpperCase(java.util.Locale.ROOT);
+        if (up.contains("CRYSTAL NUCLEUS LOOT BUNDLE")) { nucleusUntil = now + 8000; dlog("Crystal Nucleus loot: listening"); return false; }
+        if (up.contains("DRAGON DOWN!")) { dragonUntil = now + 30000; dlog("dragon down: listening for its loot"); return false; }
+        String group = now < nucleusUntil ? "nucleus" : now < dragonUntil ? "dragon" : null;
+        if (group == null) return false;
+        String name = line.trim().replaceFirst("^[+\\-•▸»]\\s*", "");
+        if (group.equals("dragon")) {
+            java.util.regex.Matcher m = OBTAINED.matcher(line);
+            if (!m.matches()) return false;
+            String me = Minecraft.getInstance().getUser() == null ? null : Minecraft.getInstance().getUser().getName();
+            if (me == null || !m.group(1).equalsIgnoreCase(me)) return false;
+            name = m.group(2).trim();
+        }
+        int amount = 1; java.util.regex.Matcher am = java.util.regex.Pattern.compile("^(.+?)\\s*x\\s*(\\d+)$").matcher(name);
+        if (am.matches()) { name = am.group(1).trim(); amount = Integer.parseInt(am.group(2)); }
+        DropData.Source src = ExtraData.sourceOf(name);
+        if (src == null || !group.equals(src.group)) return false;
+        dlog("heard: " + line.trim() + "  ->  " + group + " loot: " + name);
+        return playExtra(new ChatParser.Drop("RARE", name, amount, null, false));
     }
 
     /** A dye drop comes as two lines (the slayer's RARE DROP and the "WOW! ... found ... Dye" one): only the first plays. True when this dye was heard in the last 20 s. */
@@ -307,7 +334,7 @@ public final class DropListener {
     /** The menu category a newer group lives in. */
     static String catOfGroup(String g) {
         if (g.startsWith("fish_")) return "fishing";
-        return switch (g) { case "dyes" -> "dyes"; default -> "bosses"; };          // Crimson Isle, rare mobs: the Rare Drops page
+        return switch (g) { case "dyes" -> "dyes"; case "mobs", "nucleus" -> "mining"; default -> "bosses"; };          // the Crimson Isle and the End: the Rare Drops page
     }
     /** The scene variant of a source: its place in its group (drops of the same creature stack into one animation). */
     private static int extraKind(DropData.Source src) { return Math.max(0, ExtraData.group(src.group).indexOf(src)); }

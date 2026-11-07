@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Synthesizes the 0.9 sound banks: one bank per animation group (beat, burst, reveal, reveal_big, glow, glow_big, end) and the
-Collection book's sounds. Writes sounds/<name>.ogg, the sounds.json entries and the envelopes the Sounds tab draws.
+"""Synthesizes the 1.0 sounds: the soft set every Normal and No Drops scene shares (std_*), the cinematic RNG set (rng_*) and the
+star map's sounds. Writes sounds/<name>.ogg, the sounds.json entries and the envelopes the Sounds tab draws.
 Needs numpy, scipy and ffmpeg (libvorbis). Run from the repo root: python3 tools/make_scene_sounds.py"""
 import os, json, subprocess, tempfile, wave
 import numpy as np
@@ -126,147 +126,22 @@ def choir(notes, d, a=.4):
     s = bp(s, 400, 1600) * 1.4 + bp(s, 2200, 3200) * .5
     return s * env(t, a, d * .6)
 
-def bank2(p, beat, burst, inst, notes, big, bed, *, key_end, glow_bed=None, sub=36, step=.075, sp=1.0):
-    """One animation's sounds. beat = the three beats, burst = the drop appearing, reveal / reveal_big = the drop shown (Normal / RNG),
-    glow / glow_big = the bed under the finish, end = the close."""
-    S(p + '_beat', beat, .22); S(p + '_burst', burst, .3)
-    r = mix(1.6); at(r, arp(notes, inst, step, .9), 0); at(r, (glow_bed[0](bed, 1.4) if glow_bed else pad(bed, 1.4, 'tri', a=.15)) * .35, 0); at(r, sparkle(1.0, 6) * sp, .15); S(p + '_reveal', r, .3)
-    R = mix(3.0); at(R, impact(N(sub) * 2, N(sub), 1.4, .8, 1.2) * .8, 0); at(R, arp(big, inst, step * .9, 1.3), .1)
-    at(R, supersaw(bed, 2.6, cut=1800) * .45, 0); at(R, sparkle(2.2, 22) * sp, .3); at(R, riser(.5, 2000, 9000) * .2, 0); S(p + '_reveal_big', R, .38)
-    gb = glow_bed[0](bed + [bed[0] + 12], 2.6) if glow_bed else pad(bed + [bed[0] + 12], 2.6, 'sin', a=.6, r=1.8)
-    S(p + '_glow', pump(gb, 1.6) * .6, .25); S(p + '_glow_big', pump(add(gb, sparkle(2.6, 16, gain=.12)), 2.2) * .7, .3)
-    S(p + '_end', add(arp(key_end, inst, .12, 1.2, .45), pad([key_end[-1] - 12], 1.4, 'sin', a=.02, r=1.2) * .25), .38)
-
-# ---- Mythological: arcane arcs, thunder, a harp over a choir in D lydian
-def arc():
-    b = mix(.7); t = T(.5); z = osc(1800, .5, 'saw', glide=150) * .3 + bp(noise(.5), 1500, 8000) * .6
-    at(b, z * dec(t, 8) * (0.5 + .5 * (rng.random(len(t)) > .35)), 0); at(b, fm(N(74), .5, 1.414, 3, 6) * .35, .02); return b
-def thunder():
-    b = mix(2.2); at(b, impact(95, 30, 2.0, 1.2, 1.4), 0); at(b, lp(noise(1.8), 500) * env(T(1.8), .05, 1.6) * .9, .05); at(b, choir([62, 69, 74], 1.6, .02) * .3, 0); return b
-bank2('rit', arc(), thunder(), harp, [62, 69, 74, 78, 81], [50, 57, 62, 66, 69, 74, 78, 81, 86], [50, 57, 64, 66], key_end=[86, 81, 74, 69], glow_bed=(choir,), sub=38)
-
-# ---- Treasure: a spade in gravel, a chest bursting with coins, a music box in F
-def gravel():
-    b = mix(.6); at(b, impact(150, 70, .3, .6, .2) * .7, 0)
-    for i in range(10): at(b, bp(noise(.02), 1500, 6000) * dec(T(.02), 200) * rng.uniform(.2, .5), .02 + i * .025 + rng.uniform(0, .01))
-    return b
-def coinrain(n=18, d=1.2):
-    b = mix(d)
-    for i in range(n): at(b, fm(rng.uniform(2400, 4200), .35, 1.5, 1.4, 10) * rng.uniform(.15, .35), rng.uniform(0, d * .7) * (i / n) ** .5)
-    return b
-def chestburst():
-    b = mix(1.8); at(b, osc(160, .35, 'saw', glide=260, vib=.05, vibf=25) * env(T(.35), .04, .2) * .12, 0); at(b, impact(120, 50, .8, .9, .8), .32); at(b, coinrain(22, 1.3), .36); return b
-bank2('tre', gravel(), chestburst(), mbox, [65, 69, 72, 77, 81], [53, 60, 65, 69, 72, 77, 81, 84, 89], [53, 60, 65, 69], key_end=[89, 84, 77, 72], sub=29)
-
-# ---- Slayer: a whooshing strike with a ringing edge, a colossal hit, dark brass and taiko in C minor
-def strike():
-    b = mix(.8); at(b, sweep_noise(.22, 500, 6000, .3) * .7, 0); at(b, impact(140, 60, .5, 1.1, .5) * .8, .18); at(b, fm(1760, .5, 1.47, 2.5, 6) * .25, .18); return b
-def colossal():
-    b = mix(2.4); at(b, riser(.35, 800, 6000) * .4, 0); at(b, impact(100, 26, 2.2, 1.3, 1.6) * 1.1, .3)
-    at(b, np.tanh(lp(noise(1.2), 900) * 3) * env(T(1.2), .01, 1.0) * .35, .3); at(b, fm(110, 1.8, 2.4, 3, 2.5) * .35, .3); return b
-def brass2(notes, d): return supersaw(notes, d, det=.006, cut=1400, a=.05)
-bank2('sly', strike(), colossal(), lambda f, d, **kw: fm(f, d, 1.0, 2.2, 3.5) * .8, [60, 63, 67, 72, 75], [48, 55, 60, 63, 67, 72, 75, 79, 84], [36, 43, 48, 51], key_end=[72, 67, 63, 60], glow_bed=(brass2,), sub=24, sp=.6)
-
-# ---- Rare Crops: rustle and a wood knock, an earthy bloom, a kalimba in G
-def rustle():
-    b = mix(.5); at(b, bp(noise(.3), 2000, 7000) * env(T(.3), .03, .25) * .45, 0); at(b, mallet(N(55), .4) * .6, .05); return b
-def bloom():
-    b = mix(1.4); at(b, impact(200, 80, .6, .5, .5) * .6, 0); at(b, sweep_noise(.8, 300, 3000, .3) * .4, 0)
-    for i, m in enumerate([79, 83, 86, 91]): at(b, kalimba(N(m), .6) * .3, .1 + i * .05)
-    return b
-bank2('crp', rustle(), bloom(), kalimba, [67, 71, 74, 79, 83], [55, 62, 67, 71, 74, 79, 83, 86, 91], [55, 62, 67, 71], key_end=[91, 86, 79, 74], sub=31)
-
-# ---- Harvest Feast: a pumpkin knock and bells, a festival drum hit, a squeezebox tune in A minor
-def pknock():
-    b = mix(.5); at(b, osc(180, .3, glide=120) * dec(T(.3), 14) * .8, 0); at(b, fm(N(81), .3, 2.0, 1, 10) * .2, .02); at(b, fm(N(88), .3, 2.0, 1, 10) * .15, .06); return b
-def drumhit():
-    b = mix(1.4); at(b, impact(130, 55, 1.0, 1.0, .8), 0)
-    for i in range(5): at(b, hp(noise(.15), 5000) * dec(T(.15), 18) * .25, .06 + i * .07)
-    return b
-def squeeze(f, d, **kw): t = T(d); return lp(osc(f, d, 'sq', vib=.008, vibf=6)[:len(t)] * .6 + osc(f * 1.005, d, 'sq')[:len(t)] * .4, 2600) * env(t, .03, d * .5) * .5
-bank2('fst', pknock(), drumhit(), squeeze, [69, 72, 76, 81, 84], [57, 64, 69, 72, 76, 81, 84, 88, 93], [57, 64, 69, 72], key_end=[84, 81, 76, 69], sub=33)
-
-# ---- Harvest Bounty: greenhouse glass chimes, a bright bloom, a celesta in E
-def glasschime():
-    b = mix(.8)
-    for i in range(4): at(b, fm(rng.uniform(1800, 3200), .6, 2.76, 2, 5) * .25, i * .05)
-    return b
-def brightbloom(): b = mix(1.5); at(b, sweep_noise(1.0, 600, 9000, .35) * .45, 0); at(b, sparkle(1.2, 18, 3000, 8000, .2), .1); at(b, impact(260, 120, .5, .4, .3) * .4, 0); return b
-bank2('bty', glasschime(), brightbloom(), celesta, [76, 80, 83, 88, 92], [64, 71, 76, 80, 83, 88, 92, 95, 100], [64, 71, 76, 80], key_end=[100, 95, 88, 83], sub=40)
-
-# ---- Pests: a buzzing chirp, a vacuum suck and pop, pizzicato in D
-def buzz():
-    b = mix(.4); t = T(.25); at(b, fm(N(86), .25, 0.5, 6, 6) * (0.6 + .4 * np.sin(2 * np.pi * 60 * t)) * .5, 0); at(b, fm(N(93), .12, 0.5, 4, 12) * .3, .12); return b
-def suck():
-    b = mix(1.0); at(b, sweep_noise(.5, 4000, 300, .3) * .6, 0); at(b, osc(300, .5, glide=1200) * env(T(.5), .3, .1) * .3, 0); at(b, impact(400, 150, .3, .6, .2) * .6, .5); return b
-bank2('pst', buzz(), suck(), pizz, [74, 78, 81, 86, 90], [62, 69, 74, 78, 81, 86, 90, 93, 98], [62, 69, 74], key_end=[98, 93, 86, 81], sub=38)
-
-# ---- Experimentation Table: a page riffle and a glyph chime, a book slam with a rune hum, celesta and choir in B
-def riffle2():
-    b = mix(.6)
-    for i in range(8): at(b, bp(noise(.03), 2000, 8000) * dec(T(.03), 90) * .35, i * .03)
-    at(b, fm(N(83), .4, 3.0, 1.5, 6) * .25, .2); return b
-def slam():
-    b = mix(1.6); at(b, impact(150, 60, .9, 1.0, .8), 0); t = T(1.4); at(b, fm(N(47), 1.4, 1.0, .8, 1.5) * (1 + .3 * np.sin(2 * np.pi * 7 * t)) * .3, .05); return b
-bank2('tab', riffle2(), slam(), celesta, [71, 75, 78, 83, 87], [59, 66, 71, 75, 78, 83, 87, 90, 95], [59, 66, 71, 75], key_end=[95, 90, 83, 78], glow_bed=(choir,), sub=35)
-
-# ---- Water: a bobber plop, a splash column, liquid FM bells in C
-def plop2():
-    b = mix(.5); at(b, osc(900, .12, glide=250) * env(T(.12), .002, .1) * .7, 0); at(b, bp(noise(.2), 800, 4000) * dec(T(.2), 20) * .3, .04); return b
-def splash2():
-    b = mix(1.5); at(b, lp(noise(1.0), 3500) * env(T(1.0), .01, .8) * .8, 0); at(b, impact(180, 70, .5, .6, .6) * .6, 0)
-    for i in range(10): at(b, osc(rng.uniform(800, 1800), .08, glide=rng.uniform(1800, 3200)) * env(T(.08), .002, .07) * .2, rng.uniform(.1, .8))
-    return b
-def liquid(f, d, **kw): t = T(d); return fm(f, d, 1.0, 1.4, 3) * (1 + .15 * np.sin(2 * np.pi * 5 * t))
-bank2('wat', plop2(), splash2(), liquid, [72, 76, 79, 84, 88], [60, 67, 72, 76, 79, 84, 88, 91, 96], [60, 67, 72, 76], key_end=[96, 91, 84, 79], sub=36)
-
-# ---- Lava: a magma blorp, an eruption, low brass fifths in E minor
-def blorp2(): b = mix(.6); at(b, osc(140, .4, glide=60) * env(T(.4), .01, .3) * .8, 0); at(b, lp(noise(.3), 600) * dec(T(.3), 10) * .4, .05); at(b, crackle(.4, 50, .3), .1); return b
-def erupt(): b = mix(2.2); at(b, impact(90, 28, 2.0, .9, 1.5), 0); at(b, lp(noise(1.8), 1000) * env(T(1.8), .02, 1.5) * .7, 0); at(b, crackle(1.6, 90, .45), .05); return b
-bank2('lav', blorp2(), erupt(), lambda f, d, **kw: fm(f, d, 1.0, 2.6, 3) * .8, [64, 67, 71, 76, 79], [52, 59, 64, 67, 71, 76, 79, 83, 88], [40, 47, 52, 55], key_end=[76, 71, 67, 64], glow_bed=(brass2,), sub=28, sp=.5)
-
-# ---- Spooky: a tolling bell, an organ blast, a wavering theremin in D minor
-def toll2(): return fm(N(50), 1.4, 1.4, 3.0, 1.8) * .8
-def organ2(notes, d):
-    t = T(d); s = sum(osc(N(m), d, 'sin') + osc(N(m) * 2, d, 'sin') * .5 + osc(N(m) * 4, d, 'sin') * .25 for m in notes)
-    return s * env(t, .03, d * .6) * .25
-def ghostblast(): b = mix(1.8); at(b, organ2([50, 53, 57, 62], 1.6), 0); at(b, impact(110, 40, 1.0, .7, 1.0) * .6, 0); return b
-def theremin2(f, d, **kw): t = T(d); return osc(f, d, 'sin', vib=.02, vibf=6) * env(t, .08, d * .6) * .7
-bank2('spk', toll2(), ghostblast(), theremin2, [62, 65, 69, 74, 77], [50, 57, 62, 65, 69, 74, 77, 81, 86], [50, 53, 57, 62], key_end=[86, 81, 77, 74], glow_bed=(organ2,), sub=26, sp=.5)
-
-# ---- Winter: an ice crack, crystals shattering, a glockenspiel in A
-def crack2(): b = mix(.5); at(b, hp(noise(.05), 2000) * dec(T(.05), 80) * .9, 0); at(b, fm(2400, .4, 1.73, 3, 8) * .3, .01); at(b, osc(800, .2, glide=300) * dec(T(.2), 20) * .3, .02); return b
-def shatter2():
-    b = mix(1.6); at(b, impact(300, 120, .6, 1.4, .3) * .6, 0)
-    for i in range(24): at(b, fm(rng.uniform(2500, 7000), .3, 1.3, 2, 10) * .14, rng.uniform(0, .9))
-    return b
-bank2('ice', crack2(), shatter2(), glock, [81, 85, 88, 93, 97], [69, 76, 81, 85, 88, 93, 97, 100, 105], [57, 64, 69, 73], key_end=[105, 100, 93, 88], sub=33)
-
-# ---- Crimson Isle: a meteor strike, a fortress boom, a war horn in F minor
-def meteor2(): b = mix(.9); at(b, sweep_noise(.35, 5000, 500, .35) * .7, 0); at(b, impact(110, 40, .55, 1.0, .7), .32); at(b, crackle(.4, 70, .35), .34); return b
-def fortress(): b = mix(2.2); at(b, impact(80, 24, 2.0, 1.0, 1.6) * 1.1, 0); at(b, crackle(1.5, 80, .4), .05); at(b, supersaw([41, 48, 53], 1.6, cut=900) * .4, .05); return b
-def horn2(f, d, **kw): t = T(d); return lp(osc(f, d, 'saw', vib=.006, vibf=4.5), 1500) * env(t, .06, d * .55) * .55
-bank2('crm', meteor2(), fortress(), horn2, [65, 68, 72, 77, 80], [53, 60, 65, 68, 72, 77, 80, 84, 89], [41, 48, 53, 56], key_end=[77, 72, 68, 65], glow_bed=(brass2,), sub=29, sp=.5)
-
-# ---- Rare mobs: a rattling cage, iron bars snapping, a gritty arpeggio in G minor
-def rattle2():
-    b = mix(.6)
-    for i in range(5): at(b, fm(rng.uniform(900, 1500), .25, 1.7, 3, 14) * .3, i * .04)
-    return b
-def bars():
-    b = mix(1.5); at(b, impact(140, 50, .8, 1.0, .9) * .8, 0); at(b, fm(700, 1.0, 1.9, 3, 4) * .45, 0)
-    for i in range(7): at(b, fm(rng.uniform(1200, 2600), .35, 2.2, 2, 10) * .18, .08 + rng.uniform(0, .6))
-    return b
-def gritty(f, d, **kw): return lp(osc(f, d * .6, 'sq'), 2600) * dec(T(d * .6), 6) * .5
-bank2('mob', rattle2(), bars(), gritty, [67, 70, 74, 79, 82], [55, 62, 67, 70, 74, 79, 82, 86, 91], [43, 50, 55, 58], key_end=[82, 79, 74, 67], glow_bed=(brass2,), sub=31, sp=.6)
-
-# ---- Dyes: a rising drip, a paint splash, a sparkling celesta in Bb
-def drip2(): b = mix(.4); at(b, osc(700, .09, glide=2400) * env(T(.09), .002, .08) * .6, 0); at(b, osc(1200, .06, glide=2800) * env(T(.06), .002, .05) * .3, .09); return b
-def paint2():
-    b = mix(1.3); at(b, lp(noise(.6), 2800) * env(T(.6), .005, .45) * .7, 0); at(b, impact(240, 100, .3, .6, .3) * .5, 0)
-    for i in range(10): at(b, osc(rng.uniform(900, 2200), .07, glide=rng.uniform(2200, 3800)) * env(T(.07), .002, .06) * .22, rng.uniform(.05, .7))
-    return b
-bank2('dye', drip2(), paint2(), celesta, [70, 74, 77, 82, 86], [58, 65, 70, 74, 77, 82, 86, 89, 94], [58, 65, 70, 74], key_end=[94, 89, 82, 77], sub=34)
+# ---- 1.0: two sets only. Every Normal and No Drops scene shares the soft set (short, quiet, in E); RNG has the cinematic one.
+def std_set():
+    t = T(.22); S('std_beat', add(mallet(N(83), .22) * .55, fm(N(95), .18, 2.0, .8, 18) * .15), .18)
+    b = mix(.5); at(b, thump(320, 140, .22, 18) * .5, 0); at(b, sparkle(.35, 5, 3500, 6500, .14), .03); S('std_burst', b, .22)
+    S('std_reveal', add(arp([76, 80, 83, 88], celesta, .06, .55, .45), pad([64, 71], .9, 'sin', a=.05, r=.7) * .18), .28)
+    S('std_glow', pad([64, 71, 76], 1.0, 'sin', a=.15, r=.75) * .35, .22)
+    S('std_end', arp([88, 83], glock, .09, .5, .35), .3)
+    b = mix(.6); at(b, osc(700, .5, glide=180) * env(T(.5), .01, .45) * .3, 0); at(b, bp(noise(.4), 500, 3000) * env(T(.4), .02, .35) * .2, 0); S('std_fizzle', b, .2)
+def rng_set():
+    b = mix(.9); at(b, impact(120, 46, .7, .7, 1.2) * .8, 0); at(b, osc(N(40), .6) * env(T(.6), .005, .5) * .4, 0); at(b, riser(.35, 1500, 7000) * .25, .2); S('rng_beat', b, .25)
+    b = mix(1.6); at(b, riser(.25, 600, 8000) * .5, 0); at(b, impact(95, 28, 1.4, 1.3, 1.6), .22); at(b, sweep_noise(.9, 6000, 400, .35) * .35, .22); at(b, sparkle(1.0, 14, gain=.16), .3); S('rng_burst', b, .32)
+    b = mix(2.0); at(b, supersaw([52, 59, 64, 68, 71], 1.8, cut=2600, a=.03) * .55, 0); at(b, arp([64, 68, 71, 76, 80, 83, 88, 92, 95], harp, .045, .9, .4), .02)
+    at(b, choir([64, 71, 76], 1.6, .08) * .25, 0); at(b, sparkle(1.6, 24, gain=.15), .15); S('rng_reveal', b, .38)
+    S('rng_glow', pump(add(pad([52, 59, 64, 71, 76], 1.6, 'tri', a=.2, r=1.0) * .5, sparkle(1.5, 18, gain=.1)), 2.4) * .7, .3)
+    S('rng_end', add(arp([95, 92, 88, 83, 76], glock, .07, .8, .35), pad([52], .9, 'sin', a=.02, r=.8) * .25), .38)
+std_set(); rng_set()
 
 # ---- the achievements star map
 def sky_open():
@@ -284,6 +159,7 @@ S('sky_open', sky_open(), .35); S('sky_close', sky_close(), .3); S('sky_zoom', s
 # ------------------------------------------------------------------ write
 def norm(x, peak=.8): return x / max(1e-6, np.abs(x).max()) * peak
 sj = json.load(open(os.path.join(RES, 'sounds.json'))); ej = json.load(open(os.path.join(RES, 'envelopes.json')))
+sj = {k: v for k, v in sj.items() if k in OUT}; ej = {k: v for k, v in ej.items() if k in OUT}       # only the sounds this script makes
 for name, x in OUT.items():
     x = norm(np.nan_to_num(x)); x[-300:] *= np.linspace(1, 0, 300)
     nz = np.where(np.abs(x) > 0.002)[0]; x = x[:nz[-1] + 400] if len(nz) else x          # trim the silent tail

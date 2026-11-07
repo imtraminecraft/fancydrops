@@ -533,8 +533,9 @@ final class Ritual {
     /** The canvas of the scene at time t: the opening, then the pivot of the type. Everything except the item and the words. */
     static void paint(float t, boolean tre, int type, float S, float sz, float isc, int rc, float icy, int blade, boolean itemBob, float bobAmp) {
         boolean rng = type == AnimationManager.RNG, nod = type == AnimationManager.NO_DROPS;
+        SlayerScenery.rngBorder = rng; SlayerScenery.borderT = t;
         float O = AnimationManager.opening(type), p = t - O, icx = CW / 2f, gy = icy + 22 * sz, rx = 50 * sz, ry = 13 * sz;
-        int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : farmMode ? FarmScene.ENERGY[farmKind] : expMode ? 0xB56BFF : showMotif == ShowScene.DYE ? showTint : showMotif >= 0 ? ShowScene.ENERGY[showMotif] : CYAN;
+        int energy = tre ? GOLD : slayerMode ? SL_ENERGY[Math.floorMod(kind - 12, 6)] : farmMode ? FarmScene.ENERGY[farmKind] : expMode ? 0xB56BFF : showMotif == ShowScene.DYE ? showTint : showMotif >= 0 ? ShowScene.energy(showMotif) : CYAN;
         float bg = 1f - sm((p - 0.5f) / 0.9f);                                             // the background fades while the words show
         float fxEnd = AnimationManager.animLen(type) + hold;                                     // the finish ends with the animation; the words stay on after it
         float itemA = TextFx.itemOnly ? 1f : sm(p / 0.22f) * (1f - sm((t - (fxEnd - 0.6f)) / 0.6f));

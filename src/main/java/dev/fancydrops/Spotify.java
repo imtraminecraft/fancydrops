@@ -41,13 +41,17 @@ final class Spotify {
 
     static boolean linked() { return !FancyConfig.get().spotifyRefresh.isBlank(); }
     /** Where the song is now, in ms (moves on between polls while it plays). */
-    private static long shownPos = -1; private static String shownFor = "";
+    private static long shownPos = -1, shownAt; private static String shownFor = "";
     /** Where the song is now, in ms. Each poll can put the clock back a little (network delay); a small step back is ignored so lyric
      *  lines never flick back to the previous one. A real jump (you seek) still goes through at once. */
     static long position() {
         long p = progressMs + (playing ? System.currentTimeMillis() - progressAt : 0); if (track != null) p = Math.min(p, track.durationMs());
         String id = track == null ? "" : track.id();
-        if (!id.equals(shownFor) || p > shownPos || shownPos - p > 1500 || !playing) { shownFor = id; shownPos = p; }
+        long now = System.currentTimeMillis(), dt = shownAt == 0 ? 0 : Math.min(250, now - shownAt); shownAt = now;
+        if (!id.equals(shownFor) || !playing || Math.abs(p - shownPos) > 1200) { shownFor = id; shownPos = p; return p; }   // a new song, a pause or a seek: jump
+        // otherwise glide: the shown clock runs a little faster or slower until it meets Spotify's again, so the words never stall or skip back
+        double err = p - (shownPos + dt), rate = 1 + Math.max(-0.35, Math.min(0.35, err / 1500.0));
+        shownPos += Math.round(dt * rate);
         return shownPos;
     }
 
@@ -113,6 +117,7 @@ final class Spotify {
     private static void poll() {
         try {
             if (!fresh()) return;
+            long sentAt = System.currentTimeMillis();
             HttpResponse<String> r = HTTP.send(HttpRequest.newBuilder(URI.create("https://api.spotify.com/v1/me/player/currently-playing")).header("Authorization", "Bearer " + access).GET().build(), HttpResponse.BodyHandlers.ofString());
             if (r.statusCode() == 204 || r.body().isBlank()) { playing = false; status = "Nothing playing."; return; }
             if (r.statusCode() == 401) { access = ""; return; }
@@ -131,7 +136,7 @@ final class Spotify {
             Track tr = new Track(it.has("id") && !it.get("id").isJsonNull() ? it.get("id").getAsString() : it.get("name").getAsString(), it.get("name").getAsString(), ar.toString(), album, it.has("duration_ms") ? it.get("duration_ms").getAsLong() : 0, art);
             long prog = o.has("progress_ms") && !o.get("progress_ms").isJsonNull() ? o.get("progress_ms").getAsLong() : 0;
             boolean pl = o.has("is_playing") && o.get("is_playing").getAsBoolean();
-            progressMs = prog; progressAt = System.currentTimeMillis(); playing = pl;
+            progressMs = prog; progressAt = (sentAt + System.currentTimeMillis()) / 2; playing = pl;     // Spotify read the position halfway through the request
             if (track == null || !track.id().equals(tr.id())) { track = tr; Lyrics.load(tr); AlbumArt.load(tr.art()); }
             status = (pl ? "Playing: " : "Paused: ") + tr.name() + " - " + tr.artists();
         } catch (Throwable e) { status = "Couldn't reach Spotify."; }

@@ -29,7 +29,7 @@ public final class SoundFx {
     }
 
     public static final String NONE = "none";
-    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng", "crops.normal", "crops.rng", "feast.normal", "feast.rng", "bounty.normal", "bounty.rng", "pests.normal", "pests.rng", "exp.normal", "exp.rng", "fish_water.normal", "fish_water.rng", "fish_lava.normal", "fish_lava.rng", "fish_spooky.normal", "fish_spooky.rng", "fish_winter.normal", "fish_winter.rng", "crimson.normal", "crimson.rng", "mobs.normal", "mobs.rng", "dyes.normal", "dyes.rng"};
+    public static final String[] SCENES = {"myth.nodrops", "myth.normal", "myth.rng", "treasure.nodrops", "treasure.normal", "treasure.rng", "slayer.nodrops", "slayer.normal", "slayer.rng", "crops.normal", "crops.rng", "feast.normal", "feast.rng", "bounty.normal", "bounty.rng", "pests.normal", "pests.rng", "exp.normal", "exp.rng", "fish_water.normal", "fish_water.rng", "fish_lava.normal", "fish_lava.rng", "fish_spooky.normal", "fish_spooky.rng", "fish_winter.normal", "fish_winter.rng", "crimson.normal", "crimson.rng", "dragon.normal", "dragon.rng", "mobs.normal", "mobs.rng", "nucleus.normal", "nucleus.rng", "dyes.normal", "dyes.rng"};
     public static final String[] SLOTS = {"chop", "split", "reveal", "linger", "end"};
 
     private static final Map<String, Fx> ALL = new LinkedHashMap<>();
@@ -42,50 +42,18 @@ public final class SoundFx {
     private static boolean isMc(String name) { return name != null && name.startsWith("mc_"); }
 
     static {
-        reg("myth_bolt", "Bolt", SoundEvents.LIGHTNING_BOLT_IMPACT, 0.8f);
-        reg("myth_shatter", "Shatter", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
-        reg("myth_reveal", "Reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-        reg("myth_reveal_big", "Reveal (big)", SoundEvents.BEACON_ACTIVATE, 0.9f);
-        reg("myth_glow", "Glow", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-        reg("myth_glow_big", "Glow (big)", SoundEvents.BEACON_AMBIENT, 0.7f);
-        reg("myth_end", "Farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
-        reg("myth_dig", "Dig", SoundEvents.CROP_BREAK, 0.9f);
-        reg("myth_chest", "Chest", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-        reg("myth_fizzle", "Fizzle", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-        reg("slay_slash", "Slash", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);                         // the Slayer bank: blade, blow, rising chord, ember hum, farewell
-        reg("slay_cleave", "Cleave", SoundEvents.PLAYER_ATTACK_STRONG, 0.9f);
-        reg("slay_reveal", "Slayer reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-        reg("slay_reveal_epic", "Slayer reveal (epic)", SoundEvents.BEACON_ACTIVATE, 0.9f);
-        reg("slay_glow", "Ember hum", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.7f);
-        reg("slay_end", "Slayer farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
-        reg("farm_cut", "Scythe", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);                         // the Farming bank: snip, heave, bloom, farewell
-        reg("farm_heave", "Heave", SoundEvents.CROP_BREAK, 0.9f);
-        reg("farm_bloom", "Bloom", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-        reg("farm_bloom_big", "Bloom (big)", SoundEvents.BEACON_ACTIVATE, 0.9f);
-        reg("farm_end", "Harvest farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
-        reg("pest_vacuum", "Vacuum", SoundEvents.PLAYER_ATTACK_SWEEP, 0.9f);                      // the Pest bank
-        reg("pest_gulp", "Gulp", SoundEvents.SLIME_SQUISH, 0.9f);
-        reg("pest_pop", "Pest pop", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-        reg("exp_flip", "Page flip", SoundEvents.BOOK_PAGE_TURN, 0.9f);                           // the Experiment bank: pages, cover, rune chord, farewell
-        reg("exp_open", "Book open", SoundEvents.ENCHANTMENT_TABLE_USE, 0.9f);
-        reg("exp_reveal", "Rune chord", SoundEvents.AMETHYST_BLOCK_CHIME, 0.85f);
-        reg("exp_reveal_epic", "Rune chord (epic)", SoundEvents.BEACON_ACTIVATE, 0.9f);
-        reg("exp_end", "Book farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);
-        // 0.9: one bank per animation (tools/make_scene_sounds.py): beat, burst, reveal (+ _big for RNG), glow (+ _big), end
-        String[][] banks = {{"rit", "Ritual", "Zap", "Thunderclap"}, {"tre", "Treasure", "Spade", "Chest of coins"}, {"sly", "Slayer", "Ringing blade", "Cleave"},
-            {"crp", "Crops", "Rustling scythe", "Earth pop"}, {"fst", "Feast", "Pumpkin knock", "Festival drum"}, {"bty", "Bounty", "Glass chimes", "Greenhouse whoosh"},
-            {"pst", "Pests", "Bug chirp", "Vacuum slurp"}, {"tab", "Table", "Page riffle", "Rune slam"}, {"wat", "Water", "Bobber plop", "Splash"},
-            {"lav", "Lava", "Magma blorp", "Eruption"}, {"spk", "Spooky", "Tolling bell", "Organ stab"}, {"ice", "Winter", "Ice crack", "Shatter"},
-            {"crm", "Crimson", "Meteor", "Boom"}, {"mob", "Mobs", "Rattling cage", "Bars snap"}, {"dye", "Dyes", "Drip", "Paint splash"}};
-        for (String[] b : banks) {
-            reg(b[0] + "_beat", b[1] + ": " + b[2], SoundEvents.AMETHYST_BLOCK_HIT, 0.8f);
-            reg(b[0] + "_burst", b[1] + ": " + b[3], SoundEvents.AMETHYST_BLOCK_BREAK, 0.85f);
-            reg(b[0] + "_reveal", b[1] + ": reveal", SoundEvents.AMETHYST_BLOCK_CHIME, 0.8f);
-            reg(b[0] + "_reveal_big", b[1] + ": reveal (big)", SoundEvents.BEACON_ACTIVATE, 0.85f);
-            reg(b[0] + "_glow", b[1] + ": glow", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.45f);
-            reg(b[0] + "_glow_big", b[1] + ": glow (big)", SoundEvents.BEACON_AMBIENT, 0.5f);
-            reg(b[0] + "_end", b[1] + ": farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.6f);
-        }
+        // 1.0 (tools/make_scene_sounds.py): every Normal and No Drops scene shares one soft, short set; only RNG gets the big cinematic set
+        reg("std_beat", "Soft tick", SoundEvents.AMETHYST_BLOCK_HIT, 0.7f);
+        reg("std_burst", "Soft pop", SoundEvents.AMETHYST_BLOCK_BREAK, 0.75f);
+        reg("std_reveal", "Chime", SoundEvents.AMETHYST_BLOCK_CHIME, 0.75f);
+        reg("std_glow", "Soft glow", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.4f);
+        reg("std_end", "Close", SoundEvents.AMETHYST_BLOCK_CHIME, 0.55f);
+        reg("std_fizzle", "Fizzle", SoundEvents.AMETHYST_BLOCK_RESONATE, 0.6f);
+        reg("rng_beat", "RNG: heartbeat", SoundEvents.AMETHYST_BLOCK_HIT, 0.85f);
+        reg("rng_burst", "RNG: impact", SoundEvents.AMETHYST_BLOCK_BREAK, 0.9f);
+        reg("rng_reveal", "RNG: fanfare", SoundEvents.BEACON_ACTIVATE, 0.9f);
+        reg("rng_glow", "RNG: sparkle bed", SoundEvents.BEACON_AMBIENT, 0.5f);
+        reg("rng_end", "RNG: farewell", SoundEvents.AMETHYST_BLOCK_CHIME, 0.65f);
         reg("sky_open", "Achievements: open", SoundEvents.AMETHYST_BLOCK_CHIME, 0.7f);              // the achievements sky
         reg("sky_close", "Achievements: close", SoundEvents.AMETHYST_BLOCK_HIT, 0.6f);
         reg("sky_zoom", "Achievements: fly", SoundEvents.PLAYER_ATTACK_SWEEP, 0.6f);
@@ -142,54 +110,25 @@ public final class SoundFx {
 
     private static final Map<String, String> MC_DEFAULTS = new LinkedHashMap<>();
     static {
-        String[][] d = {                                           // the same five moments as the custom set, built only from Minecraft sounds
-            {"myth.nodrops", "mc_bolt", "mc_fizzle", NONE, NONE, NONE},
-            {"myth.normal", "mc_bolt", "mc_thunder", "mc_power", "mc_hum", "mc_powerdown"},
-            {"myth.rng", "mc_bolt", "mc_trident", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"treasure.nodrops", "mc_harvest", "mc_fizzle", NONE, NONE, NONE},
-            {"treasure.normal", "mc_harvest", "mc_anvil", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"treasure.rng", "mc_harvest", "mc_anvil", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"slayer.nodrops", "mc_swish", "mc_smack", NONE, NONE, NONE},
-            {"slayer.normal", "mc_swish", "mc_smack", "mc_crystal", "mc_hum", "mc_powerdown"},
-            {"slayer.rng", "mc_swish", "mc_smack", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"crops.normal", "mc_swish", "mc_harvest", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"crops.rng", "mc_swish", "mc_harvest", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"feast.normal", "mc_swish", "mc_harvest", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"feast.rng", "mc_swish", "mc_harvest", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"bounty.normal", "mc_swish", "mc_harvest", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"bounty.rng", "mc_swish", "mc_harvest", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"pests.normal", "mc_squish", "mc_smack", "mc_orb", "mc_hum", "mc_powerdown"},
-            {"pests.rng", "mc_squish", "mc_smack", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"exp.normal", "mc_page", "mc_enchant", "mc_crystal", "mc_hum", "mc_powerdown"},
-            {"exp.rng", "mc_page", "mc_enchant", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"fish_water.normal", "mc_splash", "mc_splash", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"fish_water.rng", "mc_splash", "mc_splash", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"fish_lava.normal", "mc_lavapop", "mc_blast", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"fish_lava.rng", "mc_lavapop", "mc_blast", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"fish_spooky.normal", "mc_splash", "mc_bell", "mc_levelup", "mc_hum", "mc_powerdown"},
-            {"fish_spooky.rng", "mc_splash", "mc_bell", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"fish_winter.normal", "mc_icebreak", "mc_icebreak", "mc_chime", "mc_hum", "mc_powerdown"},
-            {"fish_winter.rng", "mc_icebreak", "mc_icebreak", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"crimson.normal", "mc_blast", "mc_thunder", "mc_crystal", "mc_hum", "mc_powerdown"},
-            {"crimson.rng", "mc_blast", "mc_thunder", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"mobs.normal", "mc_bass", "mc_chain", "mc_crystal", "mc_hum", "mc_powerdown"},
-            {"mobs.rng", "mc_bass", "mc_chain", "mc_fanfare", "mc_hum", "mc_powerdown"},
-            {"dyes.normal", "mc_drip", "mc_splash", "mc_shimmer", "mc_hum", "mc_powerdown"},
-            {"dyes.rng", "mc_drip", "mc_splash", "mc_fanfare", "mc_hum", "mc_powerdown"}};
+        java.util.List<String[]> m0 = new java.util.ArrayList<>();               // the same idea built from Minecraft's sounds: soft and alike for Normal, a show for RNG
+        for (String g : new String[]{"myth", "treasure", "slayer", "crops", "feast", "bounty", "pests", "exp", "fish_water", "fish_lava", "fish_spooky", "fish_winter", "crimson", "dragon", "mobs", "nucleus", "dyes"}) {
+            if (g.equals("myth") || g.equals("treasure") || g.equals("slayer")) m0.add(new String[]{g + ".nodrops", "mc_xylo", "mc_fizzle", NONE, NONE, NONE});
+            m0.add(new String[]{g + ".normal", "mc_xylo", "mc_orb", "mc_chime", NONE, "mc_bell"});
+            m0.add(new String[]{g + ".rng", "mc_bass", "mc_trident", "mc_fanfare", "mc_twinkle", "mc_levelup"});
+        }
+        String[][] d = m0.toArray(new String[0][]);
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) MC_DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
     }
 
     /** What each slot plays until the player changes it. */
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
     static {
-        String[][] grp = {{"myth", "rit"}, {"treasure", "tre"}, {"slayer", "sly"}, {"crops", "crp"}, {"feast", "fst"}, {"bounty", "bty"}, {"pests", "pst"}, {"exp", "tab"},
-            {"fish_water", "wat"}, {"fish_lava", "lav"}, {"fish_spooky", "spk"}, {"fish_winter", "ice"}, {"crimson", "crm"}, {"mobs", "mob"}, {"dyes", "dye"}};
-        java.util.List<String[]> d0 = new java.util.ArrayList<>();               // every animation has its own bank; RNG plays the _big reveal and glow of it
-        for (String[] gk : grp) {
-            String b = gk[1];
-            if (gk[0].equals("myth") || gk[0].equals("treasure") || gk[0].equals("slayer")) d0.add(new String[]{gk[0] + ".nodrops", b + "_beat", "myth_fizzle", NONE, NONE, NONE});
-            d0.add(new String[]{gk[0] + ".normal", b + "_beat", b + "_burst", b + "_reveal", b + "_glow", b + "_end"});
-            d0.add(new String[]{gk[0] + ".rng", b + "_beat", b + "_burst", b + "_reveal", b + "_glow", b + "_end"});
+        String[] grp = {"myth", "treasure", "slayer", "crops", "feast", "bounty", "pests", "exp", "fish_water", "fish_lava", "fish_spooky", "fish_winter", "crimson", "dragon", "mobs", "nucleus", "dyes"};
+        java.util.List<String[]> d0 = new java.util.ArrayList<>();               // one quiet set for every Normal and No Drops scene, the cinematic set for RNG
+        for (String g : grp) {
+            if (g.equals("myth") || g.equals("treasure") || g.equals("slayer")) d0.add(new String[]{g + ".nodrops", "std_beat", "std_fizzle", NONE, NONE, NONE});
+            d0.add(new String[]{g + ".normal", "std_beat", "std_burst", "std_reveal", "std_glow", "std_end"});
+            d0.add(new String[]{g + ".rng", "rng_beat", "rng_burst", "rng_reveal", "rng_glow", "rng_end"});
         }
         String[][] d = d0.toArray(new String[0][]);
         for (String[] r : d) for (int i = 0; i < SLOTS.length; i++) DEFAULTS.put(r[0] + "." + SLOTS[i], r[i + 1]);
@@ -207,7 +146,7 @@ public final class SoundFx {
     public static Iterable<String> names() { return ALL.keySet(); }
     public static Fx byName(String n) { return n == null ? null : ALL.get(n.toLowerCase(Locale.ROOT)); }
     /** The little fanfare of an unlocked achievement. */
-    public static void achievement() { Fx f = byName("exp_reveal"); if (f == null) f = byName("mc_chime"); if (f != null) play(f, 1.2f, 0.8f); }
+    public static void achievement() { Fx f = byName("std_reveal"); if (f == null) f = byName("mc_chime"); if (f != null) play(f, 1.2f, 0.8f); }
 
     /** Every choice for a slot, "none" first: the mod's own sounds, or Minecraft's while Custom sounds is off. */
     public static List<String> choices() {

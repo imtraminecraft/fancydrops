@@ -32,7 +32,11 @@ final class Playtime {
         if (mc.level == null || mc.player == null || mc.isPaused()) return;
         FancyConfig c = FancyConfig.get();
         double before = c.playMinutes; c.playMinutes += dt / 60000.0;
-        for (Goal g : GOALS) if (before < g.minutes() && c.playMinutes >= g.minutes()) c.playDone.put(g.id(), now);   // when each star was earned
+        for (Goal g : GOALS) if (before < g.minutes() && c.playMinutes >= g.minutes()) {          // a star is earned: note when, and say so
+            c.playDone.put(g.id(), now);
+            var msg = Chat.prefix().append(" ").append(Chat.color("New star lit: ", Chat.TEXT)).append(Chat.color(g.name(), Chat.NUMBER).withStyle(st -> st.withBold(true))).append(Chat.color("  ·  Playtime", Chat.DIM));
+            mc.player.sendSystemMessage(msg); SoundFx.achievement();
+        }
         if (now - savedAt > 120_000) { savedAt = now; try { FancyConfig.save(); } catch (Throwable ignored) { } }
     }
 

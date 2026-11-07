@@ -12,9 +12,9 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Achievements and the cosmetics they unlock. Nothing here is decided on this computer: the server (tools/worn-worker.js)
- * keeps every player's drop counts, works out which achievements are earned and which cosmetics that unlocks.
- * The mod only reports real drops (signed with the player's Minecraft login) and shows what the server says.
+ * Achievements and the cosmetics they unlock. Every real drop is counted on this computer at once (LocalLedger), so stars light
+ * even when the server is unreachable; it is also sent to the server (tools/worn-worker.js), signed with your Minecraft login,
+ * which alone decides which cosmetics you have unlocked.
  */
 final class Achievements {
     private Achievements() {}
@@ -50,17 +50,20 @@ final class Achievements {
         retryAt = System.currentTimeMillis() + 60_000L; syncNote = why;
     }
 
-    private static Profile merged, mergedFrom; private static int mergedDone = -1; private static long mergedAt;
+    private static Profile merged, mergedFrom; private static int mergedDone = -1; private static long mergedAt, mergedLocal = -1;
     /** The server's profile with the Playtime stars (counted on this computer) added; rebuilt when either changes. */
     static Profile profile() {
         refresh(false);
         Profile p = profile; long now = System.currentTimeMillis();
         int done = 0; for (Playtime.Goal g : Playtime.GOALS) if (FancyConfig.get().playMinutes >= g.minutes()) done++;
-        if (merged == null || mergedFrom != p || mergedDone != done || now - mergedAt > 30_000) {
-            List<Ach> l = new ArrayList<>(p == null ? List.of() : p.list()); l.addAll(Playtime.list());
+        if (merged == null || mergedFrom != p || mergedDone != done || mergedLocal != LocalLedger.version() || now - mergedAt > 30_000) {
+            mergedLocal = LocalLedger.version();
+            Profile lp = LocalLedger.merge(p, LocalLedger.profile());                    // what the server knows plus what was counted here (drops still waiting count too)
+            Profile p0 = p; p = lp;
+            List<Ach> l = new ArrayList<>(p.list()); l.addAll(Playtime.list());
             Map<String, Double> st = new HashMap<>(p == null ? Map.of() : p.stats()); st.put("playMinutes", FancyConfig.get().playMinutes);
             merged = new Profile(st, p == null ? new HashMap<>() : p.groups(), l, p == null ? new HashSet<>() : p.cosmetics(), p == null ? new LinkedHashMap<>() : p.chapters(), p == null ? 0 : p.since());
-            mergedFrom = p; mergedDone = done; mergedAt = now;
+            mergedFrom = p0; mergedDone = done; mergedAt = now;
         }
         return merged;
     }
@@ -111,7 +114,7 @@ final class Achievements {
     // ---------------------------------------------------------------- reporting drops
     /** A real drop happened (never a simulated one): it is sent to the server a few seconds later, when its price is known. */
     static void report(AnimationManager.Item it, String group, boolean rng) {
-        if (it == null || it.sim || base() == null) return;
+        if (it == null || it.sim) return;
         JsonObject e = new JsonObject();
         e.addProperty("g", group); e.addProperty("src", it.source == null ? "" : it.source.id); e.addProperty("id", it.id == null ? it.name : it.id);
         e.addProperty("item", it.name); e.addProperty("r", it.rank); e.addProperty("rng", rng);
@@ -129,6 +132,8 @@ final class Achievements {
             for (JsonObject e : batch) { AnimationManager.Item it = PRICED.remove(e); if (it == null && e.has("v")) continue; double v = it == null || it.price < 0 ? 0 : it.price * Math.max(1, it.amount); e.addProperty("v", Math.round(v)); }
             savePending(batch);
         }
+        for (JsonObject e : batch) if (!e.has("c")) { e.addProperty("c", 1); for (String id : LocalLedger.add(e)) announce(id); }   // counted here first, so nothing is lost while the server can't confirm you
+        savePending(batch);
         String b = base(); UUID me = Cosmetics.me(); if (b == null || me == null) return;
         String name = mc.getUser().getName(), token = mc.getUser().getAccessToken();
         posting = true;
@@ -156,9 +161,11 @@ final class Achievements {
         return o;
     }
 
+    private static final Set<String> ANNOUNCED = java.util.concurrent.ConcurrentHashMap.newKeySet();
     /** "Achievement unlocked" in chat and as a notice in the menu. */
     private static void announce(String id) {
-        Profile p = profile; if (p == null) return;
+        if (!ANNOUNCED.add(id) || LocalLedger.get().unlocked.containsKey(id) && LocalLedger.get().unlocked.get(id) < System.currentTimeMillis() - 120_000) return;   // once per star
+        Profile p = profile(); if (p == null) return;
         for (Ach a : p.list()) if (a.id().equals(id)) {
             Minecraft.getInstance().execute(() -> {
                 var mc = Minecraft.getInstance(); if (mc.player == null) return;

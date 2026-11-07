@@ -48,8 +48,8 @@ public final class AnimationManager {
         String key() { return group + "." + TYPE_IDS[type]; }
         FancyConfig.AnimCfg cfg() { return FancyConfig.get().anim(key()); }
         float secs() { return sceneLen(type); }
-        /** Extra seconds the finish is held so the words of several drops can be read (1 s per extra drop, at most 3). */
-        float hold() { int n = count(); return n <= 1 ? 0f : Math.min(3f, (n - 1) * 1.0f); }
+        /** Extra seconds the finish is held so the words of several drops can be read (0.5 s per extra drop, at most 1.5). */
+        float hold() { int n = count(); return n <= 1 ? 0f : Math.min(1.5f, (n - 1) * 0.5f); }
         /** The whole length: the scene plus the hold. */
         float total() { return secs() + hold(); }
         /** The drops this animation shows (0 to 8). */
@@ -111,12 +111,12 @@ public final class AnimationManager {
     /** How much faster than real time a scene plays (1.8 after a cocooned slayer boss). */
     static float pace(Anim a) { return a.speed; }
 
-    // ---- the fixed lengths (author request Nov 6): No Drops 4 s, Normal 4 s, RNG 6 s; the words stay 2.5 s after the animation ends
-    static final float TEXT_HOLD = 2.5f;
+    // ---- the fixed lengths (author request): No Drops 4 s, Normal 4 s, RNG 6 s; the words stay 2 s after the animation ends
+    static final float TEXT_HOLD = 2.0f;
     static int typeOfKey(String key) { return key.endsWith("rng") ? RNG : key.endsWith("nodrops") ? NO_DROPS : NORMAL; }
     /** The animation itself: the opening, the drop appearing and its finish. */
     static float animLen(int type) { return type == RNG ? 6f : 4f; }
-    /** The whole scene without the multi-drop hold: the animation, then the words alone for 2.5 s (No Drops has no words). */
+    /** The whole scene without the multi-drop hold: the animation, then the words alone for 2 s (No Drops has no words). */
     static float sceneLen(int type) { return type == NO_DROPS ? animLen(type) : animLen(type) + TEXT_HOLD; }
     /** When the drop appears: the opening takes all but the last 1.4 s of the animation (the finish). */
     static float opening(int type) { return animLen(type) - 1.4f; }
