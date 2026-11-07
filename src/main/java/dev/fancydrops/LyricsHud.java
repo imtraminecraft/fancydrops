@@ -81,16 +81,16 @@ final class LyricsHud {
     private static void write(Minecraft mc, FancyConfig c, int li, long now) {
         var cam = mc.gameRenderer.mainCamera(); Vec3 eye = cam.position();
         side = -side;
-        double yaw = Math.toRadians(cam.yRot() + side * (8 + RND.nextDouble() * 22)), pitch = Math.toRadians(Math.max(-25, Math.min(35, cam.xRot())) * 0.6 + 4 + RND.nextDouble() * 8);
+        double yaw = Math.toRadians(cam.yRot() + side * (8 + RND.nextDouble() * 16)), pitch = Math.toRadians(Math.max(-25, Math.min(35, cam.xRot())) * 0.6 + 4 + RND.nextDouble() * 8);
         Vec3 dir = new Vec3(-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
         double d = 5 + RND.nextDouble() * 3;
         var hit = mc.level.clip(new ClipContext(eye, eye.add(dir.scale(d + 1)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player));
         if (hit.getType() == HitResult.Type.BLOCK) d = Math.max(2.2, hit.getLocation().distanceTo(eye) - 0.9);
         Vec3 at = eye.add(dir.scale(d));
-        double face = Math.atan2(eye.x - at.x, eye.z - at.z) + Math.toRadians(-side * (15 + RND.nextDouble() * 25));   // turned partly towards you, partly away
+        double face = Math.atan2(eye.x - at.x, eye.z - at.z) + Math.toRadians(-side * (6 + RND.nextDouble() * 14));    // turned a little away from you, so it stands in the world
         Vec3 n = new Vec3(Math.sin(face), 0, Math.cos(face)), up0 = new Vec3(0, 1, 0);
         Vec3 right = up0.cross(n).normalize();
-        double roll = Math.toRadians((RND.nextDouble() - 0.5) * 10);                                // a slight tilt
+        double roll = Math.toRadians((RND.nextDouble() - 0.5) * 6);                                // a slight tilt
         Vec3 r2 = right.scale(Math.cos(roll)).add(up0.scale(Math.sin(roll))), u2 = up0.scale(Math.cos(roll)).subtract(right.scale(Math.sin(roll)));
         float px = (float) (0.045 * c.lyricsSize / 100.0 * (0.75 + d / 14));
         SIGNS.add(new Sign(li, RND.nextInt(1000), now, at, r2, u2, px)); while (SIGNS.size() > 3) SIGNS.remove(0);
@@ -109,35 +109,41 @@ final class LyricsHud {
             if (fade < 0.03f) continue;
             Vec3 at = sg.at.add(sg.up.scale(0.5 * out * out));                                          // leaving: it rises as it fades
             Lyrics.Line ln = L.get(sg.line); long start = ln.atMs(), end = sg.line + 1 < L.size() ? L.get(sg.line + 1).atMs() : start + 4000;
-            drawSign(g, f, vp, cp, W, H, sg, at, ln.text(), start, end, pos, fade, pal);
+            drawSign(g, f, vp, cp, W, H, sg, at, ln.text(), start, end, pos, fade * ease(Math.min(1f, (now - sg.born) / 350f)), pal);
         }
     }
+    /** A whole line on its sign, in the caption's look: every word there from the start in light grey, filling with the album's colour as it
+     *  is sung (with a small nod and a soft light under the word being sung). */
     static void drawSign(GuiGraphicsExtractor g, Font f, Matrix4f vp, Vec3 cp, int W, int H, Sign sg, Vec3 at, String text, long start, long end, long pos, float fade, int[] pal) {
-            List<String> rows = wrap(f, text, 190);
-            int total = 0; for (String r : rows) total += r.length() + 1;
-            float span = Math.max(400f, (end - start) * 0.85f); int acc0 = 0, wi = 0;
-            for (int ri = 0; ri < rows.size(); ri++) {
-                String row = rows.get(ri); float x = -f.width(row) / 2f, y = (ri - (rows.size() - 1) / 2f) * 11 - 4;
-                for (String w : row.split(" ")) {
-                    float wAt = start + span * acc0 / (float) total; int ww = f.width(w);
-                    acc0 += w.length() + 1;
-                    float shown = sg.gone > 0 ? 1f : Math.max(0f, Math.min(1f, (pos - wAt) / 160f));      // each word appears as it's sung
-                    if (shown > 0f) word(g, f, vp, cp, W, H, sg, at, w, x, y, ww, shown, fade, pal[(sg.seed + wi) % pal.length]);
-                    x += ww + f.width(" "); wi++;
-                }
+        if (fade < 0.02f) return;
+        List<String> rows = wrap(f, text, 190);
+        int total = 0; for (String r : rows) total += r.length() + 1;
+        float span = Math.max(400f, (end - start) * 0.85f); int acc0 = 0, col = colour();
+        for (int ri = 0; ri < rows.size(); ri++) {
+            String row = rows.get(ri); float x = -f.width(row) / 2f, y = (ri - (rows.size() - 1) / 2f) * 11 - 4;
+            for (String w : row.split(" ")) {
+                float wAt = start + span * acc0 / (float) total, wEnd = start + span * (acc0 + w.length() + 1) / (float) total; int ww = f.width(w);
+                acc0 += w.length() + 1;
+                float lit = sg.gone > 0 ? 1f : Math.max(0f, Math.min(1f, (pos - wAt) / 140f));
+                float glow = pos >= wAt && pos < wEnd + 200 && sg.gone == 0 ? Math.min(1f, (pos - wAt) / 120f) * Math.min(1f, (wEnd + 200 - pos) / 200f) : 0f;
+                word(g, f, vp, cp, W, H, sg, at, w, x, y, ww, lit, glow, fade, col);
+                x += ww + f.width(" ");
             }
+        }
     }
-    /** One word, flat on its sign: projected corner by corner so it sits in the world with real perspective. */
-    private static void word(GuiGraphicsExtractor g, Font font, Matrix4f vp, Vec3 cp, int W, int H, Sign sg, Vec3 at, String w, float x, float y, int ww, float shown, float fade, int col) {
+    /** One word, flat on its sign: projected point by point so it sits in the world with real perspective. */
+    private static void word(GuiGraphicsExtractor g, Font font, Matrix4f vp, Vec3 cp, int W, int H, Sign sg, Vec3 at, String w, float x, float y, int ww, float lit, float glow, float fade, int col) {
         Vec3 o = at.add(sg.right.scale((x + ww / 2f) * sg.px)).subtract(sg.up.scale((y + 4) * sg.px));   // the word's middle
         float[] po = project(vp, cp, o, W, H), pr = project(vp, cp, o.add(sg.right.scale(sg.px * 8)), W, H), pd = project(vp, cp, o.subtract(sg.up.scale(sg.px * 8)), W, H);
         if (po == null || pr == null || pd == null) return;
         if (po[0] < -60 || po[0] > W + 60 || po[1] < -60 || po[1] > H + 60) return;
-        float pop = shown >= 1f ? 1f : 0.4f + 0.6f * popIn(shown);
+        float ax = (pr[0] - po[0]) / 8f, ay = (pr[1] - po[1]) / 8f, bx = (pd[0] - po[0]) / 8f, by = (pd[1] - po[1]) / 8f;
+        if (glow > 0.02f) { float sz = (float) Math.hypot(ax, ay); NebulaTex.glow(g, po[0], po[1], ww * 0.6f * sz + 5 * sz, 7 * sz, Gfx.argb(Math.round(110 * glow * fade), col)); }
+        float lift = lit > 0f && lit < 1f ? (float) Math.sin(Math.PI * lit) * 1.5f : 0f;
         Gfx.push(g);
-        g.pose().mul(new Matrix3x2f((pr[0] - po[0]) / 8f, (pr[1] - po[1]) / 8f, (pd[0] - po[0]) / 8f, (pd[1] - po[1]) / 8f, po[0], po[1]));
-        g.pose().scale(pop, pop);
-        Gfx.txt(g, font, w, -ww / 2, -4, Gfx.argb(Math.round(255 * fade * Math.min(1f, shown * 2f)), col), true);
+        g.pose().mul(new Matrix3x2f(ax, ay, bx, by, po[0], po[1])); g.pose().translate(-ww / 2f, -4 - lift);
+        Gfx.txt(g, font, w, 0, 0, Gfx.argb(Math.round(170 * fade), 0xE4E6EE), true);
+        if (lit > 0f) Gfx.txt(g, font, w, 0, 0, Gfx.argb(Math.round(255 * fade * lit), col), true);
         Gfx.pop(g);
     }
     private static float[] project(Matrix4f vp, Vec3 cp, Vec3 p, int W, int H) {
@@ -145,8 +151,6 @@ final class LyricsHud {
         if (v.w < 0.4f) return null;
         return new float[]{(v.x / v.w * 0.5f + 0.5f) * W, (1f - (v.y / v.w * 0.5f + 0.5f)) * H};
     }
-    /** 0..1 -> a scale that overshoots (about 1.1) and settles at 1. */
-    private static float popIn(float u) { float s = 2.7f; u -= 1f; return 1f + (s + 1f) * u * u * u + s * u * u; }
 
     // ------------------------------------------------------------------ the caption
     /** A whole caption centred on cx, cy: soft shade, the words, the time line; kept inside the screen. Returns nothing. */

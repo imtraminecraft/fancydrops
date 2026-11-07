@@ -49,15 +49,23 @@ final class AmbienceHud {
                 g.fill(x0, H - bh, x0 + bw, H, Gfx.argb(Math.round(150 * on), Ritual.mixc(acc, lite, i / (float) n)));
             }
         }
-        if (c.ambNotes) {                                                                // notes drifting up beside the hotbar, swaying, fading in and out
-            for (int i = 0; i < 8; i++) {
-                float per = 3.4f + (i % 4) * 0.7f, u = ((ts + i * 1.13f) % per) / per;
-                float a = (float) Math.sin(Math.PI * u) * on; if (a < 0.06f) continue;
-                boolean left = i % 2 == 0; float bx = W / 2f + (left ? -1 : 1) * (104 + 16 * (i / 2 % 3)), by = H - 30;
-                float x = bx + (float) Math.sin(u * 5 + i) * 6 + (left ? -1 : 1) * u * 18, y = by - u * 64;
-                Gfx.push(g); Gfx.translate(g, x, y); Gfx.rotate(g, (float) Math.sin(u * 4 + i) * 0.3f); Gfx.scale(g, 1f + 0.25f * (i % 3) / 2f);
-                Gfx.txt(g, font, i % 3 == 0 ? "\u266B" : "\u266A", -3, -4, Gfx.argb(Math.round(235 * a), i % 2 == 0 ? acc : lite), true);
-                Gfx.pop(g);
+        if (c.ambNotes) {                                                                // notes float up from both sides of the hotbar in curling paths,
+            for (int i = 0; i < 8; i++) {                                                    // growing then shrinking, turning from the album's colour to white, with a faint trail
+                float per = 3.0f + (i % 4) * 0.55f, u = ((ts + i * 0.91f) % per) / per;
+                float a = (float) Math.sin(Math.PI * Math.min(1f, u * 1.15f)) * on; if (a < 0.06f) continue;
+                boolean left = i % 2 == 0; float dir = left ? -1 : 1, bx = W / 2f + dir * (100 + 14 * (i / 2 % 3)), by = H - 26;
+                String n = i % 3 == 0 ? "\u266B" : "\u266A";
+                for (int tr = 2; tr >= 0; tr--) {                                            // the trail: two fainter copies a moment behind
+                    float uu = Math.max(0f, u - tr * 0.035f);
+                    float x = bx + dir * (uu * 30 + (float) Math.sin(uu * 7 + i) * 8), y = by - uu * 78 - (float) Math.sin(uu * 3.14f) * 6;
+                    float sc = (0.8f + 0.7f * (float) Math.sin(Math.PI * uu)) * (1f - tr * 0.18f), rot = dir * (float) Math.sin(uu * 5 + i) * 0.45f;
+                    int col = Ritual.mixc(i % 2 == 0 ? acc : lite, 0xFFFFFF, uu * 0.7f);
+                    Gfx.push(g); Gfx.translate(g, x, y); Gfx.rotate(g, rot); Gfx.scale(g, sc);
+                    Gfx.txt(g, font, n, -3, -4, Gfx.argb(Math.round((tr == 0 ? 240 : 70 / tr) * a), col), tr == 0);
+                    Gfx.pop(g);
+                }
+                if (u > 0.85f && u < 1f) { float pu = (u - 0.85f) / 0.15f; float x = bx + dir * (u * 30 + (float) Math.sin(u * 7 + i) * 8), y = by - u * 78;   // a little burst as it fades
+                    for (int k = 0; k < 4; k++) { double an = k * Math.PI / 2 + i; g.fill(Math.round(x + (float) Math.cos(an) * 6 * pu), Math.round(y + (float) Math.sin(an) * 6 * pu), Math.round(x + (float) Math.cos(an) * 6 * pu) + 1, Math.round(y + (float) Math.sin(an) * 6 * pu) + 1, Gfx.argb(Math.round(200 * (1 - pu) * on), lite)); } }
             }
         }
         if (c.ambWave && sinceSong < 1600) {                                             // a new song: a wave of its colour sweeps across

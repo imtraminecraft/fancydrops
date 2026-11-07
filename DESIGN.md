@@ -508,3 +508,8 @@ Standing rules from the author (ImTra). Read this before changing the menu, anim
 - Float precision bug: (now / 1000f) can't move with today's epoch ms; use (now % 3_600_000) — fixed music notes, Codex dashes/streaks/rings, menu pulses.
 - Ambience lighter: 4 edge glows, 32 bars, 8 notes without glows.
 - PC lag: tab-list name animation only while Tab is held (else once a second); chat effects only when chat changed; Spotify polls on one low-priority thread; auras capped (160 per player, 700 sprites, tiny ones skipped).
+
+## Round: smoother world lyrics
+- Spotify.position never steps back by < 1.5 s (poll jitter made lines flick back and forth, each flick writing a new sign).
+- World signs use the caption look (all words grey, filling with the album colour, nod, glow under the sung word), fade in over 350 ms, gentler angles.
+- Music notes: curling paths, grow/shrink, colour to white, faint trail, small burst at the end.

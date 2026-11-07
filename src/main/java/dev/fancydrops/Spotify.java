@@ -41,7 +41,15 @@ final class Spotify {
 
     static boolean linked() { return !FancyConfig.get().spotifyRefresh.isBlank(); }
     /** Where the song is now, in ms (moves on between polls while it plays). */
-    static long position() { long p = progressMs + (playing ? System.currentTimeMillis() - progressAt : 0); return track == null ? p : Math.min(p, track.durationMs()); }
+    private static long shownPos = -1; private static String shownFor = "";
+    /** Where the song is now, in ms. Each poll can put the clock back a little (network delay); a small step back is ignored so lyric
+     *  lines never flick back to the previous one. A real jump (you seek) still goes through at once. */
+    static long position() {
+        long p = progressMs + (playing ? System.currentTimeMillis() - progressAt : 0); if (track != null) p = Math.min(p, track.durationMs());
+        String id = track == null ? "" : track.id();
+        if (!id.equals(shownFor) || p > shownPos || shownPos - p > 1500 || !playing) { shownFor = id; shownPos = p; }
+        return shownPos;
+    }
 
     // ------------------------------------------------------------------ login
     static void login(java.util.function.Consumer<String> say) {
